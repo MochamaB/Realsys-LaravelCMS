@@ -1,0 +1,69 @@
+{
+    "name": "Default Theme",
+    "identifier": "default",
+    "description": "A clean, simple theme for basic website needs",
+    "version": "1.0.0",
+    "author": "NPPK",
+    "website": "https://nppk.com",
+    "templates": [
+        {
+            "name": "Default",
+            "identifier": "default",
+            "file": "templates/default.blade.php",
+            "sections": [
+                {
+                    "name": "Header",
+                    "identifier": "header",
+                    "description": "Page header section"
+                },
+                {
+                    "name": "Content",
+                    "identifier": "content",
+                    "description": "Main content area"
+                },
+                {
+                    "name": "Sidebar",
+                    "identifier": "sidebar",
+                    "description": "Right sidebar"
+                },
+                {
+                    "name": "Footer",
+                    "identifier": "footer",
+                    "description": "Page footer section"
+                }
+            ]
+        },
+        {
+            "name": "Full Width",
+            "identifier": "full-width",
+            "file": "templates/full-width.blade.php",
+            "sections": [
+                {
+                    "name": "Header",
+                    "identifier": "header",
+                    "description": "Page header section"
+                },
+                {
+                    "name": "Content",
+                    "identifier": "content",
+                    "description": "Main content area"
+                },
+                {
+                    "name": "Footer",
+                    "identifier": "footer",
+                    "description": "Page footer section"
+                }
+            ]
+        }
+    ],
+    "assets": {
+        "css": [
+            "assets/css/bootstrap.min.css",
+            "assets/css/style.css"
+        ],
+        "js": [
+            "assets/js/bootstrap.bundle.min.js",
+            "assets/js/main.js"
+        ]
+    }
+}
