@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Page;
 use App\Models\User;
 use App\Models\Widget;
+use App\Models\WidgetType;
 
 class DashboardController extends Controller
 {
@@ -20,7 +21,7 @@ class DashboardController extends Controller
     {
         // Get admin user from session
         $admin = Auth::guard('admin')->user();
-
+        
         // Get pages statistics
         $pages = Page::withTrashed();
         $pagesStats = [
@@ -47,11 +48,19 @@ class DashboardController extends Controller
             'recent' => Widget::latest()->take(5)->get()
         ];
 
+        // Get widget types statistics
+        $widgetTypes = WidgetType::withTrashed();
+        $widgetTypesStats = [
+            'total' => $widgetTypes->count(),
+            'active' => $widgetTypes->where('is_active', true)->count()
+        ];
+
         // Combine all stats
         $stats = [
             'pages' => $pagesStats,
             'users' => $usersStats,
             'widgets' => $widgetsStats,
+            'widgetTypes' => $widgetTypesStats,
             'recent_pages' => $pagesStats['recent'],
             'recent_users' => $usersStats['recent']
         ];

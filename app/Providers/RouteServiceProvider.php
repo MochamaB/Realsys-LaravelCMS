@@ -6,7 +6,6 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Facades\Route;
 
 class RouteServiceProvider extends ServiceProvider
 {
@@ -35,21 +34,7 @@ class RouteServiceProvider extends ServiceProvider
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
 
-        $this->routes(function () {
-            // API Routes
-            Route::middleware('api')
-                ->prefix('api')
-                ->group(base_path('routes/api.php'));
-
-            // Admin Routes
-            Route::middleware('web')
-                ->prefix('admin')
-                ->name('admin.')
-                ->group(base_path('routes/admin.php'));
-
-            // Web Routes
-            Route::middleware('web')
-                ->group(base_path('routes/web.php'));
-        });
+        // Routes are now handled in bootstrap/app.php for Laravel 11
+        // Remove the duplicate route registration
     }
 }

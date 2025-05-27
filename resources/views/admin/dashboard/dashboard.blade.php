@@ -4,10 +4,10 @@
 
 @section('css')
     <!-- jsvectormap css -->
-    <link href="{{ asset('admin/libs/jsvectormap/css/jsvectormap.min.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ asset('assets/admin/libs/jsvectormap/css/jsvectormap.min.css') }}" rel="stylesheet" type="text/css" />
 
     <!--Swiper slider css-->
-    <link href="{{ asset('admin/libs/swiper/swiper-bundle.min.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ asset('assets/admin/libs/swiper/swiper-bundle.min.css') }}" rel="stylesheet" type="text/css" />
 @endsection
 
 @section('content')
@@ -198,12 +198,12 @@
 
 @section('scripts')
     <!-- apexcharts -->
-    <script src="{{ asset('admin/libs/apexcharts/apexcharts.min.js') }}"></script>
+    <script src="{{ asset('assets/admin/libs/apexcharts/apexcharts.min.js') }}"></script>
 
     <!-- Vector map-->
-    <script src="{{ asset('admin/libs/jsvectormap/js/jsvectormap.min.js') }}"></script>
-    <script src="{{ asset('admin/libs/jsvectormap/maps/world-merc.js') }}"></script>
+    <script src="{{ asset('assets/admin/libs/jsvectormap/js/jsvectormap.min.js') }}"></script>
+    <script src="{{ asset('assets/admin/libs/jsvectormap/maps/world-merc.js') }}"></script>
 
     <!-- Dashboard init -->
-    <script src="{{ asset('admin/js/pages/dashboard-analytics.init.js') }}"></script>
+    <script src="{{ asset('assets/admin/js/pages/dashboard-analytics.init.js') }}"></script>
 @endsection

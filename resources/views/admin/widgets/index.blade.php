@@ -4,7 +4,7 @@
 
 @section('css')
     <!-- Sweet Alert css-->
-    <link href="{{ asset('admin/libs/sweetalert2/sweetalert2.min.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ asset('assets/admin/libs/sweetalert2/sweetalert2.min.css') }}" rel="stylesheet" type="text/css" />
 @endsection
 
 @section('content')
@@ -129,10 +129,10 @@
 
 @section('scripts')
     <!-- Sweet Alerts js -->
-    <script src="{{ asset('admin/libs/sweetalert2/sweetalert2.min.js') }}"></script>
+    <script src="{{ asset('assets/admin/libs/sweetalert2/sweetalert2.min.js') }}"></script>
     <!-- Sortable js -->
-    <script src="{{ asset('admin/libs/sortablejs/Sortable.min.js') }}"></script>
+    <script src="{{ asset('assets/admin/libs/sortablejs/Sortable.min.js') }}"></script>
     
     <!-- Custom js -->
-    <script src="{{ asset('admin/js/widgets/widget-list.js') }}"></script>
+    <script src="{{ asset('assets/admin/js/widgets/widget-list.js') }}"></script>
 @endsection

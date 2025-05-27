@@ -7,19 +7,19 @@
                 <div class="navbar-brand-box horizontal-logo">
                     <a href="{{ route('admin.dashboard') }}" class="logo logo-dark">
                         <span class="logo-sm">
-                            <img src="{{ asset('admin/images/logo-sm.png') }}" alt="" height="22">
+                            <img src="{{ asset('assets/admin/images/logo-sm.png') }}" alt="" height="22">
                         </span>
                         <span class="logo-lg">
-                            <img src="{{ asset('admin/images/logo-dark.png') }}" alt="" height="17">
+                            <img src="{{ asset('assets/admin/images/logo-dark.png') }}" alt="" height="17">
                         </span>
                     </a>
 
                     <a href="{{ route('admin.dashboard') }}" class="logo logo-light">
                         <span class="logo-sm">
-                            <img src="{{ asset('admin/images/logo-sm.png') }}" alt="" height="22">
+                            <img src="{{ asset('assets/admin/images/logo-sm.png') }}" alt="" height="22">
                         </span>
                         <span class="logo-lg">
-                            <img src="{{ asset('admin/images/logo-light.png') }}" alt="" height="17">
+                            <img src="{{ asset('assets/admin/images/logo-light.png') }}" alt="" height="17">
                         </span>
                     </a>
                 </div>
@@ -97,7 +97,7 @@
                 <div class="dropdown ms-sm-3 header-item topbar-user">
                     <button type="button" class="btn" id="page-header-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <span class="d-flex align-items-center">
-                            <img class="rounded-circle header-profile-user" src="{{ asset('admin/images/users/avatar-1.jpg') }}" alt="Header Avatar">
+                            <img class="rounded-circle header-profile-user" src="{{ asset('assets/admin/images/users/avatar-1.jpg') }}" alt="Header Avatar">
                             <span class="text-start ms-xl-2">
                                 <span class="d-none d-xl-inline-block ms-1 fw-medium user-name-text">Admin User</span>
                                 <span class="d-none d-xl-block ms-1 fs-12 text-muted user-name-sub-text">Administrator</span>

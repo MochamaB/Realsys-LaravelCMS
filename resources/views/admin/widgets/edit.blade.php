@@ -4,12 +4,12 @@
 
 @section('css')
     <!-- Sweet Alert css-->
-    <link href="{{ asset('admin/libs/sweetalert2/sweetalert2.min.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ asset('assets/admin/libs/sweetalert2/sweetalert2.min.css') }}" rel="stylesheet" type="text/css" />
     <!-- FilePond css -->
-    <link href="{{ asset('admin/libs/filepond/filepond.min.css') }}" rel="stylesheet" type="text/css" />
-    <link href="{{ asset('admin/libs/filepond/filepond-plugin-image-preview.min.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ asset('assets/admin/libs/filepond/filepond.min.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ asset('assets/admin/libs/filepond/filepond-plugin-image-preview.min.css') }}" rel="stylesheet" type="text/css" />
     <!-- CKEditor css -->
-    <link href="{{ asset('admin/libs/ckeditor5/sample/css/sample.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ asset('assets/admin/libs/ckeditor5/sample/css/sample.css') }}" rel="stylesheet" type="text/css" />
 @endsection
 
 @section('content')
@@ -200,15 +200,15 @@
 
 @section('scripts')
     <!-- Sweet Alerts js -->
-    <script src="{{ asset('admin/libs/sweetalert2/sweetalert2.min.js') }}"></script>
+    <script src="{{ asset('assets/admin/libs/sweetalert2/sweetalert2.min.js') }}"></script>
     <!-- FilePond js -->
-    <script src="{{ asset('admin/libs/filepond/filepond.min.js') }}"></script>
-    <script src="{{ asset('admin/libs/filepond/filepond-plugin-image-preview.min.js') }}"></script>
-    <script src="{{ asset('admin/libs/filepond/filepond-plugin-file-validate-type.min.js') }}"></script>
+    <script src="{{ asset('assets/admin/libs/filepond/filepond.min.js') }}"></script>
+    <script src="{{ asset('assets/admin/libs/filepond/filepond-plugin-image-preview.min.js') }}"></script>
+    <script src="{{ asset('assets/admin/libs/filepond/filepond-plugin-file-validate-type.min.js') }}"></script>
     <!-- CKEditor js -->
-    <script src="{{ asset('admin/libs/ckeditor5/build/ckeditor.js') }}"></script>
+    <script src="{{ asset('assets/admin/libs/ckeditor5/build/ckeditor.js') }}"></script>
     
     <!-- Custom js -->
-    <script src="{{ asset('admin/js/widgets/widget-form.js') }}"></script>
-    <script src="{{ asset('admin/js/widgets/widget-preview.js') }}"></script>
+    <script src="{{ asset('assets/admin/js/widgets/widget-form.js') }}"></script>
+    <script src="{{ asset('assets/admin/js/widgets/widget-preview.js') }}"></script>
 @endsection

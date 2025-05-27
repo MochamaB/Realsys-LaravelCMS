@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\WidgetController;
 use App\Http\Controllers\Admin\WidgetTypeController;
 use App\Http\Controllers\Admin\WidgetTypeFieldController;
+use App\Http\Controllers\Admin\WidgetTypeFieldOptionController;
 use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\MenuItemController;
 use App\Http\Controllers\Admin\ThemeController;
@@ -31,6 +32,11 @@ Route::middleware('admin.guest')->group(function () {
 // Protected admin routes (require admin authentication)
 Route::middleware('admin.auth')->group(function () {
     
+    // Test route to verify admin routing
+    Route::get('/test', function() {
+        return 'Admin routes are working!';
+    })->name('test');
+    
     // Dashboard routes
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
@@ -50,6 +56,15 @@ Route::middleware('admin.auth')->group(function () {
     Route::put('/widget-types/{widgetType}/fields/{field}', [WidgetTypeFieldController::class, 'update'])->name('widget-types.fields.update');
     Route::delete('/widget-types/{widgetType}/fields/{field}', [WidgetTypeFieldController::class, 'destroy'])->name('widget-types.fields.destroy');
     Route::post('/widget-types/{widgetType}/fields/order', [WidgetTypeFieldController::class, 'updateOrder'])->name('widget-types.fields.order');
+    
+    // Widget Type Field Options
+    Route::get('/widget-types/fields/{field}/options', [WidgetTypeFieldOptionController::class, 'index'])->name('widget-types.fields.options.index');
+    Route::get('/widget-types/fields/{field}/options/create', [WidgetTypeFieldOptionController::class, 'create'])->name('widget-types.fields.options.create');
+    Route::post('/widget-types/fields/{field}/options', [WidgetTypeFieldOptionController::class, 'store'])->name('widget-types.fields.options.store');
+    Route::get('/widget-types/fields/{field}/options/{option}/edit', [WidgetTypeFieldOptionController::class, 'edit'])->name('widget-types.fields.options.edit');
+    Route::put('/widget-types/fields/{field}/options/{option}', [WidgetTypeFieldOptionController::class, 'update'])->name('widget-types.fields.options.update');
+    Route::delete('/widget-types/fields/{field}/options/{option}', [WidgetTypeFieldOptionController::class, 'destroy'])->name('widget-types.fields.options.destroy');
+    Route::post('/widget-types/fields/{field}/options/reorder', [WidgetTypeFieldOptionController::class, 'reorder'])->name('widget-types.fields.options.reorder');
 
     // Menus
     Route::resource('menus', MenuController::class);

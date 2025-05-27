@@ -22,7 +22,7 @@ use App\Http\Controllers\Api\MediaController;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
-
+/*
 // Public API routes
 Route::prefix('api')->name('api.')->group(function () {
     // Public API routes
@@ -50,4 +50,4 @@ Route::prefix('api')->name('api.')->group(function () {
         // Media upload
         Route::post('/media/upload', [MediaController::class, 'upload']);
     });
-});
+});*/

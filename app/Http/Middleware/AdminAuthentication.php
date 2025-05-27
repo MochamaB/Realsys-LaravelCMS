@@ -17,16 +17,11 @@ class AdminAuthentication
      * @return mixed
      */
     public function handle(Request $request, Closure $next): Response
-{
-    // Skip authentication if in local environment
-    if (app()->environment('local')) {
+    {
+        if (!Auth::guard('admin')->check()) {
+            return redirect()->route('admin.login');
+        }
+
         return $next($request);
     }
-
-    if (!Auth::guard('admin')->check()) {
-        return redirect()->route('admin.login');
-    }
-    
-    return $next($request);
-}
 }
