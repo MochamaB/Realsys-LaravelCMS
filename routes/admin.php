@@ -21,11 +21,11 @@ use App\Http\Controllers\Admin\ProfileController;
 // Guest routes for admin authentication (only for non-authenticated admin users)
 Route::middleware('admin.guest')->group(function () {
     Route::get('/login', [AdminAuthController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [AdminAuthController::class, 'login']);
-    Route::get('/forgot-password', [AdminAuthController::class, 'showForgotForm'])->name('forgot');
-    Route::post('/forgot-password', [AdminAuthController::class, 'sendResetLink']);
-    Route::get('/reset-password/{token}', [AdminAuthController::class, 'showResetForm'])->name('reset');
-    Route::post('/reset-password', [AdminAuthController::class, 'resetPassword']);
+    Route::post('/login', [AdminAuthController::class, 'login'])->name('login.post');
+    Route::get('/forgot-password', [AdminAuthController::class, 'showForgotForm'])->name('forgot-password');
+    Route::post('/forgot-password', [AdminAuthController::class, 'sendResetLink'])->name('forgot-password.post');
+    Route::get('/reset-password/{token}', [AdminAuthController::class, 'showResetForm'])->name('reset-password');
+    Route::post('/reset-password', [AdminAuthController::class, 'resetPassword'])->name('reset-password.post');
 });
 
 // Protected admin routes (require admin authentication)
