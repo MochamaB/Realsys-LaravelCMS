@@ -24,10 +24,25 @@ class DatabaseSeeder extends Seeder
         $this->call(PageSeeder::class);
         $this->call(PageSectionSeeder::class);
 
-        // Finally, create widgets and link them to pages
+        // Create content types and structure
+        $this->call(ContentTypeSeeder::class);
+        $this->call(ContentTypeFieldSeeder::class);
+        $this->call(ContentTypeFieldOptionSeeder::class);
+        $this->call(ContentItemSeeder::class);
+        $this->call(ContentFieldValueSeeder::class);
+        
+        // Create widgets and link them to pages
         $this->call(WidgetTypeSeeder::class);
         $this->call(WidgetTypeFieldSeeder::class);
         $this->call(WidgetSeeder::class);
+        
+        // Link widgets to content
+        if (class_exists('App\\Models\\WidgetContentQuery')) {
+            $this->call(WidgetContentQuerySeeder::class);
+            $this->call(WidgetDisplaySettingSeeder::class);
+        }
+        
+        // Link widgets to pages
         $this->call(PageWidgetSeeder::class);
     }
 }

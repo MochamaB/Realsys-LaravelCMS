@@ -105,7 +105,7 @@ class WidgetController extends Controller
      */
     public function show(Widget $widget)
     {
-        $widget->load(['widgetType.fields', 'fieldValues', 'pageSection.page']);
+        $widget->load(['widgetType.fields', 'fieldValues', 'pageSections.page']);
         
         return view('admin.widgets.show', compact('widget'));
     }
@@ -118,7 +118,7 @@ class WidgetController extends Controller
      */
     public function edit(Widget $widget)
     {
-        $widget->load(['widgetType.fields', 'fieldValues', 'pageSection.page']);
+        $widget->load(['widgetType.fields', 'fieldValues', 'pageSections.page']);
         $widgetTypes = WidgetType::all();
         $pageSections = PageSection::with('page')->get();
         

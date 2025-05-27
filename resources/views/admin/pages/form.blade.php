@@ -4,11 +4,11 @@
 
 @section('css')
     <!-- Filepond css -->
-    <link rel="stylesheet" href="{{ asset('admin/libs/filepond/filepond.min.css') }}" type="text/css" />
-    <link rel="stylesheet" href="{{ asset('admin/libs/filepond-plugin-image-preview/filepond-plugin-image-preview.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/admin/libs/filepond/filepond.min.css') }}" type="text/css" />
+    <link rel="stylesheet" href="{{ asset('assets/admin/libs/filepond-plugin-image-preview/filepond-plugin-image-preview.min.css') }}">
     
     <!-- Sweet Alert css-->
-    <link href="{{ asset('admin/libs/sweetalert2/sweetalert2.min.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ asset('assets/admin/libs/sweetalert2/sweetalert2.min.css') }}" rel="stylesheet" type="text/css" />
 @endsection
 
 @section('content')
@@ -247,14 +247,14 @@
 
 @section('scripts')
     <!-- ckeditor -->
-    <script src="{{ asset('admin/libs/@ckeditor/ckeditor5-build-classic/build/ckeditor.js') }}"></script>
+    <script src="{{ asset('assets/admin/libs/@ckeditor/ckeditor5-build-classic/build/ckeditor.js') }}"></script>
 
     <!-- filepond js -->
-    <script src="{{ asset('admin/libs/filepond/filepond.min.js') }}"></script>
-    <script src="{{ asset('admin/libs/filepond-plugin-image-preview/filepond-plugin-image-preview.min.js') }}"></script>
-    <script src="{{ asset('admin/libs/filepond-plugin-file-validate-size/filepond-plugin-file-validate-size.min.js') }}"></script>
-    <script src="{{ asset('admin/libs/filepond-plugin-image-exif-orientation/filepond-plugin-image-exif-orientation.min.js') }}"></script>
-    <script src="{{ asset('admin/libs/filepond-plugin-file-encode/filepond-plugin-file-encode.min.js') }}"></script>
+    <script src="{{ asset('assets/admin/libs/filepond/filepond.min.js') }}"></script>
+    <script src="{{ asset('assets/admin/libs/filepond-plugin-image-preview/filepond-plugin-image-preview.min.js') }}"></script>
+    <script src="{{ asset('assets/admin/libs/filepond-plugin-file-validate-size/filepond-plugin-file-validate-size.min.js') }}"></script>
+    <script src="{{ asset('assets/admin/libs/filepond-plugin-image-exif-orientation/filepond-plugin-image-exif-orientation.min.js') }}"></script>
+    <script src="{{ asset('assets/admin/libs/filepond-plugin-file-encode/filepond-plugin-file-encode.min.js') }}"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
