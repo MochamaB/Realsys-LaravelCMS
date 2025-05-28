@@ -24,7 +24,8 @@ class ContentItemController extends Controller
         // Get all content types and their items
         $contentTypes = ContentType::where('is_active', true)->get();
         
-        return view('admin.content_items.all_index', compact('contentTypes'));
+        // Use the existing index view instead of a separate all_index view
+        return view('admin.content_items.index', compact('contentTypes'));
     }
 
     /**

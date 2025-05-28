@@ -1,14 +1,10 @@
 @extends('admin.layouts.master')
 
 @section('title', 'Create Content Type')
+@section('page-title', 'Create Content Type')
 
 @section('content')
 <div class="container-fluid">
-    <div class="row mb-4">
-        <div class="col-12">
-            <h4 class="mb-0">Create Content Type</h4>
-        </div>
-    </div>
     <div class="row">
         <div class="col-12 col-lg-8">
             <div class="card">

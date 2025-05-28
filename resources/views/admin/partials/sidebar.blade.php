@@ -120,22 +120,22 @@
                 </li>
                 <!-- Content Management Section -->
                 <li class="nav-item">
-                    <a href="#sidebarContentManagement" class="nav-link" data-bs-toggle="collapse">
-                        <i data-feather="database" class="icon-dual"></i>
-                        <span> Content Management </span>
-                        <span class="menu-arrow"></span>
+                    <a class="nav-link menu-link" href="#sidebarContentManagement" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarContentManagement">
+                        <i class="ri-database-2-line"></i>
+                        <span data-key="t-content-management">Content Management</span>
                     </a>
-                    <div class="collapse" id="sidebarContentManagement">
-                        <ul class="nav-second-level">
-                            <li>
-                                <a href="{{ route('admin.content-types.index') }}">Content Types</a>
+                    <div class="collapse menu-dropdown" id="sidebarContentManagement">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                <a href="{{ route('admin.content-types.index') }}" class="nav-link" data-key="t-content-types">Content Types</a>
                             </li>
-                            <li>
-                                <a href="{{ route('admin.content-items.all') }}">All Content</a>
+                            <li class="nav-item">
+                                <a href="{{ route('admin.content-items.all') }}" class="nav-link" data-key="t-content-items">All Content Items</a>
                             </li>
                         </ul>
                     </div>
-</li>
+                </li>
+                
 
                 <li class="menu-title"><i class="ri-more-fill"></i> <span data-key="t-settings">Settings</span></li>
 

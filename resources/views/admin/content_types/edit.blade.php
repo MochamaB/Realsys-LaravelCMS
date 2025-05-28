@@ -1,6 +1,7 @@
 @extends('admin.layouts.master')
 
 @section('title', 'Edit Content Type')
+@section('page-title', 'Edit Content Type')
 
 @section('content')
 <div class="container-fluid">

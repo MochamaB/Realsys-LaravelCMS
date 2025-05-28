@@ -115,6 +115,11 @@ Route::middleware('admin.auth')->group(function () {
     // Content Types
     Route::resource('content-types', ContentTypeController::class);
     
+    // Themes
+    Route::resource('themes', ThemeController::class);
+    Route::post('themes/{theme}/activate', [ThemeController::class, 'activate'])->name('themes.activate');
+    Route::get('themes/{theme}/preview', [ThemeController::class, 'preview'])->name('themes.preview');
+    
     // Content Type Fields
     Route::prefix('content-types/{contentType}')->group(function () {
         Route::resource('fields', ContentTypeFieldController::class)

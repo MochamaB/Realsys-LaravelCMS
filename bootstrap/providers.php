@@ -3,4 +3,6 @@
 return [
     App\Providers\AppServiceProvider::class,
     App\Providers\FortifyServiceProvider::class,
+    App\Providers\BreadcrumbServiceProvider::class,
+    App\Providers\ThemeServiceProvider::class,
 ];

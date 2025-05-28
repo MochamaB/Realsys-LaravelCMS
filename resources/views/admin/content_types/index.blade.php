@@ -2,28 +2,27 @@
 @extends('admin.layouts.master')
 
 @section('title', 'Content Types')
+@section('css')
+    <!-- Sweet Alert css-->
+    <link href="{{ asset('assets/admin/libs/sweetalert2/sweetalert2.min.css') }}" rel="stylesheet" type="text/css" />
+@endsection
 
 @section('content')
+<!-- Page title is now handled by the breadcrumb component -->
 <div class="container-fluid">
-    <!-- Page title -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="page-title-box d-flex align-items-center justify-content-between">
-                <h4 class="mb-0">Content Types</h4>
-
-                <div class="page-title-right">
-                    <a href="{{ route('admin.content-types.create') }}" class="btn btn-primary">
-                        <i class="fas fa-plus me-2"></i> Add Content Type
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-
+   
     <!-- Card for content types list -->
     <div class="row">
         <div class="col-12">
             <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0">Content Types</h4>
+                    <div>
+                        <a href="{{ route('admin.content-types.create') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i> Add Content Type
+                        </a>
+                    </div>
+                </div>
                 <div class="card-body">
                     @if($contentTypes->isEmpty())
                         <div class="text-center p-5">
@@ -58,30 +57,46 @@
                                                 @endif
                                             </td>
                                             <td>
-                                                <div class="btn-group">
-                                                    <a href="{{ route('admin.content-types.show', $contentType) }}" class="btn btn-sm btn-info">
-                                                        <i class="fas fa-eye"></i>
-                                                    </a>
-                                                    <a href="{{ route('admin.content-types.edit', $contentType) }}" class="btn btn-sm btn-primary">
-                                                        <i class="fas fa-edit"></i>
-                                                    </a>
-                                                    <a href="{{ route('admin.content-types.fields.index', $contentType) }}" class="btn btn-sm btn-secondary">
-                                                        <i class="fas fa-list"></i> Fields
-                                                    </a>
-                                                    <a href="{{ route('admin.content-types.items.index', $contentType) }}" class="btn btn-sm btn-success">
-                                                        <i class="fas fa-list"></i> Content
-                                                    </a>
-                                                    @if(!$contentType->is_system)
-                                                        <form action="{{ route('admin.content-types.destroy', $contentType) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this content type?');">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit" class="btn btn-sm btn-danger">
-                                                                <i class="fas fa-trash"></i>
+                                                        <div class="dropdown">
+                                                            <button class="btn btn-soft-secondary btn-sm " type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                                <i class="ri-more-fill align-middle"></i>
                                                             </button>
-                                                        </form>
-                                                    @endif
-                                                </div>
-                                            </td>
+                                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                                <li>
+                                                                    <a class="dropdown-item" href="{{ route('admin.content-types.show', $contentType) }}">
+                                                                        <i class="ri-eye-fill align-bottom me-2 text-muted"></i> View
+                                                                    </a>
+                                                                </li>
+                                                                <li>
+                                                                    <a class="dropdown-item" href="{{ route('admin.content-types.edit', $contentType) }}">
+                                                                        <i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Edit
+                                                                    </a>
+                                                                </li>
+                                                                <li>
+                                                                    <a class="dropdown-item" href="{{ route('admin.content-types.fields.index', $contentType) }}">
+                                                                        <i class="ri-list-check align-bottom me-2 text-muted"></i> Fields
+                                                                    </a>
+                                                                </li>
+                                                                <li>
+                                                                    <a class="dropdown-item" href="{{ route('admin.content-types.items.index', $contentType) }}">
+                                                                        <i class="ri-list-unordered align-bottom me-2 text-muted"></i> Content
+                                                                    </a>
+                                                                </li>
+                                                                @if(!$contentType->is_system)
+                                                                    <li class="dropdown-divider"></li>
+                                                                    <li>
+                                                                        <form action="{{ route('admin.content-types.destroy', $contentType) }}" method="POST" class="d-inline">
+                                                                            @csrf
+                                                                            @method('DELETE')
+                                                                            <button type="submit" class="dropdown-item remove-item-btn" onclick="return confirm('Are you sure you want to delete this content type?');">
+                                                                                <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i> Delete
+                                                                            </button>
+                                                                        </form>
+                                                                    </li>
+                                                                @endif
+                                                            </ul>
+                                                        </div>
+                                                    </td>
                                         </tr>
                                     @endforeach
                                 </tbody>

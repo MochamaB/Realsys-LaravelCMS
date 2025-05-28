@@ -41,8 +41,9 @@
             <div class="page-content">
                 <div class="container-fluid">
                     
-                    <!-- Page Title -->
-                    
+                    <!-- Breadcrumb Navigation -->
+                    @include('admin.partials.breadcrumb')
+                    <!-- End Breadcrumb Navigation -->
 
                     <!-- Alert Messages -->
                     @include('admin.partials.alerts')
