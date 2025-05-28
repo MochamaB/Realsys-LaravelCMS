@@ -119,6 +119,27 @@ Route::middleware('admin.auth')->group(function () {
     Route::resource('themes', ThemeController::class);
     Route::post('themes/{theme}/activate', [ThemeController::class, 'activate'])->name('themes.activate');
     Route::get('themes/{theme}/preview', [ThemeController::class, 'preview'])->name('themes.preview');
+    Route::post('themes/{theme}/publish-assets', [ThemeController::class, 'publishAssets'])->name('themes.publish-assets');
+    
+    // Templates
+    Route::resource('templates', TemplateController::class);
+    Route::post('templates/{template}/set-default', [TemplateController::class, 'setDefault'])->name('templates.set-default');
+    Route::get('templates/{template}/preview', [TemplateController::class, 'preview'])->name('templates.preview');
+    
+    // Template Sections
+    Route::prefix('templates/{template}')->group(function () {
+        Route::resource('sections', TemplateSectionController::class)
+            ->names([
+                'index' => 'admin.templates.sections.index',
+                'create' => 'admin.templates.sections.create',
+                'store' => 'admin.templates.sections.store',
+                'show' => 'admin.templates.sections.show',
+                'edit' => 'admin.templates.sections.edit',
+                'update' => 'admin.templates.sections.update',
+                'destroy' => 'admin.templates.sections.destroy',
+            ]);
+        Route::post('sections/order', [TemplateSectionController::class, 'updateOrder'])->name('admin.templates.sections.order');
+    });
     
     // Content Type Fields
     Route::prefix('content-types/{contentType}')->group(function () {

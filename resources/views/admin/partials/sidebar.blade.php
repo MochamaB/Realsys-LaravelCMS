@@ -118,6 +118,22 @@
                         </ul>
                     </div>
                 </li>
+                
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="#sidebarTemplates" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarTemplates">
+                        <i class="ri-layout-masonry-line"></i> <span data-key="t-templates">Templates</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarTemplates">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                <a href="{{ route('admin.templates.index') }}" class="nav-link" data-key="t-all-templates">All Templates</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('admin.templates.create') }}" class="nav-link" data-key="t-create-template">Create Template</a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
                 <!-- Content Management Section -->
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="#sidebarContentManagement" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarContentManagement">

@@ -183,6 +183,20 @@ class ThemeController extends Controller
     }
 
     /**
+     * Publish assets for the specified theme.
+     */
+    public function publishAssets(Theme $theme)
+    {
+        $result = $this->themeManager->publishAssets($theme, true);
+        
+        if ($result['success']) {
+            return redirect()->back()->with('success', $result['message']);
+        } else {
+            return redirect()->back()->with('error', $result['message']);
+        }
+    }
+    
+    /**
      * Remove the specified theme from storage.
      */
     public function destroy(Theme $theme)
@@ -197,6 +211,9 @@ class ThemeController extends Controller
         if ($theme->screenshot_path && File::exists(public_path($theme->screenshot_path))) {
             File::delete(public_path($theme->screenshot_path));
         }
+        
+        // Clean up theme assets
+        $this->themeManager->cleanupThemeAssets($theme->slug);
         
         // Delete the theme record
         $theme->delete();

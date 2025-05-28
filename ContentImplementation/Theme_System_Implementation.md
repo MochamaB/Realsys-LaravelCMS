@@ -110,9 +110,84 @@ Develop a system to:
 - Add RESTful routes for ThemeController
 - Add special routes for theme activation and preview
 
+## Theme Asset Publication Mechanism
+
+### Overview
+
+Theme assets (CSS, JavaScript, images) need to be accessible through the web browser, which means they must be in the public directory. Since themes are stored in the `resources/themes` directory, a mechanism is needed to make their assets available in the public directory.
+
+### Implementation Steps
+
+1. **Create Asset Directory Structure**
+   - Create a `public/themes` directory if it doesn't exist
+   - This will house all published theme assets
+
+2. **Implement Asset Publication Method**
+   - Create a `publishAssets()` method in the ThemeManager class
+   - This method will copy assets from `resources/themes/{theme}/assets` to `public/themes/{theme}`
+
+3. **Define Publication Triggers**
+   - During theme registration/installation
+   - When activating a theme
+   - Via an explicit "Publish Assets" action in the admin
+   - During system updates
+
+4. **Create Asset Cleanup Method**
+   - Implement logic to remove assets of deleted themes
+   - Avoid removing assets of active themes
+
+5. **Add Automatic Detection**
+   - Create a check that runs on application boot to verify if the active theme's assets are published
+   - Automatically publish missing assets
+
+6. **Update Theme Views**
+   - Add a "Publish Assets" button to theme management interfaces
+   - Display status of asset publication for each theme
+
+7. **Add File Modification Tracking**
+   - Track file modification timestamps to know when assets need to be republished
+   - Only copy files that have changed to improve performance
+
+8. **Implement Cache Busting**
+   - Add version parameters to asset URLs based on modification time or theme version
+   - This ensures browsers load the latest assets after updates
+
+## Advanced Theme Management
+
+The following advanced theme management features can be implemented in the future:
+
+### 1. Theme Update Functionality
+
+Implement a system to detect and handle theme file changes:
+
+- **Version Detection**: Compare filesystem theme.json version with database version
+- **File Hash Comparison**: Generate checksums of key theme files to detect changes
+- **Update Actions**: Re-publish assets, update metadata, run migrations, clear cache
+- **Upgrade Path Management**: Handle breaking changes between versions
+- **Rollback Capability**: Allow reverting to previous theme versions
+
+### 2. Theme Configuration Editor
+
+Implement a UI for customizing theme settings:
+
+- **Theme Settings Schema**: Define configurable options in a standardized format
+- **Configuration Categories**: Layout settings, color schemes, typography, etc.
+- **UI Components**: Color pickers, font selectors, toggle switches, etc.
+- **Live Preview**: See changes in real-time before saving
+- **Configuration Storage**: Store settings in the database as JSON
+
+### 3. Theme Dependency Management
+
+Implement a system to handle relationships between themes and required components:
+
+- **Types of Dependencies**: Required libraries, parent themes, plugins/modules
+- **Dependency Resolution**: Check availability, install missing dependencies
+- **Conflict Detection**: Identify and prevent version conflicts
+- **Upgrade Coordination**: Ensure theme and dependencies are upgraded together
+
 ## Next Steps After Implementation
 
-Once the Theme System is implemented, proceed to:
+Once the Theme System and Asset Publication mechanism are implemented, proceed to:
 
 1. Template System implementation
 2. Page System implementation

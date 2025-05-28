@@ -32,6 +32,9 @@ class ThemeServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Check if active theme assets are published
+        $this->checkThemeAssets();
+        
         // Register theme view paths
         $this->registerThemeViewPaths();
         
@@ -43,6 +46,25 @@ class ThemeServiceProvider extends ServiceProvider
         
         // Register view composers
         $this->registerViewComposers();
+    }
+    
+    /**
+     * Check if active theme assets are published and publish them if needed
+     */
+    protected function checkThemeAssets(): void
+    {
+        // Get the active theme
+        $activeTheme = $this->app->make('active.theme');
+        
+        if ($activeTheme) {
+            // Get the theme manager
+            $themeManager = $this->app->make('theme.manager');
+            
+            // Check if assets are published and publish if needed
+            if (!$themeManager->areAssetsPublished($activeTheme)) {
+                $themeManager->publishAssets($activeTheme);
+            }
+        }
     }
     
     /**

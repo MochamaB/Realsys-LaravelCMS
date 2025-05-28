@@ -40,9 +40,16 @@
                                         <i class="mdi mdi-pencil me-1"></i> Edit
                                     </a>
                                     
-                                    <a href="{{ route('admin.themes.preview', $theme) }}" target="_blank" class="btn btn-info btn-sm">
+                                    <a href="{{ route('admin.themes.preview', $theme) }}" target="_blank" class="btn btn-info btn-sm me-2">
                                         <i class="mdi mdi-eye me-1"></i> Preview
                                     </a>
+                                    
+                                    <form action="{{ route('admin.themes.publish-assets', $theme) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        <button type="submit" class="btn btn-secondary btn-sm">
+                                            <i class="mdi mdi-refresh me-1"></i> Publish Assets
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
                             

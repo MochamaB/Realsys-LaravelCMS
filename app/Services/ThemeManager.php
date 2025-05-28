@@ -85,6 +85,9 @@ class ThemeManager
                     'is_active' => false,
                 ]);
                 
+                // Publish theme assets for newly registered theme
+                $this->publishAssets($theme);
+                
                 $registeredThemes[] = $theme;
             }
         }
@@ -168,6 +171,9 @@ class ThemeManager
         $theme->is_active = true;
         $theme->save();
         
+        // Publish theme assets for the newly activated theme
+        $this->publishAssets($theme);
+        
         // Clear theme cache
         Cache::forget('available_themes');
         
@@ -201,5 +207,188 @@ class ThemeManager
         }
         
         return $templates;
+    }
+    
+    /**
+     * Publish theme assets to the public directory
+     *
+     * @param string|Theme $theme Theme slug or Theme model instance
+     * @param bool $force Force republication even if assets exist
+     * @return array Results of the publication process
+     */
+    public function publishAssets($theme, $force = false)
+    {
+        // Get theme slug if a Theme model is provided
+        $themeSlug = $theme instanceof Theme ? $theme->slug : $theme;
+        
+        // Define source and destination paths
+        $sourcePath = resource_path("themes/{$themeSlug}/assets");
+        $destinationPath = public_path("themes/{$themeSlug}");
+        
+        // Initialize result array
+        $result = [
+            'success' => false,
+            'message' => '',
+            'files_copied' => 0,
+            'errors' => [],
+        ];
+        
+        // Check if source directory exists
+        if (!File::isDirectory($sourcePath)) {
+            $result['message'] = "Theme assets directory not found at {$sourcePath}";
+            return $result;
+        }
+        
+        // Create destination directory if it doesn't exist
+        if (!File::isDirectory($destinationPath)) {
+            File::makeDirectory($destinationPath, 0755, true);
+        }
+        
+        try {
+            // Get all files from source directory recursively
+            $files = $this->getAllFiles($sourcePath);
+            
+            foreach ($files as $file) {
+                // Get the relative path from the assets directory
+                $relativePath = Str::after($file, $sourcePath . DIRECTORY_SEPARATOR);
+                $targetFile = $destinationPath . DIRECTORY_SEPARATOR . $relativePath;
+                $targetDir = dirname($targetFile);
+                
+                // Create target directory if it doesn't exist
+                if (!File::isDirectory($targetDir)) {
+                    File::makeDirectory($targetDir, 0755, true);
+                }
+                
+                // Check if we need to copy the file
+                $shouldCopy = $force || !File::exists($targetFile) ||
+                             File::lastModified($file) > File::lastModified($targetFile);
+                
+                if ($shouldCopy) {
+                    // Copy the file
+                    if (File::copy($file, $targetFile)) {
+                        $result['files_copied']++;
+                    } else {
+                        $result['errors'][] = "Failed to copy: {$relativePath}";
+                    }
+                }
+            }
+            
+            $result['success'] = true;
+            $result['message'] = $result['files_copied'] > 0 ?
+                "Successfully published {$result['files_copied']} theme assets." :
+                "No files needed updating.";
+            
+        } catch (\Exception $e) {
+            $result['message'] = "Error publishing theme assets: {$e->getMessage()}";
+            $result['errors'][] = $e->getMessage();
+        }
+        
+        return $result;
+    }
+    
+    /**
+     * Publish assets for all themes or for the active theme
+     *
+     * @param bool $activeOnly Only publish assets for the active theme
+     * @param bool $force Force republication even if assets exist
+     * @return array Results of the publication process
+     */
+    public function publishAllAssets($activeOnly = false, $force = false)
+    {
+        $results = [];
+        
+        if ($activeOnly) {
+            $activeTheme = $this->getActiveTheme();
+            if ($activeTheme) {
+                $results[$activeTheme->slug] = $this->publishAssets($activeTheme, $force);
+            }
+        } else {
+            // Get all themes from the database
+            $themes = Theme::all();
+            
+            foreach ($themes as $theme) {
+                $results[$theme->slug] = $this->publishAssets($theme, $force);
+            }
+        }
+        
+        return $results;
+    }
+    
+    /**
+     * Clean up theme assets for a deleted theme
+     *
+     * @param string $themeSlug Theme slug
+     * @return bool Success status
+     */
+    public function cleanupThemeAssets($themeSlug)
+    {
+        $themePath = public_path("themes/{$themeSlug}");
+        
+        if (File::isDirectory($themePath)) {
+            try {
+                File::deleteDirectory($themePath);
+                return true;
+            } catch (\Exception $e) {
+                return false;
+            }
+        }
+        
+        return true; // Already clean
+    }
+    
+    /**
+     * Check if theme assets are published
+     *
+     * @param string|Theme $theme Theme slug or Theme model instance
+     * @return bool Whether assets are published
+     */
+    public function areAssetsPublished($theme)
+    {
+        // Get theme slug if a Theme model is provided
+        $themeSlug = $theme instanceof Theme ? $theme->slug : $theme;
+        
+        // Define paths
+        $sourcePath = resource_path("themes/{$themeSlug}/assets");
+        $destinationPath = public_path("themes/{$themeSlug}");
+        
+        // Check if destination directory exists
+        if (!File::isDirectory($destinationPath)) {
+            return false;
+        }
+        
+        // Check if source directory exists
+        if (!File::isDirectory($sourcePath)) {
+            return true; // No assets to publish
+        }
+        
+        // Check for at least one key file (e.g., CSS file)
+        $cssFiles = File::glob($sourcePath . '/css/*.css');
+        if (!empty($cssFiles)) {
+            $cssFile = basename($cssFiles[0]);
+            return File::exists($destinationPath . '/css/' . $cssFile);
+        }
+        
+        // If no CSS files, check for any files
+        return !empty(File::files($destinationPath, true));
+    }
+    
+    /**
+     * Get all files from a directory recursively
+     *
+     * @param string $directory Directory path
+     * @return array Array of file paths
+     */
+    protected function getAllFiles($directory)
+    {
+        $files = [];
+        
+        foreach (File::allFiles($directory) as $file) {
+            // Skip directories, only include files
+            if (!$file->isDir()) {
+                $files[] = $file->getPathname();
+            }
+        }
+        
+        return $files;
     }
 }

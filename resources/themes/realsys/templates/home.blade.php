@@ -1,25 +1,27 @@
-@extends('themes.realsys.layouts.master')
+@extends('theme::layouts.theme')
 
 @section('content')
-    <!-- Hero Header -->
-    @if($page->hasSection('hero'))
-        {!! $page->renderSection('hero') !!}
-    @endif
+    @hassection('hero')
+        @section('hero')
+    @endhassection
 
-    <!-- Main Content -->
     <div class="container px-4 px-lg-5">
-        <div class="row gx-4 gx-lg-5 justify-content-center">
-            <div class="col-md-10 col-lg-8 col-xl-7">
-                <!-- Post Listings -->
-                @if($page->hasSection('posts'))
-                    {!! $page->renderSection('posts') !!}
-                @endif
+        <div class="row gx-4 gx-lg-5">
+            <div class="col-md-8">
+                @hassection('content')
+                    @section('content')
+                @endhassection
+                
+                @hassection('posts')
+                    @section('posts')
+                @endhassection
             </div>
+            
+            @hassection('sidebar')
+                <div class="col-md-4">
+                    @section('sidebar')
+                </div>
+            @endhassection
         </div>
     </div>
-
-    <!-- Footer -->
-    @if($page->hasSection('footer'))
-        {!! $page->renderSection('footer') !!}
-    @endif
 @endsection

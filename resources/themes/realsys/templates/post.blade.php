@@ -1,37 +1,33 @@
-@extends('themes.realsys.layouts.master')
+@extends('theme::layouts.theme')
 
 @section('content')
-    <!-- Hero Header -->
-    @if($page->hasSection('hero'))
-        {!! $page->renderSection('hero') !!}
-    @endif
+    @hassection('hero')
+        @section('hero')
+    @endhassection
 
-    <!-- Post Content -->
     <article class="mb-4">
         <div class="container px-4 px-lg-5">
-            <div class="row gx-4 gx-lg-5 justify-content-center">
-                <div class="col-md-10 col-lg-8 col-xl-7">
-                    <!-- Main Content -->
-                    @if($page->hasSection('content'))
-                        {!! $page->renderSection('content') !!}
-                    @endif
-
-                    <!-- Author Info -->
-                    @if($page->hasSection('author'))
-                        {!! $page->renderSection('author') !!}
-                    @endif
-
-                    <!-- Comments -->
-                    @if($page->hasSection('comments'))
-                        {!! $page->renderSection('comments') !!}
-                    @endif
+            <div class="row gx-4 gx-lg-5">
+                <div class="col-md-8">
+                    @hassection('content')
+                        @section('content')
+                    @endhassection
+                    
+                    @hassection('author')
+                        @section('author')
+                    @endhassection
+                    
+                    @hassection('comments')
+                        @section('comments')
+                    @endhassection
                 </div>
+                
+                @hassection('sidebar')
+                    <div class="col-md-4">
+                        @section('sidebar')
+                    </div>
+                @endhassection
             </div>
         </div>
     </article>
-
-    <!-- Footer -->
-    @if($page->hasSection('footer'))
-        {!! $page->renderSection('footer') !!}
-    @endif
 @endsection
