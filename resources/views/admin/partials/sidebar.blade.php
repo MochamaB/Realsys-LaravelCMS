@@ -118,6 +118,24 @@
                         </ul>
                     </div>
                 </li>
+                <!-- Content Management Section -->
+                <li class="nav-item">
+                    <a href="#sidebarContentManagement" class="nav-link" data-bs-toggle="collapse">
+                        <i data-feather="database" class="icon-dual"></i>
+                        <span> Content Management </span>
+                        <span class="menu-arrow"></span>
+                    </a>
+                    <div class="collapse" id="sidebarContentManagement">
+                        <ul class="nav-second-level">
+                            <li>
+                                <a href="{{ route('admin.content-types.index') }}">Content Types</a>
+                            </li>
+                            <li>
+                                <a href="{{ route('admin.content-items.all') }}">All Content</a>
+                            </li>
+                        </ul>
+                    </div>
+</li>
 
                 <li class="menu-title"><i class="ri-more-fill"></i> <span data-key="t-settings">Settings</span></li>
 

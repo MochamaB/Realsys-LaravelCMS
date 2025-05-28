@@ -2,22 +2,27 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\Auth\AdminAuthController;
+use App\Http\Controllers\Admin\ContentItemController;
+use App\Http\Controllers\Admin\ContentTypeController;
+use App\Http\Controllers\Admin\ContentTypeFieldController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\MediaController;
+use App\Http\Controllers\Admin\MenuController;
+use App\Http\Controllers\Admin\MenuItemController;
 use App\Http\Controllers\Admin\PageController;
+use App\Http\Controllers\Admin\PageSectionController;
+use App\Http\Controllers\Admin\PageWidgetController;
+use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\TemplateController;
+use App\Http\Controllers\Admin\TemplateSectionController;
+use App\Http\Controllers\Admin\ThemeController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\WidgetController;
 use App\Http\Controllers\Admin\WidgetTypeController;
 use App\Http\Controllers\Admin\WidgetTypeFieldController;
 use App\Http\Controllers\Admin\WidgetTypeFieldOptionController;
-use App\Http\Controllers\Admin\MenuController;
-use App\Http\Controllers\Admin\MenuItemController;
-use App\Http\Controllers\Admin\ThemeController;
-use App\Http\Controllers\Admin\TemplateController;
-use App\Http\Controllers\Admin\TemplateSectionController;
-use App\Http\Controllers\Admin\MediaController;
-use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Admin\RoleController;
-use App\Http\Controllers\Admin\SettingController;
-use App\Http\Controllers\Admin\ProfileController;
 
 // Guest routes for admin authentication (only for non-authenticated admin users)
 Route::middleware('admin.guest')->group(function () {
@@ -106,4 +111,38 @@ Route::middleware('admin.auth')->group(function () {
 
     // Logout
     Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
+
+    // Content Types
+    Route::resource('content-types', ContentTypeController::class);
+    
+    // Content Type Fields
+    Route::prefix('content-types/{contentType}')->group(function () {
+        Route::resource('fields', ContentTypeFieldController::class)
+            ->except(['show'])
+            ->names([
+                'index' => 'content-types.fields.index',
+                'create' => 'content-types.fields.create',
+                'store' => 'content-types.fields.store',
+                'edit' => 'content-types.fields.edit',
+                'update' => 'content-types.fields.update',
+                'destroy' => 'content-types.fields.destroy',
+            ]);
+        Route::post('fields/reorder', [ContentTypeFieldController::class, 'reorder'])->name('content-types.fields.reorder');
+    });
+    
+    // Content Items
+    Route::get('content-items', [ContentItemController::class, 'allItems'])->name('content-items.all');
+    Route::prefix('content-types/{contentType}')->group(function () {
+        Route::resource('items', ContentItemController::class)
+            ->names([
+                'index' => 'content-types.items.index',
+                'create' => 'content-types.items.create',
+                'store' => 'content-types.items.store',
+                'show' => 'content-types.items.show',
+                'edit' => 'content-types.items.edit',
+                'update' => 'content-types.items.update',
+                'destroy' => 'content-types.items.destroy',
+            ]);
+        Route::get('items/{item}/preview', [ContentItemController::class, 'preview'])->name('content-types.items.preview');
+    });
 });
