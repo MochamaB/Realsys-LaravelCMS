@@ -1,6 +1,6 @@
 @extends('themes.default.layouts.master')
 
-@section('content')
+@templateSection('content')
 <div class="container-fluid py-4">
     <!-- Header Section -->
     @if($page->hasSection('header'))
@@ -23,4 +23,4 @@
         </div>
     @endif
 </div>
-@endsection
+@endtemplateSection

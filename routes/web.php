@@ -46,5 +46,9 @@ Route::middleware(['auth:web'])->group(function () {
 Route::get('/', [PageController::class, 'show'])->name('home');
 Route::get('/{slug}', [PageController::class, 'show'])->name('page.show')->where('slug', '[a-z0-9-]+');
 
+// Page preview route (requires authentication)
+Route::get('/preview/{id}', [PageController::class, 'preview'])->name('page.preview')
+    ->middleware(['auth:web,admin']);
+
 // Fallback route for CMS pages
 Route::fallback([PageController::class, 'resolve'])->name('page.resolve');

@@ -101,27 +101,39 @@ class TemplateRenderer
      * @param Template $template
      * @return string|null
      */
-    protected function getTemplatePath(Template $template): ?string
-    {
-        $theme = $template->theme;
-        
-        if (!$theme) {
-            return null;
-        }
-        
-        // Get the template file from theme's templates directory
-        $templateFilePath = $theme->path . '/resources/views/templates/' . $template->file_path;
-        
-        // Check if file exists physically
-        if (!File::exists($templateFilePath)) {
-            return null;
-        }
-        
-        // Convert file path to view namespace
-        $viewPath = 'theme::templates.' . str_replace('.blade.php', '', $template->file_path);
-        
-        return $viewPath;
+    protected function getTemplatePath(Template $template): ?string 
+{
+    $theme = $template->theme;
+    
+    if (!$theme) {
+        return null;
     }
+    
+    // Remove 'templates/' prefix from file_path if it exists
+    $cleanFilePath = ltrim($template->file_path, 'templates/');
+    
+    // Correct path to look in views/themes directory
+    $templateFilePath = resource_path('themes/' . $theme->slug . '/templates/' . $cleanFilePath);
+    
+    dump([
+        'Theme Slug' => $theme->slug,
+        'Original Template File' => $template->file_path,
+        'Clean Template File' => $cleanFilePath,
+        'Looking For File At' => $templateFilePath,
+        'File Exists' => File::exists($templateFilePath),
+        'View Path' => 'theme::templates.' . str_replace('.blade.php', '', $cleanFilePath)
+    ]);
+    
+    // Check if file exists physically
+    if (!File::exists($templateFilePath)) {
+        return null;
+    }
+    
+    // Convert file path to view namespace
+    $viewPath = 'theme::templates.' . str_replace('.blade.php', '', $cleanFilePath);
+    
+    return $viewPath;
+}
     
     /**
      * Render a section
@@ -158,6 +170,20 @@ class TemplateRenderer
             'section' => $pageSection->templateSection,
             'widgets' => $pageSection->widgets,
         ], $data);
+        
+        // Prepare widget-specific data
+        foreach ($pageSection->widgets as $widget) {
+            // Add widget-specific data based on type
+            if ($widget->widgetType && $widget->widgetType->type === 'post-list') {
+                // Mock posts data for the post-list widget
+                $sectionData['posts'] = [
+                    ['id' => 1, 'title' => 'Sample Post 1', 'excerpt' => 'This is a sample post for testing purposes', 'url' => '/post/sample-1'],
+                    ['id' => 2, 'title' => 'Sample Post 2', 'excerpt' => 'Another sample post with some interesting content', 'url' => '/post/sample-2'],
+                    ['id' => 3, 'title' => 'Sample Post 3', 'excerpt' => 'Yet another sample post to demonstrate the widget', 'url' => '/post/sample-3'],
+                ];
+            }
+            // Add more widget types as needed
+        }
         
         // Render the section
         $theme = $template->theme;

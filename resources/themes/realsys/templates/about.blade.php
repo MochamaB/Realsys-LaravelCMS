@@ -1,32 +1,32 @@
 @extends('theme::layouts.theme')
 
-@section('content')
-    @hassection('hero')
-        @section('hero')
-    @endhassection
+@templateSection('content')
+    @hasTemplateSection('hero')
+        @templateSection('hero')
+    @endHasTemplateSection
 
     <div class="container px-4 px-lg-5">
         <div class="row gx-4 gx-lg-5">
             <div class="col-md-8">
-                @hassection('content')
-                    @section('content')
-                @endhassection
+                @hasTemplateSection('content')
+                    @templateSection('content')
+                @endHasTemplateSection
                 
-                @hassection('team')
-                    @section('team')
-                @endhassection
+                @hasTemplateSection('team')
+                    @templateSection('team')
+                @endHasTemplateSection
                 
-                @hassection('services')
-                    @section('services')
-                @endhassection
+                @hasTemplateSection('services')
+                    @templateSection('services')
+                @endHasTemplateSection
             </div>
             
-            @hassection('sidebar')
+            @hasTemplateSection('sidebar')
                 <div class="col-md-4">
-                    @section('sidebar')
+                    @templateSection('sidebar')
                 </div>
-            @endhassection
+            @endHasTemplateSection
         </div>
     </div>
-@endsection
+@endtemplateSection
 

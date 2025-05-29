@@ -14,7 +14,7 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Manage Templates</h5>
+                    <h5 class="mb-0">Templates for "{{ $activeTheme->name }}" Theme</h5>
                     <div>
                         <a href="{{ route('admin.templates.create') }}" class="btn btn-primary">
                             <i class="mdi mdi-plus-circle-outline me-1"></i> Add New Template
@@ -22,22 +22,6 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <!-- Theme filter -->
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <form action="{{ route('admin.templates.index') }}" method="GET" class="d-flex">
-                                <select name="theme_id" class="form-select me-2" style="max-width: 250px;">
-                                    <option value="">All Themes</option>
-                                    @foreach($themes as $theme)
-                                        <option value="{{ $theme->id }}" {{ request('theme_id') == $theme->id ? 'selected' : '' }}>
-                                            {{ $theme->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <button type="submit" class="btn btn-outline-primary">Filter</button>
-                            </form>
-                        </div>
-                    </div>
                     
                     @if($templates->isEmpty())
                         <div class="text-center p-4">

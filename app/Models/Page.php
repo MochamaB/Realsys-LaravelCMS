@@ -16,18 +16,29 @@ class Page extends Model implements HasMedia
         'template_id',
         'title',
         'slug',
+        'description',
+        'content',
+        'status',
+        'parent_id',
+        'is_active',
+        'is_homepage',
+        'show_in_menu',
+        'menu_order',
         'meta_title',
         'meta_description',
         'meta_keywords',
-        'status',
+        'published_at',
         'created_by',
-        'updated_by',
-        'published_at'
+        'updated_by'
     ];
 
     protected $casts = [
         'published_at' => 'datetime',
-        'status' => 'string'
+        'status' => 'string',
+        'is_active' => 'boolean',
+        'is_homepage' => 'boolean',
+        'show_in_menu' => 'boolean',
+        'menu_order' => 'integer'
     ];
 
     protected $dates = [
@@ -150,6 +161,49 @@ class Page extends Model implements HasMedia
         }
         
         return url($this->slug);
+    }
+    
+    /**
+     * Check if this page has a section with the given slug
+     *
+     * @param string $sectionSlug
+     * @return bool
+     */
+    public function hasSection(string $sectionSlug): bool
+    {
+        return app(\App\Services\PageSectionManager::class)->hasSection($this, $sectionSlug);
+    }
+    
+    /**
+     * Get a section by its slug
+     *
+     * @param string $sectionSlug
+     * @return \App\Models\PageSection|null
+     */
+    public function getSection(string $sectionSlug): ?PageSection
+    {
+        return app(\App\Services\PageSectionManager::class)->getSection($this, $sectionSlug);
+    }
+    
+    /**
+     * Sync the page sections with the template sections
+     *
+     * @return array Result of the synchronization
+     */
+    public function syncSections(): array
+    {
+        return app(\App\Services\PageSectionManager::class)->syncPageSections($this);
+    }
+    
+    /**
+     * Handle template switching
+     *
+     * @param int $oldTemplateId The previous template ID
+     * @return array Result of the synchronization
+     */
+    public function handleTemplateSwitching(int $oldTemplateId): array
+    {
+        return app(\App\Services\PageSectionManager::class)->handleTemplateSwitching($this, $oldTemplateId);
     }
     
     /**

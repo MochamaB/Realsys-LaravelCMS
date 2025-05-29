@@ -8,7 +8,7 @@
                 <img src="{{ asset('assets/admin/images/logo-sm.png') }}" alt="" height="22">
             </span>
             <span class="logo-lg">
-                <img src="{{ asset('assets/admin/images/logo-dark.png') }}" alt="" height="17">
+                <img src="{{ asset('assets/admin/images/realsyslogo.png') }}" alt="" height="67">
             </span>
         </a>
         <!-- Light Logo-->
@@ -34,6 +34,37 @@
                     <a class="nav-link menu-link" href="{{ route('admin.dashboard') }}">
                         <i class="ri-dashboard-2-line"></i> <span data-key="t-dashboards">Dashboard</span>
                     </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="#sidebarThemes" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarThemes">
+                        <i class="ri-palette-line"></i> <span data-key="t-themes">Themes</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarThemes">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                <a href="{{ route('admin.themes.index') }}" class="nav-link" data-key="t-all-themes">All Themes</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('admin.themes.create') }}" class="nav-link" data-key="t-install-theme">Install Theme</a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+                
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="#sidebarTemplates" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarTemplates">
+                        <i class="ri-layout-masonry-line"></i> <span data-key="t-templates">Templates</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarTemplates">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                <a href="{{ route('admin.templates.index') }}" class="nav-link" data-key="t-all-templates">All Templates</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('admin.templates.create') }}" class="nav-link" data-key="t-create-template">Create Template</a>
+                            </li>
+                        </ul>
+                    </div>
                 </li>
 
                 <li class="nav-item">
@@ -103,37 +134,7 @@
                     </div>
                 </li>
 
-                <li class="nav-item">
-                    <a class="nav-link menu-link" href="#sidebarThemes" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarThemes">
-                        <i class="ri-palette-line"></i> <span data-key="t-themes">Themes</span>
-                    </a>
-                    <div class="collapse menu-dropdown" id="sidebarThemes">
-                        <ul class="nav nav-sm flex-column">
-                            <li class="nav-item">
-                                <a href="{{ route('admin.themes.index') }}" class="nav-link" data-key="t-all-themes">All Themes</a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ route('admin.themes.create') }}" class="nav-link" data-key="t-install-theme">Install Theme</a>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
-                
-                <li class="nav-item">
-                    <a class="nav-link menu-link" href="#sidebarTemplates" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarTemplates">
-                        <i class="ri-layout-masonry-line"></i> <span data-key="t-templates">Templates</span>
-                    </a>
-                    <div class="collapse menu-dropdown" id="sidebarTemplates">
-                        <ul class="nav nav-sm flex-column">
-                            <li class="nav-item">
-                                <a href="{{ route('admin.templates.index') }}" class="nav-link" data-key="t-all-templates">All Templates</a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ route('admin.templates.create') }}" class="nav-link" data-key="t-create-template">Create Template</a>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
+
                 <!-- Content Management Section -->
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="#sidebarContentManagement" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarContentManagement">

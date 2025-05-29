@@ -48,6 +48,8 @@ Route::middleware('admin.auth')->group(function () {
 
     // Pages
     Route::resource('pages', PageController::class);
+    // Add this to your admin routes
+    Route::put('/pages/{page}/homepage', [PageController::class, 'toggleHomepage'])->name('admin.pages.homepage');
 
     // Widgets
     Route::resource('widgets', WidgetController::class);
@@ -130,15 +132,15 @@ Route::middleware('admin.auth')->group(function () {
     Route::prefix('templates/{template}')->group(function () {
         Route::resource('sections', TemplateSectionController::class)
             ->names([
-                'index' => 'admin.templates.sections.index',
-                'create' => 'admin.templates.sections.create',
-                'store' => 'admin.templates.sections.store',
-                'show' => 'admin.templates.sections.show',
-                'edit' => 'admin.templates.sections.edit',
-                'update' => 'admin.templates.sections.update',
-                'destroy' => 'admin.templates.sections.destroy',
+                'index' => 'templates.sections.index',
+                'create' => 'templates.sections.create',
+                'store' => 'templates.sections.store',
+                'show' => 'templates.sections.show',
+                'edit' => 'templates.sections.edit',
+                'update' => 'templates.sections.update',
+                'destroy' => 'templates.sections.destroy',
             ]);
-        Route::post('sections/order', [TemplateSectionController::class, 'updateOrder'])->name('admin.templates.sections.order');
+        Route::post('sections/order', [TemplateSectionController::class, 'updateOrder'])->name('templates.sections.order');
     });
     
     // Content Type Fields

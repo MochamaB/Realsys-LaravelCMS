@@ -148,12 +148,21 @@ class ThemeManager
             $previewTheme = Theme::find($previewThemeId);
             
             if ($previewTheme) {
+                // Register view paths for preview theme
+                $this->registerThemeViewPaths($previewTheme);
                 return $previewTheme;
             }
         }
         
         // Get the active theme from database
-        return Theme::where('is_active', true)->first();
+        $activeTheme = Theme::where('is_active', true)->first();
+        
+        if ($activeTheme) {
+            // Register view paths for active theme
+            $this->registerThemeViewPaths($activeTheme);
+        }
+        
+        return $activeTheme;
     }
     
     /**
@@ -170,6 +179,9 @@ class ThemeManager
         // Activate the selected theme
         $theme->is_active = true;
         $theme->save();
+        
+        // Register view paths for the newly activated theme
+        $this->registerThemeViewPaths($theme);
         
         // Publish theme assets for the newly activated theme
         $this->publishAssets($theme);
@@ -390,5 +402,33 @@ class ThemeManager
         }
         
         return $files;
+    }
+    
+    /**
+     * Register theme view paths so that the theme templates can be found
+     *
+     * @param Theme $theme The theme to register view paths for
+     * @return void
+     */
+    public function registerThemeViewPaths(Theme $theme)
+    {
+        if (!$theme) {
+            return;
+        }
+        
+        // Register the main theme namespace
+        $themePath = resource_path('themes/' . $theme->slug);
+        
+        if (is_dir($themePath)) {
+            // Register the theme namespace with Laravel's view finder
+            view()->addNamespace('theme', $themePath);
+            
+            // Also register a fallback path for any theme-specific views
+            // that aren't found in the active theme
+            $fallbackPath = resource_path('themes/default');
+            if (is_dir($fallbackPath) && $theme->slug !== 'default') {
+                view()->addNamespace('theme', $fallbackPath);
+            }
+        }
     }
 }

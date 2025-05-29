@@ -14,21 +14,25 @@ use Illuminate\Validation\Rule;
 class TemplateController extends Controller
 {
     /**
-     * Display a listing of the templates.
+     * Display a listing of the templates from the active theme only.
      */
     public function index(Request $request)
     {
-        $query = Template::query()->with('theme');
+        // Get the active theme
+        $activeTheme = app(\App\Services\ThemeManager::class)->getActiveTheme();
         
-        // Filter by theme if provided
-        if ($request->has('theme_id') && $request->theme_id) {
-            $query->where('theme_id', $request->theme_id);
+        if (!$activeTheme) {
+            return redirect()->route('admin.themes.index')
+                ->with('error', 'No active theme found. Please activate a theme first.');
         }
         
-        $templates = $query->orderBy('name')->get();
-        $themes = Theme::orderBy('name')->get();
+        // Get templates from the active theme only
+        $templates = Template::where('theme_id', $activeTheme->id)
+            ->with('theme')
+            ->orderBy('name')
+            ->get();
         
-        return view('admin.templates.index', compact('templates', 'themes'));
+        return view('admin.templates.index', compact('templates', 'activeTheme'));
     }
 
     /**

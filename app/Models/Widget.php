@@ -11,6 +11,8 @@ class Widget extends Model
 
     protected $fillable = [
         'widget_type_id',
+        'content_query_id',
+        'display_settings_id',
         'name',
         'description',
         'is_active',
@@ -36,6 +38,22 @@ class Widget extends Model
     public function widgetType()
     {
         return $this->belongsTo(WidgetType::class);
+    }
+    
+    /**
+     * Get the content query associated with this widget.
+     */
+    public function contentQuery()
+    {
+        return $this->belongsTo(WidgetContentQuery::class, 'content_query_id');
+    }
+    
+    /**
+     * Get the display settings associated with this widget.
+     */
+    public function displaySettings()
+    {
+        return $this->belongsTo(WidgetDisplaySetting::class, 'display_settings_id');
     }
 
     /**
@@ -162,11 +180,35 @@ class Widget extends Model
     public function render()
     {
         $widgetType = $this->widgetType;
-        $viewPath = 'widgets.' . $widgetType->slug;
-        
-        return view($viewPath, [
+        $viewData = [
             'widget' => $this,
             'data' => $this->getData()
-        ])->render();
+        ];
+        
+        // If this widget uses the content query system
+        if ($this->content_query_id) {
+            // Get content items using the query
+            $contentQuery = $this->contentQuery;
+            if ($contentQuery) {
+                $contentItems = $contentQuery->executeQuery();
+                $viewData['contentItems'] = $contentItems;
+            }
+            
+            // Get display settings
+            $displaySettings = $this->displaySettings;
+            if ($displaySettings) {
+                $viewData['displaySettings'] = $displaySettings;
+                
+                // If display settings specify a view path, use it
+                if ($displaySettings->layout) {
+                    $viewPath = $displaySettings->getViewPath();
+                    return view($viewPath, $viewData)->render();
+                }
+            }
+        }
+        
+        // Fallback to traditional widget rendering
+        $viewPath = 'widgets.' . $widgetType->slug;
+        return view($viewPath, $viewData)->render();
     }
 }

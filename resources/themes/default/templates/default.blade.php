@@ -1,6 +1,6 @@
 @extends('themes.default.layouts.master')
 
-@section('content')
+@templateSection('content')
 <div class="container py-4">
     <div class="row">
         <!-- Main Content -->
@@ -37,4 +37,4 @@
         </div>
     @endif
 </div>
-@endsection
+@endtemplateSection

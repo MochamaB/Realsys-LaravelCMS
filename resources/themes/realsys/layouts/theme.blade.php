@@ -19,7 +19,7 @@
     </head>
     <body>
         <!-- Navigation/Header Section -->
-        @section('header')
+        @templateSection('header')
 
         <!-- Main Content -->
         <div class="main-content">
@@ -27,7 +27,7 @@
         </div>
 
         <!-- Footer Section -->
-        @section('footer')
+        @templateSection('footer')
 
         <!-- Theme JavaScript -->
         @foreach($theme->js as $js)

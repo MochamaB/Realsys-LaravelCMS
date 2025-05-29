@@ -36,29 +36,34 @@ class TemplateServiceProvider extends ServiceProvider
      */
     protected function registerBladeDirectives()
     {
-        // @section directive for rendering a template section
-        Blade::directive('section', function ($expression) {
+        // @templateSection directive for rendering a template section
+        Blade::directive('templateSection', function ($expression) {
             return "<?php echo app('" . TemplateRenderer::class . "')->renderSection({$expression}, get_defined_vars()); ?>";
         });
         
-        // @hassection directive to check if a section exists
-        Blade::directive('hassection', function ($expression) {
+        // @hasTemplateSection directive to check if a section exists
+        Blade::directive('hasTemplateSection', function ($expression) {
             return "<?php if(app('" . TemplateRenderer::class . "')->sectionExists({$expression}, get_defined_vars())): ?>";
         });
         
-        // @endhassection directive
-        Blade::directive('endhassection', function () {
+        // @endHasTemplateSection directive
+        Blade::directive('endHasTemplateSection', function () {
             return "<?php endif; ?>";
         });
         
-        // @nosection directive for when a section doesn't exist
-        Blade::directive('nosection', function ($expression) {
+        // @noTemplateSection directive for when a section doesn't exist
+        Blade::directive('noTemplateSection', function ($expression) {
             return "<?php if(!app('" . TemplateRenderer::class . "')->sectionExists({$expression}, get_defined_vars())): ?>";
         });
         
-        // @endnosection directive
-        Blade::directive('endnosection', function () {
+        // @endNoTemplateSection directive
+        Blade::directive('endNoTemplateSection', function () {
             return "<?php endif; ?>";
+        });
+        
+        // @endTemplateSection directive
+        Blade::directive('endTemplateSection', function () {
+            return "<?php ?>"; // Just close the PHP tag
         });
     }
 }
