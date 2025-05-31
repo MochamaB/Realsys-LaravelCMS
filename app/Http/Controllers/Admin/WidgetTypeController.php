@@ -18,7 +18,7 @@ class WidgetTypeController extends Controller
      */
     public function index()
     {        
-        $widgetTypes = WidgetType::withCount('fields')->withCount('widgets')
+        $widgetTypes = WidgetType::withCount('widgets')
             ->latest()
             ->paginate(15);
             
@@ -76,9 +76,7 @@ class WidgetTypeController extends Controller
      */
     public function show(WidgetType $widgetType)
     {        
-        $widgetType->load(['fields' => function($query) {
-            $query->orderBy('order_index', 'asc');
-        }]);
+        $widgetType->load(['widgets']);
         
         return view('admin.widget-types.show', compact('widgetType'));
     }
@@ -90,10 +88,7 @@ class WidgetTypeController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function edit(WidgetType $widgetType)
-    {        
-        $widgetType->load(['fields' => function($query) {
-            $query->orderBy('order_index', 'asc');
-        }]);
+    {
         
         return view('admin.widget-types.edit', compact('widgetType'));
     }
@@ -144,10 +139,7 @@ class WidgetTypeController extends Controller
                 ->with('error', 'Cannot delete widget type that is in use by widgets!');
         }
         
-        // Delete fields first to maintain referential integrity
-        $widgetType->fields()->delete();
-        
-        // Then delete the widget type
+        // Delete the widget type
         $widgetType->delete();
         
         return redirect()->route('admin.widget-types.index')

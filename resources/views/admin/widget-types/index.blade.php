@@ -8,20 +8,7 @@
 @endsection
 
 @section('content')
-    <div class="row">
-        <div class="col-12">
-            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                <h4 class="mb-sm-0">Widget Types</h4>
 
-                <div class="page-title-right">
-                    <ol class="breadcrumb m-0">
-                        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Widget Types</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <div class="row">
         <div class="col-lg-12">
@@ -41,7 +28,7 @@
                                 <tr>
                                     <th scope="col">Name</th>
                                     <th scope="col">Slug</th>
-                                    <th scope="col">Fields</th>
+                                    <th scope="col">Widgets</th>
                                     <th scope="col">Status</th>
                                     <th scope="col" style="width: 150px;">Action</th>
                                 </tr>
@@ -56,7 +43,7 @@
                                         </td>
                                         <td>{{ $type->slug }}</td>
                                         <td>
-                                            <span class="badge bg-info">{{ $type->fields_count }} fields</span>
+                                            <span class="badge bg-info">{{ $type->widgets_count }} widgets</span>
                                         </td>
                                         <td>
                                             <div class="form-check form-switch form-switch-success">

@@ -14,31 +14,18 @@ class Page extends Model implements HasMedia
 
     protected $fillable = [
         'template_id',
-        'title',
+        'name',
         'slug',
-        'description',
-        'content',
-        'status',
-        'parent_id',
-        'is_active',
-        'is_homepage',
-        'show_in_menu',
-        'menu_order',
         'meta_title',
         'meta_description',
-        'meta_keywords',
-        'published_at',
-        'created_by',
-        'updated_by'
+        'status',
+        'parent_id',
+        'published_at'
     ];
 
     protected $casts = [
         'published_at' => 'datetime',
-        'status' => 'string',
-        'is_active' => 'boolean',
-        'is_homepage' => 'boolean',
-        'show_in_menu' => 'boolean',
-        'menu_order' => 'integer'
+        'status' => 'string'
     ];
 
     protected $dates = [

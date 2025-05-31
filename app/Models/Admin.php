@@ -8,10 +8,11 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\Permission\Traits\HasRoles;
 
 class Admin extends Authenticatable implements HasMedia
 {
-    use HasFactory, Notifiable, SoftDeletes, InteractsWithMedia;
+    use HasFactory, Notifiable, SoftDeletes, InteractsWithMedia, HasRoles;
 
     protected $guard = 'admin';
     /**
@@ -56,4 +57,6 @@ class Admin extends Authenticatable implements HasMedia
             ->singleFile()
             ->useDisk('public');
     }
+    // No model methods needed here for role assignment
+    // Role assignment is handled in the RolesSeeder
 }

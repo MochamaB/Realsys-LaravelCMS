@@ -19,13 +19,8 @@ class Template extends Model
     protected $fillable = [
         'theme_id',
         'name',
-        'slug',
-        'file_path',
-        'description',
-        'thumbnail_path',
-        'settings',
-        'is_active',
-        'is_default'
+        'identifier',
+        'file_path'
     ];
 
     /**
@@ -34,9 +29,6 @@ class Template extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'is_active' => 'boolean',
-        'is_default' => 'boolean',
-        'settings' => 'array',
     ];
 
     /**

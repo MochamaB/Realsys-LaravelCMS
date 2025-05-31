@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ContentItem extends Model
 {
-    use HasFactory, SoftDeletes;
+    use SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -17,12 +18,8 @@ class ContentItem extends Model
      */
     protected $fillable = [
         'content_type_id',
-        'title',
-        'slug',
         'status',
-        'published_at',
-        'created_by',
-        'updated_by',
+        'published_at'
     ];
 
     /**
@@ -37,7 +34,7 @@ class ContentItem extends Model
     /**
      * Get the content type that owns the content item.
      */
-    public function contentType()
+    public function contentType(): BelongsTo
     {
         return $this->belongsTo(ContentType::class);
     }
@@ -45,7 +42,7 @@ class ContentItem extends Model
     /**
      * Get the field values for the content item.
      */
-    public function fieldValues()
+    public function fieldValues(): HasMany
     {
         return $this->hasMany(ContentFieldValue::class);
     }

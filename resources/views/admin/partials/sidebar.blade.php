@@ -90,13 +90,24 @@
                     <div class="collapse menu-dropdown" id="sidebarWidgets">
                         <ul class="nav nav-sm flex-column">
                             <li class="nav-item">
-                                <a href="{{ route('admin.widgets.index') }}" class="nav-link" data-key="t-all-widgets">All Widgets</a>
+                                <a href="{{ route('admin.widget-types.index') }}" class="nav-link" data-key="t-widget-types">
+                                     Types
+                                </a>
                             </li>
                             <li class="nav-item">
-                                <a href="{{ route('admin.widgets.create') }}" class="nav-link" data-key="t-create-widget">Create Widget</a>
+                                <a href="{{ route('admin.widgets.index') }}" class="nav-link" data-key="t-all-widgets">
+                                    All Widgets
+                                </a>
                             </li>
                             <li class="nav-item">
-                                <a href="{{ route('admin.widget-types.index') }}" class="nav-link" data-key="t-widget-types">Widget Types</a>
+                                <a href="{{ route('admin.widget-content-queries.index') }}" class="nav-link" data-key="t-content-sources">
+                                    Content Sources
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('admin.widget-display-settings.index') }}" class="nav-link" data-key="t-display-settings">
+                                    Display Settings
+                                </a>
                             </li>
                         </ul>
                     </div>

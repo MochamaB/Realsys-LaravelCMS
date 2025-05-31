@@ -20,9 +20,11 @@ use App\Http\Controllers\Admin\TemplateSectionController;
 use App\Http\Controllers\Admin\ThemeController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\WidgetController;
+use App\Http\Controllers\Admin\WidgetContentQueryController;
+use App\Http\Controllers\Admin\WidgetContentQueryFilterController;
+use App\Http\Controllers\Admin\WidgetDisplaySettingController;
 use App\Http\Controllers\Admin\WidgetTypeController;
-use App\Http\Controllers\Admin\WidgetTypeFieldController;
-use App\Http\Controllers\Admin\WidgetTypeFieldOptionController;
+
 
 // Guest routes for admin authentication (only for non-authenticated admin users)
 Route::middleware('admin.guest')->group(function () {
@@ -58,20 +60,22 @@ Route::middleware('admin.auth')->group(function () {
 
     // Widget Types
     Route::resource('widget-types', WidgetTypeController::class);
-    Route::get('/widget-types/{widgetType}/fields', [WidgetTypeFieldController::class, 'index'])->name('widget-types.fields.index');
-    Route::post('/widget-types/{widgetType}/fields', [WidgetTypeFieldController::class, 'store'])->name('widget-types.fields.store');
-    Route::put('/widget-types/{widgetType}/fields/{field}', [WidgetTypeFieldController::class, 'update'])->name('widget-types.fields.update');
-    Route::delete('/widget-types/{widgetType}/fields/{field}', [WidgetTypeFieldController::class, 'destroy'])->name('widget-types.fields.destroy');
-    Route::post('/widget-types/{widgetType}/fields/order', [WidgetTypeFieldController::class, 'updateOrder'])->name('widget-types.fields.order');
+    Route::get('/widget-types/{widgetType}/toggle', [WidgetTypeController::class, 'toggle'])->name('widget-types.toggle');
     
-    // Widget Type Field Options
-    Route::get('/widget-types/fields/{field}/options', [WidgetTypeFieldOptionController::class, 'index'])->name('widget-types.fields.options.index');
-    Route::get('/widget-types/fields/{field}/options/create', [WidgetTypeFieldOptionController::class, 'create'])->name('widget-types.fields.options.create');
-    Route::post('/widget-types/fields/{field}/options', [WidgetTypeFieldOptionController::class, 'store'])->name('widget-types.fields.options.store');
-    Route::get('/widget-types/fields/{field}/options/{option}/edit', [WidgetTypeFieldOptionController::class, 'edit'])->name('widget-types.fields.options.edit');
-    Route::put('/widget-types/fields/{field}/options/{option}', [WidgetTypeFieldOptionController::class, 'update'])->name('widget-types.fields.options.update');
-    Route::delete('/widget-types/fields/{field}/options/{option}', [WidgetTypeFieldOptionController::class, 'destroy'])->name('widget-types.fields.options.destroy');
-    Route::post('/widget-types/fields/{field}/options/reorder', [WidgetTypeFieldOptionController::class, 'reorder'])->name('widget-types.fields.options.reorder');
+    // Widget Content Queries
+    Route::resource('widget-content-queries', WidgetContentQueryController::class);
+    Route::get('/widget-content-queries/{contentQuery}/preview', [WidgetContentQueryController::class, 'preview'])->name('widget-content-queries.preview');
+    
+    // Widget Content Query Filters
+    Route::post('/widget-content-queries/{contentQuery}/filters', [WidgetContentQueryFilterController::class, 'store'])->name('widget-content-query-filters.store');
+    Route::get('/widget-content-query-filters/{filter}/edit', [WidgetContentQueryFilterController::class, 'edit'])->name('widget-content-query-filters.edit');
+    Route::put('/widget-content-query-filters/{filter}', [WidgetContentQueryFilterController::class, 'update'])->name('widget-content-query-filters.update');
+    Route::delete('/widget-content-query-filters/{filter}', [WidgetContentQueryFilterController::class, 'destroy'])->name('widget-content-query-filters.destroy');
+    Route::get('/widget-content-query-filters/get-fields', [WidgetContentQueryFilterController::class, 'getContentTypeFields'])->name('widget-content-query-filters.get-fields');
+    
+    // Widget Display Settings
+    Route::resource('widget-display-settings', WidgetDisplaySettingController::class);
+    Route::get('/widget-display-settings/{displaySetting}/preview', [WidgetDisplaySettingController::class, 'preview'])->name('widget-display-settings.preview');
 
     // Menus
     Route::resource('menus', MenuController::class);

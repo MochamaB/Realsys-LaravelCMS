@@ -28,7 +28,18 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="card-title mb-0">Widgets List</h4>
-                    <div>
+                    <div class="d-flex gap-2">
+                        <div class="input-group" style="width: 250px;">
+                            <select class="form-select" id="themeFilter">
+                                <option value="">All Themes</option>
+                                @foreach($themes as $theme)
+                                    <option value="{{ $theme->id }}" {{ request()->get('theme') == $theme->id ? 'selected' : '' }}>
+                                        {{ $theme->name }}{{ $theme->active ? ' (Active)' : '' }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <button class="btn btn-primary" type="button" id="applyThemeFilter">Filter</button>
+                        </div>
                         <a href="{{ route('admin.widgets.create') }}" class="btn btn-success add-btn">
                             <i class="ri-add-line align-bottom me-1"></i> Create Widget
                         </a>
@@ -42,6 +53,8 @@
                                     <th scope="col" style="width: 50px;">#</th>
                                     <th scope="col">Name</th>
                                     <th scope="col">Type</th>
+                                    <th scope="col">Content Source</th>
+                                    <th scope="col">Display Settings</th>
                                     <th scope="col">Page Section</th>
                                     <th scope="col">Status</th>
                                     <th scope="col" style="width: 150px;">Action</th>
@@ -73,11 +86,34 @@
                                             </span>
                                         </td>
                                         <td>
-                                            <span class="badge bg-info">
+                                            @if($widget->content_query_id)
+                                                <a href="{{ route('admin.widget-content-queries.show', $widget->content_query_id) }}" class="badge bg-info text-decoration-none">
+                                                    <i class="ri-filter-line"></i> {{ $widget->contentQuery->contentType->name ?? 'Content Source' }}
+                                                </a>
+                                            @else
+                                                <span class="badge bg-secondary">No Content Source</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($widget->display_settings_id)
+                                                <a href="{{ route('admin.widget-display-settings.show', $widget->display_settings_id) }}" class="badge bg-success text-decoration-none">
+                                                    <i class="ri-layout-line"></i> {{ $widget->displaySettings->layout ?? 'Display Settings' }}
+                                                </a>
+                                            @else
+                                                <span class="badge bg-secondary">Default Display</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($widget->pageSections->count() > 0)
                                                 @foreach($widget->pageSections as $pageSection)
-                                                    {{ $pageSection->title }} ({{ $pageSection->page->title }})@if(!$loop->last), @endif
+                                                    <span class="badge bg-info">
+                                                        {{ $pageSection->templateSection->name ?? 'Section' }} ({{ $pageSection->page->title ?? 'Page' }})
+                                                    </span>
+                                                    @if(!$loop->last)<br>@endif
                                                 @endforeach
-                                            </span>
+                                            @else
+                                                <span class="badge bg-warning">Not placed</span>
+                                            @endif
                                         </td>
                                         <td>
                                             <div class="form-check form-switch form-switch-success">
@@ -111,7 +147,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="text-center">No widgets found</td>
+                                        <td colspan="8" class="text-center">No widgets found</td>
                                     </tr>
                                 @endforelse
                             </tbody>

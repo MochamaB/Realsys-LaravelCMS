@@ -33,13 +33,7 @@ class WidgetType extends Model
         'is_active' => 'boolean',
     ];
 
-    /**
-     * Get the fields for this widget type.
-     */
-    public function fields(): HasMany
-    {
-        return $this->hasMany(WidgetTypeField::class)->orderBy('order_index');
-    }
+
 
     /**
      * Get the widgets of this type.

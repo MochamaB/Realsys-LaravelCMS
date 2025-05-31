@@ -17,12 +17,14 @@ class Theme extends Model
      */
     protected $fillable = [
         'name',
-        'slug',
+        'identifier',
         'description',
         'version',
         'author',
-        'screenshot_path',
-        'is_active'
+        'website',
+        'is_active',
+        'screenshot',
+        'settings'
     ];
 
     /**
@@ -32,6 +34,7 @@ class Theme extends Model
      */
     protected $casts = [
         'is_active' => 'boolean',
+        'settings' => 'json'
     ];
 
     /**
@@ -40,5 +43,13 @@ class Theme extends Model
     public function templates(): HasMany
     {
         return $this->hasMany(Template::class);
+    }
+    
+    /**
+     * Get the widgets for this theme.
+     */
+    public function widgets(): HasMany
+    {
+        return $this->hasMany(Widget::class);
     }
 }

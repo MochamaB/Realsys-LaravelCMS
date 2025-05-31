@@ -1,69 +1,420 @@
 {
-    "name": "Default Theme",
+    "name": "RealSys Default",
     "identifier": "default",
-    "description": "A clean, simple theme for basic website needs",
+    "description": "A clean, modern blog theme with beautiful typography and responsive design",
     "version": "1.0.0",
     "author": "NPPK",
     "website": "https://nppk.com",
-    "templates": [
+    "active": true,
+    "screenshot": "assets/img/screenshot.jpg",
+    "content_types": [
         {
-            "name": "Default",
-            "identifier": "default",
-            "file": "templates/default.blade.php",
-            "sections": [
+            "name": "Article",
+            "identifier": "article",
+            "description": "Article content for post listings",
+            "fields": [
                 {
-                    "name": "Header",
-                    "identifier": "header",
-                    "description": "Page header section"
+                    "name": "Title",
+                    "identifier": "title",
+                    "type": "text",
+                    "required": true,
+                    "validation": "required|max:255"
+                },
+                {
+                    "name": "Subtitle",
+                    "identifier": "subtitle",
+                    "type": "text",
+                    "required": false,
+                    "validation": "max:255"
                 },
                 {
                     "name": "Content",
                     "identifier": "content",
-                    "description": "Main content area"
+                    "type": "wysiwyg",
+                    "required": true,
+                    "validation": "required"
                 },
                 {
-                    "name": "Sidebar",
-                    "identifier": "sidebar",
-                    "description": "Right sidebar"
+                    "name": "Featured Image",
+                    "identifier": "featured_image",
+                    "type": "image",
+                    "required": true,
+                    "validation": "required|image"
                 },
                 {
-                    "name": "Footer",
-                    "identifier": "footer",
-                    "description": "Page footer section"
+                    "name": "Author Name",
+                    "identifier": "author_name",
+                    "type": "text",
+                    "required": true,
+                    "validation": "required"
+                },
+                {
+                    "name": "Published Date",
+                    "identifier": "published_date",
+                    "type": "date",
+                    "required": true,
+                    "validation": "required|date"
+                },
+                {
+                    "name": "URL",
+                    "identifier": "url",
+                    "type": "text",
+                    "required": true,
+                    "validation": "required"
                 }
             ]
         },
         {
-            "name": "Full Width",
-            "identifier": "full-width",
-            "file": "templates/full-width.blade.php",
-            "sections": [
+            "name": "Page Header",
+            "identifier": "page_header",
+            "description": "Hero header content for pages",
+            "fields": [
                 {
-                    "name": "Header",
-                    "identifier": "header",
-                    "description": "Page header section"
+                    "name": "Title",
+                    "identifier": "title",
+                    "type": "text",
+                    "required": true,
+                    "validation": "required|max:255"
                 },
                 {
-                    "name": "Content",
-                    "identifier": "content",
-                    "description": "Main content area"
+                    "name": "Subtitle",
+                    "identifier": "subtitle",
+                    "type": "text",
+                    "required": false,
+                    "validation": "max:255"
+                },
+                {
+                    "name": "Background Image",
+                    "identifier": "background",
+                    "type": "image",
+                    "required": true,
+                    "validation": "required|image"
+                }
+            ]
+        },
+        {
+            "name": "Contact Settings",
+            "identifier": "contact_settings",
+            "description": "Settings for contact forms",
+            "fields": [
+                {
+                    "name": "Form Title",
+                    "identifier": "title",
+                    "type": "text",
+                    "required": true,
+                    "validation": "required|max:255"
+                },
+                {
+                    "name": "Email Recipient",
+                    "identifier": "recipient",
+                    "type": "email",
+                    "required": true,
+                    "validation": "required|email"
+                },
+                {
+                    "name": "Success Message",
+                    "identifier": "success_message",
+                    "type": "textarea",
+                    "required": false,
+                    "validation": "max:500"
+                },
+                {
+                    "name": "Button Text",
+                    "identifier": "button_text",
+                    "type": "text",
+                    "required": false,
+                    "validation": "max:50",
+                    "default": "Send"
+                }
+            ]
+        }
+    ],
+    "templates": [
+        {
+            "name": "Home",
+            "identifier": "home",
+            "file": "templates/home.blade.php",
+            "sections": [
+                {
+                    "name": "Hero Header",
+                    "identifier": "hero",
+                    "description": "Page header with background image",
+                    "layout": {
+                        "width": "full",
+                        "height": "auto",
+                        "padding": {
+                            "top": "5rem",
+                            "bottom": "5rem",
+                            "left": "0",
+                            "right": "0"
+                        },
+                        "responsive": {
+                            "mobile": {
+                                "height": "auto",
+                                "padding": {
+                                    "top": "3rem",
+                                    "bottom": "3rem"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "Post Listings",
+                    "identifier": "posts",
+                    "description": "Blog post listings section",
+                    "layout": {
+                        "width": "container",
+                        "height": "auto",
+                        "padding": {
+                            "top": "3rem",
+                            "bottom": "3rem",
+                            "left": "1rem",
+                            "right": "1rem"
+                        },
+                        "responsive": {
+                            "mobile": {
+                                "padding": {
+                                    "top": "2rem",
+                                    "bottom": "2rem",
+                                    "left": "0.5rem",
+                                    "right": "0.5rem"
+                                }
+                            }
+                        }
+                    }
                 },
                 {
                     "name": "Footer",
                     "identifier": "footer",
-                    "description": "Page footer section"
+                    "description": "Page footer with social links"
+                }
+            ]
+        },
+        {
+            "name": "Post",
+            "identifier": "post",
+            "file": "templates/post.blade.php",
+            "sections": [
+                {
+                    "name": "Hero Header",
+                    "identifier": "hero",
+                    "description": "Post header with background image"
+                },
+                {
+                    "name": "Post Content",
+                    "identifier": "content",
+                    "description": "Main post content area"
+                },
+                {
+                    "name": "Author Info",
+                    "identifier": "author",
+                    "description": "Author information section"
+                },
+                {
+                    "name": "Comments",
+                    "identifier": "comments",
+                    "description": "Comments section"
+                },
+                {
+                    "name": "Footer",
+                    "identifier": "footer",
+                    "description": "Page footer with social links"
+                }
+            ]
+        },
+        {
+            "name": "About",
+            "identifier": "about",
+            "file": "templates/about.blade.php",
+            "sections": [
+                {
+                    "name": "Hero Header",
+                    "identifier": "hero",
+                    "description": "Page header with background image",
+                    "layout": {
+                        "width": "full",
+                        "height": "auto",
+                        "padding": {
+                            "top": "5rem",
+                            "bottom": "5rem",
+                            "left": "0",
+                            "right": "0"
+                        },
+                        "responsive": {
+                            "mobile": {
+                                "height": "auto",
+                                "padding": {
+                                    "top": "3rem",
+                                    "bottom": "3rem"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "Main Content",
+                    "identifier": "content",
+                    "description": "Main content area"
+                },
+                {
+                    "name": "Team",
+                    "identifier": "team",
+                    "description": "Team members section"
+                },
+                {
+                    "name": "Footer",
+                    "identifier": "footer",
+                    "description": "Page footer with social links"
+                }
+            ]
+        },
+        {
+            "name": "Contact",
+            "identifier": "contact",
+            "file": "templates/contact.blade.php",
+            "sections": [
+                {
+                    "name": "Hero Header",
+                    "identifier": "hero",
+                    "description": "Page header with background image",
+                    "layout": {
+                        "width": "full",
+                        "height": "auto",
+                        "padding": {
+                            "top": "5rem",
+                            "bottom": "5rem",
+                            "left": "0",
+                            "right": "0"
+                        },
+                        "responsive": {
+                            "mobile": {
+                                "height": "auto",
+                                "padding": {
+                                    "top": "3rem",
+                                    "bottom": "3rem"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "Contact Form",
+                    "identifier": "form",
+                    "description": "Contact form section"
+                },
+                {
+                    "name": "Map",
+                    "identifier": "map",
+                    "description": "Google Maps section"
+                },
+                {
+                    "name": "Footer",
+                    "identifier": "footer",
+                    "description": "Page footer with social links"
+                }
+            ]
+        }
+    ],
+    "widgets": [
+        {
+            "name": "Hero Header",
+            "identifier": "hero-header",
+            "description": "Header with background image and text overlay",
+            "content_types": ["page_header"],
+            "query_parameters": {
+                "content_type": "page_header",
+                "limit": 1,
+                "order_by": "created_at",
+                "direction": "desc"
+            },
+            "fields": [
+                {
+                    "name": "Title",
+                    "identifier": "title",
+                    "type": "text",
+                    "required": true
+                },
+                {
+                    "name": "Subtitle",
+                    "identifier": "subtitle",
+                    "type": "text",
+                    "required": false
+                },
+                {
+                    "name": "Background Image",
+                    "identifier": "background",
+                    "type": "image",
+                    "required": true
+                }
+            ]
+        },
+        {
+            "name": "Post List",
+            "identifier": "post-list",
+            "description": "List of blog posts with preview",
+            "content_types": ["article"],
+            "query_parameters": {
+                "content_type": "article",
+                "limit": 10,
+                "order_by": "published_date",
+                "direction": "desc",
+                "filters": {
+                    "status": "published"
+                }
+            },
+            "fields": [
+                {
+                    "name": "Posts Per Page",
+                    "identifier": "per_page",
+                    "type": "number",
+                    "required": true,
+                    "default": 5
+                }
+            ]
+        },
+        {
+            "name": "Contact Form",
+            "identifier": "contact-form",
+            "description": "Contact form with email functionality",
+            "content_types": ["contact_settings"],
+            "query_parameters": {
+                "content_type": "contact_settings",
+                "limit": 1,
+                "order_by": "created_at",
+                "direction": "desc"
+            },
+            "fields": [
+                {
+                    "name": "Form Title",
+                    "identifier": "title",
+                    "type": "text",
+                    "required": true
+                },
+                {
+                    "name": "Email Recipient",
+                    "identifier": "recipient",
+                    "type": "email",
+                    "required": true
                 }
             ]
         }
     ],
     "assets": {
         "css": [
-            "assets/css/bootstrap.min.css",
-            "assets/css/style.css"
+            "https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic",
+            "https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800",
+            "assets/css/styles.css"
         ],
         "js": [
-            "assets/js/bootstrap.bundle.min.js",
-            "assets/js/main.js"
+            "https://use.fontawesome.com/releases/v6.3.0/js/all.js",
+            "assets/js/scripts.js"
+        ],
+        "images": [
+            "assets/img/home-bg.jpg",
+            "assets/img/about-bg.jpg",
+            "assets/img/post-bg.jpg",
+            "assets/img/contact-bg.jpg"
         ]
     }
 }

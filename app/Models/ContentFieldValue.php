@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ContentFieldValue extends Model
 {
-    use HasFactory;
+    use SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -16,14 +17,14 @@ class ContentFieldValue extends Model
      */
     protected $fillable = [
         'content_item_id',
-        'field_id',
-        'value',
+        'content_type_field_id',
+        'field_value',
     ];
 
     /**
      * Get the content item that owns the field value.
      */
-    public function contentItem()
+    public function contentItem(): BelongsTo
     {
         return $this->belongsTo(ContentItem::class);
     }
@@ -31,9 +32,9 @@ class ContentFieldValue extends Model
     /**
      * Get the field that owns the field value.
      */
-    public function field()
+    public function field(): BelongsTo
     {
-        return $this->belongsTo(ContentTypeField::class, 'field_id');
+        return $this->belongsTo(ContentTypeField::class, 'content_type_field_id');
     }
 
     /**

@@ -12,17 +12,6 @@ class TemplateSection extends Model
     use SoftDeletes;
 
     /**
-     * Section type constants
-     */
-    const TYPE_HEADER = 'header';
-    const TYPE_FOOTER = 'footer';
-    const TYPE_SIDEBAR = 'sidebar';
-    const TYPE_CONTENT = 'content';
-    const TYPE_HERO = 'hero';
-    const TYPE_BANNER = 'banner';
-    const TYPE_CUSTOM = 'custom';
-    
-    /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
@@ -30,15 +19,10 @@ class TemplateSection extends Model
     protected $fillable = [
         'template_id',
         'name',
-        'slug',
+        'identifier',
         'description',
-        'settings',
-        'type',
-        'width',
-        'is_required',
-        'max_widgets',
-        'order_index',
-        'is_active'
+        'is_repeatable',
+        'layout_settings'
     ];
 
     /**
@@ -47,11 +31,8 @@ class TemplateSection extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'is_active' => 'boolean',
-        'is_required' => 'boolean',
-        'order_index' => 'integer',
-        'max_widgets' => 'integer',
-        'settings' => 'array'
+        'is_repeatable' => 'boolean',
+        'layout_settings' => 'json'
     ];
 
     /**

@@ -32,6 +32,6 @@ class AdminSeeder extends Seeder
         }
 
         // Sync the superadmin role (removes other roles and assigns superadmin)
-        $admin->syncRoles(['superadmin']);
+        $admin->syncRoles(['super-admin']);
     }
 }

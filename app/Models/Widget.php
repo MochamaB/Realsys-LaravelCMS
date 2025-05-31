@@ -4,48 +4,56 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Widget extends Model
 {
     use SoftDeletes;
 
     protected $fillable = [
-        'widget_type_id',
-        'content_query_id',
-        'display_settings_id',
+        'theme_id',
         'name',
+        'identifier',
         'description',
-        'is_active',
-        'status',
-        'created_by',
-        'updated_by'
+        'settings'
     ];
 
     protected $casts = [
-        'is_active' => 'boolean',
-        'status' => 'string'
-    ];
-
-    protected $dates = [
-        'created_at',
-        'updated_at',
-        'deleted_at'
+        'settings' => 'json'
     ];
 
     /**
-     * Get the widget type that owns the widget.
+     * Get the theme that owns the widget.
      */
-    public function widgetType()
+    public function theme(): BelongsTo
     {
-        return $this->belongsTo(WidgetType::class);
+        return $this->belongsTo(Theme::class);
     }
     
     /**
-     * Get the content query associated with this widget.
+     * Get the field definitions for this widget.
      */
-    public function contentQuery()
+    public function fieldDefinitions(): HasMany
     {
-        return $this->belongsTo(WidgetContentQuery::class, 'content_query_id');
+        return $this->hasMany(WidgetFieldDefinition::class);
+    }
+    
+    /**
+     * Get the content type associations for this widget.
+     */
+    public function contentTypeAssociations(): HasMany
+    {
+        return $this->hasMany(WidgetContentTypeAssociation::class);
+    }
+    
+    /**
+     * Get the content types associated with this widget.
+     */
+    public function contentTypes()
+    {
+        return $this->belongsToMany(ContentType::class, 'widget_content_type_associations')
+            ->withTimestamps();
     }
     
     /**
@@ -67,13 +75,7 @@ class Widget extends Model
             ->orderBy('page_widgets.order_index');
     }
 
-    /**
-     * Get the field values for the widget.
-     */
-    public function fieldValues()
-    {
-        return $this->hasMany(WidgetFieldValue::class);
-    }
+
 
     /**
      * Get the user that created the widget.
@@ -142,33 +144,32 @@ class Widget extends Model
      */
     public function getData()
     {
-        $data = [];
+        $data = [
+            'name' => $this->name,
+            'description' => $this->description,
+            'status' => $this->status,
+            'type' => $this->widgetType ? $this->widgetType->name : null,
+            'type_key' => $this->widgetType ? $this->widgetType->slug : null,
+        ];
         
-        // Get all field values
-        $fieldValues = $this->fieldValues()->with('field')->get();
+        // Add content query data if available
+        if ($this->contentQuery) {
+            $data['content_query'] = [
+                'content_type' => $this->contentQuery->contentType ? $this->contentQuery->contentType->name : null,
+                'limit' => $this->contentQuery->limit,
+                'order_by' => $this->contentQuery->order_by,
+                'order_direction' => $this->contentQuery->order_direction,
+            ];
+        }
         
-        foreach ($fieldValues as $fieldValue) {
-            $field = $fieldValue->field;
-            $key = $field->key;
-            $value = $fieldValue->value;
-            
-            // Cast the value based on field type
-            switch ($field->type) {
-                case 'boolean':
-                    $value = (bool) $value;
-                    break;
-                case 'integer':
-                    $value = (int) $value;
-                    break;
-                case 'float':
-                    $value = (float) $value;
-                    break;
-                case 'json':
-                    $value = json_decode($value, true);
-                    break;
-            }
-            
-            $data[$key] = $value;
+        // Add display settings if available
+        if ($this->displaySettings) {
+            $data['display_settings'] = [
+                'layout' => $this->displaySettings->layout,
+                'view_mode' => $this->displaySettings->view_mode,
+                'pagination_type' => $this->displaySettings->pagination_type,
+                'items_per_page' => $this->displaySettings->items_per_page,
+            ];
         }
         
         return $data;

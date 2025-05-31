@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ContentTypeField extends Model
 {
-    use HasFactory;
+    use SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -17,13 +19,14 @@ class ContentTypeField extends Model
     protected $fillable = [
         'content_type_id',
         'name',
-        'key',
-        'type',
-        'required',
+        'slug',
+        'field_type',
+        'is_required',
+        'is_unique',
+        'position',
         'description',
         'validation_rules',
-        'default_value',
-        'order_index',
+        'settings'
     ];
 
     /**
@@ -32,31 +35,24 @@ class ContentTypeField extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'required' => 'boolean',
+        'is_required' => 'boolean',
+        'settings' => 'json',
     ];
 
     /**
      * Get the content type that owns the field.
      */
-    public function contentType()
+    public function contentType(): BelongsTo
     {
         return $this->belongsTo(ContentType::class);
     }
 
     /**
-     * Get the field options for the field.
+     * Get the field values for this field.
      */
-    public function options()
+    public function fieldValues(): HasMany
     {
-        return $this->hasMany(ContentTypeFieldOption::class, 'field_id')->orderBy('order_index');
-    }
-
-    /**
-     * Get the field values for the field.
-     */
-    public function fieldValues()
-    {
-        return $this->hasMany(ContentFieldValue::class, 'field_id');
+        return $this->hasMany(ContentFieldValue::class, 'content_type_field_id');
     }
 
     /**
@@ -81,6 +77,6 @@ class ContentTypeField extends Model
      */
     public function isType($type)
     {
-        return $this->type === $type;
+        return $this->field_type === $type;
     }
 }

@@ -11,22 +11,7 @@
 @endsection
 
 @section('content')
-    <div class="row">
-        <div class="col-12">
-            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                <h4 class="mb-sm-0">Edit Widget Type</h4>
-
-                <div class="page-title-right">
-                    <ol class="breadcrumb m-0">
-                        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('admin.widget-types.index') }}">Widget Types</a></li>
-                        <li class="breadcrumb-item active">Edit</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
-    </div>
-
+   
     <div class="row">
         <div class="col-lg-12">
             <div class="card">
@@ -105,112 +90,6 @@
                         </div>
 
                         <div class="col-12">
-                            <div class="card">
-                                <div class="card-header">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <h5 class="mb-0">Fields</h5>
-                                        <button type="button" class="btn btn-success btn-sm" id="addField">
-                                            <i class="ri-add-line"></i> Add Field
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="card-body">
-                                    <div id="fieldsContainer">
-                                        @foreach($widgetType->fields as $index => $field)
-                                            <div class="field-item border rounded p-3 mb-3">
-                                                <div class="row g-3">
-                                                    <div class="col-12 d-flex justify-content-between align-items-center">
-                                                        <h6 class="mb-0">Field</h6>
-                                                        <button type="button" class="btn btn-danger btn-sm delete-field">
-                                                            <i class="ri-delete-bin-line"></i>
-                                                        </button>
-                                                    </div>
-
-                                                    <input type="hidden" name="fields[{{ $index }}][id]" value="{{ $field->id }}">
-
-                                                    <div class="col-md-6">
-                                                        <label class="form-label">Name <span class="text-danger">*</span></label>
-                                                        <input type="text" 
-                                                               class="form-control" 
-                                                               name="fields[{{ $index }}][name]" 
-                                                               value="{{ $field->name }}"
-                                                               required>
-                                                    </div>
-
-                                                    <div class="col-md-6">
-                                                        <label class="form-label">Label <span class="text-danger">*</span></label>
-                                                        <input type="text" 
-                                                               class="form-control" 
-                                                               name="fields[{{ $index }}][label]" 
-                                                               value="{{ $field->label }}"
-                                                               required>
-                                                    </div>
-
-                                                    <div class="col-md-6">
-                                                        <label class="form-label">Field Type <span class="text-danger">*</span></label>
-                                                        <select class="form-select" 
-                                                                name="fields[{{ $index }}][field_type]" 
-                                                                required>
-                                                            @foreach(['text', 'textarea', 'rich_text', 'number', 'email', 'url', 'image', 'file', 'select', 'multiselect', 'checkbox', 'radio', 'date', 'time', 'datetime'] as $type)
-                                                                <option value="{{ $type }}" {{ $field->field_type === $type ? 'selected' : '' }}>
-                                                                    {{ ucfirst(str_replace('_', ' ', $type)) }}
-                                                                </option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-
-                                                    <div class="col-md-6">
-                                                        <label class="form-label">Default Value</label>
-                                                        <input type="text" 
-                                                               class="form-control" 
-                                                               name="fields[{{ $index }}][default_value]"
-                                                               value="{{ $field->default_value }}">
-                                                    </div>
-
-                                                    <div class="col-md-12">
-                                                        <label class="form-label">Help Text</label>
-                                                        <textarea class="form-control" 
-                                                                  name="fields[{{ $index }}][help_text]" 
-                                                                  rows="2">{{ $field->help_text }}</textarea>
-                                                    </div>
-
-                                                    <div class="col-md-12">
-                                                        <label class="form-label">Validation Rules</label>
-                                                        <input type="text" 
-                                                               class="form-control" 
-                                                               name="fields[{{ $index }}][validation_rules]" 
-                                                               value="{{ $field->validation_rules }}"
-                                                               placeholder="e.g., required|max:255">
-                                                    </div>
-
-                                                    <div class="col-md-6">
-                                                        <div class="form-check form-switch form-switch-success">
-                                                            <input class="form-check-input" 
-                                                                   type="checkbox" 
-                                                                   name="fields[{{ $index }}][is_required]"
-                                                                   {{ $field->is_required ? 'checked' : '' }}>
-                                                            <label class="form-check-label">Required</label>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="col-md-6">
-                                                        <div class="form-check form-switch form-switch-success">
-                                                            <input class="form-check-input" 
-                                                                   type="checkbox" 
-                                                                   name="fields[{{ $index }}][is_repeatable]"
-                                                                   {{ $field->is_repeatable ? 'checked' : '' }}>
-                                                            <label class="form-check-label">Repeatable</label>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-12">
                             <div class="form-check form-switch form-switch-success">
                                 <input class="form-check-input" 
                                        type="checkbox" 
@@ -233,98 +112,6 @@
         </div>
     </div>
 
-    <!-- Field Template -->
-    <template id="fieldTemplate">
-        <div class="field-item border rounded p-3 mb-3">
-            <div class="row g-3">
-                <div class="col-12 d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0">Field</h6>
-                    <button type="button" class="btn btn-danger btn-sm delete-field">
-                        <i class="ri-delete-bin-line"></i>
-                    </button>
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">Name <span class="text-danger">*</span></label>
-                    <input type="text" 
-                           class="form-control" 
-                           name="fields[__INDEX__][name]" 
-                           required>
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">Label <span class="text-danger">*</span></label>
-                    <input type="text" 
-                           class="form-control" 
-                           name="fields[__INDEX__][label]" 
-                           required>
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">Field Type <span class="text-danger">*</span></label>
-                    <select class="form-select" 
-                            name="fields[__INDEX__][field_type]" 
-                            required>
-                        <option value="text">Text</option>
-                        <option value="textarea">Textarea</option>
-                        <option value="rich_text">Rich Text</option>
-                        <option value="number">Number</option>
-                        <option value="email">Email</option>
-                        <option value="url">URL</option>
-                        <option value="image">Image</option>
-                        <option value="file">File</option>
-                        <option value="select">Select</option>
-                        <option value="multiselect">Multi Select</option>
-                        <option value="checkbox">Checkbox</option>
-                        <option value="radio">Radio</option>
-                        <option value="date">Date</option>
-                        <option value="time">Time</option>
-                        <option value="datetime">DateTime</option>
-                    </select>
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">Default Value</label>
-                    <input type="text" 
-                           class="form-control" 
-                           name="fields[__INDEX__][default_value]">
-                </div>
-
-                <div class="col-md-12">
-                    <label class="form-label">Help Text</label>
-                    <textarea class="form-control" 
-                              name="fields[__INDEX__][help_text]" 
-                              rows="2"></textarea>
-                </div>
-
-                <div class="col-md-12">
-                    <label class="form-label">Validation Rules</label>
-                    <input type="text" 
-                           class="form-control" 
-                           name="fields[__INDEX__][validation_rules]" 
-                           placeholder="e.g., required|max:255">
-                </div>
-
-                <div class="col-md-6">
-                    <div class="form-check form-switch form-switch-success">
-                        <input class="form-check-input" 
-                               type="checkbox" 
-                               name="fields[__INDEX__][is_required]">
-                        <label class="form-check-label">Required</label>
-                    </div>
-                </div>
-
-                <div class="col-md-6">
-                    <div class="form-check form-switch form-switch-success">
-                        <input class="form-check-input" 
-                               type="checkbox" 
-                               name="fields[__INDEX__][is_repeatable]">
-                        <label class="form-check-label">Repeatable</label>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </template>
 @endsection
 
 @section('scripts')
@@ -337,35 +124,6 @@
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const fieldsContainer = document.getElementById('fieldsContainer');
-            const fieldTemplate = document.getElementById('fieldTemplate');
-            const addFieldBtn = document.getElementById('addField');
-            let fieldIndex = {{ count($widgetType->fields) }};
-
-            // Add field
-            addFieldBtn.addEventListener('click', function() {
-                const newField = fieldTemplate.content.cloneNode(true);
-                
-                // Update field index
-                newField.querySelectorAll('[name*="__INDEX__"]').forEach(input => {
-                    input.name = input.name.replace('__INDEX__', fieldIndex);
-                });
-
-                // Add delete handler
-                newField.querySelector('.delete-field').addEventListener('click', function() {
-                    this.closest('.field-item').remove();
-                });
-
-                fieldsContainer.appendChild(newField);
-                fieldIndex++;
-            });
-
-            // Delete existing fields
-            document.querySelectorAll('.delete-field').forEach(button => {
-                button.addEventListener('click', function() {
-                    this.closest('.field-item').remove();
-                });
-            });
         });
     </script>
 @endsection

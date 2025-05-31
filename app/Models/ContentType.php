@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class ContentType extends Model
 {
-    use HasFactory;
+    use SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -16,38 +18,42 @@ class ContentType extends Model
      */
     protected $fillable = [
         'name',
-        'key',
+        'slug',
         'description',
-        'is_system',
-        'is_active',
-        'created_by',
-        'updated_by',
-    ];
-
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
-    protected $casts = [
-        'is_system' => 'boolean',
-        'is_active' => 'boolean',
+        'icon'
     ];
 
     /**
      * Get the fields for the content type.
      */
-    public function fields()
+    public function fields(): HasMany
     {
-        return $this->hasMany(ContentTypeField::class)->orderBy('order_index');
+        return $this->hasMany(ContentTypeField::class);
     }
 
     /**
      * Get the content items for the content type.
      */
-    public function contentItems()
+    public function contentItems(): HasMany
     {
         return $this->hasMany(ContentItem::class);
+    }
+    
+    /**
+     * Get the widgets associated with this content type.
+     */
+    public function widgets(): BelongsToMany
+    {
+        return $this->belongsToMany(Widget::class, 'widget_content_type_associations')
+            ->withTimestamps();
+    }
+    
+    /**
+     * Get the widget associations for this content type.
+     */
+    public function widgetAssociations(): HasMany
+    {
+        return $this->hasMany(WidgetContentTypeAssociation::class);
     }
 
     /**
