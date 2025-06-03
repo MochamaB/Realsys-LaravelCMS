@@ -43,24 +43,16 @@ class DashboardController extends Controller
         $widgets = Widget::withTrashed();
         $widgetsStats = [
             'total' => $widgets->count(),
-            'published' => $widgets->where('status', 'published')->count(),
-            'draft' => $widgets->where('status', 'draft')->count(),
             'recent' => Widget::latest()->take(5)->get()
         ];
 
-        // Get widget types statistics
-        $widgetTypes = WidgetType::withTrashed();
-        $widgetTypesStats = [
-            'total' => $widgetTypes->count(),
-            'active' => $widgetTypes->where('is_active', true)->count()
-        ];
+       
 
         // Combine all stats
         $stats = [
             'pages' => $pagesStats,
             'users' => $usersStats,
             'widgets' => $widgetsStats,
-            'widgetTypes' => $widgetTypesStats,
             'recent_pages' => $pagesStats['recent'],
             'recent_users' => $usersStats['recent']
         ];

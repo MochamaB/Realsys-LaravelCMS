@@ -30,7 +30,7 @@
                                     @else
                                         <form action="{{ route('admin.themes.activate', $theme) }}" method="POST" class="d-inline">
                                             @csrf
-                                            <button type="submit" class="btn btn-success btn-sm me-2">
+                                            <button type="submit" class="btn btn-success  me-2">
                                                 <i class="mdi mdi-check-circle me-1"></i> Activate Theme
                                             </button>
                                         </form>

@@ -78,14 +78,12 @@ class ThemeSeeder extends Seeder
         
         $themeId = DB::table('themes')->insertGetId([
             'name' => $themeConfig['name'],
-            'identifier' => $themeConfig['identifier'],
+            'slug' => $themeConfig['identifier'],
+            'directory' => $themeConfig['identifier'],
             'description' => $themeConfig['description'],
             'version' => $themeConfig['version'],
             'author' => $themeConfig['author'],
-            'website' => $themeConfig['website'],
             'is_active' => $themeConfig['active'] ?? false,
-            'screenshot' => $themeConfig['screenshot'] ?? null,
-            'settings' => json_encode($themeConfig['assets'] ?? []),
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -107,8 +105,9 @@ class ThemeSeeder extends Seeder
             $templateId = DB::table('templates')->insertGetId([
                 'theme_id' => $themeId,
                 'name' => $templateConfig['name'],
-                'identifier' => $templateConfig['identifier'],
+                'slug' => $templateConfig['identifier'],
                 'file_path' => $templateConfig['file'],
+                'description' => $templateConfig['description'] ?? null,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -122,10 +121,13 @@ class ThemeSeeder extends Seeder
                 DB::table('template_sections')->insert([
                     'template_id' => $templateId,
                     'name' => $sectionConfig['name'],
-                    'identifier' => $sectionConfig['identifier'],
+                    'slug' => $sectionConfig['identifier'],
+                    'position' => $sectionConfig['position'] ?? 0,
+                    'section_type' => $sectionConfig['section_type'] ?? 'full-width',
+                    'column_layout' => $sectionConfig['column_layout'] ?? null,
                     'description' => $sectionConfig['description'] ?? null,
                     'is_repeatable' => $sectionConfig['repeatable'] ?? false,
-                    'layout_settings' => $layoutSettings,
+                    'max_widgets' => $sectionConfig['max_widgets'] ?? null,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
@@ -147,9 +149,10 @@ class ThemeSeeder extends Seeder
             $widgetId = DB::table('widgets')->insertGetId([
                 'theme_id' => $themeId,
                 'name' => $widgetConfig['name'],
-                'identifier' => $widgetConfig['identifier'],
+                'slug' => $widgetConfig['identifier'],
                 'description' => $widgetConfig['description'] ?? null,
-                'settings' => json_encode($widgetConfig['query_parameters'] ?? []),
+                'icon' => $widgetConfig['icon'] ?? null,
+                'view_path' => $widgetConfig['view'] ?? 'theme::widgets.' . Str::slug($widgetConfig['identifier']),
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -161,9 +164,11 @@ class ThemeSeeder extends Seeder
                 DB::table('widget_field_definitions')->insert([
                     'widget_id' => $widgetId,
                     'name' => $fieldConfig['name'],
-                    'identifier' => $fieldConfig['identifier'],
+                    'slug' => $fieldConfig['identifier'],
                     'field_type' => $fieldConfig['type'],
                     'is_required' => $fieldConfig['required'] ?? false,
+                    'position' => $fieldConfig['position'] ?? 0,
+                    'description' => $fieldConfig['description'] ?? null,
                     'validation_rules' => $fieldConfig['validation'] ?? null,
                     'settings' => json_encode([
                         'default' => $fieldConfig['default'] ?? null,
@@ -188,7 +193,7 @@ class ThemeSeeder extends Seeder
             // Register content type
             $contentTypeId = DB::table('content_types')->insertGetId([
                 'name' => $contentTypeConfig['name'],
-                'identifier' => $contentTypeConfig['identifier'],
+                'slug' => $contentTypeConfig['identifier'],
                 'description' => $contentTypeConfig['description'] ?? null,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -201,9 +206,12 @@ class ThemeSeeder extends Seeder
                 DB::table('content_type_fields')->insert([
                     'content_type_id' => $contentTypeId,
                     'name' => $fieldConfig['name'],
-                    'identifier' => $fieldConfig['identifier'],
+                    'slug' => $fieldConfig['identifier'],
                     'field_type' => $fieldConfig['type'],
                     'is_required' => $fieldConfig['required'] ?? false,
+                    'position' => $fieldConfig['position'] ?? 0,
+                    'description' => $fieldConfig['description'] ?? null,
+                    'is_unique' => $fieldConfig['unique'] ?? false,
                     'validation_rules' => $fieldConfig['validation'] ?? null,
                     'settings' => json_encode([
                         'default' => $fieldConfig['default'] ?? null,
@@ -230,21 +238,21 @@ class ThemeSeeder extends Seeder
             }
             
             $widget = DB::table('widgets')
-                ->where('identifier', $widgetConfig['identifier'])
+                ->where('slug', $widgetConfig['identifier'])
                 ->first();
                 
             if (!$widget) {
-                $this->command->error('Widget not found: ' . $widgetConfig['identifier']);
+                $this->command->error('Widget not found with slug: ' . $widgetConfig['identifier']);
                 continue;
             }
             
             foreach ($widgetConfig['content_types'] as $contentTypeIdentifier) {
                 $contentType = DB::table('content_types')
-                    ->where('identifier', $contentTypeIdentifier)
+                    ->where('slug', $contentTypeIdentifier)
                     ->first();
                     
                 if (!$contentType) {
-                    $this->command->error('Content type not found: ' . $contentTypeIdentifier);
+                    $this->command->error('Content type not found with slug: ' . $contentTypeIdentifier);
                     continue;
                 }
                 
@@ -286,12 +294,12 @@ class ThemeSeeder extends Seeder
     private function createArticleContent(): void
     {
         $contentType = DB::table('content_types')
-            ->where('identifier', 'article')
+            ->where('slug', 'article')
             ->first();
             
         if (!$contentType) 
         {
-            $this->command->error('Content type not found: article');
+            $this->command->error('Content type not found with slug: article');
             return;
         }
         
@@ -326,6 +334,8 @@ class ThemeSeeder extends Seeder
             // Create content item
             $contentItemId = DB::table('content_items')->insertGetId([
                 'content_type_id' => $contentType->id,
+                'title' => $articleData['title'],
+                'slug' => Str::slug($articleData['title']),
                 'status' => 'published',
                 'published_at' => $articleData['published_date'],
                 'created_at' => now(),
@@ -339,13 +349,13 @@ class ThemeSeeder extends Seeder
                 
             // Create field values
             foreach ($fields as $field) {
-                $value = $articleData[$field->identifier] ?? null;
+                $value = $articleData[$field->slug] ?? null;
                 
                 if ($value !== null) {
                     DB::table('content_field_values')->insert([
                         'content_item_id' => $contentItemId,
                         'content_type_field_id' => $field->id,
-                        'field_value' => is_array($value) ? json_encode($value) : $value,
+                        'value' => is_array($value) ? json_encode($value) : $value,
                         'created_at' => now(),
                         'updated_at' => now(),
                     ]);
@@ -362,11 +372,11 @@ class ThemeSeeder extends Seeder
     private function createPageHeaderContent(): void
     {
         $contentType = DB::table('content_types')
-            ->where('identifier', 'page_header')
+            ->where('slug', 'page_header')
             ->first();
             
         if (!$contentType) {
-            $this->command->error('Content type not found: page_header');
+            $this->command->error('Content type not found with slug: page_header');
             return;
         }
         
@@ -392,6 +402,8 @@ class ThemeSeeder extends Seeder
             // Create content item
             $contentItemId = DB::table('content_items')->insertGetId([
                 'content_type_id' => $contentType->id,
+                'title' => $headerData['title'],
+                'slug' => Str::slug($headerData['title']),
                 'status' => 'published',
                 'published_at' => now(),
                 'created_at' => now(),
@@ -405,13 +417,13 @@ class ThemeSeeder extends Seeder
                 
             // Create field values
             foreach ($fields as $field) {
-                $value = $headerData[$field->identifier] ?? null;
+                $value = $headerData[$field->slug] ?? null;
                 
                 if ($value !== null) {
                     DB::table('content_field_values')->insert([
                         'content_item_id' => $contentItemId,
                         'content_type_field_id' => $field->id,
-                        'field_value' => is_array($value) ? json_encode($value) : $value,
+                        'value' => is_array($value) ? json_encode($value) : $value,
                         'created_at' => now(),
                         'updated_at' => now(),
                     ]);
@@ -428,11 +440,11 @@ class ThemeSeeder extends Seeder
     private function createContactSettingsContent(): void
     {
         $contentType = DB::table('content_types')
-            ->where('identifier', 'contact_settings')
+            ->where('slug', 'contact_settings')
             ->first();
             
         if (!$contentType) {
-            $this->command->error('Content type not found: contact_settings');
+            $this->command->error('Content type not found with slug: contact_settings');
             return;
         }
         
@@ -446,6 +458,8 @@ class ThemeSeeder extends Seeder
         // Create content item
         $contentItemId = DB::table('content_items')->insertGetId([
             'content_type_id' => $contentType->id,
+            'title' => $contactSettings['title'],
+            'slug' => Str::slug($contactSettings['title']),
             'status' => 'published',
             'published_at' => now(),
             'created_at' => now(),
@@ -459,13 +473,13 @@ class ThemeSeeder extends Seeder
             
         // Create field values
         foreach ($fields as $field) {
-            $value = $contactSettings[$field->identifier] ?? null;
+            $value = $contactSettings[$field->slug] ?? null;
             
             if ($value !== null) {
                 DB::table('content_field_values')->insert([
                     'content_item_id' => $contentItemId,
                     'content_type_field_id' => $field->id,
-                    'field_value' => is_array($value) ? json_encode($value) : $value,
+                    'value' => is_array($value) ? json_encode($value) : $value,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
@@ -485,7 +499,7 @@ class ThemeSeeder extends Seeder
         $templates = DB::table('templates')->get();
         
         // Create home page
-        $homeTemplate = $templates->where('identifier', 'home')->first();
+        $homeTemplate = $templates->where('slug', 'home')->first();
         if ($homeTemplate) {
             $homePageId = DB::table('pages')->insertGetId([
                 'template_id' => $homeTemplate->id,
@@ -493,7 +507,7 @@ class ThemeSeeder extends Seeder
                 'slug' => 'home',
                 'is_homepage' => true,
                 'status' => 'published',
-                'meta_title' => 'RealSys CMS - Home',
+                'meta_keywords' => 'RealSys CMS - Home',
                 'meta_description' => 'Welcome to RealSys CMS, a modern content management system',
                 'published_at' => now(),
                 'created_at' => now(),
@@ -507,7 +521,7 @@ class ThemeSeeder extends Seeder
         }
         
         // Create about page
-        $aboutTemplate = $templates->where('identifier', 'about')->first();
+        $aboutTemplate = $templates->where('slug', 'about')->first();
         if ($aboutTemplate) {
             $aboutPageId = DB::table('pages')->insertGetId([
                 'template_id' => $aboutTemplate->id,
@@ -515,7 +529,7 @@ class ThemeSeeder extends Seeder
                 'slug' => 'about',
                 'is_homepage' => false,
                 'status' => 'published',
-                'meta_title' => 'RealSys CMS - About Us',
+                'meta_keywords' => 'RealSys CMS - About Us',
                 'meta_description' => 'Learn more about the RealSys CMS team and our mission',
                 'published_at' => now(),
                 'created_at' => now(),
@@ -529,7 +543,7 @@ class ThemeSeeder extends Seeder
         }
         
         // Create contact page
-        $contactTemplate = $templates->where('identifier', 'contact')->first();
+        $contactTemplate = $templates->where('slug', 'contact')->first();
         if ($contactTemplate) {
             $contactPageId = DB::table('pages')->insertGetId([
                 'template_id' => $contactTemplate->id,
@@ -537,7 +551,7 @@ class ThemeSeeder extends Seeder
                 'slug' => 'contact',
                 'is_homepage' => false,
                 'status' => 'published',
-                'meta_title' => 'RealSys CMS - Contact Us',
+                'meta_keywords' => 'RealSys CMS - Contact Us',
                 'meta_description' => 'Get in touch with the RealSys CMS team',
                 'published_at' => now(),
                 'created_at' => now(),
@@ -566,13 +580,13 @@ class ThemeSeeder extends Seeder
             $pageSectionId = DB::table('page_sections')->insertGetId([
                 'page_id' => $pageId,
                 'template_section_id' => $templateSection->id,
-                'layout_settings' => $templateSection->layout_settings,
+                'position' => $templateSection->position ?? 0,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
             
             // Add widgets to page section
-            $this->addWidgetsToPageSection($pageSectionId, $templateSection->identifier);
+            $this->addWidgetsToPageSection($pageSectionId, $templateSection->slug);
         }
     }
 
@@ -598,7 +612,7 @@ class ThemeSeeder extends Seeder
         $widgetIdentifier = $sectionWidgetMap[$sectionIdentifier];
         
         $widget = DB::table('widgets')
-            ->where('identifier', $widgetIdentifier)
+            ->where('slug', $widgetIdentifier)
             ->first();
             
         if (!$widget) {

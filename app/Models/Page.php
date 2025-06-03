@@ -14,12 +14,12 @@ class Page extends Model implements HasMedia
 
     protected $fillable = [
         'template_id',
-        'name',
+        'title',
         'slug',
-        'meta_title',
+        'is_homepage',
         'meta_description',
+        'meta_keywords',
         'status',
-        'parent_id',
         'published_at'
     ];
 
@@ -48,7 +48,7 @@ class Page extends Model implements HasMedia
      */
     public function sections()
     {
-        return $this->hasMany(PageSection::class)->orderBy('order_index');
+        return $this->hasMany(PageSection::class)->orderBy('position');
     }
 
     /**

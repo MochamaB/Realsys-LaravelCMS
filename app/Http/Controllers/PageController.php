@@ -70,13 +70,13 @@ class PageController extends Controller
             if (is_null($slug)) {
                 $page = Page::where('is_homepage', true)
                     ->where('status', 'published')
-                    ->with(['template', 'template.theme', 'sections.templateSection', 'sections.widgets.widgetType'])
+                    ->with(['template', 'template.theme', 'sections.templateSection', 'sections.widgets'])
                     ->first();
                 
                 if (!$page) {
                     // If no homepage is set, get the first published page
                     $page = Page::where('status', 'published')
-                        ->with(['template', 'template.theme', 'sections.templateSection', 'sections.widgets.widgetType'])
+                        ->with(['template', 'template.theme', 'sections.templateSection', 'sections.widgets'])
                         ->orderBy('created_at', 'asc')
                         ->first();
                 }
@@ -88,7 +88,7 @@ class PageController extends Controller
                 // Find the page by slug
                 $page = Page::where('slug', $slug)
                     ->where('status', 'published')
-                    ->with(['template', 'template.theme', 'sections.templateSection', 'sections.widgets.widgetType'])
+                    ->with(['template', 'template.theme', 'sections.templateSection', 'sections.widgets'])
                     ->first();
                     
                 if (!$page) {
@@ -133,9 +133,12 @@ class PageController extends Controller
                 'exception' => $e
             ]);
             
-            return view('front.errors.page-error', [
-                'message' => 'There was an error rendering this page.'
-            ]);
+            // Temporarily showing the actual error instead of the error page
+            throw $e;
+            
+            // return view('front.errors.page-error', [
+            //     'message' => 'There was an error rendering this page.'
+            // ]);
         }
     }
     
@@ -162,7 +165,7 @@ class PageController extends Controller
             // Try to find the page by the final path segment
             $page = Page::where('slug', $slug)
                 ->where('status', 'published')
-                ->with(['template', 'template.theme', 'sections.templateSection', 'sections.widgets.widgetType'])
+                ->with(['template', 'template.theme', 'sections.templateSection', 'sections.widgets'])
                 ->first();
                 
             // If found, verify that the full path matches the page hierarchy
@@ -264,7 +267,7 @@ public function preview($id)
         abort(403);
     }
     
-    $page = Page::with(['template', 'template.theme', 'sections.templateSection', 'sections.widgets.widgetType'])
+    $page = Page::with(['template', 'template.theme', 'sections.templateSection', 'sections.widgets'])
         ->findOrFail($id);
     
     try {

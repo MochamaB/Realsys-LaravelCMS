@@ -7,12 +7,12 @@
                 <i class="fas fa-bars"></i>
             </button>
             <div class="collapse navbar-collapse" id="navbarResponsive">
-                @if($widgets && $widgets->count() > 0)
+                @if(!empty($widgets))
                     <!-- Render navigation widgets -->
                     @foreach($widgets as $widget)
-                        <div class="widget widget-{{ $widget->widgetType->slug }}">
-                            @include('theme::widgets.' . $widget->widgetType->slug, ['widget' => $widget])
-                        </div>
+                        <div class="widget widget-{{ $widget['slug'] }}">
+                @include($widget['view_path'], ['widget' => $widget])
+            </div>
                     @endforeach
                 @else
                     <!-- Default navigation if no widgets -->

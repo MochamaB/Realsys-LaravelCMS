@@ -1,6 +1,7 @@
 @extends('theme::layouts.theme')
 
-@templateSection('content')
+
+@section('content')
     @hasTemplateSection('hero')
         @templateSection('hero')
     @endHasTemplateSection
@@ -24,4 +25,4 @@
             @endHasTemplateSection
         </div>
     </div>
-@endtemplateSection
+@endsection

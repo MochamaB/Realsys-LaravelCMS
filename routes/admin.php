@@ -20,10 +20,6 @@ use App\Http\Controllers\Admin\TemplateSectionController;
 use App\Http\Controllers\Admin\ThemeController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\WidgetController;
-use App\Http\Controllers\Admin\WidgetContentQueryController;
-use App\Http\Controllers\Admin\WidgetContentQueryFilterController;
-use App\Http\Controllers\Admin\WidgetDisplaySettingController;
-use App\Http\Controllers\Admin\WidgetTypeController;
 
 
 // Guest routes for admin authentication (only for non-authenticated admin users)
@@ -58,24 +54,7 @@ Route::middleware('admin.auth')->group(function () {
     Route::get('/widgets/{widget}/preview', [WidgetController::class, 'preview'])->name('widgets.preview');
     Route::patch('/widgets/{widget}/toggle', [WidgetController::class, 'toggle'])->name('widgets.toggle');
 
-    // Widget Types
-    Route::resource('widget-types', WidgetTypeController::class);
-    Route::get('/widget-types/{widgetType}/toggle', [WidgetTypeController::class, 'toggle'])->name('widget-types.toggle');
-    
-    // Widget Content Queries
-    Route::resource('widget-content-queries', WidgetContentQueryController::class);
-    Route::get('/widget-content-queries/{contentQuery}/preview', [WidgetContentQueryController::class, 'preview'])->name('widget-content-queries.preview');
-    
-    // Widget Content Query Filters
-    Route::post('/widget-content-queries/{contentQuery}/filters', [WidgetContentQueryFilterController::class, 'store'])->name('widget-content-query-filters.store');
-    Route::get('/widget-content-query-filters/{filter}/edit', [WidgetContentQueryFilterController::class, 'edit'])->name('widget-content-query-filters.edit');
-    Route::put('/widget-content-query-filters/{filter}', [WidgetContentQueryFilterController::class, 'update'])->name('widget-content-query-filters.update');
-    Route::delete('/widget-content-query-filters/{filter}', [WidgetContentQueryFilterController::class, 'destroy'])->name('widget-content-query-filters.destroy');
-    Route::get('/widget-content-query-filters/get-fields', [WidgetContentQueryFilterController::class, 'getContentTypeFields'])->name('widget-content-query-filters.get-fields');
-    
-    // Widget Display Settings
-    Route::resource('widget-display-settings', WidgetDisplaySettingController::class);
-    Route::get('/widget-display-settings/{displaySetting}/preview', [WidgetDisplaySettingController::class, 'preview'])->name('widget-display-settings.preview');
+   
 
     // Menus
     Route::resource('menus', MenuController::class);
@@ -85,6 +64,7 @@ Route::middleware('admin.auth')->group(function () {
     Route::delete('/menus/{menu}/items/{item}', [MenuItemController::class, 'destroy'])->name('menus.items.destroy');
     Route::post('/menus/{menu}/items/order', [MenuItemController::class, 'updateOrder'])->name('menus.items.order');
 
+    
     // Themes
     Route::resource('themes', ThemeController::class);
     Route::post('/themes/{theme}/activate', [ThemeController::class, 'activate'])->name('themes.activate');

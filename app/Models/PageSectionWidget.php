@@ -18,7 +18,15 @@ class PageSectionWidget extends Model
     protected $fillable = [
         'page_section_id',
         'widget_id',
+        'position',
+        'column_position',
         'settings',
+        'content_query',
+        'css_classes',
+        'padding',
+        'margin',
+        'min_height',
+        'max_height'
     ];
 
     /**
@@ -28,6 +36,9 @@ class PageSectionWidget extends Model
      */
     protected $casts = [
         'settings' => 'json',
+        'content_query' => 'json',
+        'padding' => 'json',
+        'margin' => 'json',
     ];
 
     /**

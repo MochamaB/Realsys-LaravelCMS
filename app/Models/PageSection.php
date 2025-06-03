@@ -62,18 +62,8 @@ class PageSection extends Model
     public function widgets(): BelongsToMany
     {
         return $this->belongsToMany(Widget::class, 'page_section_widgets')
-            ->withPivot('settings')
-            ->withTimestamps();
-    }
-
-    /**
-     * Get the widgets for this page section.
-     */
-    public function widgets(): BelongsToMany
-    {
-        return $this->belongsToMany(Widget::class, 'page_widgets')
-            ->withPivot('order_index')
+            ->withPivot('settings', 'position', 'content_query')
             ->withTimestamps()
-            ->orderBy('page_widgets.order_index');
+            ->orderBy('page_section_widgets.position', 'asc');
     }
 }

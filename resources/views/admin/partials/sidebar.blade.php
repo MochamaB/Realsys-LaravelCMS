@@ -89,26 +89,13 @@
                     </a>
                     <div class="collapse menu-dropdown" id="sidebarWidgets">
                         <ul class="nav nav-sm flex-column">
-                            <li class="nav-item">
-                                <a href="{{ route('admin.widget-types.index') }}" class="nav-link" data-key="t-widget-types">
-                                     Types
-                                </a>
-                            </li>
+                            
                             <li class="nav-item">
                                 <a href="{{ route('admin.widgets.index') }}" class="nav-link" data-key="t-all-widgets">
-                                    All Widgets
+                                     Widgets
                                 </a>
                             </li>
-                            <li class="nav-item">
-                                <a href="{{ route('admin.widget-content-queries.index') }}" class="nav-link" data-key="t-content-sources">
-                                    Content Sources
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ route('admin.widget-display-settings.index') }}" class="nav-link" data-key="t-display-settings">
-                                    Display Settings
-                                </a>
-                            </li>
+                           
                         </ul>
                     </div>
                 </li>
@@ -128,7 +115,7 @@
                         </ul>
                     </div>
                 </li>
-
+                
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="#sidebarMenus" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarMenus">
                         <i class="ri-menu-line"></i> <span data-key="t-menus">Menus</span>

@@ -12,11 +12,13 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
-            <div class="d-flex justify-content-end mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-4" style="border-bottom: 1px solid #dee2e6; padding-bottom: 10px;">
+                <h4>Themes <span class="badge bg-primary">{{ $themes->count() }}</span></h4>
                 <a href="{{ route('admin.themes.create') }}" class="btn btn-primary">
                     <i class="mdi mdi-plus-circle-outline me-1"></i> Add New Theme
                 </a>
             </div>
+            
         </div>
     </div>
 
@@ -30,7 +32,7 @@
                     </div>
                 </div>
             </div>
-        @else
+            @else
             @foreach($themes as $theme)
                 <div class="col-md-6 col-lg-4 mb-4">
                     <div class="card h-100">
@@ -45,7 +47,7 @@
                             
                             @if($theme->is_active)
                                 <div class="position-absolute top-0 end-0 m-2">
-                                    <span class="badge bg-success">Active</span>
+                                    <span class="badge rounded-pill border border-success text-success">Active</span>
                                 </div>
                             @endif
                         </div>
@@ -62,10 +64,10 @@
                             </p>
                             
                             <div class="d-flex justify-content-between align-items-center">
-                                <a href="{{ route('admin.themes.show', $theme) }}" class="btn btn-sm btn-primary">View Details</a>
+                                <a href="{{ route('admin.themes.show', $theme) }}" class="btn btn-primary">View Details</a>
                                 
                                 <div class="dropdown">
-                                    <button class="btn btn-sm btn-light dropdown-toggle" type="button" id="themeActionDropdown{{ $theme->id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <button class="btn btn-light dropdown-toggle" type="button" id="themeActionDropdown{{ $theme->id }}" data-bs-toggle="dropdown" aria-expanded="false">
                                         Actions
                                     </button>
                                     <ul class="dropdown-menu" aria-labelledby="themeActionDropdown{{ $theme->id }}">

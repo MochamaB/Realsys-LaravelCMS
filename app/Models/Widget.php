@@ -14,9 +14,10 @@ class Widget extends Model
     protected $fillable = [
         'theme_id',
         'name',
-        'identifier',
+        'slug',
         'description',
-        'settings'
+        'icon',
+        'view_path'
     ];
 
     protected $casts = [
@@ -59,20 +60,17 @@ class Widget extends Model
     /**
      * Get the display settings associated with this widget.
      */
-    public function displaySettings()
-    {
-        return $this->belongsTo(WidgetDisplaySetting::class, 'display_settings_id');
-    }
+   
 
     /**
-     * Get the page section that owns the widget.
+     * Get the page sections that use this widget.
      */
     public function pageSections()
     {
-        return $this->belongsToMany(PageSection::class, 'page_widgets')
-            ->withPivot('order_index')
+        return $this->belongsToMany(PageSection::class, 'page_section_widgets')
+            ->withPivot('position', 'settings', 'content_query')
             ->withTimestamps()
-            ->orderBy('page_widgets.order_index');
+            ->orderBy('page_section_widgets.position');
     }
 
 
@@ -148,8 +146,8 @@ class Widget extends Model
             'name' => $this->name,
             'description' => $this->description,
             'status' => $this->status,
-            'type' => $this->widgetType ? $this->widgetType->name : null,
-            'type_key' => $this->widgetType ? $this->widgetType->slug : null,
+            'slug' => $this->slug,
+            'theme' => $this->theme ? $this->theme->name : null,
         ];
         
         // Add content query data if available
@@ -180,36 +178,30 @@ class Widget extends Model
      */
     public function render()
     {
-        $widgetType = $this->widgetType;
         $viewData = [
             'widget' => $this,
             'data' => $this->getData()
         ];
         
-        // If this widget uses the content query system
-        if ($this->content_query_id) {
-            // Get content items using the query
-            $contentQuery = $this->contentQuery;
-            if ($contentQuery) {
-                $contentItems = $contentQuery->executeQuery();
-                $viewData['contentItems'] = $contentItems;
+        // If the widget is attached to a page section with a content query
+        if (request()->route('page_section_widget')) {
+            $pageSectionWidget = request()->route('page_section_widget');
+            
+            // If there's a content query in the pivot
+            if ($pageSectionWidget && !empty($pageSectionWidget->content_query)) {
+                // In the future, we'll need to implement a content query executor here
+                // For now, just pass the content query to the view
+                $viewData['content_query'] = $pageSectionWidget->content_query;
             }
             
-            // Get display settings
-            $displaySettings = $this->displaySettings;
-            if ($displaySettings) {
-                $viewData['displaySettings'] = $displaySettings;
-                
-                // If display settings specify a view path, use it
-                if ($displaySettings->layout) {
-                    $viewPath = $displaySettings->getViewPath();
-                    return view($viewPath, $viewData)->render();
-                }
+            // Add settings from the pivot
+            if ($pageSectionWidget && !empty($pageSectionWidget->settings)) {
+                $viewData['settings'] = $pageSectionWidget->settings;
             }
         }
         
-        // Fallback to traditional widget rendering
-        $viewPath = 'widgets.' . $widgetType->slug;
+        // Use widget's view_path for rendering
+        $viewPath = $this->view_path ?: 'widgets.' . $this->slug;
         return view($viewPath, $viewData)->render();
     }
 }

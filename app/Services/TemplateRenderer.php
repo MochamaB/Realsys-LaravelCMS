@@ -19,14 +19,23 @@ class TemplateRenderer
     protected $themeManager;
     
     /**
+     * The widget service instance
+     *
+     * @var WidgetService
+     */
+    protected $widgetService;
+    
+    /**
      * Create a new template renderer instance.
      *
      * @param ThemeManager $themeManager
+     * @param WidgetService $widgetService
      * @return void
      */
-    public function __construct(ThemeManager $themeManager)
+    public function __construct(ThemeManager $themeManager, WidgetService $widgetService)
     {
         $this->themeManager = $themeManager;
+        $this->widgetService = $widgetService;
     }
     
     /**
@@ -77,22 +86,47 @@ class TemplateRenderer
         
         if ($page) {
             // Load page sections with their widgets
-            $pageSections = $page->sections()->with('widgets.widgetType')->get();
+            $pageSections = $page->sections()->with(['templateSection', 'widgets'])->get();
             
             foreach ($pageSections as $pageSection) {
-                $sections[$pageSection->templateSection->slug] = $pageSection;
+                // Get widget data prepared for rendering
+                $widgetData = $this->widgetService->getWidgetsForSection($pageSection->id);
+                
+                // Add section data with its widgets
+                $sections[$pageSection->templateSection->slug] = [
+                    'id' => $pageSection->id,
+                    'name' => $pageSection->name,
+                    'slug' => $pageSection->templateSection->slug,
+                    'widgets' => $widgetData
+                ];
             }
         }
+        
+        // Get active theme
+        $activeTheme = $this->themeManager->getActiveTheme();
+        
+        // Prepare theme assets
+        $themeAssets = [
+            'slug' => $activeTheme->slug,
+            'name' => $activeTheme->name,
+            'css' => [
+                theme_asset('css/styles.css'),
+            ],
+            'js' => [
+                theme_asset('js/scripts.js'),
+            ]
+        ];
         
         // Prepare view data
         $viewData = array_merge([
             'page' => $page,
             'template' => $template,
             'sections' => $sections,
+            'theme' => (object) $themeAssets,
         ], $data);
         
-        // Render the template
-        return view($templatePath, $viewData)->render();
+        // Don't render immediately - let Laravel handle the view hierarchy
+        return view($templatePath, $viewData)->__toString();
     }
     
     /**
@@ -110,11 +144,14 @@ class TemplateRenderer
     }
     
     // Remove 'templates/' prefix from file_path if it exists
-    $cleanFilePath = ltrim($template->file_path, 'templates/');
+    $cleanFilePath = $template->file_path;
+    if (strpos($cleanFilePath, 'templates/') === 0) {
+        $cleanFilePath = substr($cleanFilePath, strlen('templates/'));
+    }
     
     // Correct path to look in views/themes directory
     $templateFilePath = resource_path('themes/' . $theme->slug . '/templates/' . $cleanFilePath);
-    
+    /*
     dump([
         'Theme Slug' => $theme->slug,
         'Original Template File' => $template->file_path,
@@ -123,6 +160,7 @@ class TemplateRenderer
         'File Exists' => File::exists($templateFilePath),
         'View Path' => 'theme::templates.' . str_replace('.blade.php', '', $cleanFilePath)
     ]);
+    */
     
     // Check if file exists physically
     if (!File::exists($templateFilePath)) {
@@ -157,46 +195,89 @@ class TemplateRenderer
             ->whereHas('templateSection', function($query) use ($sectionSlug) {
                 $query->where('slug', $sectionSlug);
             })
-            ->with(['templateSection', 'widgets.widgetType'])
+            ->with(['templateSection', 'widgets'])
             ->first();
         
         if (!$pageSection) {
             return '';
         }
         
+        // Get widgets data from WidgetService to ensure consistent format
+        $widgetData = $this->widgetService->getWidgetsForSection($pageSection->id);
+        
+        // Debug the widget data for this section
+        \Log::debug('Section widget data in renderer', [
+            'section_id' => $pageSection->id,
+            'section_name' => $pageSection->name,
+            'section_slug' => $pageSection->templateSection->slug,
+            'widget_count' => is_array($widgetData) ? count($widgetData) : 0,
+            'widget_data_type' => gettype($widgetData),
+            'widget_sample' => !empty($widgetData) ? json_encode(array_slice($widgetData, 0, 1)) : 'empty'
+        ]);
+        
         // Prepare view data
         $sectionData = array_merge([
             'pageSection' => $pageSection,
             'section' => $pageSection->templateSection,
-            'widgets' => $pageSection->widgets,
+            'widgets' => $widgetData,
         ], $data);
         
-        // Prepare widget-specific data
-        foreach ($pageSection->widgets as $widget) {
-            // Add widget-specific data based on type
-            if ($widget->widgetType && $widget->widgetType->type === 'post-list') {
-                // Mock posts data for the post-list widget
-                $sectionData['posts'] = [
-                    ['id' => 1, 'title' => 'Sample Post 1', 'excerpt' => 'This is a sample post for testing purposes', 'url' => '/post/sample-1'],
-                    ['id' => 2, 'title' => 'Sample Post 2', 'excerpt' => 'Another sample post with some interesting content', 'url' => '/post/sample-2'],
-                    ['id' => 3, 'title' => 'Sample Post 3', 'excerpt' => 'Yet another sample post to demonstrate the widget', 'url' => '/post/sample-3'],
-                ];
-            }
-            // Add more widget types as needed
+        // Prepare any additional widget-specific data if needed
+        // Note: This should now be handled by the WidgetService
+        // and included in the widget data array already
+        
+        // Legacy fallback for specific widgets if needed
+        foreach ($widgetData as $widget) {
+            // Most data should be part of the widget content already
+            // This is just for any legacy compatibility if needed
         }
         
         // Render the section
         $theme = $template->theme;
-        $sectionView = 'theme::sections.' . $pageSection->templateSection->type;
         
-        // Check if section view exists, otherwise fall back to default
-        if (!View::exists($sectionView)) {
+        // Log section details for debugging
+        \Log::debug('Section template resolution', [
+            'section_id' => $pageSection->id,
+            'section_name' => $pageSection->name,
+            'template_section_id' => $pageSection->templateSection->id,
+            'template_section_slug' => $pageSection->templateSection->slug,
+            'template_section_type' => $pageSection->templateSection->type
+        ]);
+        
+        // Try to resolve section view using slug first (which should match the file names)
+        $sectionSlugView = 'theme::sections.' . $pageSection->templateSection->slug;
+        $sectionTypeView = 'theme::sections.' . $pageSection->templateSection->type;
+        
+        // Log view paths we're trying to resolve
+        \Log::debug('Section view paths', [
+            'section_slug_view' => $sectionSlugView,
+            'section_type_view' => $sectionTypeView,
+            'slug_view_exists' => View::exists($sectionSlugView) ? 'yes' : 'no',
+            'type_view_exists' => View::exists($sectionTypeView) ? 'yes' : 'no',
+        ]);
+        
+        // First try the slug-based view (matching our file names)
+        if (View::exists($sectionSlugView)) {
+            $sectionView = $sectionSlugView;
+        }
+        // Then try the type-based view
+        else if (View::exists($sectionTypeView)) {
+            $sectionView = $sectionTypeView;
+        }
+        // Finally fall back to default
+        else {
             $sectionView = 'theme::sections.default';
             
             // If theme doesn't provide a default section view, use system default
             if (!View::exists($sectionView)) {
                 $sectionView = 'front.sections.default';
             }
+            
+            \Log::warning('Falling back to default section template', [
+                'section_id' => $pageSection->id,
+                'section_slug' => $pageSection->templateSection->slug,
+                'section_type' => $pageSection->templateSection->type
+            ]);
         }
         
         return view($sectionView, $sectionData)->render();

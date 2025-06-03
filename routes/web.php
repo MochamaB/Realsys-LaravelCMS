@@ -50,5 +50,7 @@ Route::get('/{slug}', [PageController::class, 'show'])->name('page.show')->where
 Route::get('/preview/{id}', [PageController::class, 'preview'])->name('page.preview')
     ->middleware(['auth:web,admin']);
 
+    // Add this above the fallback route
+Route::redirect('/admin', '/admin/dashboard');
 // Fallback route for CMS pages
 Route::fallback([PageController::class, 'resolve'])->name('page.resolve');

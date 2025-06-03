@@ -5,10 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
-class Theme extends Model
+class Theme extends Model implements HasMedia
 {
-    use SoftDeletes;
+    use SoftDeletes, InteractsWithMedia;
 
     /**
      * The attributes that are mass assignable.
@@ -52,4 +55,38 @@ class Theme extends Model
     {
         return $this->hasMany(Widget::class);
     }
+     /**
+     * Register media collections
+     */
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('screenshot')
+             ->singleFile();
+    }
+
+    /**
+     * Define media conversions
+     */
+    public function registerMediaConversions(Media $media = null): void
+    {
+        $this->addMediaConversion('thumb')
+             ->width(400)
+             ->height(300);
+    }
+    public function getScreenshotPathAttribute()
+    {
+    // First check if we have a media item
+    if ($this->hasMedia('screenshot')) {
+        return $this->getFirstMediaUrl('screenshot');
+    }
+    
+    // If no media, check for default thumbnail in theme directory
+    $defaultPath = "themes/{$this->slug}/img/thumbnail.png";
+    if (file_exists(public_path($defaultPath))) {
+        return $defaultPath;
+    }
+    
+    // If neither exists, return null
+    return null;
+}
 }

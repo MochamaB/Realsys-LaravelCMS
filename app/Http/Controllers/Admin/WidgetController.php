@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Widget;
-use App\Models\WidgetType;
+// WidgetType model no longer used in new architecture
 use App\Models\PageSection;
 use App\Models\WidgetContentQuery;
 use App\Models\WidgetDisplaySetting;
@@ -25,18 +25,16 @@ class WidgetController extends Controller
         $activeTheme = Theme::where('is_active', true)->first();
         
         $query = Widget::with([
-            'widgetType', 
+            'theme', 
             'pageSections.page', 
             'pageSections.templateSection',
-            'contentQuery.contentType',
-            'displaySettings'
+            'contentTypes',
+            'fieldDefinitions'
         ]);
         
         // Always filter by the active theme
         if ($activeTheme) {
-            $query->whereHas('widgetType', function($q) use ($activeTheme) {
-                $q->where('theme_id', $activeTheme->id);
-            });
+            $query->where('theme_id', $activeTheme->id);
         }
         
         $widgets = $query->latest()->paginate(15);

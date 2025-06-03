@@ -8,13 +8,23 @@
                         <span class="subheading">{{ $section->getSetting('subheading', '') }}</span>
                     </div>
                     
-                    @if($widgets && $widgets->count() > 0)
+                    @if(!empty($widgets))
                         <div class="widgets-container">
                             @foreach($widgets as $widget)
-                                <div class="widget widget-{{ $widget->widgetType->slug }}">
-                                    @include('theme::widgets.' . $widget->widgetType->slug, ['widget' => $widget])
+                                <div class="widget widget-{{ $widget['slug'] }}">
+                                    @include($widget['view_path'], ['widget' => $widget])
                                 </div>
                             @endforeach
+                        </div>
+                    @else
+                        <div class="debug-info">
+                            <h4>Debug Info - Hero Section</h4>
+                            <p>Section: {{ $section->slug }}</p>
+                            <p>Widget Count: {{ is_array($widgets) ? count($widgets) : ($widgets ? $widgets->count() : 0) }}</p>
+                            <details>
+                                <summary>Widget Data</summary>
+                                <pre>{{ json_encode($widgets, JSON_PRETTY_PRINT) }}</pre>
+                            </details>
                         </div>
                     @endif
                 </div>

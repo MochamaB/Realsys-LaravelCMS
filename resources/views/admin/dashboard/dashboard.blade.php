@@ -65,7 +65,7 @@
                                     <div>
                                         <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span class="counter-value" data-target="{{ $stats['widgets']['total'] }}">0</span></h4>
                                         <div class="mb-2">
-                                            <span class="badge bg-success">{{ $stats['widgets']['published'] }} Published</span>
+                                            <span class="badge bg-success"> Published</span>
                                         </div>
                                         <a href="{{ route('admin.widgets.index') }}" class="text-decoration-underline">View all widgets</a>
                                     </div>

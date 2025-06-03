@@ -1,10 +1,10 @@
 <div class="section section-sidebar {{ $section->getSetting('custom_class', '') }}" id="section-{{ $section->slug }}">
     <div class="sidebar-container">
-        @if($widgets && $widgets->count() > 0)
+        @if(!empty($widgets))
             <div class="widgets-container">
                 @foreach($widgets as $widget)
-                    <div class="widget widget-{{ $widget->widgetType->slug }} mb-4">
-                        @include('theme::widgets.' . $widget->widgetType->slug, ['widget' => $widget])
+                    <div class="widget widget-{{ $widget['slug'] }} mb-4">
+                        @include($widget['view_path'], ['widget' => $widget])
                     </div>
                 @endforeach
             </div>
