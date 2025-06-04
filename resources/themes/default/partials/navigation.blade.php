@@ -7,15 +7,42 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarResponsive">
             <ul class="navbar-nav ms-auto py-4 py-lg-0">
-                @foreach($navigation->items as $item)
-                    <li class="nav-item">
-                        <a class="nav-link px-lg-3 py-3 py-lg-4 {{ $item->isActive ? 'active' : '' }}" 
-                           href="{{ $item->url }}"
-                           @if($item->target) target="{{ $item->target }}" @endif>
-                            {{ $item->label }}
-                        </a>
-                    </li>
-                @endforeach
+                @if(isset($menu) && $menu->rootItems->isNotEmpty())
+                    @foreach($menu->rootItems as $item)
+                        <li class="nav-item {{ $item->children && $item->children->isNotEmpty() ? 'dropdown' : '' }}">
+                            <a class="nav-link px-lg-3 py-3 py-lg-4 {{ $item->is_current ? 'active' : '' }} {{ $item->has_active_child ? 'parent-active' : '' }}" 
+                               href="{{ $item->full_url }}"
+                               @if($item->target) target="{{ $item->target }}" @endif
+                               @if($item->children && $item->children->isNotEmpty()) data-bs-toggle="dropdown" aria-expanded="false" @endif
+                               @if(isset($item->scrollTo) && $item->scrollTo) 
+                                   data-scroll-to="{{ $item->dataAttributes['data-scroll-to'] }}"
+                                   data-offset="{{ $item->dataAttributes['data-offset'] }}"
+                               @endif>
+                                {{ $item->label }}
+                            </a>
+                            
+                            @if($item->children && $item->children->isNotEmpty())
+                                <ul class="dropdown-menu">
+                                    @foreach($item->children as $child)
+                                        <li>
+                                            <a class="dropdown-item {{ $child->is_current ? 'active' : '' }}" 
+                                               href="{{ $child->full_url }}"
+                                               @if($child->target) target="{{ $child->target }}" @endif
+                                               @if(isset($child->scrollTo) && $child->scrollTo) 
+                                                   data-scroll-to="{{ $child->dataAttributes['data-scroll-to'] }}"
+                                                   data-offset="{{ $child->dataAttributes['data-offset'] }}"
+                                               @endif>
+                                                {{ $child->label }}
+                                            </a>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            @endif
+                        </li>
+                    @endforeach
+                @else
+                    <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" href="{{ url('/') }}">Home</a></li>
+                @endif
             </ul>
         </div>
     </div>

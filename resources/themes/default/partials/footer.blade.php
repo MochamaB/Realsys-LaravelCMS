@@ -1,3 +1,14 @@
+{{-- Inject the MenuService --}}
+@inject('menuService', 'App\Services\MenuService')
+
+{{-- Get the footer menu --}}
+@php
+    $footerMenu = $menuService->getProcessedMenu('footer', 
+        $page->id ?? null, 
+        $template->id ?? null, 
+        $isOnePage ?? false);
+@endphp
+
 <footer class="border-top">
     <div class="container px-4 px-lg-5">
         <div class="row gx-4 gx-lg-5 justify-content-center">
@@ -36,6 +47,28 @@
                         </li>
                     @endif
                 </ul>
+                
+                {{-- Footer Menu --}}
+                @if(isset($footerMenu) && $footerMenu->rootItems->isNotEmpty())
+                <div class="footer-menu py-3">
+                    <ul class="list-inline text-center">
+                        @foreach($footerMenu->rootItems as $item)
+                            <li class="list-inline-item">
+                                <a href="{{ $item->full_url }}" 
+                                   @if($item->target) target="{{ $item->target }}" @endif
+                                   class="px-2 {{ $item->is_current ? 'active' : '' }}"
+                                   @if(isset($item->scrollTo) && $item->scrollTo) 
+                                       data-scroll-to="{{ $item->dataAttributes['data-scroll-to'] }}"
+                                       data-offset="{{ $item->dataAttributes['data-offset'] }}"
+                                   @endif>
+                                    {{ $item->label }}
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+                @endif
+                
                 <div class="small text-center text-muted fst-italic">Copyright &copy; {{ config('app.name') }} {{ date('Y') }}</div>
             </div>
         </div>

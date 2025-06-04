@@ -7,8 +7,8 @@
                         <!-- Render footer widgets -->
                         @foreach($widgets as $widget)
                         <div class="widget widget-{{ $widget['slug'] }}">
-                @include($widget['view_path'], ['widget' => $widget])
-            </div>
+                            @include($widget['view_path'], ['widget' => $widget])
+                        </div>
                         @endforeach
                     @else
                         <!-- Default footer content if no widgets -->

@@ -16,10 +16,15 @@
 
         <!-- Custom CSS -->
         @stack('styles')
+       
+
     </head>
     <body>
         <!-- Navigation/Header Section -->
+         
         @templateSection('header')
+        {{-- In the header section of your layout --}}
+        <x-theme-navigation location="header" :page-id="$page->id ?? null" :template-id="$template->id ?? null" />
 
         <!-- Main Content -->
         <div class="main-content">

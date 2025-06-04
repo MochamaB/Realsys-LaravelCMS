@@ -1,0 +1,15 @@
+{
+  "name": "Miata",
+  "identifier": "miata",
+  "description": "A political Party theme for RealsysCMS",
+  "version": "1.0.0",
+  "author": "HTMLDemo.net (Adapted for RealsysCMS)",
+  "website": "https://nppk.com",
+  "active": false,
+  "screenshot": "assets/img/thumbnail.jpg",
+  "settings": {
+    "primary_color": "#ff5c5c",
+    "secondary_color": "#1e1e85",
+    "font_family": "Poppins, sans-serif"
+  }
+}

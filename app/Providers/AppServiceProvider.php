@@ -4,8 +4,11 @@ namespace App\Providers;
 
 use App\Providers\TemplateServiceProvider;
 use App\Providers\WidgetServiceProvider;
+use App\Services\MenuService;
+use App\View\Components\ThemeNavigation;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Blade;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +22,11 @@ class AppServiceProvider extends ServiceProvider
         
         // Register the Widget Service Provider
         $this->app->register(WidgetServiceProvider::class);
+        
+        // Register the Menu Service as a singleton
+        $this->app->singleton(MenuService::class, function ($app) {
+            return new MenuService();
+        });
     }
 
     /**
@@ -27,5 +35,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Schema::defaultStringLength(191);
+        
+        // Register theme navigation component
+        Blade::component('theme-navigation', ThemeNavigation::class);
     }
 }

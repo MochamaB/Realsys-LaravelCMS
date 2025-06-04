@@ -63,27 +63,34 @@ class ThemeManager
      */
     public function scanAndRegisterThemes()
     {
+        
         $registeredThemes = [];
         $themeConfigs = $this->getAllThemes();
         
         foreach ($themeConfigs as $slug => $config) {
+            
             // Check if theme already exists in database
             $existingTheme = Theme::where('slug', $slug)->first();
             
             if (!$existingTheme) {
+               
                 // Check for screenshot
                 $screenshotPath = $this->getThemeScreenshotPath($slug);
                 
                 // Create new theme record
                 $theme = Theme::create([
                     'name' => $config['name'] ?? Str::title($slug),
-                    'slug' => $slug,
+                    'slug' =>$config['identifier'] ?? null,
                     'description' => $config['description'] ?? null,
                     'version' => $config['version'] ?? '1.0.0',
                     'author' => $config['author'] ?? null,
-                    'screenshot_path' => $screenshotPath,
+                    'directory' => $config['identifier'] ?? null,
                     'is_active' => false,
                 ]);
+                if ($screenshotPath && File::exists(public_path($screenshotPath))) {
+                    $theme->addMediaFromUrl(asset($screenshotPath))
+                          ->toMediaCollection('screenshot');
+                }
                 
                 // Publish theme assets for newly registered theme
                 $this->publishAssets($theme);

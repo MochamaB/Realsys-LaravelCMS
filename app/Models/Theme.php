@@ -20,11 +20,11 @@ class Theme extends Model implements HasMedia
      */
     protected $fillable = [
         'name',
-        'identifier',
-        'description',
+        'slug',
+        'directory',
         'version',
         'author',
-        'website',
+        'description',
         'is_active',
         'screenshot',
         'settings'
@@ -81,10 +81,13 @@ class Theme extends Model implements HasMedia
     }
     
     // If no media, check for default thumbnail in theme directory
-    $defaultPath = "themes/{$this->slug}/img/thumbnail.png";
+    $preferredOrder = ['webp', 'png', 'jpg', 'jpeg','gif'];
+    foreach ($preferredOrder as $ext) {
+    $defaultPath = "themes/{$this->slug}/img/thumbnail.{$ext}";
     if (file_exists(public_path($defaultPath))) {
         return $defaultPath;
     }
+}
     
     // If neither exists, return null
     return null;
