@@ -5,8 +5,7 @@
                             <div class="col-lg-6 col-md-6 col-sm-6 col-12">
                                 <div class="social-logo">
                                     <a href="index.html">
-                                    <img src="{{ theme_asset('assets/images/logo/logo2.png') }}" alt="{{ config('app.name') }}" style="width: 260px; height: auto;">
-                                        <img src="{{ asset('client/assets/images/logo/logo2.png') }}" alt=""  style="width: 260px; height: auto;">
+                                        <img src="img/logo/logo2.png" alt="">
                                     </a>
                                 </div>
                             </div>
@@ -142,21 +141,12 @@
                             <div class="row">
                                 <div class="col-lg-6 col-12 col-md-9">
                                     <div class="footer-menu">
-                                        <ul>
-                                            <li><a class="active" href="#">Home </a></li>
-                                            <li><a href="#">About </a></li>
-                                            <li><a href="#">ssues  </a></li>
-                                            <li><a href="#">Events </a></li>
-                                            <li><a href="#">Pages  </a></li>
-                                            <li><a href="#">Elements</a></li>
-                                            <li><a href="#">Blog</a></li>
-                                            <li><a href="#">Contact</a></li>
-                                        </ul>
+                                    <x-theme-navigation :menu="$menus['footer'] ?? null" location="footer" />
                                     </div>
                                 </div>
                                 <div class="col-lg-6 col-12 col-md-3">
                                     <div class="copyright-text floatright">
-                                        <p>© 2022<a href="https://realsys.com/"> Realsys.</a></p>
+                                        <p>© {{ now()->year }} <a href="https://realsys.co.ke/">Realsys.</a></p>
                                     </div>
                                 </div>
                             </div>

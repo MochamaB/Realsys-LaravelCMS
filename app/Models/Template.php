@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Template extends Model
 {
@@ -19,8 +20,12 @@ class Template extends Model
     protected $fillable = [
         'theme_id',
         'name',
-        'identifier',
-        'file_path'
+        'slug',  // Required by the database schema
+        'file_path',
+        'description',
+        'is_active',
+        'is_default',
+        'settings'
     ];
 
     /**
@@ -132,5 +137,32 @@ class Template extends Model
         }
         
         return null;
+    }
+    
+    /**
+     * The booting method of the model.
+     * Ensures we always have a slug value generated from the name if none provided
+     *
+     * @return void
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($template) {
+            // Generate slug from name if not provided
+            if (empty($template->slug) && !empty($template->name)) {
+                $template->slug = Str::slug($template->name);
+                
+                // Ensure slug uniqueness per theme
+                $count = 1;
+                $originalSlug = $template->slug;
+                while (self::where('theme_id', $template->theme_id)
+                           ->where('slug', $template->slug)
+                           ->exists()) {
+                    $template->slug = $originalSlug . '-' . $count++;
+                }
+            }
+        });
     }
 }

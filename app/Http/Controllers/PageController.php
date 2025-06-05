@@ -61,6 +61,12 @@ class PageController extends Controller
         try {
             // Get the active theme
             $activeTheme = $this->themeManager->getActiveTheme();
+            // Add dd here
+    //dd([
+   //     'theme_slug' => $activeTheme->slug,
+   //     'css_assets' => $activeTheme->css ?? [],
+  //      'js_assets' => $activeTheme->js ?? []
+  //  ]);
             
             if (!$activeTheme) {
                 return view('front.errors.no-theme');

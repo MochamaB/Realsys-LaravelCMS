@@ -51,6 +51,10 @@ Route::get('/preview/{id}', [PageController::class, 'preview'])->name('page.prev
     ->middleware(['auth:web,admin']);
 
     // Add this above the fallback route
-Route::redirect('/admin', '/admin/dashboard');
+// Dynamic slug route - exclude 'admin' and other reserved paths
+Route::get('/{slug}', [PageController::class, 'show'])
+    ->name('page.show')
+    ->where('slug', '^(?!admin)[a-z0-9-]+$');
+
 // Fallback route for CMS pages
 Route::fallback([PageController::class, 'resolve'])->name('page.resolve');

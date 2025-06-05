@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+    
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -23,19 +24,16 @@
     </head>
     <body>
     <div class="wrapper">
+       
         <!-- Navigation/Header Section -->
-         
-        @templateSection('header')
-        {{-- In the header section of your layout --}}
-        <x-theme-navigation location="header" :page-id="$page->id ?? null" :template-id="$template->id ?? null" />
-
+        @include('theme::partials.header')
         <!-- Main Content -->
         <div class="main-content">
             @yield('content')
         </div>
 
         <!-- Footer Section -->
-        @templateSection('footer')
+        @include('theme::partials.footer')
 
         <!-- Theme JavaScript -->
         @foreach($theme->js as $js)

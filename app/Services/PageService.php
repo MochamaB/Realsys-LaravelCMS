@@ -224,7 +224,6 @@ class PageService
         }
         
         return Template::where('theme_id', $activeTheme->id)
-            ->where('is_active', true)
             ->orderBy('name')
             ->get();
     }

@@ -8,6 +8,7 @@ use App\Models\Theme;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\View;
+use App\Services\MenuService;
 
 class TemplateRenderer
 {
@@ -104,25 +105,17 @@ class TemplateRenderer
         
         // Get active theme
         $activeTheme = $this->themeManager->getActiveTheme();
-        
-        // Prepare theme assets
-        $themeAssets = [
-            'slug' => $activeTheme->slug,
-            'name' => $activeTheme->name,
-            'css' => [
-                theme_asset('css/styles.css'),
-            ],
-            'js' => [
-                theme_asset('js/scripts.js'),
-            ]
-        ];
+        // Get all active menus
+        $menuService = app(MenuService::class);
+        $menus = $menuService->getAllActiveMenus($page->id ?? null, $template->id ?? null);
         
         // Prepare view data
         $viewData = array_merge([
             'page' => $page,
             'template' => $template,
             'sections' => $sections,
-            'theme' => (object) $themeAssets,
+            'theme' => $activeTheme,
+            'menus' => $menus,
         ], $data);
         
         // Don't render immediately - let Laravel handle the view hierarchy

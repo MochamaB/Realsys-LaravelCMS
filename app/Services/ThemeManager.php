@@ -6,6 +6,11 @@ use App\Models\Theme;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use App\Models\Template;
+use App\Models\Page;    
+use App\Models\Menu;
+use App\Services\ThemeMigrationService;
+use App\Services\TemplateScanner;
 
 class ThemeManager
 {
@@ -91,6 +96,7 @@ class ThemeManager
                     $theme->addMediaFromUrl(asset($screenshotPath))
                           ->toMediaCollection('screenshot');
                 }
+               
                 
                 // Publish theme assets for newly registered theme
                 $this->publishAssets($theme);
@@ -167,8 +173,15 @@ class ThemeManager
         if ($activeTheme) {
             // Register view paths for active theme
             $this->registerThemeViewPaths($activeTheme);
+            $this->loadThemeAssets($activeTheme);
+            // For debugging only
+    // dd([
+    //     'theme_slug' => $activeTheme->slug,
+    //     'css_assets' => $activeTheme->css,
+    //     'js_assets' => $activeTheme->js
+    // ]);
         }
-        
+      //  dd($activeTheme->css);
         return $activeTheme;
     }
     
@@ -178,26 +191,7 @@ class ThemeManager
      * @param Theme $theme
      * @return bool
      */
-    public function activateTheme(Theme $theme)
-    {
-        // Deactivate all themes
-        Theme::where('is_active', true)->update(['is_active' => false]);
-        
-        // Activate the selected theme
-        $theme->is_active = true;
-        $theme->save();
-        
-        // Register view paths for the newly activated theme
-        $this->registerThemeViewPaths($theme);
-        
-        // Publish theme assets for the newly activated theme
-        $this->publishAssets($theme);
-        
-        // Clear theme cache
-        Cache::forget('available_themes');
-        
-        return true;
-    }
+   
     
     /**
      * Get available templates for a theme
@@ -412,11 +406,47 @@ class ThemeManager
     }
     
     /**
-     * Register theme view paths so that the theme templates can be found
-     *
-     * @param Theme $theme The theme to register view paths for
-     * @return void
+     * Activate a theme
+     * 
+     * @param Theme $theme Theme to activate
+     * @return bool Success status
      */
+    public function activateTheme(Theme $theme)
+    {
+        // Get current active theme before deactivating
+        $oldTheme = Theme::where('is_active', true)->first();
+        
+        // Deactivate all themes
+        Theme::where('is_active', true)->update(['is_active' => false]);
+        
+        // Activate the selected theme
+        $theme->is_active = true;
+        $theme->save();
+        // Scan and register templates from the theme's directory
+    app(TemplateScanner::class)->scanAndRegisterTemplates($theme);
+    
+        
+        // Migrate content from old theme to new theme
+        app(ThemeMigrationService::class)->migrateToNewTheme($theme, $oldTheme);
+        
+        // Register view paths for the newly activated theme
+        $this->registerThemeViewPaths($theme);
+        
+        // Publish theme assets for the newly activated theme
+        $this->publishAssets($theme);
+        
+        // Clear theme cache
+        Cache::forget('available_themes');
+        
+        return true;
+    }
+    
+    /**
+     * Get the currently active theme
+     * 
+     * @return Theme|null Active theme or null if none is active
+     */
+   
     public function registerThemeViewPaths(Theme $theme)
     {
         if (!$theme) {
@@ -438,4 +468,66 @@ class ThemeManager
             }
         }
     }
+    protected function loadThemeAssets(Theme $theme)
+{
+    $themeConfig = $this->getThemeConfig($theme->slug);
+    $cssAssets = [];
+    $jsAssets = [];
+    
+    // Try to load from theme.json configuration
+    if (isset($themeConfig['assets'])) {
+        if (isset($themeConfig['assets']['css'])) {
+            foreach ($themeConfig['assets']['css'] as $css) {
+                // Use asset() instead of theme_asset()
+                $cssAssets[] = asset('themes/' . $theme->slug . '/' . ltrim($css, '/'));
+            }
+        }
+        
+        if (isset($themeConfig['assets']['js'])) {
+            foreach ($themeConfig['assets']['js'] as $js) {
+                // Use asset() instead of theme_asset()
+                $jsAssets[] = asset('themes/' . $theme->slug . '/' . ltrim($js, '/'));
+            }
+        }
+    }
+    
+    // If no CSS assets in config, try to scan the directories
+    if (empty($cssAssets)) {
+        $cssDir = public_path("themes/{$theme->slug}/css");
+        if (File::isDirectory($cssDir)) {
+            foreach (File::files($cssDir) as $file) {
+                if (pathinfo($file, PATHINFO_EXTENSION) === 'css') {
+                    // Use asset() instead of theme_asset()
+                    $cssAssets[] = asset('themes/' . $theme->slug . '/css/' . $file->getFilename());
+                }
+            }
+        }
+    }
+    
+    // Same for JS assets
+    if (empty($jsAssets)) {
+        $jsDir = public_path("themes/{$theme->slug}/js");
+        if (File::isDirectory($jsDir)) {
+            foreach (File::files($jsDir) as $file) {
+                if (pathinfo($file, PATHINFO_EXTENSION) === 'js') {
+                    // Use asset() instead of theme_asset()
+                    $jsAssets[] = asset('themes/' . $theme->slug . '/js/' . $file->getFilename());
+                }
+            }
+        }
+    }
+    
+    // Set assets on theme object
+    $theme->css = $cssAssets;
+    $theme->js = $jsAssets;
+    
+    // For debugging only
+    // dd([
+   //      'theme_slug' => $theme->slug,
+     //    'css_assets' => $cssAssets,
+    //     'js_assets' => $jsAssets
+  //   ]);
+}
+
+   
 }

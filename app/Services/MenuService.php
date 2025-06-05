@@ -41,6 +41,49 @@ class MenuService
         
         return $menu;
     }
+    /**
+     * Get all active menus with their items
+     *
+     * @param int|null $pageId
+     * @param int|null $templateId
+     * @param bool $useCache
+     * @return \Illuminate\Support\Collection
+     */
+    public function getAllActiveMenus(?int $pageId = null, ?int $templateId = null, bool $useCache = true)
+    {
+        $cacheKey = "menus.all" . ($pageId ? ".page{$pageId}" : "") . ($templateId ? ".template{$templateId}" : "");
+        
+        if ($useCache && Cache::has($cacheKey)) {
+            return Cache::get($cacheKey);
+        }
+        
+        // Get all active menus with their items
+        $menus = Menu::where('is_active', true)
+            ->with(['rootItems' => function($query) {
+                $query->where('is_active', true)->orderBy('position');
+            }, 'rootItems.children' => function($query) {
+                $query->where('is_active', true)->orderBy('position');
+            }])
+            ->get();
+        
+        // Process each menu
+        $processedMenus = collect();
+        foreach ($menus as $menu) {
+            // Apply context filtering
+            $menu = $this->filterMenuItemsByContext($menu, $pageId, $templateId);
+            
+            // Process active states
+            $menu = $this->processActiveStates($menu);
+            
+            $processedMenus->put($menu->location, $menu);
+        }
+        
+        if ($useCache) {
+            Cache::put($cacheKey, $processedMenus, now()->addSeconds($this->cacheDuration));
+        }
+        
+        return $processedMenus;
+    }
     
     /**
      * Process menu items to mark active based on current URL

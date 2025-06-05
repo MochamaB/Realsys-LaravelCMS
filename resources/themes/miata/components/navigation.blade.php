@@ -1,10 +1,11 @@
+
 <nav>
     <ul>
         @if(isset($menu) && $menu->rootItems->isNotEmpty())
             @foreach($menu->rootItems as $item)
                 @if($item->children->count() > 0)
                     <li>
-                        <a href="{{ $item->getFullUrl() }}"
+                        <a href="{{ $item->full_url }}"
                             @if($item->target) target="{{ $item->target }}" @endif
                             @if($item->children && $item->children->isNotEmpty()) data-bs-toggle="dropdown" aria-expanded="false" @endif
                             @if(isset($item->scrollTo) && $item->scrollTo) 
@@ -17,7 +18,7 @@
                             <ul class="submenu-mainmenu">
                                 @foreach($item->children as $child)
                                     <li>
-                                        <a href="{{ $child->getFullUrl() }}"
+                                        <a href="{{ $child->full_url }}"
                                             @if($child->target) target="{{ $child->target }}" @endif
                                             @if(isset($child->scrollTo) && $child->scrollTo) 
                                                 data-scroll-to="{{ $child->dataAttributes['data-scroll-to'] }}"
@@ -32,7 +33,7 @@
                     </li>
                 @else
                     <li>
-                        <a href="{{ $item->getFullUrl() }}">{{ $item->label }}</a>
+                        <a href="{{ $item->full_url }}">{{ $item->label }}</a>
                     </li>
                 @endif
             @endforeach

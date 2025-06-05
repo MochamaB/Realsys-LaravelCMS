@@ -15,10 +15,13 @@ return new class extends Migration
             $table->id();
             $table->foreignId('theme_id')->constrained()->onDelete('cascade');
             $table->string('name');
-            $table->string('slug')->unique();
+            $table->string('slug');
             $table->string('file_path');
+            // Make slug unique per theme, not globally unique
+            $table->unique(['theme_id', 'slug']);
             // No image URL fields as we're using Spatie Media Library
             $table->text('description')->nullable();
+            $table->boolean('is_active')->default(false);
             $table->timestamps();
             $table->softDeletes();
         });

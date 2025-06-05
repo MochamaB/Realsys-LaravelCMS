@@ -7621,7 +7621,7 @@ b,strong {
 }
 
 .badge {
-    line-height: .95
+    line-height: 1.25
 }
 
 .badge-label.bg-primary:before {

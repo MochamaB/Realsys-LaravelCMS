@@ -1,10 +1,11 @@
+
 <header class="header-area intelligent-header">
     <div class="container-fluid">
         <div class="row">
             <div class="col-md-12">
                 <div class="logo floatleft">
                     <a href="{{ route('home') }}">
-                    <img src="{{ theme_asset('assets/images/logo.png') }}" alt="{{ config('app.name') }}" style="width: 250px; height: auto;" class="logo-img">
+                    <img src="{{ theme_asset('img/logo/logo.png') }}" alt="{{ config('app.name') }}" style="width: 250px; height: auto;" class="logo-img">
                     </a>
                 </div>
                 <div class="header-search floatright">
@@ -14,8 +15,7 @@
                     </div>
                 </div>
                 <div class="main-menu floatright">
-                <x-theme-navigation location="header" :page-id="$page->id ?? null" :template-id="$template->id ?? null" />
-                    @include('layouts.client.navigation')
+                <x-theme-navigation :menu="$menus['header'] ?? null" location="header" />
                 </div>
             </div>
         </div>
@@ -27,7 +27,7 @@
         <div class="row">
             <div class="col-md-12">
                 <div class="mobile-menu">
-                    @include('layouts.client.mobile_navigation')
+                    <x-theme-navigation location="header" :page-id="$page->id ?? null" :template-id="$template->id ?? null" />
                 </div>
             </div>
         </div>

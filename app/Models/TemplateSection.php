@@ -19,7 +19,7 @@ class TemplateSection extends Model
     protected $fillable = [
         'template_id',
         'name',
-        'identifier',
+        'slug',
         'description',
         'is_repeatable',
         'layout_settings'

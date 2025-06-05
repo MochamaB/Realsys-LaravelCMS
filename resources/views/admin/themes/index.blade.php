@@ -38,30 +38,32 @@
                     <div class="card h-100">
                         <div class="position-relative">
                             @if($theme->screenshot_path)
-                                <img src="{{ asset($theme->screenshot_path) }}" class="card-img-top" alt="{{ $theme->name }} Screenshot" style="height: 180px; object-fit: cover;">
+                                <img src="{{ asset($theme->screenshot_path) }}" class="card-img-top" alt="{{ $theme->name }} Screenshot" style="height: 220px; object-fit: cover;">
                             @else
-                                <div class="bg-light d-flex align-items-center justify-content-center" style="height: 180px;">
+                                <div class="bg-light d-flex align-items-center justify-content-center" style="height: 220px;">
                                     <i class="mdi mdi-image-outline" style="font-size: 48px;"></i>
                                 </div>
                             @endif
                             
-                            @if($theme->is_active)
-                                <div class="position-absolute top-0 end-0 m-2">
-                                    <span class="badge rounded-pill border border-success text-success">Active</span>
-                                </div>
-                            @endif
+                           
                         </div>
                         
                         <div class="card-body">
-                            <h5 class="card-title">{{ $theme->name }}</h5>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">{{ $theme->name }}</h5>
+                                
+                                @if($theme->is_active)
+                                    <span class="badge rounded-pill border border-success text-success ms-2">Active</span>
+                                @endif
+                            </div>
                             <p class="card-text text-muted mb-1">
                                 @if($theme->version)
                                     <small>Version: {{ $theme->version }}</small>
                                 @endif
                             </p>
-                            <p class="card-text small mb-3">
+                            <!--p class="card-text small mb-3">
                                 {{ Str::limit($theme->description, 100) }}
-                            </p>
+                            </p!-->
                             
                             <div class="d-flex justify-content-between align-items-center">
                                 <a href="{{ route('admin.themes.show', $theme) }}" class="btn btn-primary">View Details</a>

@@ -4,15 +4,15 @@
             @foreach($mainMenu->topLevelItems as $item)
                 @if($item->children->count() > 0)
                     <li>
-                        <a href="{{ $item->getFullUrl() }}">{{ $item->title }}</a>
+                        <a href="{{ $item->full_url }}">{{ $item->title }}</a>
                         <ul class="sub-menu">
                             @foreach($item->children as $child)
-                                <li><a href="{{ $child->getFullUrl() }}">{{ $child->title }}</a></li>
+                                <li><a href="{{ $child->full_url }}">{{ $child->title }}</a></li>
                             @endforeach
                         </ul>
                     </li>
                 @else
-                    <li><a href="{{ $item->getFullUrl() }}">{{ $item->title }}</a></li>
+                    <li><a href="{{ $item->full_url }}">{{ $item->title }}</a></li>
                 @endif
             @endforeach
         @else

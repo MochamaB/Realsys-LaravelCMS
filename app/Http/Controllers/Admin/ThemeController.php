@@ -33,6 +33,7 @@ class ThemeController extends Controller
         // Scan and register any new themes in the filesystem
         $this->themeManager->scanAndRegisterThemes();
         
+        
         $themes = Theme::all();
         $activeTheme = Theme::where('is_active', true)->first();
         
