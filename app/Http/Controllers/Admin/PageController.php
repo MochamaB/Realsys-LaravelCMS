@@ -327,4 +327,30 @@ class PageController extends Controller
         return redirect()->route('admin.pages.index')
             ->with('success', 'Page deleted successfully.');
     }
+
+    /**
+     * Get sections for a specific page as JSON.
+     *
+     * @param  int  $pageId
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getSections(Page $page)
+    {
+        // Get all page sections with their related template sections for the specific page
+        $sections = $page->sections()->with('templateSection')->get()->map(function($section) {
+            $templateSection = $section->templateSection;
+            return [
+                'id' => $section->id,
+                'name' => $templateSection->name,
+                'identifier' => $templateSection->identifier,
+                'description' => $templateSection->description
+            ];
+        });
+
+        return response()->json([
+            'page_id' => $page->id,
+            'page_title' => $page->title,
+            'sections' => $sections
+        ]);
+    }
 }

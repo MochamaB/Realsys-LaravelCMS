@@ -29,7 +29,7 @@
         <div class="container-fluid">
             <div id="two-column-menu"></div>
             <ul class="navbar-nav" id="navbar-nav">
-                <li class="menu-title"><span data-key="t-menu">Menu</span></li>
+                <li class="menu-title"><span data-key="t-menu">CMS</span></li>
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="{{ route('admin.dashboard') }}">
                         <i class="ri-dashboard-2-line"></i> <span data-key="t-dashboards">Dashboard</span>
@@ -82,6 +82,21 @@
                         </ul>
                     </div>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="#sidebarMenus" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarMenus">
+                        <i class="ri-menu-line"></i> <span data-key="t-menus">Menus</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarMenus">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                <a href="{{ route('admin.menus.index') }}" class="nav-link" data-key="t-all-menus">All Menus</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('admin.menus.create') }}" class="nav-link" data-key="t-create-menu">Create Menu</a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
 
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="#sidebarWidgets" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarWidgets">
@@ -116,28 +131,14 @@
                     </div>
                 </li>
                 
-                <li class="nav-item">
-                    <a class="nav-link menu-link" href="#sidebarMenus" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarMenus">
-                        <i class="ri-menu-line"></i> <span data-key="t-menus">Menus</span>
-                    </a>
-                    <div class="collapse menu-dropdown" id="sidebarMenus">
-                        <ul class="nav nav-sm flex-column">
-                            <li class="nav-item">
-                                <a href="{{ route('admin.menus.index') }}" class="nav-link" data-key="t-all-menus">All Menus</a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ route('admin.menus.create') }}" class="nav-link" data-key="t-create-menu">Create Menu</a>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
+               
 
 
                 <!-- Content Management Section -->
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="#sidebarContentManagement" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarContentManagement">
                         <i class="ri-database-2-line"></i>
-                        <span data-key="t-content-management">Content Management</span>
+                        <span data-key="t-content-management">Content</span>
                     </a>
                     <div class="collapse menu-dropdown" id="sidebarContentManagement">
                         <ul class="nav nav-sm flex-column">

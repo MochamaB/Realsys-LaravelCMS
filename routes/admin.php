@@ -46,23 +46,32 @@ Route::middleware('admin.auth')->group(function () {
 
     // Pages
     Route::resource('pages', PageController::class);
-    // Add this to your admin routes
     Route::put('/pages/{page}/homepage', [PageController::class, 'toggleHomepage'])->name('admin.pages.homepage');
+    Route::get('/pages/{page}/sections', [PageController::class, 'getSections'])->name('pages.sections');
 
     // Widgets
     Route::resource('widgets', WidgetController::class);
     Route::get('/widgets/{widget}/preview', [WidgetController::class, 'preview'])->name('widgets.preview');
     Route::patch('/widgets/{widget}/toggle', [WidgetController::class, 'toggle'])->name('widgets.toggle');
+        
 
    
 
     // Menus
     Route::resource('menus', MenuController::class);
-    Route::get('/menus/{menu}/items', [MenuItemController::class, 'index'])->name('menus.items.index');
-    Route::post('/menus/{menu}/items', [MenuItemController::class, 'store'])->name('menus.items.store');
-    Route::put('/menus/{menu}/items/{item}', [MenuItemController::class, 'update'])->name('menus.items.update');
-    Route::delete('/menus/{menu}/items/{item}', [MenuItemController::class, 'destroy'])->name('menus.items.destroy');
-    Route::post('/menus/{menu}/items/order', [MenuItemController::class, 'updateOrder'])->name('menus.items.order');
+
+    // Menu items management page
+    Route::get('menus/{menu}/items', [MenuController::class, 'items'])->name('menus.items');
+
+    // Menu item routes
+    Route::prefix('menus/{menu}')->name('menus.items.')->group(function () {
+        Route::get('items/create', [MenuItemController::class, 'create'])->name('create');
+        Route::post('items', [MenuItemController::class, 'store'])->name('store');
+        Route::get('items/{item}/edit', [MenuItemController::class, 'edit'])->name('edit');
+        Route::put('items/{item}', [MenuItemController::class, 'update'])->name('update');
+        Route::delete('items/{item}', [MenuItemController::class, 'destroy'])->name('destroy');
+        Route::post('items/positions', [MenuItemController::class, 'updatePositions'])->name('positions');
+    });
 
     
     // Themes
