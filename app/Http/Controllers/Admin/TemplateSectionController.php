@@ -17,12 +17,31 @@ class TemplateSectionController extends Controller
     public function index(Template $template)
     {
         $template->load(['sections' => function($query) {
-            $query->orderBy('order_index');
+            $query->orderBy('position');
         }]);
         
-        $sectionTypes = TemplateSection::getTypes();
+        $sectionTypes = [
+            'full-width' => 'Full Width Section',
+            'multi-column' => 'Multi-Column Section',
+            'sidebar-left' => 'Sidebar Left Section',
+            'sidebar-right' => 'Sidebar Right Section',
+        ];
         
-        return view('admin.template_sections.index', compact('template', 'sectionTypes'));
+        $columnLayouts = [
+            '12' => 'Full Width (12)',
+            '6-6' => 'Two Equal Columns (6-6)',
+            '4-4-4' => 'Three Equal Columns (4-4-4)',
+            '3-3-3-3' => 'Four Equal Columns (3-3-3-3)',
+            '8-4' => 'Wide & Narrow (8-4)',
+            '4-8' => 'Narrow & Wide (4-8)',
+            '3-6-3' => 'Sidebar, Main, Sidebar (3-6-3)',
+        ];
+        
+        // Get empty section for the form
+        $newSection = new TemplateSection();
+        $newSection->section_type = 'full-width';
+        
+        return view('admin.templates.sections.index', compact('template', 'sectionTypes', 'columnLayouts', 'newSection'));
     }
 
     /**
@@ -44,15 +63,14 @@ class TemplateSectionController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'type' => [
+            'section_type' => [
                 'required',
-                Rule::in(array_keys(TemplateSection::getTypes()))
+                Rule::in(['full-width', 'multi-column', 'sidebar-left', 'sidebar-right'])
             ],
-            'width' => 'nullable|string|max:50',
-            'is_required' => 'boolean',
+            'column_layout' => 'nullable|string|max:50',
+            'is_repeatable' => 'boolean',
             'max_widgets' => 'nullable|integer|min:1',
-            'order_index' => 'nullable|integer|min:0',
-            'settings' => 'nullable|array',
+            'position' => 'nullable|integer|min:0',
         ]);
         
         // Generate slug from name
@@ -62,15 +80,20 @@ class TemplateSectionController extends Controller
         $count = 0;
         $originalSlug = $slug;
         while (TemplateSection::where('template_id', $template->id)
-                             ->where('slug', $slug)
-                             ->exists()) {
+                              ->where('slug', $slug)
+                              ->exists()) {
             $count++;
             $slug = $originalSlug . '-' . $count;
         }
         
-        // Set order index if not provided
-        if (!isset($validated['order_index'])) {
-            $validated['order_index'] = $template->sections()->max('order_index') + 1;
+        // Set position if not provided
+        if (!isset($validated['position'])) {
+            $validated['position'] = $template->sections()->max('position') + 1;
+        }
+        
+        // Set default column layout if needed
+        if (!isset($validated['column_layout']) || empty($validated['column_layout'])) {
+            $validated['column_layout'] = '12'; // Default to full width
         }
         
         // Create the section
@@ -79,19 +102,19 @@ class TemplateSectionController extends Controller
             'name' => $validated['name'],
             'slug' => $slug,
             'description' => $validated['description'] ?? null,
-            'type' => $validated['type'],
-            'width' => $validated['width'] ?? null,
-            'is_required' => $request->has('is_required') && $request->is_required ? true : false,
+            'section_type' => $validated['section_type'],
+            'column_layout' => $validated['column_layout'],
+            'is_repeatable' => $request->has('is_repeatable') && $request->is_repeatable ? true : false,
             'max_widgets' => $validated['max_widgets'] ?? null,
-            'order_index' => $validated['order_index'],
-            'settings' => $validated['settings'] ?? null,
-            'is_active' => true,
+            'position' => $validated['position'],
         ]);
         
-        // If width is null, set default width based on section type
-        if (empty($section->width)) {
-            $section->width = $section->getDefaultWidth();
-            $section->save();
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Section created successfully.',
+                'section' => $section->load('template')
+            ]);
         }
         
         return redirect()->route('admin.templates.sections.index', $template)
@@ -115,18 +138,19 @@ class TemplateSectionController extends Controller
     }
 
     /**
-     * Show the form for editing the specified section.
+     * Get a specific section for editing via AJAX
      */
-    public function edit(Template $template, TemplateSection $section)
+    public function getSection(Request $request, Template $template, TemplateSection $section)
     {
         // Ensure the section belongs to the template
         if ($section->template_id !== $template->id) {
-            abort(404);
+            return response()->json(['success' => false, 'message' => 'Section not found'], 404);
         }
         
-        $sectionTypes = TemplateSection::getTypes();
-        
-        return view('admin.template_sections.edit', compact('template', 'section', 'sectionTypes'));
+        return response()->json([
+            'success' => true,
+            'section' => $section
+        ]);
     }
 
     /**
@@ -136,33 +160,47 @@ class TemplateSectionController extends Controller
     {
         // Ensure the section belongs to the template
         if ($section->template_id !== $template->id) {
+            if ($request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Section not found'], 404);
+            }
             abort(404);
         }
         
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'type' => [
+            'section_type' => [
                 'required',
-                Rule::in(array_keys(TemplateSection::getTypes()))
+                Rule::in(['full-width', 'multi-column', 'sidebar-left', 'sidebar-right'])
             ],
-            'width' => 'nullable|string|max:50',
-            'is_required' => 'boolean',
+            'column_layout' => 'nullable|string|max:50',
+            'is_repeatable' => 'boolean',
             'max_widgets' => 'nullable|integer|min:1',
-            'order_index' => 'nullable|integer|min:0',
-            'settings' => 'nullable|array',
+            'position' => 'nullable|integer|min:0',
         ]);
+        
+        // Set default column layout if needed
+        if (!isset($validated['column_layout']) || empty($validated['column_layout'])) {
+            $validated['column_layout'] = '12'; // Default to full width
+        }
         
         // Update the section
         $section->name = $validated['name'];
         $section->description = $validated['description'] ?? null;
-        $section->type = $validated['type'];
-        $section->width = $validated['width'] ?? $section->getDefaultWidth();
-        $section->is_required = $request->has('is_required') && $request->is_required ? true : false;
+        $section->section_type = $validated['section_type'];
+        $section->column_layout = $validated['column_layout'];
+        $section->is_repeatable = $request->has('is_repeatable') && $request->is_repeatable ? true : false;
         $section->max_widgets = $validated['max_widgets'] ?? null;
-        $section->order_index = $validated['order_index'] ?? $section->order_index;
-        $section->settings = $validated['settings'] ?? $section->settings;
+        $section->position = $validated['position'] ?? $section->position;
         $section->save();
+        
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Section updated successfully.',
+                'section' => $section->fresh()
+            ]);
+        }
         
         return redirect()->route('admin.templates.sections.index', $template)
                 ->with('success', 'Section updated successfully.');
@@ -171,42 +209,59 @@ class TemplateSectionController extends Controller
     /**
      * Update the order of sections.
      */
-    public function updateOrder(Request $request, Template $template)
+    public function updatePositions(Request $request, Template $template)
     {
         $validated = $request->validate([
-            'sections' => 'required|array',
-            'sections.*.id' => 'required|exists:template_sections,id',
-            'sections.*.order_index' => 'required|integer|min:0',
+            'positions' => 'required|array',
+            'positions.*' => 'required|exists:template_sections,id',
         ]);
         
-        foreach ($validated['sections'] as $sectionData) {
-            TemplateSection::where('id', $sectionData['id'])
+        // Update positions based on array order
+        foreach ($validated['positions'] as $index => $sectionId) {
+            TemplateSection::where('id', $sectionId)
                 ->where('template_id', $template->id)
-                ->update(['order_index' => $sectionData['order_index']]);
+                ->update(['position' => $index]);
         }
         
-        return response()->json(['success' => true]);
+        return response()->json([
+            'success' => true, 
+            'message' => 'Section positions updated successfully'
+        ]);
     }
 
     /**
      * Remove the specified section from storage.
      */
-    public function destroy(Template $template, TemplateSection $section)
+    public function destroy(Request $request, Template $template, TemplateSection $section)
     {
         // Ensure the section belongs to the template
         if ($section->template_id !== $template->id) {
+            if ($request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Section not found'], 404);
+            }
             abort(404);
         }
         
         // Check if section is in use by any page sections
         $pageSectionsCount = $section->pageSections()->count();
         if ($pageSectionsCount > 0) {
+            $message = "Cannot delete section because it is used by {$pageSectionsCount} page sections.";
+            if ($request->ajax()) {
+                return response()->json(['success' => false, 'message' => $message]);
+            }
             return redirect()->route('admin.templates.sections.index', $template)
-                    ->with('error', "Cannot delete section because it is used by {$pageSectionsCount} page sections.");
+                    ->with('error', $message);
         }
         
         // Delete the section
         $section->delete();
+        
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true, 
+                'message' => 'Section deleted successfully.'
+            ]);
+        }
         
         return redirect()->route('admin.templates.sections.index', $template)
                 ->with('success', 'Section deleted successfully.');

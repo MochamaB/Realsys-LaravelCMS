@@ -1,0 +1,192 @@
+/* Template Sections Manager Styles */
+
+/* Section List Styles */
+.section-list {
+    margin-bottom: 20px;
+}
+
+/* Template Section Item Styles */
+.template-section-item {
+    margin-bottom: 20px;
+    border: 1px solid #333; /* Default thick border */
+    border-radius: 0px;
+    transition: transform 0.2s ease;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* Border colors for different section types */
+.template-section-item.border-primary {
+    border-color: #0d6efd;
+}
+
+.template-section-item.border-info {
+    border-color: #0dcaf0;
+}
+
+.template-section-item.border-success {
+    border-color: #198754;
+}
+
+.template-section-item.border-warning {
+    border-color: #ffc107;
+}
+
+.template-section-item.border-secondary {
+    border-color: #6c757d;
+}
+
+/* Section Header Styles */
+.section-header {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.section-handle {
+    cursor: grab;
+    color: #555;
+    font-size: 1.5rem;
+    margin-right: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.section-handle:hover {
+    color: #222;
+}
+
+.section-title {
+    flex-grow: 1;
+}
+
+.section-title h5 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.section-description {
+    margin: 5px 0 0;
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.section-position {
+    padding: 0 15px;
+    color: #555;
+    font-weight: 500;
+}
+
+.section-actions {
+    display: flex;
+    gap: 5px;
+}
+
+/* Section Details Styles */
+.section-details {
+    padding: 15px;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.section-info {
+    flex: 1;
+    min-width: 300px;
+    margin-right: 20px;
+}
+
+.info-item {
+    margin-bottom: 8px;
+}
+
+.info-item strong {
+    display: inline-block;
+    min-width: 120px;
+}
+
+/* Section Preview Styles */
+.section-preview {
+    flex: 1;
+    min-width: 300px;
+}
+
+/* Ghost Element for Dragging */
+.section-ghost {
+    opacity: 0.6;
+    background: #f0f0f0;
+}
+
+/* Preview Styles */
+.preview-full-width,
+.preview-multi-column,
+.preview-sidebar-left,
+.preview-sidebar-right {
+    border: 2px dashed #ccc;
+    background: #f9f9f9;
+    height: 100px;
+    width: 100%;
+    min-height: 80px;
+}
+
+.preview-multi-column {
+    display: flex;
+    gap: 5px;
+}
+
+.preview-column {
+    background-color: #dee2e6;
+    border: 1px solid #ced4da;
+    height: 100%;
+}
+
+.preview-sidebar-left,
+.preview-sidebar-right {
+    display: flex;
+    gap: 5px;
+}
+
+.preview-sidebar {
+    background-color: #d1e7dd;
+    height: 100%;
+    width: 30%;
+    border: 1px solid #badbcc;
+}
+
+.preview-content {
+    background-color: #cfe2ff;
+    height: 100%;
+    flex-grow: 1;
+    border: 1px solid #b6d4fe;
+}
+
+/* Form Styles */
+#section-form .form-check {
+    margin-top: 1rem;
+}
+
+#max-widgets-container {
+    padding-left: 1.5rem;
+}
+
+/* Button Styling */
+#save-positions {
+    display: none;
+}
+
+.section-list:not(:empty) ~ .d-flex #save-positions {
+    display: inline-block;
+}
+
+/* Animation */
+@keyframes highlight {
+    0% { background-color: rgba(255, 243, 205, 0); }
+    50% { background-color: rgba(255, 243, 205, 1); }
+    100% { background-color: rgba(255, 243, 205, 0); }
+}
+
+.highlight {
+    animation: highlight 2s ease;
+}

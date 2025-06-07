@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Providers\BladeServiceProvider;
 use App\Providers\TemplateServiceProvider;
 use App\Providers\WidgetServiceProvider;
 use App\Services\MenuService;
@@ -22,6 +23,9 @@ class AppServiceProvider extends ServiceProvider
         
         // Register the Widget Service Provider
         $this->app->register(WidgetServiceProvider::class);
+        
+        // Register the Blade Service Provider for template sections
+        $this->app->register(BladeServiceProvider::class);
         
         // Register the Menu Service as a singleton
         $this->app->singleton(MenuService::class, function ($app) {

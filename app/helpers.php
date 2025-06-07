@@ -17,3 +17,21 @@ if (!function_exists('theme_asset')) {
         return asset('themes/' . $themeSlug . '/' . ltrim($path, '/'));
     }
 }
+
+if (!function_exists('getSectionColorClass')) {
+    /**
+     * Get the color class for a section type
+     * 
+     * @param string $sectionType
+     * @return string
+     */
+    function getSectionColorClass($sectionType) {
+        return match ($sectionType) {
+            'full-width' => 'primary',
+            'multi-column' => 'info',
+            'sidebar-left' => 'success',
+            'sidebar-right' => 'warning',
+            default => 'secondary',
+        };
+    }
+}

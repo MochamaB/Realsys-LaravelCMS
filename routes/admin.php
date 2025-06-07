@@ -125,16 +125,18 @@ Route::middleware('admin.auth')->group(function () {
     // Template Sections
     Route::prefix('templates/{template}')->group(function () {
         Route::resource('sections', TemplateSectionController::class)
+            ->except(['create', 'edit'])
             ->names([
                 'index' => 'templates.sections.index',
-                'create' => 'templates.sections.create',
                 'store' => 'templates.sections.store',
                 'show' => 'templates.sections.show',
-                'edit' => 'templates.sections.edit',
                 'update' => 'templates.sections.update',
                 'destroy' => 'templates.sections.destroy',
             ]);
-        Route::post('sections/order', [TemplateSectionController::class, 'updateOrder'])->name('templates.sections.order');
+            
+        // AJAX routes for template sections management
+        Route::post('sections/positions', [TemplateSectionController::class, 'updatePositions'])->name('templates.sections.positions');
+        Route::get('sections/{section}/get', [TemplateSectionController::class, 'getSection'])->name('templates.sections.get');
     });
     
     // Content Type Fields

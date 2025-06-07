@@ -68,42 +68,28 @@
                                                 {{ $template->theme->name ?? 'N/A' }}
                                             </td>
                                             <td>
-                                                <span class="badge bg-info">{{ $template->sections->count() }} sections</span>
+                                               {{ $template->sections->count() }} sections
                                             </td>
                                             <td>
                                                 @if($template->is_active)
-                                                    <span class="badge bg-success">Active</span>
+                                                    <span class="badge rounded-pill bg-success">Active</span>
                                                 @else
-                                                    <span class="badge bg-secondary">Inactive</span>
+                                                    <span class="badge rounded-pill bg-secondary">Inactive</span>
                                                 @endif
                                             </td>
                                             <td>
-                                                <div class="d-flex">
-                                                    <a href="{{ route('admin.templates.show', $template) }}" class="btn btn-sm btn-info me-1" data-bs-toggle="tooltip" title="View">
-                                                        <i class="mdi mdi-eye"></i>
-                                                    </a>
-                                                    <a href="{{ route('admin.templates.edit', $template) }}" class="btn btn-sm btn-primary me-1" data-bs-toggle="tooltip" title="Edit">
-                                                        <i class="mdi mdi-pencil"></i>
-                                                    </a>
-                                                    <a href="{{ route('admin.templates.sections.index', $template) }}" class="btn btn-sm btn-secondary me-1" data-bs-toggle="tooltip" title="Manage Sections">
-                                                        <i class="mdi mdi-puzzle"></i>
-                                                    </a>
-                                                    @if(!$template->is_default)
-                                                        <form action="{{ route('admin.templates.set-default', $template) }}" method="POST" class="d-inline">
-                                                            @csrf
-                                                            <button type="submit" class="btn btn-sm btn-success me-1" data-bs-toggle="tooltip" title="Set as Default">
-                                                                <i class="mdi mdi-check-circle"></i>
-                                                            </button>
-                                                        </form>
-                                                    @endif
-                                                    <form action="{{ route('admin.templates.destroy', $template) }}" method="POST" class="d-inline delete-form">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="btn btn-sm btn-danger" data-bs-toggle="tooltip" title="Delete">
-                                                            <i class="mdi mdi-trash-can"></i>
-                                                        </button>
-                                                    </form>
-                                                </div>
+                                                @include('admin.partials.actionbuttons', [
+                                                    'model' => $template,
+                                                    'type' => 'inline',
+                                                    'itemsRoute' => 'admin.templates.sections.index',
+                                                    'previewRoute' => 'admin.templates.preview',
+                                                    'viewRoute' => 'admin.templates.show',
+                                                    'editRoute' => 'admin.templates.edit',
+                                                    'destroyRoute' => 'admin.templates.destroy',
+                                                    'resource' => 'template',
+                                                    'resourceName' => 'template'
+                                                ])
+
                                             </td>
                                         </tr>
                                     @endforeach

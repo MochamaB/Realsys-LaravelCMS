@@ -14,13 +14,10 @@ class TemplateSection extends Model
     /**
      * Section type constants
      */
-    const TYPE_HEADER = 'header';
-    const TYPE_FOOTER = 'footer';
-    const TYPE_SIDEBAR = 'sidebar';
-    const TYPE_CONTENT = 'content';
-    const TYPE_HERO = 'hero';
-    const TYPE_BANNER = 'banner';
-    const TYPE_CUSTOM = 'custom';
+    const TYPE_FULL_WIDTH = 'full-width';
+    const TYPE_MULTI_COLUMN = 'multi-column';
+    const TYPE_SIDEBAR_LEFT = 'sidebar-left';
+    const TYPE_SIDEBAR_RIGHT = 'sidebar-right';
 
     /**
      * The attributes that are mass assignable.
@@ -101,8 +98,10 @@ class TemplateSection extends Model
     public static function getTypes(): array
     {
         return [
-            'full-width' => 'Full Width',
-            'multi-column' => 'Multi-Column',
+            self::TYPE_FULL_WIDTH => 'Full Width Section',
+            self::TYPE_MULTI_COLUMN => 'Multi-Column Section',
+            self::TYPE_SIDEBAR_LEFT => 'Sidebar Left Section',
+            self::TYPE_SIDEBAR_RIGHT => 'Sidebar Right Section',
         ];
     }
     
@@ -117,9 +116,10 @@ class TemplateSection extends Model
             '12' => 'Full Width (12)',
             '6-6' => 'Two Equal Columns (6-6)',
             '4-4-4' => 'Three Equal Columns (4-4-4)',
-            '8-4' => 'Two Columns (8-4)',
-            '4-8' => 'Two Columns (4-8)',
-            '3-6-3' => 'Three Columns (3-6-3)',
+            '3-3-3-3' => 'Four Equal Columns (3-3-3-3)',
+            '8-4' => 'Wide & Narrow (8-4)',
+            '4-8' => 'Narrow & Wide (4-8)',
+            '3-6-3' => 'Sidebar, Main, Sidebar (3-6-3)',
         ];
     }
     
@@ -131,7 +131,7 @@ class TemplateSection extends Model
      */
     public function isType(string $type): bool
     {
-        return $this->type === $type;
+        return $this->section_type === $type;
     }
     
     /**
@@ -141,18 +141,23 @@ class TemplateSection extends Model
      */
     public function getDefaultWidth(): string
     {
-        switch ($this->type) {
-            case self::TYPE_HEADER:
-            case self::TYPE_FOOTER:
-            case self::TYPE_HERO:
-            case self::TYPE_BANNER:
+        switch ($this->section_type) {
+            case self::TYPE_FULL_WIDTH:
                 return 'col-12'; // Full width
                 
-            case self::TYPE_SIDEBAR:
+            case self::TYPE_SIDEBAR_LEFT:
+            case self::TYPE_SIDEBAR_RIGHT:
                 return 'col-md-4'; // Smaller width for sidebar
                 
-            case self::TYPE_CONTENT:
-                return 'col-md-8'; // Larger width for main content
+            case self::TYPE_MULTI_COLUMN:
+                // For multi-column, the width depends on the column layout
+                $layout = $this->column_layout ?? '12';
+                if ($layout === '12') {
+                    return 'col-12';
+                } else {
+                    // Return a reasonable default
+                    return 'col-md-6';
+                }
                 
             default:
                 return 'col-md-6'; // Default medium width

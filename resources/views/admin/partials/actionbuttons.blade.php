@@ -37,7 +37,14 @@
     @if($itemsRoute)
         <a href="{{ route($itemsRoute, $model->id) }}" class="btn btn-sm btn-soft-primary" data-bs-toggle="tooltip" title="Manage Items">
             <i class="ri-list-check"></i>
-            @if($type === 'inline') Manage Items @endif
+            @if($type === 'inline') 
+                Manage 
+                @if($itemsRoute === 'admin.templates.sections.index')
+                    Sections 
+                @else
+                    Items 
+                @endif
+            @endif
         </a>
     @endif
 
