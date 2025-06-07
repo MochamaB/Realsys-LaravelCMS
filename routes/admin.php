@@ -120,6 +120,7 @@ Route::middleware('admin.auth')->group(function () {
     Route::resource('templates', TemplateController::class);
     Route::post('templates/{template}/set-default', [TemplateController::class, 'setDefault'])->name('templates.set-default');
     Route::get('templates/{template}/preview', [TemplateController::class, 'preview'])->name('templates.preview');
+    Route::get('template-files', [TemplateController::class, 'getTemplateFiles'])->name('templates.files');
     
     // Template Sections
     Route::prefix('templates/{template}')->group(function () {

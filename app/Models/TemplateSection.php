@@ -10,6 +10,17 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class TemplateSection extends Model
 {
     use SoftDeletes;
+    
+    /**
+     * Section type constants
+     */
+    const TYPE_HEADER = 'header';
+    const TYPE_FOOTER = 'footer';
+    const TYPE_SIDEBAR = 'sidebar';
+    const TYPE_CONTENT = 'content';
+    const TYPE_HERO = 'hero';
+    const TYPE_BANNER = 'banner';
+    const TYPE_CUSTOM = 'custom';
 
     /**
      * The attributes that are mass assignable.
@@ -20,9 +31,12 @@ class TemplateSection extends Model
         'template_id',
         'name',
         'slug',
+        'position',
+        'section_type',
+        'column_layout',
         'description',
         'is_repeatable',
-        'layout_settings'
+        'max_widgets'
     ];
 
     /**
@@ -32,7 +46,8 @@ class TemplateSection extends Model
      */
     protected $casts = [
         'is_repeatable' => 'boolean',
-        'layout_settings' => 'json'
+        'position' => 'integer',
+        'max_widgets' => 'integer'
     ];
 
     /**
@@ -86,13 +101,25 @@ class TemplateSection extends Model
     public static function getTypes(): array
     {
         return [
-            self::TYPE_HEADER => 'Header',
-            self::TYPE_FOOTER => 'Footer',
-            self::TYPE_SIDEBAR => 'Sidebar',
-            self::TYPE_CONTENT => 'Content',
-            self::TYPE_HERO => 'Hero',
-            self::TYPE_BANNER => 'Banner',
-            self::TYPE_CUSTOM => 'Custom',
+            'full-width' => 'Full Width',
+            'multi-column' => 'Multi-Column',
+        ];
+    }
+    
+    /**
+     * Get all available column layouts
+     * 
+     * @return array
+     */
+    public static function getColumnLayouts(): array
+    {
+        return [
+            '12' => 'Full Width (12)',
+            '6-6' => 'Two Equal Columns (6-6)',
+            '4-4-4' => 'Three Equal Columns (4-4-4)',
+            '8-4' => 'Two Columns (8-4)',
+            '4-8' => 'Two Columns (4-8)',
+            '3-6-3' => 'Three Columns (3-6-3)',
         ];
     }
     

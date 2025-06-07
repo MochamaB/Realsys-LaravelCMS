@@ -234,12 +234,12 @@ class TemplateRenderer
             'section_name' => $pageSection->name,
             'template_section_id' => $pageSection->templateSection->id,
             'template_section_slug' => $pageSection->templateSection->slug,
-            'template_section_type' => $pageSection->templateSection->type
+            'template_section_type' => $pageSection->templateSection->section_type
         ]);
         
         // Try to resolve section view using slug first (which should match the file names)
         $sectionSlugView = 'theme::sections.' . $pageSection->templateSection->slug;
-        $sectionTypeView = 'theme::sections.' . $pageSection->templateSection->type;
+        $sectionTypeView = 'theme::sections.' . $pageSection->templateSection->section_type;
         
         // Log view paths we're trying to resolve
         \Log::debug('Section view paths', [
@@ -269,7 +269,7 @@ class TemplateRenderer
             \Log::warning('Falling back to default section template', [
                 'section_id' => $pageSection->id,
                 'section_slug' => $pageSection->templateSection->slug,
-                'section_type' => $pageSection->templateSection->type
+                'section_type' => $pageSection->templateSection->section_type
             ]);
         }
         
@@ -296,5 +296,56 @@ class TemplateRenderer
                 $query->where('slug', $sectionSlug);
             })
             ->exists();
+    }
+    
+    /**
+     * Render all sections for a page and template
+     *
+     * @param array $data View data containing page and template
+     * @return string HTML output of all rendered sections
+     */
+    public function renderAllSections(array $data = []): string
+    {
+        $page = $data['page'] ?? null;
+        $template = $data['template'] ?? null;
+        
+        if (!$page || !$template) {
+            return '';
+        }
+        
+        $output = '';
+        
+        // Load all template sections in order
+        $templateSections = $template->sections()
+            ->orderBy('position')
+            ->get();
+            
+        foreach ($templateSections as $templateSection) {
+            // Find the corresponding page section
+            $pageSection = $page->sections()
+                ->where('template_section_id', $templateSection->id)
+                ->first();
+                
+            if (!$pageSection) {
+                // Skip sections that don't exist for this page
+                continue;
+            }
+            
+            // Generate appropriate CSS classes based on the section type and column layout
+            $sectionClasses = $templateSection->section_type;
+            if ($templateSection->section_type === 'multi-column' && $templateSection->column_layout) {
+                $sectionClasses .= ' columns-' . $templateSection->column_layout;
+            }
+            
+            // Create the section wrapper with appropriate classes
+            $output .= "<div id='section-{$templateSection->slug}' class='template-section {$sectionClasses}'>";
+            
+            // Render the section content
+            $output .= $this->renderSection($templateSection->slug, $data);
+            
+            $output .= "</div>\n";
+        }
+        
+        return $output;
     }
 }

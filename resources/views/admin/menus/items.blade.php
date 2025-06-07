@@ -104,7 +104,7 @@
 
 @section('js')
 <!-- Sortable.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+<script src="{{ asset('assets/admin/libs/sortablejs/Sortable.min.js') }}"></script>
 
 <!-- Menu Manager JS -->
 <script src="{{ asset('assets/admin/js/menu-manager.js') }}"></script>

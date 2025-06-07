@@ -43,7 +43,43 @@ class TemplateController extends Controller
         $themes = Theme::where('is_active', true)->orderBy('name')->get();
         $sectionTypes = TemplateSection::getTypes();
         
-        return view('admin.templates.create', compact('themes', 'sectionTypes'));
+        // Get available template files for the first theme (if any)
+        $templateFiles = [];
+        if ($themes->isNotEmpty()) {
+            $templateFiles = $this->getAvailableTemplateFiles($themes->first()->id);
+        }
+        
+        return view('admin.templates.create', compact('themes', 'sectionTypes', 'templateFiles'));
+    }
+    
+    /**
+     * Get available template files for a theme
+     *
+     * @param int $themeId
+     * @return array
+     */
+    protected function getAvailableTemplateFiles($themeId)
+    {
+        $theme = Theme::find($themeId);
+        if (!$theme) {
+            return [];
+        }
+        
+        // Check for template files in the theme's templates directory
+        $templatesDir = resource_path('themes/' . $theme->slug . '/templates');
+        $files = [];
+        
+        if (File::exists($templatesDir) && File::isDirectory($templatesDir)) {
+            $bladeFiles = File::glob($templatesDir . '/*.blade.php');
+            
+            foreach ($bladeFiles as $file) {
+                $relativePath = basename($file);
+                $name = str_replace('.blade.php', '', $relativePath);
+                $files[$relativePath] = ucfirst($name);
+            }
+        }
+        
+        return $files;
     }
 
     /**
@@ -114,12 +150,11 @@ class TemplateController extends Controller
                     'name' => $sectionData['name'],
                     'slug' => $sectionSlug,
                     'description' => $sectionData['description'] ?? null,
-                    'type' => $sectionData['type'] ?? TemplateSection::TYPE_CONTENT,
-                    'width' => $sectionData['width'] ?? null,
-                    'is_required' => isset($sectionData['is_required']) && $sectionData['is_required'] ? true : false,
+                    'section_type' => $sectionData['section_type'] ?? 'full-width',
+                    'column_layout' => $sectionData['column_layout'] ?? '12',
+                    'is_repeatable' => isset($sectionData['is_repeatable']) && $sectionData['is_repeatable'] ? true : false,
                     'max_widgets' => $sectionData['max_widgets'] ?? null,
-                    'order_index' => $index,
-                    'is_active' => true,
+                    'position' => $index
                 ]);
             }
         }
@@ -148,11 +183,28 @@ class TemplateController extends Controller
     {
         $themes = Theme::orderBy('name')->get();
         $template->load(['sections' => function($query) {
-            $query->orderBy('order_index');
+            $query->orderBy('position');
         }]);
         $sectionTypes = TemplateSection::getTypes();
         
-        return view('admin.templates.edit', compact('template', 'themes', 'sectionTypes'));
+        // Get available template files for the template's theme
+        $templateFiles = $this->getAvailableTemplateFiles($template->theme_id);
+        
+        return view('admin.templates.edit', compact('template', 'themes', 'sectionTypes', 'templateFiles'));
+    }
+    
+    /**
+     * Get template files for a theme via AJAX
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getTemplateFiles(Request $request)
+    {
+        $themeId = $request->input('theme_id');
+        $files = $this->getAvailableTemplateFiles($themeId);
+        
+        return response()->json($files);
     }
 
     /**
@@ -194,6 +246,8 @@ class TemplateController extends Controller
         if ($template->is_default) {
             $template->setAsDefault();
         }
+        
+        // Note: We don't update sections here as they are managed through the dedicated sections management page
         
         return redirect()->route('admin.templates.show', $template)
                 ->with('success', 'Template updated successfully.');

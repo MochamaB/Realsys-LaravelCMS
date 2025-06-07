@@ -51,9 +51,16 @@
                                 </div>
                                 
                                 <div class="mb-3">
-                                    <label for="file_path" class="form-label">File Path <span class="text-danger">*</span></label>
-                                    <input type="text" id="file_path" name="file_path" class="form-control @error('file_path') is-invalid @enderror" value="{{ old('file_path', $template->file_path) }}" placeholder="e.g., default.blade.php" required>
-                                    <small class="text-muted">Relative path to the template file in the theme's templates directory</small>
+                                    <label for="file_path" class="form-label">Template File <span class="text-danger">*</span></label>
+                                    <select id="file_path" name="file_path" class="form-select @error('file_path') is-invalid @enderror" required>
+                                        <option value="">-- Select Template File --</option>
+                                        @foreach($templateFiles as $path => $name)
+                                            <option value="{{ $path }}" {{ old('file_path', $template->file_path) == $path ? 'selected' : '' }}>
+                                                {{ $name }} ({{ $path }})
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <small class="text-muted">Select an existing template file from the theme's templates directory</small>
                                     @error('file_path')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -107,11 +114,19 @@
                                                     <li class="list-group-item d-flex justify-content-between align-items-center">
                                                         <div>
                                                             <strong>{{ $section->name }}</strong>
-                                                            <span class="badge bg-primary ms-2">{{ $sectionTypes[$section->type] ?? 'Unknown' }}</span>
-                                                            @if($section->is_required)
-                                                                <span class="badge bg-danger ms-1">Required</span>
+                                                            <span class="badge bg-primary ms-2">{{ $sectionTypes[$section->section_type] ?? 'Unknown' }}</span>
+                                                            
+                                                            @if($section->is_repeatable)
+                                                                <span class="badge bg-info ms-1">Repeatable</span>
                                                             @endif
-                                                            <div class="text-muted small">{{ $section->width ?? 'Default width' }}</div>
+                                                            
+                                                            @if($section->column_layout)
+                                                                <div class="text-muted small">Layout: {{ $section->column_layout }}</div>
+                                                            @endif
+                                                            
+                                                            @if($section->max_widgets)
+                                                                <div class="text-muted small">Max widgets: {{ $section->max_widgets }}</div>
+                                                            @endif
                                                         </div>
                                                     </li>
                                                 @endforeach
@@ -138,4 +153,53 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const themeSelect = document.getElementById('theme_id');
+        const templateFileSelect = document.getElementById('file_path');
+        const currentFilePath = '{{ $template->file_path }}';
+        
+        // Theme selection change event
+        themeSelect.addEventListener('change', function() {
+            const themeId = this.value;
+            if (!themeId) {
+                // Clear template files if no theme selected
+                templateFileSelect.innerHTML = '<option value="">-- Select Template File --</option>';
+                return;
+            }
+            
+            // Show loading message
+            templateFileSelect.innerHTML = '<option value="">Loading template files...</option>';
+            
+            // Fetch template files for selected theme
+            fetch(`{{ route('templates.files') }}?theme_id=${themeId}`)
+                .then(response => response.json())
+                .then(files => {
+                    // Reset the select
+                    templateFileSelect.innerHTML = '<option value="">-- Select Template File --</option>';
+                    
+                    // Add options for each file
+                    for (const [path, name] of Object.entries(files)) {
+                        const option = document.createElement('option');
+                        option.value = path;
+                        option.textContent = `${name} (${path})`;
+                        
+                        // If this is the currently selected file, select it
+                        if (path === currentFilePath) {
+                            option.selected = true;
+                        }
+                        
+                        templateFileSelect.appendChild(option);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching template files:', error);
+                    templateFileSelect.innerHTML = '<option value="">Error loading files</option>';
+                });
+        });
+    });
+</script>
 @endsection

@@ -38,5 +38,32 @@ class AppServiceProvider extends ServiceProvider
         
         // Register theme navigation component
         Blade::component('theme-navigation', ThemeNavigation::class);
+        
+        // Custom Blade directives for template sections
+        Blade::directive('renderSection', function ($expression) {
+            return "<?php echo app('App\\Services\\TemplateRenderer')->renderSection($expression, get_defined_vars()); ?>";
+        });
+        
+        Blade::directive('renderAllSections', function () {
+            return "<?php echo app('App\\Services\\TemplateRenderer')->renderAllSections(get_defined_vars()); ?>";
+        });
+        
+        Blade::directive('sectionExists', function ($expression) {
+            return "<?php if(app('App\\Services\\TemplateRenderer')->sectionExists($expression, get_defined_vars())): ?>";
+        });
+        
+        Blade::directive('endsectionExists', function () {
+            return "<?php endif; ?>";
+        });
+        
+        // In AppServiceProvider boot() method
+        Blade::directive('activeRoute', function ($route) {
+            return "<?php echo request()->routeIs($route) ? 'active' : ''; ?>";
+        });
+
+        Blade::directive('activeRouteShow', function ($route) {
+            return "<?php echo request()->routeIs($route) ? 'show' : ''; ?>";
+});
+         //
     }
 }
