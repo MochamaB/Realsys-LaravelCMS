@@ -13,19 +13,85 @@ $(document).ready(function() {
         if (sectionsList) {
             sectionsListSortable = new Sortable(sectionsList, {
                 group: 'template-sections',
-                animation: 150,
+                animation: 200,
                 fallbackOnBody: true,
-                swapThreshold: 0.65,
-                handle: '.section-handle',
+                swapThreshold: 0.5, // Reduced for better responsiveness
+                direction: 'vertical',
+                // Remove handle restriction to make entire section draggable
+                // handle: '.section-handle', 
                 ghostClass: 'section-ghost',
                 chosenClass: 'sortable-chosen',
                 dragClass: 'sortable-drag',
+                forceFallback: false,
+                scroll: true,
+                scrollSensitivity: 30,
+                scrollSpeed: 10,
+                bubbleScroll: true,
+                
+                // Enhanced drag detection
+                delay: 100,
+                delayOnTouchOnly: true,
+                touchStartThreshold: 5,
+                
+                onStart: function(evt) {
+                    console.log('Drag started:', evt);
+                    // Add visual feedback when dragging starts
+                    evt.item.classList.add('is-dragging');
+                    document.body.classList.add('sorting-active');
+                },
+                
                 onEnd: function(evt) {
                     console.log('Section moved:', evt);
+                    // Remove visual feedback
+                    evt.item.classList.remove('is-dragging');
+                    document.body.classList.remove('sorting-active');
                     updatePositionLabels();
+                },
+                
+                onMove: function(evt) {
+                    // Optional: Add logic to prevent certain moves
+                    return true;
+                },
+                
+                onChoose: function(evt) {
+                    // When item is chosen for dragging
+                    evt.item.classList.add('sortable-chosen');
                 }
             });
         }
+    }
+
+    // Enhanced cursor and hover states
+    function initializeDragCursors() {
+        const sections = document.querySelectorAll('.dd-item');
+        
+        sections.forEach(section => {
+            // Add cursor pointer to entire section
+            section.style.cursor = 'grab';
+            
+            // Handle mouse events for better UX
+            section.addEventListener('mousedown', function() {
+                this.style.cursor = 'grabbing';
+            });
+            
+            section.addEventListener('mouseup', function() {
+                this.style.cursor = 'grab';
+            });
+            
+            section.addEventListener('mouseleave', function() {
+                this.style.cursor = 'grab';
+            });
+            
+            // Prevent dragging when clicking on buttons
+            const buttons = section.querySelectorAll('.edit-section, .delete-section');
+            buttons.forEach(button => {
+                button.addEventListener('mousedown', function(e) {
+                    e.stopPropagation();
+                });
+                
+                button.style.cursor = 'pointer';
+            });
+        });
     }
 
     // Update position labels for all sections
@@ -64,23 +130,57 @@ $(document).ready(function() {
         .then(data => {
             if (data.success) {
                 // Show success message
-                alert(data.message);
+                showNotification(data.message, 'success');
                 
                 // Restore button state
                 saveBtn.innerHTML = originalBtnText;
                 saveBtn.disabled = false;
             } else {
-                alert('Error: ' + data.message);
+                showNotification('Error: ' + data.message, 'error');
                 saveBtn.innerHTML = originalBtnText;
                 saveBtn.disabled = false;
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('An error occurred while saving positions.');
+            showNotification('An error occurred while saving positions.', 'error');
             saveBtn.innerHTML = originalBtnText;
             saveBtn.disabled = false;
         });
+    }
+
+    // Enhanced notification system
+    function showNotification(message, type = 'info') {
+        // Remove existing notifications
+        const existingNotifications = document.querySelectorAll('.sortable-notification');
+        existingNotifications.forEach(notification => notification.remove());
+        
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `sortable-notification alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 300px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        `;
+        
+        notification.innerHTML = `
+            <i class="ri-${type === 'success' ? 'check-circle' : 'error-warning'}-line me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Auto remove after 3 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 3000);
     }
 
     // Load section for editing
@@ -112,18 +212,18 @@ $(document).ready(function() {
                     document.getElementById('is_repeatable').dispatchEvent(new Event('change'));
                     
                     // Scroll to form
-                    document.getElementById('section-form').scrollIntoView();
+                    document.getElementById('section-form').scrollIntoView({ behavior: 'smooth' });
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('An error occurred while loading the section.');
+                showNotification('An error occurred while loading the section.', 'error');
             });
     }
 
     // Delete section
     function deleteSection(sectionId) {
-        if (!confirm('Are you sure you want to delete this section?')) {
+        if (!confirm('Are you sure you want to delete this section? This action cannot be undone.')) {
             return;
         }
         
@@ -142,25 +242,33 @@ $(document).ready(function() {
         .then(data => {
             if (data.success) {
                 // Show success message
-                alert(data.message);
+                showNotification(data.message, 'success');
                 
-                // Remove section from DOM
-                document.getElementById(`section-${sectionId}`).remove();
-                
-                // If no sections left, reload page
-                if (document.querySelectorAll('.dd-item').length === 0) {
-                    window.location.reload();
+                // Remove section from DOM with animation
+                const sectionElement = document.querySelector(`[data-id="${sectionId}"]`);
+                if (sectionElement) {
+                    sectionElement.style.transition = 'opacity 0.3s ease';
+                    sectionElement.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                        sectionElement.remove();
+                        
+                        // If no sections left, reload page
+                        if (document.querySelectorAll('.dd-item').length === 0) {
+                            window.location.reload();
+                        } else {
+                            // Update position labels
+                            updatePositionLabels();
+                        }
+                    }, 300);
                 }
-                
-                // Update position labels
-                updatePositionLabels();
             } else {
-                alert('Error: ' + data.message);
+                showNotification('Error: ' + data.message, 'error');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('An error occurred while deleting the section.');
+            showNotification('An error occurred while deleting the section.', 'error');
         });
     }
 
@@ -234,6 +342,10 @@ $(document).ready(function() {
                 
                 const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
                 
+                // Disable submit button
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="ri-loader-4-line spin"></i> Saving...';
+                
                 // Send AJAX request
                 fetch(url, {
                     method: method,
@@ -247,17 +359,23 @@ $(document).ready(function() {
                 .then(data => {
                     if (data.success) {
                         // Show success message
-                        alert(data.message);
+                        showNotification(data.message, 'success');
                         
                         // Reload page to show updated sections
-                        window.location.reload();
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
                     } else {
-                        alert('Error: ' + data.message);
+                        showNotification('Error: ' + data.message, 'error');
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = isEditing ? 'Update Section' : 'Create Section';
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('An error occurred while saving the section.');
+                    showNotification('An error occurred while saving the section.', 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = isEditing ? 'Update Section' : 'Create Section';
                 });
             });
         }
@@ -287,6 +405,7 @@ $(document).ready(function() {
     // Initialize everything on document ready
     initializeSortable();
     initSectionForm();
+    initializeDragCursors();
     
     // Save positions button click handler
     document.getElementById('save-positions')?.addEventListener('click', function() {
@@ -297,6 +416,7 @@ $(document).ready(function() {
     document.addEventListener('click', function(e) {
         // Edit buttons
         if (e.target.closest('.edit-section')) {
+            e.stopPropagation(); // Prevent dragging when clicking edit
             const btn = e.target.closest('.edit-section');
             const sectionId = btn.dataset.id;
             loadSectionForEdit(sectionId);
@@ -304,9 +424,21 @@ $(document).ready(function() {
         
         // Delete buttons
         if (e.target.closest('.delete-section')) {
+            e.stopPropagation(); // Prevent dragging when clicking delete
             const btn = e.target.closest('.delete-section');
             const sectionId = btn.dataset.id;
             deleteSection(sectionId);
+        }
+    });
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        // ESC key to cancel editing
+        if (e.key === 'Escape') {
+            const editingInput = document.getElementById('editing');
+            if (editingInput && editingInput.value !== '') {
+                resetForm();
+            }
         }
     });
 });

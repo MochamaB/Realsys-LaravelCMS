@@ -60,14 +60,64 @@ class AppServiceProvider extends ServiceProvider
             return "<?php endif; ?>";
         });
         
-        // In AppServiceProvider boot() method
-        Blade::directive('activeRoute', function ($route) {
-            return "<?php echo request()->routeIs($route) ? 'active' : ''; ?>";
+        // Improved activeRoute directive to handle multiple routes and wildcards
+        Blade::directive('activeRoute', function ($routes) {
+            return "<?php 
+            \$routesArray = explode(',', $routes);
+            \$isActive = false;
+            
+            // Current route name
+            \$currentRoute = request()->route()->getName();
+            
+            foreach(\$routesArray as \$route) {
+                // Clean up the route
+                \$route = trim(\$route);
+                
+                // Handle wildcards
+                if (str_ends_with(\$route, '*')) {
+                    \$baseRoute = rtrim(\$route, '*');
+                    if (str_starts_with(\$currentRoute, \$baseRoute)) {
+                        \$isActive = true;
+                        break;
+                    }
+                } else if (\$route === \$currentRoute) {
+                    \$isActive = true;
+                    break;
+                }
+            }
+            
+            echo \$isActive ? 'active' : '';
+            ?>";
         });
 
-        Blade::directive('activeRouteShow', function ($route) {
-            return "<?php echo request()->routeIs($route) ? 'show' : ''; ?>";
-});
+        Blade::directive('activeRouteShow', function ($routes) {
+            return "<?php 
+            \$routesArray = explode(',', $routes);
+            \$isActive = false;
+            
+            // Current route name
+            \$currentRoute = request()->route()->getName();
+            
+            foreach(\$routesArray as \$route) {
+                // Clean up the route
+                \$route = trim(\$route);
+                
+                // Handle wildcards
+                if (str_ends_with(\$route, '*')) {
+                    \$baseRoute = rtrim(\$route, '*');
+                    if (str_starts_with(\$currentRoute, \$baseRoute)) {
+                        \$isActive = true;
+                        break;
+                    }
+                } else if (\$route === \$currentRoute) {
+                    \$isActive = true;
+                    break;
+                }
+            }
+            
+            echo \$isActive ? 'show' : '';
+            ?>";
+        });
          //
     }
 }

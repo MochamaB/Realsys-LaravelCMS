@@ -6,7 +6,7 @@
 <link href="{{ asset('assets/admin/css/template-sections.css') }}" rel="stylesheet" type="text/css" />
 @endsection
 
-@section('scripts')
+@section('js')
 <script src="{{ asset('assets/admin/libs/sortablejs/Sortable.min.js') }}"></script>
 <script src="{{ asset('assets/admin/js/template-sections.js') }}"></script>
 @endsection

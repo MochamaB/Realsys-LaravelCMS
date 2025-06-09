@@ -121,8 +121,7 @@ class TemplateSection extends Model
             '4-8' => 'Narrow & Wide (4-8)',
             '3-6-3' => 'Sidebar, Main, Sidebar (3-6-3)',
         ];
-    }
-    
+    } 
     /**
      * Check if this section is of a specific type
      * 
