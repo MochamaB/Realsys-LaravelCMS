@@ -221,14 +221,21 @@ $(document).ready(function() {
             });
     }
 
-    // Delete section
-    function deleteSection(sectionId) {
-        if (!confirm('Are you sure you want to delete this section? This action cannot be undone.')) {
-            return;
-        }
+    // Confirm deletion of a section
+    function confirmDeleteSection(button) {
+        const sectionId = button.dataset.id;
+        const deleteUrl = button.dataset.url;
         
-        const baseUrl = document.getElementById('sections-container').dataset.baseUrl;
-        const url = `${baseUrl}/sections/${sectionId}`;
+        // Create confirmation dialog
+        if (confirm('Are you sure you want to delete this section? This action cannot be undone.')) {
+            deleteSection(sectionId, deleteUrl);
+        }
+    }
+
+    // Delete section
+    function deleteSection(sectionId, deleteUrl) {
+        // Use the provided URL instead of constructing it
+        const url = deleteUrl || `${document.getElementById('sections-container').dataset.baseUrl}/sections/${sectionId}`;
         const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
         
         fetch(url, {

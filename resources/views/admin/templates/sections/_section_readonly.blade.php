@@ -1,10 +1,7 @@
-<li class="dd-item template-section-item" data-id="{{ $section->id }}" id="section-{{ $section->id }}">
-    <div class="dd-handle section-header">
-        <div class="section-handle" title="Drag to reorder">
-            <i class="ri-drag-move-line"></i>
-        </div>
+<li class="dd-item template-section-item" id="section-{{ $section->id }}">
+    <div class="section-header">
         <div class="section-title">
-            <h5 class="mb-0">{{ $section->name }}</h5>
+            <h5>{{ $section->name }}</h5>
             @if($section->description)
                 <small>{{ Str::limit($section->description, 80) }}</small>
             @endif
@@ -12,26 +9,7 @@
         <div class="section-position">
             Position: {{ $section->position + 1 }}
         </div>
-        <div class="section-actions">
-            <a href="{{ route('admin.templates.sections.edit', ['template' => $section->template_id, 'section' => $section->id]) }}" 
-                class="btn btn-sm btn-primary edit-section" 
-                title="Edit Section"
-                onclick="event.stopPropagation();"
-                style="position: relative; z-index: 10;">
-                <i class="ri-pencil-line"></i>
-            </a>
-            <button type="button" 
-                class="btn btn-sm btn-danger delete-section" 
-                data-id="{{ $section->id }}" 
-                data-url="{{ route('admin.templates.sections.destroy', ['template' => $section->template_id, 'section' => $section->id]) }}"
-                title="Delete Section"
-                onclick="event.stopPropagation(); confirmDeleteSection(this);"
-                style="position: relative; z-index: 10;">
-                <i class="ri-delete-bin-line"></i>
-            </button>
-        </div>
     </div>
-    
     <div class="section-details">
         <div class="section-info">
             <div class="info-item">
@@ -106,11 +84,5 @@
                 </div>
             @endif
         </div>
-    </div>
-    
-    <!-- Drag indicator overlay -->
-    <div class="drag-indicator" style="pointer-events: none;">
-        <i class="ri-drag-move-2-line"></i>
-        <span>Drag to reorder</span>
     </div>
 </li>

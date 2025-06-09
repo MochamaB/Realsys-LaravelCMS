@@ -422,16 +422,7 @@
     border: 1px solid #e3e6f0;
 }
 
-.card-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border-bottom: none;
-}
 
-.card-header h5 {
-    margin: 0;
-    font-weight: 600;
-}
 
 /* Touch device improvements */
 @media (hover: none) and (pointer: coarse) {

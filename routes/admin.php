@@ -125,11 +125,12 @@ Route::middleware('admin.auth')->group(function () {
     // Template Sections
     Route::prefix('templates/{template}')->group(function () {
         Route::resource('sections', TemplateSectionController::class)
-            ->except(['create', 'edit'])
             ->names([
                 'index' => 'templates.sections.index',
+                'create' => 'templates.sections.create',
                 'store' => 'templates.sections.store',
                 'show' => 'templates.sections.show',
+                'edit' => 'templates.sections.edit',
                 'update' => 'templates.sections.update',
                 'destroy' => 'templates.sections.destroy',
             ]);

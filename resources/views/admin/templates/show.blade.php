@@ -11,6 +11,9 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Template: {{ $template->name }}</h5>
                     <div>
+                        <a href="{{ route('admin.templates.sections.index', $template) }}" class="btn btn-info me-2">
+                            <i class="ri-layout-line me-1"></i> Manage Sections
+                        </a>
                         <a href="{{ route('admin.templates.preview', $template) }}" class="btn btn-info me-2" target="_blank">
                             <i class="mdi mdi-eye me-1"></i> Preview
                         </a>
@@ -92,68 +95,39 @@
                             </div>
                             
                             <div class="mt-4">
-                                <h5 class="border-bottom pb-2">Template Sections ({{ $template->sections->count() }})</h5>
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="border-bottom pb-2">Template Sections ({{ $template->sections->count() }})</h5>
+                                    <a href="{{ route('admin.templates.sections.index', $template) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="ri-layout-line me-1"></i> Manage All Sections
+                                    </a>
+                                </div>
                                 
                                 @if($template->sections->isEmpty())
                                     <div class="alert alert-info">
-                                        <i class="mdi mdi-information-outline me-2"></i>
+                                        <i class="ri-information-line me-2"></i>
                                         This template doesn't have any sections yet. Sections define the structure of your template.
+                                        <div class="mt-2">
+                                            <a href="{{ route('admin.templates.sections.create', $template) }}" class="btn btn-sm btn-success">
+                                                <i class="ri-add-line me-1"></i> Add First Section
+                                            </a>
+                                        </div>
                                     </div>
-                                    <a href="{{ route('admin.templates.sections.create', $template) }}" class="btn btn-primary">
-                                        <i class="mdi mdi-plus-circle me-1"></i> Add Section
-                                    </a>
                                 @else
-                                    <div class="table-responsive">
-                                        <table class="table table-bordered table-hover">
-                                            <thead class="table-light">
-                                                <tr>
-                                                    <th>Name</th>
-                                                    <th>Type</th>
-                                                    <th>Width</th>
-                                                    <th>Required</th>
-                                                    <th>Max Widgets</th>
-                                                    <th>Order</th>
-                                                    <th>Actions</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach($template->sections->sortBy('order_index') as $section)
-                                                    <tr>
-                                                        <td>
-                                                            <strong>{{ $section->name }}</strong>
-                                                            <div class="text-muted small">{{ $section->slug }}</div>
-                                                        </td>
-                                                        <td>
-                                                            <span class="badge bg-info">{{ $sectionTypes[$section->type] ?? $section->type }}</span>
-                                                        </td>
-                                                        <td>{{ $section->width ?? 'Default' }}</td>
-                                                        <td>
-                                                            @if($section->is_required)
-                                                                <span class="badge bg-success">Yes</span>
-                                                            @else
-                                                                <span class="badge bg-secondary">No</span>
-                                                            @endif
-                                                        </td>
-                                                        <td>{{ $section->max_widgets ?? 'Unlimited' }}</td>
-                                                        <td>{{ $section->order_index }}</td>
-                                                        <td>
-                                                            <div class="d-flex">
-                                                                <a href="{{ route('admin.templates.sections.edit', [$template, $section]) }}" class="btn btn-sm btn-primary me-1">
-                                                                    <i class="mdi mdi-pencil"></i>
-                                                                </a>
-                                                                <form action="{{ route('admin.templates.sections.destroy', [$template, $section]) }}" method="POST" class="d-inline">
-                                                                    @csrf
-                                                                    @method('DELETE')
-                                                                    <button type="submit" class="btn btn-sm btn-danger delete-section">
-                                                                        <i class="mdi mdi-trash-can"></i>
-                                                                    </button>
-                                                                </form>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
+                                    <div class="template-sections-preview">
+                                        <ul class="list-unstyled">
+                                            @php
+                                                $sectionTypes = [
+                                                    'full-width' => 'Full Width Section',
+                                                    'multi-column' => 'Multi-Column Section',
+                                                    'sidebar-left' => 'Sidebar Left Section',
+                                                    'sidebar-right' => 'Sidebar Right Section',
+                                                ];
+                                            @endphp
+                                            
+                                            @foreach($template->sections->sortBy('position') as $section)
+                                                @include('admin.templates.sections._section_readonly', ['section' => $section, 'sectionTypes' => $sectionTypes])
+                                            @endforeach
+                                        </ul>
                                     </div>
                                     
                                     <div class="mt-3">

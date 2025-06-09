@@ -50,9 +50,31 @@ class TemplateSectionController extends Controller
     public function create(Template $template)
     {
         $sectionTypes = TemplateSection::getTypes();
-        $nextOrderIndex = $template->sections()->max('order_index') + 1;
+        $columnLayouts = TemplateSection::getColumnLayouts();
+        $nextPosition = $template->sections()->max('position') + 1;
         
-        return view('admin.template_sections.create', compact('template', 'sectionTypes', 'nextOrderIndex'));
+        // Get empty section for the form
+        $newSection = new TemplateSection();
+        $newSection->section_type = 'full-width';
+        $newSection->position = $nextPosition;
+        
+        return view('admin.templates.sections.create', compact('template', 'sectionTypes', 'columnLayouts', 'newSection'));
+    }
+    
+    /**
+     * Show the form for editing the specified section.
+     */
+    public function edit(Template $template, TemplateSection $section)
+    {
+        // Ensure the section belongs to the template
+        if ($section->template_id !== $template->id) {
+            abort(404);
+        }
+        
+        $sectionTypes = TemplateSection::getTypes();
+        $columnLayouts = TemplateSection::getColumnLayouts();
+        
+        return view('admin.templates.sections.edit', compact('template', 'section', 'sectionTypes', 'columnLayouts'));
     }
 
     /**

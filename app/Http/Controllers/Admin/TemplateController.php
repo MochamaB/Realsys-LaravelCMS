@@ -170,7 +170,7 @@ class TemplateController extends Controller
     {
         // Load the related theme and sections
         $template->load(['theme', 'sections' => function($query) {
-            $query->orderBy('order_index');
+            $query->orderBy('position');
         }, 'pages']);
         
         return view('admin.templates.show', compact('template'));
@@ -270,7 +270,7 @@ class TemplateController extends Controller
     public function preview(Template $template)
     {
         $template->load(['theme', 'sections' => function($query) {
-            $query->orderBy('order_index');
+            $query->orderBy('position');
         }]);
         
         return view('admin.templates.preview', compact('template'));
