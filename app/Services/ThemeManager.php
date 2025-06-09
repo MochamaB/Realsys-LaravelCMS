@@ -11,6 +11,7 @@ use App\Models\Page;
 use App\Models\Menu;
 use App\Services\ThemeMigrationService;
 use App\Services\TemplateScanner;
+use App\Services\WidgetDiscoveryService;
 
 class ThemeManager
 {
@@ -422,9 +423,12 @@ class ThemeManager
         // Activate the selected theme
         $theme->is_active = true;
         $theme->save();
+        
         // Scan and register templates from the theme's directory
-    app(TemplateScanner::class)->scanAndRegisterTemplates($theme);
-    
+        app(TemplateScanner::class)->scanAndRegisterTemplates($theme);
+        
+        // Scan and register widgets from the theme's directory
+        app(WidgetDiscoveryService::class)->discoverAndRegisterWidgets($theme);
         
         // Migrate content from old theme to new theme
         app(ThemeMigrationService::class)->migrateToNewTheme($theme, $oldTheme);

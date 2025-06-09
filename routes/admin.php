@@ -20,7 +20,8 @@ use App\Http\Controllers\Admin\TemplateSectionController;
 use App\Http\Controllers\Admin\ThemeController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\WidgetController;
-
+use App\Http\Controllers\Admin\WidgetContentTypeController;
+use App\Http\Controllers\Admin\PageSectionWidgetController;
 
 // Guest routes for admin authentication (only for non-authenticated admin users)
 Route::middleware('admin.guest')->group(function () {
@@ -49,13 +50,30 @@ Route::middleware('admin.auth')->group(function () {
     Route::put('/pages/{page}/homepage', [PageController::class, 'toggleHomepage'])->name('admin.pages.homepage');
     Route::get('/pages/{page}/sections', [PageController::class, 'getSections'])->name('pages.sections');
 
-    // Widgets
+    // Widgets - Global routes
     Route::resource('widgets', WidgetController::class);
     Route::get('/widgets/{widget}/preview', [WidgetController::class, 'preview'])->name('widgets.preview');
     Route::patch('/widgets/{widget}/toggle', [WidgetController::class, 'toggle'])->name('widgets.toggle');
-        
-
-   
+    
+    // Theme-specific Widgets
+    Route::prefix('themes/{theme}')->name('themes.')->group(function () {
+        Route::get('/widgets', [WidgetController::class, 'index'])->name('widgets.index');
+        Route::get('/widgets/scan', [WidgetController::class, 'scanThemeWidgets'])->name('widgets.scan');
+        Route::get('/widgets/{widget}', [WidgetController::class, 'show'])->name('widgets.show');
+    });
+    
+    // Widget Content Type Associations
+    Route::post('/widgets/{widget}/content-types', [WidgetContentTypeController::class, 'store'])->name('widgets.content-types.store');
+    Route::delete('/widgets/{widget}/content-types/{contentType}', [WidgetContentTypeController::class, 'destroy'])->name('widgets.content-types.destroy');
+    
+    // Page Section Widgets
+    Route::get('/pages/{page}/sections/{section}/widgets', [PageSectionWidgetController::class, 'index'])->name('pages.sections.widgets.index');
+    Route::post('/pages/{page}/sections/{section}/widgets', [PageSectionWidgetController::class, 'store'])->name('pages.sections.widgets.store');
+    Route::get('/pages/{page}/sections/{section}/widgets/{widget}/edit', [PageSectionWidgetController::class, 'edit'])->name('pages.sections.widgets.edit');
+    Route::put('/pages/{page}/sections/{section}/widgets/{widget}', [PageSectionWidgetController::class, 'update'])->name('pages.sections.widgets.update');
+    Route::delete('/pages/{page}/sections/{section}/widgets/{widget}', [PageSectionWidgetController::class, 'destroy'])->name('pages.sections.widgets.destroy');
+    Route::post('/pages/{page}/sections/{section}/widgets/positions', [PageSectionWidgetController::class, 'updatePositions'])->name('pages.sections.widgets.positions');
+    
 
     // Menus
     Route::resource('menus', MenuController::class);

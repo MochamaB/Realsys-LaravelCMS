@@ -83,9 +83,19 @@ return [
                 [
                     'name' => 'Widgets',
                     'icon' => 'ri-layout-grid-line',
-                    'route' => 'admin.widgets.index',
-                    'default_active' => false,
-                    'show_children' => false,
+                    'route_prefix' => 'admin.widgets',
+                    'default_active' => 'admin.widgets.index',
+                    'show_children' => true,
+                    'items' => [
+                        [
+                            'name' => 'All Widgets',
+                            'route' => 'admin.widgets.index',
+                        ],
+                        [
+                            'name' => 'Create Widget',
+                            'route' => 'admin.widgets.create',
+                        ],
+                    ],
                 ],
                 [
                     'name' => 'Media',

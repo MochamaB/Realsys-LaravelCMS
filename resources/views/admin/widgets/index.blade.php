@@ -1,6 +1,6 @@
 @extends('admin.layouts.master')
 
-@section('title', 'Widgets')
+@section('title', isset($theme) ? "Widgets for {$theme->name}" : 'All Widgets')
 
 @section('css')
     <!-- Sweet Alert css-->
@@ -11,7 +11,7 @@
     <div class="row">
         <div class="col-12">
             <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                <h4 class="mb-sm-0">Widgets</h4>
+                <h4 class="mb-sm-0">{{ isset($theme) ? "Widgets for {$theme->name}" : 'All Widgets' }}</h4>
 
                 <div class="page-title-right">
                     <ol class="breadcrumb m-0">
@@ -29,20 +29,25 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="card-title mb-0">Widgets List</h4>
                     <div class="d-flex gap-2">
-                        <div class="input-group" style="width: 250px;">
-                            <select class="form-select" id="themeFilter">
-                                <option value="">All Themes</option>
-                                @foreach($themes as $theme)
-                                    <option value="{{ $theme->id }}" {{ request()->get('theme') == $theme->id ? 'selected' : '' }}>
-                                        {{ $theme->name }}{{ $theme->active ? ' (Active)' : '' }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            <button class="btn btn-primary" type="button" id="applyThemeFilter">Filter</button>
-                        </div>
-                        <a href="{{ route('admin.widgets.create') }}" class="btn btn-success add-btn">
-                            <i class="ri-add-line align-bottom me-1"></i> Create Widget
+                        <a href="{{ route('admin.themes.widgets.scan', $theme) }}" class="btn btn-success">
+                            <i class="ri-scan-line align-bottom me-1"></i> Discover Widgets
                         </a>
+                        
+                        <div class="dropdown">
+                            <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                {{ $theme->name }} Theme
+                            </button>
+                            <ul class="dropdown-menu">
+                                @foreach($themes as $t)
+                                    <li>
+                                        <a class="dropdown-item {{ $theme->id === $t->id ? 'active' : '' }}" 
+                                           href="{{ route('admin.themes.widgets.index', $t) }}">
+                                            {{ $t->name }} {{ $t->is_active ? '(Active)' : '' }}
+                                        </a>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
                     </div>
                 </div>
                 <div class="card-body">
@@ -50,12 +55,13 @@
                         <table class="table table-nowrap align-middle">
                             <thead class="text-muted table-light">
                                 <tr>
+                                    <th scope="col" style="width: 80px;">Preview</th>
                                     <th scope="col" style="width: 50px;">#</th>
                                     <th scope="col">Name</th>
-                                    <th scope="col">Type</th>
-                                    <th scope="col">Content Source</th>
-                                    <th scope="col">Display Settings</th>
-                                    <th scope="col">Page Section</th>
+                                    <th scope="col">Theme</th>
+                                    <th scope="col">Description</th>
+                                    <th scope="col">Content Types</th>
+                                    <th scope="col">Fields</th>
                                     <th scope="col">Status</th>
                                     <th scope="col" style="width: 150px;">Action</th>
                                 </tr>
@@ -63,6 +69,18 @@
                             <tbody class="widget-list">
                                 @forelse($widgets as $index => $widget)
                                     <tr data-widget-id="{{ $widget->id }}">
+                                        <td>
+                                            <div style="width: 70px; height: 50px;" class="d-flex justify-content-center align-items-center border rounded overflow-hidden">
+                                                @php
+                                                    $previewPath = resource_path("themes/{$widget->theme->slug}/widgets/{$widget->slug}/assets/preview.jpg");
+                                                    $hasPreview = file_exists($previewPath);
+                                                    $previewUrl = $hasPreview 
+                                                        ? asset("resources/themes/{$widget->theme->slug}/widgets/{$widget->slug}/assets/preview.jpg") 
+                                                        : asset('assets/admin/images/widget-placeholder.png');
+                                                @endphp
+                                                <img src="{{ $previewUrl }}" alt="{{ $widget->name }}" class="img-fluid" style="max-height: 50px; max-width: 100%;">
+                                            </div>
+                                        </td>
                                         <td>
                                             <div class="avatar-xs">
                                                 <span class="avatar-title rounded-circle bg-soft-primary text-primary">
@@ -72,76 +90,52 @@
                                         </td>
                                         <td>
                                             <div class="d-flex align-items-center">
-                                                <span class="widget-handle me-2 cursor-move">
-                                                    <i class="ri-drag-move-2-fill text-muted"></i>
-                                                </span>
-                                                <a href="{{ route('admin.widgets.edit', $widget) }}" class="fw-medium">
+                                                @if($widget->icon)
+                                                    <i class="{{ $widget->icon }} me-2 text-muted"></i>
+                                                @endif
+                                                <a href="{{ route('admin.themes.widgets.show', [$widget->theme, $widget]) }}" class="fw-medium">
                                                     {{ $widget->name }}
                                                 </a>
                                             </div>
                                         </td>
                                         <td>
                                             <span class="badge bg-primary">
-                                                {{ $widget->widgetType->name }}
+                                                {{ $widget->theme->name }}
                                             </span>
                                         </td>
                                         <td>
-                                            @if($widget->content_query_id)
-                                                <a href="{{ route('admin.widget-content-queries.show', $widget->content_query_id) }}" class="badge bg-info text-decoration-none">
-                                                    <i class="ri-filter-line"></i> {{ $widget->contentQuery->contentType->name ?? 'Content Source' }}
-                                                </a>
-                                            @else
-                                                <span class="badge bg-secondary">No Content Source</span>
-                                            @endif
+                                            {{ Str::limit($widget->description, 50) }}
                                         </td>
                                         <td>
-                                            @if($widget->display_settings_id)
-                                                <a href="{{ route('admin.widget-display-settings.show', $widget->display_settings_id) }}" class="badge bg-success text-decoration-none">
-                                                    <i class="ri-layout-line"></i> {{ $widget->displaySettings->layout ?? 'Display Settings' }}
-                                                </a>
-                                            @else
-                                                <span class="badge bg-secondary">Default Display</span>
-                                            @endif
+                                            @forelse($widget->contentTypes as $contentType)
+                                                <span class="badge bg-info">{{ $contentType->name }}</span>
+                                            @empty
+                                                <span class="badge bg-secondary">None</span>
+                                            @endforelse
                                         </td>
                                         <td>
-                                            @if($widget->pageSections->count() > 0)
-                                                @foreach($widget->pageSections as $pageSection)
-                                                    <span class="badge bg-info">
-                                                        {{ $pageSection->templateSection->name ?? 'Section' }} ({{ $pageSection->page->title ?? 'Page' }})
-                                                    </span>
-                                                    @if(!$loop->last)<br>@endif
-                                                @endforeach
-                                            @else
-                                                <span class="badge bg-warning">Not placed</span>
-                                            @endif
+                                            <span class="badge bg-success">
+                                                {{ $widget->fieldDefinitions->count() }} fields
+                                            </span>
                                         </td>
                                         <td>
                                             <div class="form-check form-switch form-switch-success">
-                                                <form action="{{ route('admin.widgets.toggle', $widget) }}" method="POST">
-                                                    @csrf
-                                                    @method('PATCH')
-                                                    <input type="checkbox" 
-                                                           class="form-check-input widget-status-toggle" 
-                                                           {{ $widget->status === 'published' ? 'checked' : '' }}>
-                                                </form>
+                                                <input type="checkbox" 
+                                                       class="form-check-input widget-status-toggle" 
+                                                       data-widget-id="{{ $widget->id }}"
+                                                       {{ $widget->is_active ? 'checked' : '' }}>
                                             </div>
                                         </td>
                                         <td>
                                             <div class="d-flex gap-2">
-                                                <a href="{{ route('admin.widgets.edit', $widget) }}" 
-                                                   class="btn btn-sm btn-success edit-item-btn">
-                                                    <i class="ri-pencil-line"></i>
+                                                <a href="{{ route('admin.themes.widgets.show', [$widget->theme, $widget]) }}" 
+                                                   class="btn btn-sm btn-info view-item-btn">
+                                                    <i class="ri-eye-line"></i>
                                                 </a>
-                                                <form action="{{ route('admin.widgets.destroy', $widget) }}" 
-                                                      method="POST" 
-                                                      class="d-inline">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="button" 
-                                                            class="btn btn-sm btn-danger delete-widget">
-                                                        <i class="ri-delete-bin-line"></i>
-                                                    </button>
-                                                </form>
+                                                <a href="{{ route('admin.widgets.preview', $widget) }}" 
+                                                   class="btn btn-sm btn-primary preview-item-btn">
+                                                    <i class="ri-live-line"></i>
+                                                </a>
                                             </div>
                                         </td>
                                     </tr>
@@ -166,9 +160,36 @@
 @section('scripts')
     <!-- Sweet Alerts js -->
     <script src="{{ asset('assets/admin/libs/sweetalert2/sweetalert2.min.js') }}"></script>
-    <!-- Sortable js -->
-    <script src="{{ asset('assets/admin/libs/sortablejs/Sortable.min.js') }}"></script>
-    
     <!-- Custom js -->
-    <script src="{{ asset('assets/admin/js/widgets/widget-list.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Widget status toggle
+            document.querySelectorAll('.widget-status-toggle').forEach(function(toggle) {
+                toggle.addEventListener('change', function() {
+                    const widgetId = this.dataset.widgetId;
+                    const status = this.checked;
+                    
+                    fetch(`{{ url('admin/widgets') }}/${widgetId}/toggle`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({ status: status })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Success!',
+                                text: data.message,
+                                icon: 'success',
+                                confirmButtonText: 'Ok'
+                            });
+                        }
+                    });
+                });
+            });
+        });
+    </script>
 @endsection

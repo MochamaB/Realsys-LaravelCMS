@@ -1,0 +1,50 @@
+{
+  "name": "Default Content Widget",
+  "slug": "default",
+  "description": "A simple widget for displaying default content with title, text and optional button",
+  "icon": "ri-layout-line",
+  "fields": [
+    {
+      "name": "Title",
+      "slug": "title",
+      "field_type": "text",
+      "is_required": true,
+      "description": "Widget main title"
+    },
+    {
+      "name": "Content",
+      "slug": "content",
+      "field_type": "rich_text",
+      "is_required": true,
+      "description": "Main content text"
+    },
+    {
+      "name": "Button Text",
+      "slug": "button_text",
+      "field_type": "text",
+      "is_required": false,
+      "description": "Optional button text"
+    },
+    {
+      "name": "Button URL",
+      "slug": "button_url",
+      "field_type": "url",
+      "is_required": false,
+      "description": "URL for the button"
+    },
+    {
+      "name": "Layout Style",
+      "slug": "layout_style",
+      "field_type": "select",
+      "is_required": false,
+      "description": "Widget layout style",
+      "settings": {
+        "options": [
+          {"value": "default", "label": "Default"},
+          {"value": "boxed", "label": "Boxed"},
+          {"value": "full-width", "label": "Full Width"}
+        ]
+      }
+    }
+  ]
+}

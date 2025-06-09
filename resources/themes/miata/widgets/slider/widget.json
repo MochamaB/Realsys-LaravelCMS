@@ -1,0 +1,112 @@
+{
+  "name": "Image Slider Widget",
+  "slug": "slider",
+  "description": "A responsive image carousel/slider with navigation controls and optional captions",
+  "icon": "ri-slideshow-line",
+  "fields": [
+    {
+      "name": "Slides",
+      "slug": "slides",
+      "field_type": "repeater",
+      "is_required": true,
+      "description": "Slide items for the slider",
+      "settings": {
+        "min_items": 1,
+        "max_items": 10,
+        "subfields": [
+          {
+            "name": "Image",
+            "slug": "image",
+            "field_type": "image",
+            "is_required": true,
+            "description": "Slide image"
+          },
+          {
+            "name": "Title",
+            "slug": "title",
+            "field_type": "text",
+            "is_required": false,
+            "description": "Optional slide title"
+          },
+          {
+            "name": "Subtitle",
+            "slug": "subtitle",
+            "field_type": "text",
+            "is_required": false,
+            "description": "Optional slide subtitle or caption"
+          },
+          {
+            "name": "Button Text",
+            "slug": "button_text",
+            "field_type": "text",
+            "is_required": false,
+            "description": "Optional button text"
+          },
+          {
+            "name": "Button URL",
+            "slug": "button_url",
+            "field_type": "url",
+            "is_required": false,
+            "description": "URL for the button"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Slider Height",
+      "slug": "slider_height",
+      "field_type": "select",
+      "is_required": false,
+      "description": "Height of the slider",
+      "settings": {
+        "options": [
+          {"value": "default", "label": "Default"},
+          {"value": "small", "label": "Small"},
+          {"value": "medium", "label": "Medium"},
+          {"value": "large", "label": "Large"},
+          {"value": "fullscreen", "label": "Fullscreen"}
+        ]
+      }
+    },
+    {
+      "name": "Animation Speed",
+      "slug": "animation_speed",
+      "field_type": "number",
+      "is_required": false,
+      "description": "Animation speed in milliseconds",
+      "default": 500
+    },
+    {
+      "name": "Autoplay",
+      "slug": "autoplay",
+      "field_type": "checkbox",
+      "is_required": false,
+      "description": "Auto-rotate slides",
+      "default": true
+    },
+    {
+      "name": "Autoplay Delay",
+      "slug": "autoplay_delay",
+      "field_type": "number",
+      "is_required": false,
+      "description": "Delay between slides in milliseconds",
+      "default": 5000
+    },
+    {
+      "name": "Show Navigation Arrows",
+      "slug": "show_nav_arrows",
+      "field_type": "checkbox",
+      "is_required": false,
+      "description": "Show next/prev navigation arrows",
+      "default": true
+    },
+    {
+      "name": "Show Pagination Dots",
+      "slug": "show_pagination",
+      "field_type": "checkbox",
+      "is_required": false,
+      "description": "Show pagination dots",
+      "default": true
+    }
+  ]
+}
