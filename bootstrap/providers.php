@@ -7,4 +7,5 @@ return [
     App\Providers\ThemeServiceProvider::class,
     App\Providers\PageServiceProvider::class,
     App\Providers\BladeServiceProvider::class,
+    Modules\UserManagement\Providers\UserManagementServiceProvider::class,
 ];
