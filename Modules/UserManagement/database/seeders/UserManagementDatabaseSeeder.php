@@ -11,6 +11,16 @@ class UserManagementDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // $this->call([]);
+        $this->call([
+            EthnicitiesTableSeeder::class,
+            SpecialStatusTableSeeder::class,
+            MobileProvidersTableSeeder::class,
+            ReligionsTableSeeder::class,
+            CountiesTableSeeder::class,
+            ConstituenciesTableSeeder::class,
+            WardTableSeeder::class,
+            ProfileTypesTableSeeder::class,
+            RolePermissionSeeder::class,
+        ]);
     }
 }

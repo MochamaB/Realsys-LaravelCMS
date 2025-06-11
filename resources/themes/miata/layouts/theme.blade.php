@@ -36,6 +36,8 @@
         @include('theme::partials.footer')
 
         <!-- Theme JavaScript -->
+        <script src="{{ asset('themes/miata/js/vendor/jquery-1.12.4.min.js') }}"></script>
+        <script src="{{ asset('themes/miata/js/vendor/modernizr-3.11.7.min.js') }}"></script>
         @foreach($theme->js as $js)
             <script src="{{ $js }}"></script>
         @endforeach
