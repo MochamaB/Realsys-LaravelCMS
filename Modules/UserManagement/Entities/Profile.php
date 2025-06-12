@@ -18,7 +18,7 @@ class Profile extends Model
         'gender',
         'ethnicity_id',
         'special_status_id',
-        'special_status_number',
+        'ncpwd_number',
         'religion_id',
         'mobile_provider_id',
         'county_id',

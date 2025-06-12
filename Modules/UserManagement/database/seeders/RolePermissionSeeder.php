@@ -56,17 +56,17 @@ class RolePermissionSeeder extends Seeder
             }
             
             // Create roles and assign permissions
-            $partyMemberRole = Role::findOrCreate('party_member');
+            $partyMemberRole = Role::findOrCreate('party_member','web');
             foreach ($memberPermissions as $permission) {
                 $partyMemberRole->givePermissionTo($permission);
             }
             
-            $volunteerRole = Role::findOrCreate('volunteer');
+            $volunteerRole = Role::findOrCreate('volunteer','web');
             foreach ($volunteerPermissions as $permission) {
                 $volunteerRole->givePermissionTo($permission);
             }
             
-            $voterRole = Role::findOrCreate('voter');
+            $voterRole = Role::findOrCreate('voter','web');
             foreach ($voterPermissions as $permission) {
                 $voterRole->givePermissionTo($permission);
             }

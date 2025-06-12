@@ -31,6 +31,11 @@ Route::middleware('guest:web')->group(function () {
     Route::post('/forgot-password', [UserAuthController::class, 'sendResetLink'])->name('password.email');
     Route::get('/reset-password/{token}', [UserAuthController::class, 'showResetForm'])->name('password.reset');
     Route::post('/reset-password', [UserAuthController::class, 'resetPassword'])->name('password.update');
+  
+    Route::get('/force-change-password', [UserProfileController::class, 'showForceChangePassword'])
+        ->name('password.force_change');
+    Route::post('/force-change-password', [UserProfileController::class, 'updateForceChangePassword'])
+        ->name('password.force_change.update');
 });
 
 // Auth routes for authenticated users

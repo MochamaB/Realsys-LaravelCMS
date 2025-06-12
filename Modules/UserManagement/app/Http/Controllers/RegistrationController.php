@@ -349,9 +349,13 @@ class RegistrationController extends Controller
             }
             
             $user = User::create([
-                'name' => $fullName,
+                'first_name' => $wizardData['first_name'],
+                'surname' => $wizardData['surname'],
+                'last_name' => $wizardData['last_name'],
                 'email' => $wizardData['email'],
                 'password' => $wizardData['password_hash'],
+                'phone_number' => $wizardData['phone_number'],
+                'id_number' => $wizardData['id_number'],
             ]);
             
             // Get profile type
@@ -367,7 +371,7 @@ class RegistrationController extends Controller
                 'gender' => $wizardData['gender'],
                 'ethnicity_id' => $wizardData['ethnicity_id'] ?? null,
                 'special_status_id' => $wizardData['special_status_id'] ?? null,
-                'special_status_number' => $wizardData['ncpwd_number'] ?? null,
+                'ncpwd_number' => $wizardData['ncpwd_number'] ?? null,
                 'religion_id' => $wizardData['religion_id'] ?? null,
                 'mobile_provider_id' => $wizardData['mobile_provider_id'] ?? null,
                 'county_id' => $wizardData['county_id'],
@@ -424,8 +428,10 @@ class RegistrationController extends Controller
             Session::forget('wizard_step');
             
             // Redirect to login page with success message
-            return redirect()->route('auth.login')
-                ->with('success', 'Registration completed successfully! You can now log in to your account.');
+            return redirect()->route('login', [
+                'email' => $user->email,
+                'auto_login' => true
+                ])->with('success', 'Registration successful! You can now log in with your account.');
                 
         } catch (\Exception $e) {
             // Rollback the transaction in case of failure

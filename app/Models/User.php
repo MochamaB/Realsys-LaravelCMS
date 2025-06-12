@@ -9,10 +9,11 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements HasMedia
 {
-    use  HasFactory, Notifiable, SoftDeletes, InteractsWithMedia;
+    use  HasFactory, Notifiable, SoftDeletes, InteractsWithMedia, HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -20,7 +21,9 @@ class User extends Authenticatable implements HasMedia
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
+        'first_name',
+        'surname',
+        'last_name',
         'email',
         'password',
         'status',

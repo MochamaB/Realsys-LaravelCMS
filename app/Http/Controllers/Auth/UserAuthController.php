@@ -39,6 +39,11 @@ class UserAuthController extends Controller
 
         if (Auth::guard('web')->attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
+             // Check if user is using default password
+        if ($request->input('password') === 'NPPK.123') {
+            return redirect()->route('password.force_change')
+                ->with('warning', 'For security reasons, you must change your default password before continuing.');
+        }
 
             return redirect()->intended(route('dashboard'));
         }
@@ -93,7 +98,7 @@ class UserAuthController extends Controller
      */
     public function showForgotForm()
     {
-        return view('auth.forgot-password');
+        return view('auth.passwords.email');
     }
 
     /**
@@ -123,7 +128,7 @@ class UserAuthController extends Controller
      */
     public function showResetForm(Request $request, string $token)
     {
-        return view('auth.reset-password', [
+        return view('auth.passwords.reset', [
             'token' => $token,
             'email' => $request->email
         ]);

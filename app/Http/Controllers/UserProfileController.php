@@ -88,4 +88,38 @@ class UserProfileController extends Controller
         return redirect()->route('profile.show')
             ->with('status', 'Password updated successfully.');
     }
+    /**
+     * Show the force change password form.
+     *
+     * @return \Illuminate\View\View
+     */
+    public function showForceChangePassword()
+    {
+        return view('auth.passwords.force-change');
+    }
+    
+    /**
+     * Update the password when forced to change.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function updateForceChangePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => ['required', function ($attribute, $value, $fail) {
+                if (!Hash::check($value, Auth::user()->password)) {
+                    $fail('The current password is incorrect.');
+                }
+            }],
+            'password' => ['required', 'string', 'min:8', 'confirmed', 'different:current_password'],
+        ]);
+    
+        $user = Auth::user();
+        $user->password = Hash::make($request->password);
+        $user->save();
+    
+        return redirect()->route('dashboard')
+            ->with('success', 'Password changed successfully. You can now access your account.');
+    }
 }
