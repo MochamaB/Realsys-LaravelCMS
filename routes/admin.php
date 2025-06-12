@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\WidgetController;
 use App\Http\Controllers\Admin\WidgetContentTypeController;
 use App\Http\Controllers\Admin\PageSectionWidgetController;
+use App\Http\Controllers\Admin\UserManagementController;
 
 // Guest routes for admin authentication (only for non-authenticated admin users)
 Route::middleware('admin.guest')->group(function () {
@@ -106,7 +107,9 @@ Route::middleware('admin.auth')->group(function () {
     Route::post('/media/upload', [MediaController::class, 'upload'])->name('media.upload');
 
     // Users
-    Route::resource('users', UserController::class);
+    Route::resource('users', UserManagementController::class)
+        ->names('users')
+        ->middleware(['auth:admin', 'verified']);
 
     // Roles and Permissions
     Route::resource('roles', RoleController::class);

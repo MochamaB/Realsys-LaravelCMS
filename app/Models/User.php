@@ -10,6 +10,8 @@ use Laravel\Sanctum\HasApiTokens;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\Permission\Traits\HasRoles;
+use Modules\UserManagement\Entities\Profile;
+use Modules\UserManagement\Entities\Membership;
 
 class User extends Authenticatable implements HasMedia
 {
@@ -49,6 +51,34 @@ class User extends Authenticatable implements HasMedia
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    /**
+     * Get the user's full name.
+     */
+    public function getNameAttribute()
+    {
+        $name = $this->first_name . ' ' . $this->surname;
+        if ($this->last_name) {
+            $name .= ' ' . $this->last_name;
+        }
+        return $name;
+    }
+
+    /**
+     * Get the profile associated with the user.
+     */
+    public function profile()
+    {
+        return $this->hasOne(Profile::class);
+    }
+
+    /**
+     * Get the membership associated with the user.
+     */
+    public function membership()
+    {
+        return $this->hasOne(Membership::class);
+    }
 
     /**
      * Register media collections

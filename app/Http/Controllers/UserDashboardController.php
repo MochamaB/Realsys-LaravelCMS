@@ -12,11 +12,7 @@ class UserDashboardController extends Controller
      *
      * @return void
      */
-    public function __construct()
-    {
-        $this->middleware('auth:web');
-    }
-
+ 
     /**
      * Show the user dashboard.
      *

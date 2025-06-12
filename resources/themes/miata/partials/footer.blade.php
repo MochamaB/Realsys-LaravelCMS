@@ -141,6 +141,7 @@
                             <div class="row">
                                 <div class="col-lg-6 col-12 col-md-9">
                                     <div class="footer-menu">
+                            
                                     <x-theme-navigation :menu="$menus['footer'] ?? null" location="footer" />
                                     </div>
                                 </div>
