@@ -27,7 +27,7 @@ class UserManagementServiceProvider extends ServiceProvider
         $this->registerTranslations();
         $this->registerConfig();
         $this->registerViews();
-        $this->loadMigrationsFrom(module_path($this->moduleName, 'Database/Migrations'));
+        $this->loadMigrationsFrom(module_path($this->moduleName, 'database/migrations'));
         $this->registerRoutes();
         view()->composer('usermanagement::*', function ($view) {
             $view->with('themeName', 'miata');
@@ -52,10 +52,10 @@ class UserManagementServiceProvider extends ServiceProvider
     protected function registerConfig()
     {
         $this->publishes([
-            module_path($this->moduleName, 'Config/config.php') => config_path($this->moduleNameLower . '.php'),
+            module_path($this->moduleName, 'config/config.php') => config_path($this->moduleNameLower . '.php'),
         ], 'config');
         $this->mergeConfigFrom(
-            module_path($this->moduleName, 'Config/config.php'), $this->moduleNameLower
+            module_path($this->moduleName, 'config/config.php'), $this->moduleNameLower
         );
     }
 
@@ -68,7 +68,7 @@ class UserManagementServiceProvider extends ServiceProvider
     {
         $viewPath = resource_path('views/modules/' . $this->moduleNameLower);
 
-        $sourcePath = module_path($this->moduleName, 'Resources/views');
+        $sourcePath = module_path($this->moduleName, 'resources/views');
 
         $this->publishes([
             $sourcePath => $viewPath
@@ -90,8 +90,8 @@ class UserManagementServiceProvider extends ServiceProvider
             $this->loadTranslationsFrom($langPath, $this->moduleNameLower);
             $this->loadJsonTranslationsFrom($langPath);
         } else {
-            $this->loadTranslationsFrom(module_path($this->moduleName, 'Resources/lang'), $this->moduleNameLower);
-            $this->loadJsonTranslationsFrom(module_path($this->moduleName, 'Resources/lang'));
+            $this->loadTranslationsFrom(module_path($this->moduleName, 'resources/lang'), $this->moduleNameLower);
+            $this->loadJsonTranslationsFrom(module_path($this->moduleName, 'resources/lang'));
         }
     }
 
@@ -123,7 +123,7 @@ class UserManagementServiceProvider extends ServiceProvider
      */
     protected function registerRoutes()
     {
-        $this->loadRoutesFrom(module_path($this->moduleName, 'Routes/web.php'));
-        $this->loadRoutesFrom(module_path($this->moduleName, 'Routes/api.php'));
+        $this->loadRoutesFrom(module_path($this->moduleName, 'routes/web.php'));
+        $this->loadRoutesFrom(module_path($this->moduleName, 'routes/api.php'));
     }
 }

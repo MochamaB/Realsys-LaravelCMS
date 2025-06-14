@@ -99,7 +99,7 @@ class UserProfileController extends Controller
     }
     
     /**
-     * Update the password when forced to change.
+     * Update the user's password after force change.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
@@ -107,19 +107,32 @@ class UserProfileController extends Controller
     public function updateForceChangePassword(Request $request)
     {
         $request->validate([
-            'current_password' => ['required', function ($attribute, $value, $fail) {
-                if (!Hash::check($value, Auth::user()->password)) {
-                    $fail('The current password is incorrect.');
-                }
-            }],
+            'current_password' => ['required', 'string'],
             'password' => ['required', 'string', 'min:8', 'confirmed', 'different:current_password'],
         ]);
-    
-        $user = Auth::user();
-        $user->password = Hash::make($request->password);
-        $user->save();
-    
-        return redirect()->route('dashboard')
-            ->with('success', 'Password changed successfully. You can now access your account.');
+
+        $user = Auth::guard('web')->user();
+
+        // Verify current password
+        if (!Hash::check($request->current_password, $user->password)) {
+            return back()->withErrors([
+                'current_password' => 'The provided password does not match your current password.',
+            ]);
+        }
+
+        // Update password
+        $user->forceFill([
+            'password' => Hash::make($request->password),
+        ])->save();
+
+        // If this was a login attempt, complete the login
+        if ($request->session()->has('login_attempt')) {
+            $request->session()->regenerate();
+            return redirect()->route('user.dashboard')
+                ->with('success', 'Password changed successfully. Welcome to your dashboard!');
+        }
+
+        return redirect()->route('user.dashboard')
+            ->with('success', 'Password changed successfully.');
     }
 }

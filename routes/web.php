@@ -10,6 +10,7 @@ use App\Http\Controllers\MediaController;
 use App\Http\Controllers\Auth\UserAuthController;
 use App\Http\Controllers\UserDashboardController;
 use App\Http\Controllers\UserProfileController;
+use App\Http\Controllers\Admin\UserViewSwitchController;
 
 // Test routes to verify routing
 Route::get('/test-route', function() {
@@ -47,17 +48,13 @@ Route::middleware(['auth:web'])->group(function () {
     Route::post('/logout', [UserAuthController::class, 'logout'])->name('logout');
 });
 
-// User Dashboard Routes
-Route::middleware(['auth:web', 'verified'])->group(function () {
-    // Dashboard
-    Route::get('/dashboard', function () {
-        return view('user.dashboard');
-    })->name('user.dashboard');
-
-    // Profile
-    Route::get('/profile', function () {
-        return view('user.profile');
-    })->name('user.profile');
+// User routes
+Route::middleware(['web', 'auth:web', 'admin.as.user'])->group(function () {
+    Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/profile', [UserProfileController::class, 'show'])->name('user.profile');
+    Route::get('/settings/account', [UserProfileController::class, 'account'])->name('user.settings.account');
+    Route::get('/settings/privacy', [UserProfileController::class, 'privacy'])->name('user.settings.privacy');
+    Route::get('/settings/notifications', [UserProfileController::class, 'notifications'])->name('user.settings.notifications');
 
     // Membership
     Route::prefix('membership')->group(function () {
@@ -149,3 +146,14 @@ Route::get('/{slug}', [PageController::class, 'show'])
 
 // Fallback route for CMS pages
 Route::fallback([PageController::class, 'resolve'])->name('page.resolve');
+
+// Admin to User View Switch Routes
+Route::middleware(['auth:admin'])->group(function () {
+    Route::get('/switch-to-user', [App\Http\Controllers\Admin\UserViewSwitchController::class, 'switchToUser'])
+        ->name('switch.to.user');
+});
+
+Route::middleware(['auth:web'])->group(function () {
+    Route::get('/switch-to-admin', [App\Http\Controllers\Admin\UserViewSwitchController::class, 'switchToAdmin'])
+        ->name('switch.to.admin');
+});

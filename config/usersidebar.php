@@ -5,7 +5,7 @@ return [
         [
             'title' => 'Dashboard',
             'icon' => 'ri-dashboard-line',
-            'route' => 'user.dashboard',
+            'route' => 'dashboard',
             'permission' => null,
         ],
         [

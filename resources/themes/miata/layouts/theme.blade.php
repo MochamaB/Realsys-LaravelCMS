@@ -14,8 +14,6 @@
         @foreach($theme->css as $css)
             <link rel="stylesheet" href="{{ $css }}" />
         @endforeach
-        <link rel="stylesheet" href="{{ theme_asset('assets/lib/css/nivo-slider.css') }}">
-        <link rel="stylesheet" href="{{ theme_asset('assets/lib/css/preview.css') }}">
 
         <!-- Custom CSS -->
         @stack('styles')
@@ -35,15 +33,14 @@
         <!-- Footer Section -->
         @include('theme::partials.footer')
 
-        <!-- Theme JavaScript -->
-        <script src="{{ asset('themes/miata/js/vendor/jquery-1.12.4.min.js') }}"></script>
-        <script src="{{ asset('themes/miata/js/vendor/modernizr-3.11.7.min.js') }}"></script>
-        @foreach($theme->js as $js)
+     
+    </div>
+       <!-- Theme JavaScript -->
+       @foreach($theme->js as $js)
             <script src="{{ $js }}"></script>
         @endforeach
 
         <!-- Custom JavaScript -->
         @stack('scripts')
-    </div>
     </body>
 </html>

@@ -73,10 +73,10 @@ return [
     |
     */
 
-    'home' => '/home',
+    'home' => '/dashboard',
     'admin' => [
-    'home' => '/admin/dashboard',
-],
+        'home' => '/admin/dashboard',
+    ],
 
     /*
     |--------------------------------------------------------------------------

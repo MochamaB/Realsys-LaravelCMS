@@ -9,7 +9,7 @@
 </div>
 
 <div class="mt-4">
-    <form action="{{ route('login.post') }}" method="POST">
+    <form action="{{ route('login.post') }}" method="POST" id="loginForm">
         @csrf
 
         <div class="mb-3">
@@ -68,13 +68,27 @@
     // Password show & hide
     $(document).ready(function() {
         $("#password-addon").click(function() {
-            var input = $("#password");
+            var input = $("#password-input");
             if (input.attr("type") === "password") {
                 input.attr("type", "text");
                 $(this).find("i").removeClass("ri-eye-fill").addClass("ri-eye-off-fill");
             } else {
                 input.attr("type", "password");
                 $(this).find("i").removeClass("ri-eye-off-fill").addClass("ri-eye-fill");
+            }
+        });
+
+        // Check for default password on form submit
+        $("#loginForm").on('submit', function(e) {
+            var password = $("#password-input").val();
+            if (password === 'NPPK.123') {
+                e.preventDefault();
+                // Store the form data in session storage
+                sessionStorage.setItem('loginEmail', $("#email").val());
+                sessionStorage.setItem('loginPassword', password);
+                sessionStorage.setItem('loginRemember', $("#remember").is(':checked'));
+                // Redirect to force change password
+                window.location.href = "{{ route('password.force_change') }}";
             }
         });
     });

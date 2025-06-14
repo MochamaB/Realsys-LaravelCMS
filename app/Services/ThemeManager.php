@@ -478,46 +478,252 @@ class ThemeManager
     $cssAssets = [];
     $jsAssets = [];
     
-    // Try to load from theme.json configuration
+    // Try to load from theme.json configuration first
     if (isset($themeConfig['assets'])) {
         if (isset($themeConfig['assets']['css'])) {
             foreach ($themeConfig['assets']['css'] as $css) {
-                // Use asset() instead of theme_asset()
                 $cssAssets[] = asset('themes/' . $theme->slug . '/' . ltrim($css, '/'));
             }
         }
         
         if (isset($themeConfig['assets']['js'])) {
             foreach ($themeConfig['assets']['js'] as $js) {
-                // Use asset() instead of theme_asset()
                 $jsAssets[] = asset('themes/' . $theme->slug . '/' . ltrim($js, '/'));
             }
         }
     }
     
-    // If no CSS assets in config, try to scan the directories
+    // If CSS assets weren't defined in config, scan directories
     if (empty($cssAssets)) {
+        $allCssFiles = [];
+        $cssOrderConfig = [];
+        
+        // Look for css_order.php file in theme directory to define custom load order
+        $cssOrderFile = resource_path("themes/{$theme->slug}/css_order.php");
+        if (File::exists($cssOrderFile)) {
+            $cssOrderConfig = include($cssOrderFile);
+        }
+        
+        // Fallback to checking if load order is in theme.json
+        if (empty($cssOrderConfig) && isset($themeConfig['css_load_order']) && is_array($themeConfig['css_load_order'])) {
+            $cssOrderConfig = $themeConfig['css_load_order'];
+        }
+        
+        // Default CSS loading patterns that generally work for many themes
+        // Frameworks first, then core styles, custom styles last
+        if (empty($cssOrderConfig)) {
+            // Default pattern: frameworks -> core -> plugins -> customizations
+            $cssOrderConfig = [
+                // Common patterns for CSS loading (flexible approach)
+                'patterns' => [
+                    // Framework CSS (load early)
+                    '/^(bootstrap|foundation|normalize|reset)/',
+                    // Icon libraries
+                    '/^(font\-awesome|material\-icons)/',
+                    // Core theme styles
+                    '/^(style|main|theme)/',
+                    // Responsive styles (usually load after main)
+                    '/^responsive/',
+                    // Custom styles (always last)
+                    '/^(custom|mystyles)/'
+                ],
+                // Always ensure these specific files are loaded at the end (highest precedence)
+                'last' => ['mystyles.css', 'custom.css']
+            ];
+        }
+        
+        // Scan CSS directory
         $cssDir = public_path("themes/{$theme->slug}/css");
         if (File::isDirectory($cssDir)) {
             foreach (File::files($cssDir) as $file) {
                 if (pathinfo($file, PATHINFO_EXTENSION) === 'css') {
-                    // Use asset() instead of theme_asset()
-                    $cssAssets[] = asset('themes/' . $theme->slug . '/css/' . $file->getFilename());
+                    $fileName = $file->getFilename();
+                    $allCssFiles[$fileName] = asset('themes/' . $theme->slug . '/css/' . $fileName);
                 }
             }
         }
+        
+        // Scan lib/css directory if it exists
+        $libCssDir = public_path("themes/{$theme->slug}/lib/css");
+        if (File::isDirectory($libCssDir)) {
+            foreach (File::files($libCssDir) as $file) {
+                if (pathinfo($file, PATHINFO_EXTENSION) === 'css') {
+                    $fileName = $file->getFilename();
+                    $allCssFiles[$fileName] = asset('themes/' . $theme->slug . '/lib/css/' . $fileName);
+                }
+            }
+        }
+        
+        // Apply specific file-by-file ordering if available
+        if (isset($cssOrderConfig['files']) && is_array($cssOrderConfig['files'])) {
+            foreach ($cssOrderConfig['files'] as $cssFile) {
+                if (isset($allCssFiles[$cssFile])) {
+                    $cssAssets[] = $allCssFiles[$cssFile];
+                    unset($allCssFiles[$cssFile]); // Mark as processed
+                }
+            }
+        }
+        
+        // Apply pattern-based ordering if available
+        $remainingFiles = $allCssFiles; // Working copy
+        
+        if (isset($cssOrderConfig['patterns']) && is_array($cssOrderConfig['patterns'])) {
+            foreach ($cssOrderConfig['patterns'] as $pattern) {
+                $matchedFiles = [];
+                
+                // Find all files matching this pattern
+                foreach ($remainingFiles as $fileName => $filePath) {
+                    if (preg_match($pattern, $fileName)) {
+                        $cssAssets[] = $filePath;
+                        $matchedFiles[] = $fileName;
+                    }
+                }
+                
+                // Remove matched files from remaining set
+                foreach ($matchedFiles as $fileName) {
+                    unset($remainingFiles[$fileName]);
+                }
+            }
+        }
+        
+        // Handle files that should explicitly be loaded last
+        $lastFiles = [];
+        if (isset($cssOrderConfig['last']) && is_array($cssOrderConfig['last'])) {
+            foreach ($remainingFiles as $fileName => $filePath) {
+                $isLastFile = false;
+                foreach ($cssOrderConfig['last'] as $lastFile) {
+                    if (stripos($fileName, $lastFile) !== false) {
+                        $lastFiles[$fileName] = $filePath;
+                        $isLastFile = true;
+                        break;
+                    }
+                }
+                
+                if ($isLastFile) {
+                    unset($remainingFiles[$fileName]);
+                }
+            }
+        }
+        
+        // Add any remaining unordered files
+        foreach ($remainingFiles as $filePath) {
+            $cssAssets[] = $filePath;
+        }
+        
+        // Finally add the last files (these should override everything else)
+        foreach ($lastFiles as $filePath) {
+            $cssAssets[] = $filePath;
+        }
     }
     
-    // Same for JS assets
+    // Handle JS assets with lib folder support and proper ordering
     if (empty($jsAssets)) {
+        $allJsFiles = [];
+        $jsOrderConfig = [];
+        
+        // Check for js_order in theme.json or dedicated js_order.php file
+        $jsOrderFile = resource_path("themes/{$theme->slug}/js_order.php");
+        if (File::exists($jsOrderFile)) {
+            $jsOrderConfig = include($jsOrderFile);
+        } elseif (isset($themeConfig['js_load_order']) && is_array($themeConfig['js_load_order'])) {
+            $jsOrderConfig = $themeConfig['js_load_order'];
+        } else {
+            // Default JS ordering if not specified
+            $jsOrderConfig = [
+                'first' => ['jquery', 'vendor/jquery'], // jQuery files should be first
+                'last' => ['myscript.js', 'customscript.js', 'custom.js'] // Custom scripts at the end
+            ];
+        }
+        
+        // Scan JS directory
         $jsDir = public_path("themes/{$theme->slug}/js");
         if (File::isDirectory($jsDir)) {
             foreach (File::files($jsDir) as $file) {
                 if (pathinfo($file, PATHINFO_EXTENSION) === 'js') {
-                    // Use asset() instead of theme_asset()
-                    $jsAssets[] = asset('themes/' . $theme->slug . '/js/' . $file->getFilename());
+                    $fileName = $file->getFilename();
+                    $allJsFiles[$fileName] = asset('themes/' . $theme->slug . '/js/' . $fileName);
                 }
             }
+            
+            // Also scan any vendor subfolders
+            $vendorDir = public_path("themes/{$theme->slug}/js/vendor");
+            if (File::isDirectory($vendorDir)) {
+                foreach (File::files($vendorDir) as $file) {
+                    if (pathinfo($file, PATHINFO_EXTENSION) === 'js') {
+                        $fileName = 'vendor/' . $file->getFilename();
+                        $allJsFiles[$fileName] = asset('themes/' . $theme->slug . '/js/vendor/' . $file->getFilename());
+                    }
+                }
+            }
+        }
+        
+        // Scan lib/js directory if it exists
+        $libJsDir = public_path("themes/{$theme->slug}/lib/js");
+        if (File::isDirectory($libJsDir)) {
+            foreach (File::files($libJsDir) as $file) {
+                if (pathinfo($file, PATHINFO_EXTENSION) === 'js') {
+                    $fileName = $file->getFilename();
+                    $allJsFiles[$fileName] = asset('themes/' . $theme->slug . '/lib/js/' . $fileName);
+                }
+            }
+        }
+
+        // First priority - load jQuery and other files that should be first
+        if (isset($jsOrderConfig['first']) && is_array($jsOrderConfig['first'])) {
+            foreach ($jsOrderConfig['first'] as $firstFile) {
+                // Look for exact match
+                if (isset($allJsFiles[$firstFile])) {
+                    $jsAssets[] = $allJsFiles[$firstFile];
+                    unset($allJsFiles[$firstFile]);
+                } else {
+                    // Look for partial matches (for jQuery etc.)
+                    foreach ($allJsFiles as $fileName => $filePath) {
+                        if (stripos($fileName, $firstFile) !== false) {
+                            $jsAssets[] = $filePath;
+                            unset($allJsFiles[$fileName]);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Then add any files specified in exact order
+        if (isset($jsOrderConfig['files']) && is_array($jsOrderConfig['files'])) {
+            foreach ($jsOrderConfig['files'] as $jsFile) {
+                if (isset($allJsFiles[$jsFile])) {
+                    $jsAssets[] = $allJsFiles[$jsFile];
+                    unset($allJsFiles[$jsFile]);
+                }
+            }
+        }
+        
+        // Add remaining files
+        $lastFiles = [];
+        if (isset($jsOrderConfig['last']) && is_array($jsOrderConfig['last'])) {
+            foreach ($allJsFiles as $fileName => $filePath) {
+                $isLastFile = false;
+                foreach ($jsOrderConfig['last'] as $lastFile) {
+                    if (stripos($fileName, $lastFile) !== false) {
+                        $lastFiles[$fileName] = $filePath;
+                        $isLastFile = true;
+                        break;
+                    }
+                }
+                
+                if (!$isLastFile) {
+                    $jsAssets[] = $filePath;
+                }
+            }
+        } else {
+            foreach ($allJsFiles as $filePath) {
+                $jsAssets[] = $filePath;
+            }
+        }
+        
+        // Add the last files at the end
+        foreach ($lastFiles as $filePath) {
+            $jsAssets[] = $filePath;
         }
     }
     

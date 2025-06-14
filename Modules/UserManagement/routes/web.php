@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\UserManagement\App\Http\Controllers\RegistrationController;
-use Modules\UserManagement\Http\Controllers\UserManagementController;
+use Modules\UserManagement\App\Http\Controllers\UserManagementController;
 
 // Public routes for registration
 Route::group(['prefix' => 'join', 'as' => 'usermanagement.', 'middleware' => 'web'], function () {

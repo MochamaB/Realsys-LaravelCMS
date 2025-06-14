@@ -16,8 +16,6 @@
                 padding: 40px 30px;
                 border-right: 2px solid #e9ecef;
                 justify-content: center;
-
-                
             }
             
             .wizard-step {
@@ -26,7 +24,6 @@
                 margin-bottom: 60px;
                 padding: 15px 0;
                 position: relative;
-
             }
             
             .wizard-step-circle {
@@ -43,7 +40,6 @@
                 z-index: 2;
                 transition: all 0.3s ease;
                 margin-right: 25px;
-
             }
             
             .wizard-step.active .wizard-step-circle {
@@ -53,7 +49,6 @@
             
             .wizard-step.completed .wizard-step-circle {
                 background-color: #343a40;
-
                 color: #fff;
             }
             
@@ -68,19 +63,17 @@
                 color: #343a40;
                 font-weight: 700;
                 font-size: 20px;
-
             }
             
             .wizard-progress {
                 position: absolute;
-                left: 59px; /* Center of the circle (30px padding + 30px radius + 9px adjustment) */
-                top: 70px; /* Start from middle of first circle */
+                left: 59px;
+                top: 70px;
                 width: 4px;
                 background-color: #e9ecef;
-                height: calc(100% - 190px); /* End at middle of last circle */
+                height: calc(100% - 190px);
                 z-index: 1;
                 border-radius: 2px;
-
             }
             
             .wizard-progress-bar {
@@ -89,7 +82,6 @@
                 height: 0%;
                 transition: height 0.5s ease;
                 border-radius: 2px;
-
             }
             
             .wizard-content {
@@ -98,7 +90,6 @@
                 border-radius: 0;
                 height: 100%;
                 min-height: 100vh;
-
             }
             
             .wizard-content .tab-pane {
@@ -115,10 +106,7 @@
                 margin-top: 40px;
                 padding-top: 30px;
                 border-top: 1px solid #e9ecef;
-
             }
-            
-           
             
             /* Form styles */
             .form-group {
@@ -137,8 +125,9 @@
                 font-size: 12px;
                 margin-top: 5px;
             }
-                        /* Button styles - Remove blue, use red or dark gray */
-                        .btn-primary {
+            
+            /* Button styles - Remove blue, use red or dark gray */
+            .btn-primary {
                 background-color: #dc3545;
                 border-color: #dc3545;
                 color: #fff;
@@ -194,7 +183,6 @@
                 box-shadow: none !important;
             }
 
-            
             /* Card styles for profile types */
             .profile-type-card {
                 border: 2px solid #e9ecef;
@@ -231,8 +219,9 @@
                 color: #dc3545;
                 margin-bottom: 15px;
             }
-             /* Alert styles - make them more prominent */
-             .alert {
+            
+            /* Alert styles - make them more prominent */
+            .alert {
                 border-radius: 8px;
                 padding: 15px 20px;
                 margin-bottom: 25px;
@@ -255,8 +244,9 @@
             .alert-dismissible .btn-close {
                 padding: 8px 12px;
             }
-              /* Form inputs */
-              .form-control {
+            
+            /* Form inputs */
+            .form-control {
                 border-radius: 6px;
                 border: 1px solid #e9ecef;
                 padding: 12px 15px;
@@ -302,6 +292,79 @@
             .text-danger {
                 color: #dc3545 !important;
             }
+
+            /* Mobile Responsive Styles */
+            @media (max-width: 991px) {
+                .wizard-steps {
+                    flex-direction: row;
+                    height: auto;
+                    padding: 20px 0;
+                    border-right: none;
+                    border-bottom: 2px solid #e9ecef;
+                    justify-content: space-between;
+                    margin-bottom: 30px;
+                }
+
+                .wizard-step {
+                    flex-direction: column;
+                    margin-bottom: 0;
+                    padding: 0 10px;
+                    text-align: center;
+                }
+
+                .wizard-step-circle {
+                    width: 40px;
+                    height: 40px;
+                    line-height: 40px;
+                    font-size: 18px;
+                    margin-right: 0;
+                    margin-bottom: 8px;
+                }
+
+                .wizard-step-text {
+                    font-size: 12px;
+                    display: none;
+                }
+
+                .wizard-progress {
+                    left: 0;
+                    top: 40px;
+                    width: 100%;
+                    height: 4px;
+                }
+
+                .wizard-progress-bar {
+                    width: 0%;
+                    height: 100%;
+                }
+
+                .wizard-content {
+                    padding: 0 20px;
+                    min-height: auto;
+                }
+
+                .col-lg-4 {
+                    width: 100%;
+                }
+
+                .col-lg-8 {
+                    width: 100%;
+                }
+            }
+
+            /* Small Mobile Styles */
+            @media (max-width: 576px) {
+                .wizard-step-circle {
+                    width: 35px;
+                    height: 35px;
+                    line-height: 35px;
+                    font-size: 16px;
+                }
+
+                .wizard-content {
+                    padding: 0 15px;
+                }
+            }
         </style>
     </x-slot>
 
@@ -309,7 +372,8 @@
         <div class="row">
             <div class="col-12 mb-4">
                 <h2 class="text-center">Join Our Party</h2>
-                <p class="text-center text-muted">Complete the registration form to become a member</p>
+                <p class="text-center text-muted">Please confirm your membership status by dialing *509#<br>
+                Or register/ login on: <a class="text-danger"  href="https://ippms.orpp.or.ke/auth/login?ReturnUrl=%2F" target="_blank">ORPP IPPMS</a></p>
             </div>
         </div>
         <div class="row">
@@ -395,8 +459,14 @@
                     const stepsCount = $('.wizard-step').length;
                     const progressPercentage = ((currentStep - 1) / (stepsCount - 1)) * 100;
                     
-                    // Update progress bar
-                    $('#wizard-progress-bar').css('height', progressPercentage + '%');
+                    // Update progress bar based on screen size
+                    if (window.innerWidth <= 991) {
+                        // Mobile: horizontal progress
+                        $('#wizard-progress-bar').css('width', progressPercentage + '%');
+                    } else {
+                        // Desktop: vertical progress
+                        $('#wizard-progress-bar').css('height', progressPercentage + '%');
+                    }
                     
                     // Update completed steps
                     $('.wizard-step').each(function(index) {
@@ -405,6 +475,11 @@
                         }
                     });
                 }
+                
+                // Update progress bar on window resize
+                $(window).resize(function() {
+                    updateProgressBar();
+                });
                 
                 // Profile Type Selection
                 $('.profile-type-card').click(function() {

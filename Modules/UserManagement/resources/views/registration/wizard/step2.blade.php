@@ -20,7 +20,7 @@
             </div>
             <div class="col-md-4">
                 <div class="form-group">
-                    <label for="surname">Surname <span class="text-danger">*</span></label>
+                    <label for="surname">SurName <span class="text-danger">*</span></label>
                     <input type="text" class="form-control @error('surname') is-invalid @enderror" id="surname" name="surname" value="{{ old('surname', session('wizard_data.surname', '')) }}" required>
                     @error('surname')
                         <div class="invalid-feedback">{{ $message }}</div>
@@ -29,7 +29,7 @@
             </div>
             <div class="col-md-4">
                 <div class="form-group">
-                    <label for="last_name">Last Name</label>
+                    <label for="last_name">Middle Name</label>
                     <input type="text" class="form-control @error('last_name') is-invalid @enderror" id="last_name" name="last_name" value="{{ old('last_name', session('wizard_data.last_name', '')) }}">
                     @error('last_name')
                         <div class="invalid-feedback">{{ $message }}</div>

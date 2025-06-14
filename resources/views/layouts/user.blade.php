@@ -33,7 +33,7 @@
                     <div class="d-flex">
                         <!-- LOGO -->
                         <div class="navbar-brand-box horizontal-logo">
-                            <a href="{{ route('user.dashboard') }}" class="logo logo-dark">
+                            <a href="{{ route('dashboard') }}" class="logo logo-dark">
                                 <span class="logo-sm">
                                     <img src="{{ asset('assets/admin/images/logo-sm.png') }}" alt="" height="22">
                                 </span>
@@ -42,7 +42,7 @@
                                 </span>
                             </a>
 
-                            <a href="{{ route('user.dashboard') }}" class="logo logo-light">
+                            <a href="{{ route('dashboard') }}" class="logo logo-light">
                                 <span class="logo-sm">
                                     <img src="{{ asset('assets/admin/images/logo-sm.png') }}" alt="" height="22">
                                 </span>
@@ -62,6 +62,15 @@
                     </div>
 
                     <div class="d-flex align-items-center">
+                        @if(session('admin_as_user'))
+                            <div class="me-3">
+                                <span class="badge bg-warning">Viewing as User</span>
+                                <a href="{{ route('switch.to.admin') }}" class="btn btn-sm btn-primary ms-2">
+                                    <i class="ri-admin-line me-1"></i> Switch to Admin
+                                </a>
+                            </div>
+                        @endif
+
                         <div class="dropdown ms-sm-3 header-item topbar-user">
                             <button type="button" class="btn" id="page-header-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <span class="d-flex align-items-center">
@@ -110,7 +119,7 @@
             <!-- LOGO -->
             <div class="navbar-brand-box">
                 <!-- Dark Logo-->
-                <a href="{{ route('user.dashboard') }}" class="logo logo-dark">
+                <a href="{{ route('dashboard') }}" class="logo logo-dark">
                     <span class="logo-sm">
                         <img src="{{ asset('assets/admin/images/logo-sm.png') }}" alt="" height="22">
                     </span>
@@ -119,9 +128,9 @@
                     </span>
                 </a>
                 <!-- Light Logo-->
-                <a href="{{ route('user.dashboard') }}" class="logo logo-light">
+                <a href="{{ route('dashboard') }}" class="logo logo-light">
                     <span class="logo-sm">
-                            <img src="{{ asset('assets/admin/images/logo-sm.png') }}" alt="" height="22">
+                        <img src="{{ asset('assets/admin/images/logo-sm.png') }}" alt="" height="22">
                     </span>
                     <span class="logo-lg">
                         <img src="{{ asset('assets/admin/images/logo-light.png') }}" alt="" height="17">
