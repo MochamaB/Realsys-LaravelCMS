@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-layout="vertical" data-topbar="light" data-sidebar="dark" data-sidebar-size="lg" data-sidebar-image="none" data-preloader="disable">
 <head>
     <meta charset="utf-8" />
     <title>@yield('title', 'Admin Dashboard') | {{ config('app.name') }}</title>
@@ -73,6 +73,57 @@
     
     <!-- App js -->
     <script src="{{ asset('assets/admin/js/app.js') }}"></script>
+
+    <script>
+        // Initialize sidebar collapse functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get the necessary elements
+            const verticalHover = document.getElementById('vertical-hover');
+            const hamburgerIcon = document.getElementById('topnav-hamburger-icon');
+            const body = document.body;
+            const verticalOverlay = document.querySelector('.vertical-overlay');
+
+            // Function to handle sidebar collapse
+            function toggleSidebar() {
+                body.classList.toggle('sidebar-enable');
+                if (verticalOverlay) {
+                    verticalOverlay.classList.toggle('show');
+                }
+            }
+
+            // Function to handle vertical hover
+            function toggleVerticalHover() {
+                body.classList.toggle('vertical-sidebar-enable');
+            }
+
+            // Add click event listeners
+            if (verticalHover) {
+                verticalHover.addEventListener('click', toggleVerticalHover);
+            }
+
+            if (hamburgerIcon) {
+                hamburgerIcon.addEventListener('click', toggleSidebar);
+            }
+
+            // Close sidebar when clicking overlay
+            if (verticalOverlay) {
+                verticalOverlay.addEventListener('click', function() {
+                    body.classList.remove('sidebar-enable');
+                    verticalOverlay.classList.remove('show');
+                });
+            }
+
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                if (window.innerWidth >= 992) {
+                    body.classList.remove('sidebar-enable');
+                    if (verticalOverlay) {
+                        verticalOverlay.classList.remove('show');
+                    }
+                }
+            });
+        });
+    </script>
 
     @yield('js')
 </body>

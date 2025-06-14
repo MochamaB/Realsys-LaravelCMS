@@ -75,13 +75,16 @@
                         <span class="position-absolute topbar-badge fs-10 translate-middle badge rounded-pill bg-danger">0<span class="visually-hidden">unread messages</span></span>
                     </button>
                 </div>
-
-                <div class="dropdown ms-sm-3 header-item topbar-user">
-                    @if(auth()->guard('admin')->check() && !session('admin_as_user'))
-                        <a href="{{ route('switch.to.user') }}" class="btn btn-sm btn-info me-2">
+                <div class="ms-1 header-item d-none d-sm-flex">
+                @if(auth()->guard('admin')->check() && !session('admin_as_user'))
+                        <a href="{{ route('admin.switch.to.user') }}" class="btn btn-sm btn-info me-2">
                             <i class="ri-user-line me-1"></i> View as User
                         </a>
                     @endif
+                </div>
+
+                <div class="dropdown ms-sm-3 header-item topbar-user">
+                   
                     <button type="button" class="btn" id="page-header-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <span class="d-flex align-items-center">
                             <img class="rounded-circle header-profile-user" src="{{ asset('assets/admin/images/users/avatar-1.jpg') }}" alt="Header Avatar">

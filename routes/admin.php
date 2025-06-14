@@ -23,6 +23,7 @@ use App\Http\Controllers\Admin\WidgetController;
 use App\Http\Controllers\Admin\WidgetContentTypeController;
 use App\Http\Controllers\Admin\PageSectionWidgetController;
 use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\Admin\UserViewSwitchController;
 
 // Guest routes for admin authentication (only for non-authenticated admin users)
 Route::middleware('admin.guest')->group(function () {
@@ -45,6 +46,10 @@ Route::middleware('admin.auth')->group(function () {
     // Dashboard routes
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
+
+    // Admin to User View Switch Routes
+    Route::get('/switch-to-user', [UserViewSwitchController::class, 'switchToUser'])
+        ->name('switch.to.user');
 
     // Pages
     Route::resource('pages', PageController::class);
@@ -190,5 +195,18 @@ Route::middleware('admin.auth')->group(function () {
                 'destroy' => 'content-types.items.destroy',
             ]);
         Route::get('items/{item}/preview', [ContentItemController::class, 'preview'])->name('content-types.items.preview');
+    });
+
+    // User Management Routes
+    Route::prefix('users')->name('users.')->group(function () {
+        Route::get('/', [UserManagementController::class, 'index'])->name('index');
+        Route::get('/create', [UserManagementController::class, 'create'])->name('create');
+        Route::post('/', [UserManagementController::class, 'store'])->name('store');
+        Route::get('/{id}', [UserManagementController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [UserManagementController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [UserManagementController::class, 'update'])->name('update');
+        Route::delete('/{id}', [UserManagementController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/update-password', [UserManagementController::class, 'updatePassword'])->name('update-password');
+        Route::put('/{id}/update-membership', [UserManagementController::class, 'updateMembership'])->name('update-membership');
     });
 });

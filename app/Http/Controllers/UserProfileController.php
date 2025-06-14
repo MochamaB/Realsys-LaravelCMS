@@ -135,4 +135,40 @@ class UserProfileController extends Controller
         return redirect()->route('user.dashboard')
             ->with('success', 'Password changed successfully.');
     }
+
+    /**
+     * Update the user's profile picture.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function updateProfilePicture(Request $request)
+    {
+        $request->validate([
+            'profile_photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048'
+        ]);
+
+        try {
+            $user = Auth::user();
+            
+            // Delete old profile photo if exists
+            if ($user->hasMedia('profile_photos')) {
+                $user->clearMediaCollection('profile_photos');
+            }
+
+            // Add new profile photo
+            $user->addMediaFromRequest('profile_photo')
+                ->toMediaCollection('profile_photos');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Profile picture updated successfully.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update profile picture. Please try again.'
+            ], 500);
+        }
+    }
 }
