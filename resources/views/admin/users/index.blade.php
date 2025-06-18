@@ -83,6 +83,14 @@
 
         <!-- Users List Card -->
         <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0">User Management</h4>
+                    <a href="{{ route('admin.users.wizard.step1') }}" class="btn btn-primary">
+                        <i class="ri-user-add-line me-1"></i> Create User
+                    </a>
+                </div>
+            </div>
             
             <div class="card-body">
                 <!-- Custom Tabs -->

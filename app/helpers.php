@@ -35,3 +35,43 @@ if (!function_exists('getSectionColorClass')) {
         };
     }
 }
+
+if (!function_exists('getLoggedInAdmin')) {
+    /**
+     * Get the currently logged in admin user
+     */
+    function getLoggedInAdmin()
+    {
+        return auth()->guard('admin')->user();
+    }
+}
+
+if (!function_exists('getLoggedInUser')) {
+    /**
+     * Get the currently logged in web user
+     */
+    function getLoggedInUser()
+    {
+        return auth()->guard('web')->user();
+    }
+}
+
+if (!function_exists('isAdminLoggedIn')) {
+    /**
+     * Check if admin is logged in
+     */
+    function isAdminLoggedIn()
+    {
+        return auth()->guard('admin')->check();
+    }
+}
+
+if (!function_exists('isUserLoggedIn')) {
+    /**
+     * Check if user is logged in
+     */
+    function isUserLoggedIn()
+    {
+        return auth()->guard('web')->check();
+    }
+}

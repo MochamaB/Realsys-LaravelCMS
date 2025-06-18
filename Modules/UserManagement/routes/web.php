@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\UserManagement\App\Http\Controllers\RegistrationController;
-use Modules\UserManagement\App\Http\Controllers\UserManagementController;
+
 
 // Public routes for registration
 Route::group(['prefix' => 'join', 'as' => 'usermanagement.', 'middleware' => 'web'], function () {
@@ -37,8 +37,4 @@ Route::group(['prefix' => 'join', 'as' => 'usermanagement.', 'middleware' => 'we
     Route::get('wards', [RegistrationController::class, 'getWards'])->name('wards');
 });
 
-// Protected routes
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::resource('usermanagements', UserManagementController::class)->names('usermanagement');
 
-});

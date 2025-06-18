@@ -11,7 +11,6 @@ use App\Http\Controllers\Auth\UserAuthController;
 use App\Http\Controllers\UserDashboardController;
 use App\Http\Controllers\UserProfileController;
 use App\Http\Controllers\Admin\UserViewSwitchController;
-use App\Http\Controllers\Admin\UserManagementController;
 
 // Test routes to verify routing
 Route::get('/test-route', function() {
@@ -161,13 +160,4 @@ Route::middleware(['web', 'auth:web'])->group(function () {
 });
 
 // User Management Routes
-Route::prefix('admin/users')->middleware(['auth', 'admin'])->group(function () {
-    Route::get('/', [UserManagementController::class, 'index'])->name('admin.users.index');
-    Route::get('/create', [UserManagementController::class, 'create'])->name('admin.users.create');
-    Route::post('/', [UserManagementController::class, 'store'])->name('admin.users.store');
-    Route::get('/{id}', [UserManagementController::class, 'show'])->name('admin.users.show');
-    Route::get('/{id}/edit', [UserManagementController::class, 'edit'])->name('admin.users.edit');
-    Route::put('/{id}', [UserManagementController::class, 'update'])->name('admin.users.update');
-    Route::delete('/{id}', [UserManagementController::class, 'destroy'])->name('admin.users.destroy');
-    Route::post('/{id}/profile-picture', [UserManagementController::class, 'updateProfilePicture'])->name('admin.users.update-profile-picture');
-});
+// Removed conflicting routes - these are now handled in routes/admin.php

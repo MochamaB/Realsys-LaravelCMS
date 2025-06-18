@@ -10,6 +10,7 @@ use App\View\Components\ThemeNavigation;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\View;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -118,6 +119,23 @@ class AppServiceProvider extends ServiceProvider
             echo \$isActive ? 'show' : '';
             ?>";
         });
-         //
+        
+        // View composers for global user data
+        View::composer('*', function ($view) {
+            // Get logged in admin
+            $loggedInAdmin = null;
+            if (auth()->guard('admin')->check()) {
+                $loggedInAdmin = auth()->guard('admin')->user();
+            }
+            
+            // Get logged in user
+            $loggedInUser = null;
+            if (auth()->guard('web')->check()) {
+                $loggedInUser = auth()->guard('web')->user();
+            }
+            
+            $view->with('loggedInAdmin', $loggedInAdmin);
+            $view->with('loggedInUser', $loggedInUser);
+        });
     }
 }

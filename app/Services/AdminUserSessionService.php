@@ -86,7 +86,9 @@ class AdminUserSessionService
             if (!$user) {
                 // Create new user account
                 $user = User::create([
-                    'name' => $admin->name,
+                    'firstname' =>$admin->first_name,
+                    'surname' =>$admin->surname,
+                    'last_name' => $admin->last_name,
                     'email' => $admin->email,
                     'password' => Hash::make(Str::random(32)),
                     'email_verified_at' => now(),

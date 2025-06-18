@@ -208,5 +208,42 @@ Route::middleware('admin.auth')->group(function () {
         Route::delete('/{id}', [UserManagementController::class, 'destroy'])->name('destroy');
         Route::post('/{id}/update-password', [UserManagementController::class, 'updatePassword'])->name('update-password');
         Route::put('/{id}/update-membership', [UserManagementController::class, 'updateMembership'])->name('update-membership');
+        Route::post('/{id}/profile-picture', [UserManagementController::class, 'updateProfilePicture'])->name('update-profile-picture');
+    
+        // Wizard Routes
+        Route::get('/wizard', [UserManagementController::class, 'showWizard'])->name('wizard');
+        Route::get('/wizard/cancel', [UserManagementController::class, 'cancelWizard'])->name('wizard.cancel');
+        
+        // Step 1: User Type
+        Route::get('/wizard/step1', [UserManagementController::class, 'showStep1'])->name('wizard.step1');
+        Route::post('/wizard/step1', [UserManagementController::class, 'submitStep1'])->name('wizard.step1.post');
+        
+        // Step 2: Role Selection
+        Route::get('/wizard/step2', [UserManagementController::class, 'showStep2'])->name('wizard.step2');
+        Route::post('/wizard/step2', [UserManagementController::class, 'submitStep2'])->name('wizard.step2.post');
+        
+        // Step 3: Personal Information
+        Route::get('/wizard/step3', [UserManagementController::class, 'showStep3'])->name('wizard.step3');
+        Route::post('/wizard/step3', [UserManagementController::class, 'submitStep3'])->name('wizard.step3.post');
+        
+        // Step 4: Party Membership Decision
+        Route::get('/wizard/step4', [UserManagementController::class, 'showStep4'])->name('wizard.step4');
+        Route::post('/wizard/step4', [UserManagementController::class, 'submitStep4'])->name('wizard.step4.post');
+        
+        // Step 5: Additional Information (Conditional)
+        Route::get('/wizard/step5', [UserManagementController::class, 'showStep5'])->name('wizard.step5');
+        Route::post('/wizard/step5', [UserManagementController::class, 'submitStep5'])->name('wizard.step5.post');
+        
+        // Step 6: Geographic Information (Conditional)
+        Route::get('/wizard/step6', [UserManagementController::class, 'showStep6'])->name('wizard.step6');
+        Route::post('/wizard/step6', [UserManagementController::class, 'submitStep6'])->name('wizard.step6.post');
+        
+        // Step 7: Terms & Photo (Conditional)
+        Route::get('/wizard/step7', [UserManagementController::class, 'showStep7'])->name('wizard.step7');
+        Route::post('/wizard/step7', [UserManagementController::class, 'submitStep7'])->name('wizard.step7.post');
+        
+        // AJAX routes for dynamic data
+        Route::get('/wizard/constituencies', [UserManagementController::class, 'getConstituencies'])->name('wizard.constituencies');
+        Route::get('/wizard/wards', [UserManagementController::class, 'getWards'])->name('wizard.wards');
     });
 });

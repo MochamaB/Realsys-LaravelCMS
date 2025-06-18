@@ -134,7 +134,7 @@ return [
             ],
         ],
         [
-            'name' => 'Settings',
+            'name' => 'User Management',
             'icon' => 'ri-more-fill',
             'submodules' => [
                 [
@@ -149,15 +149,18 @@ return [
                             'route' => 'admin.users.index',
                         ],
                         [
-                            'name' => 'Create User',
-                            'route' => 'admin.users.create',
-                        ],
-                        [
                             'name' => 'Roles',
                             'route' => 'admin.roles.index',
                         ],
+                       
                     ],
                 ],
+            ],
+        ],
+        [
+            'name' => 'Settings',
+            'icon' => 'ri-more-fill',
+            'submodules' => [
                 [
                     'name' => 'General Settings',
                     'icon' => 'ri-settings-2-line',

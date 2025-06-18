@@ -3,6 +3,7 @@
 @section('title', 'User Profile')
 
 @section('content')
+
 <div class="row">
     <div class="col-xxl-4">
         <div class="card">
@@ -13,7 +14,8 @@
                         <x-profile-photo-edit :user="$user" :size="'lg'" />
                         
                 </div>
-                    <h5 class="fs-16 mb-1">{{ $user->name }}</h5>
+               
+                    <h5 class="fs-16 mb-1">{{ $user->first_name }} {{ $user->surname }}</h5>
                     <p class="text-muted mb-3">{{ $user->profile->profileType->name ?? 'Member' }}</p>
                 </div>
             </div>
@@ -96,14 +98,32 @@
                             <div class="row">
                                 <div class="col-lg-6">
                                     <div class="mb-3">
-                                        <label for="name" class="form-label">Name</label>
-                                        <input type="text" class="form-control" id="name" name="name" value="{{ $user->name }}" required>
+                                        <label for="name" class="form-label">First Name</label>
+                                        <input type="text" class="form-control" id="first_name" name="first_name" value="{{ $user->first_name }}" required>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <div class="mb-3">
+                                        <label for="phone_number" class="form-label">SurName</label>
+                                        <input type="text" class="form-control" id="surname" name="surname" value="{{ $user->surname }}" required>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <div class="mb-3">
+                                        <label for="phone_number" class="form-label">Last Name</label>
+                                        <input type="text" class="form-control" id="last_name" name="last_name" value="{{ $user->last_name }}" required>
                                     </div>
                                 </div>
                                 <div class="col-lg-6">
                                     <div class="mb-3">
                                         <label for="email" class="form-label">Email</label>
                                         <input type="email" class="form-control" id="email" name="email" value="{{ $user->email }}" required>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <div class="mb-3">
+                                        <label for="phone_number" class="form-label">Phone Number</label>
+                                        <input type="text" class="form-control" id="phone_number" name="phone_number" value="{{ $user->phone_number }}" required>
                                     </div>
                                 </div>
                                 <div class="col-lg-6">
@@ -127,22 +147,7 @@
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-lg-6">
-                                    <div class="mb-3">
-                                        <label for="membership_status" class="form-label">Membership Status</label>
-                                        <select class="form-select" id="membership_status" name="membership_status">
-                                            <option value="active" {{ $user->membership->status === 'active' ? 'selected' : '' }}>Active</option>
-                                            <option value="inactive" {{ $user->membership->status === 'inactive' ? 'selected' : '' }}>Inactive</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-lg-6">
-                                    <div class="mb-3">
-                                        <label for="membership_expiry" class="form-label">Membership Expiry</label>
-                                        <input type="date" class="form-control" id="membership_expiry" name="membership_expiry" 
-                                               value="{{ $user->membership?->expiry_date?->format('Y-m-d') ?? '' }}" required>
-                                    </div>
-                                </div>
+                                
                                 <div class="col-lg-12">
                                     <div class="mb-3">
                                         <label for="roles" class="form-label">Roles</label>

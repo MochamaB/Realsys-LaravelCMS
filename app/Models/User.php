@@ -12,6 +12,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\Permission\Traits\HasRoles;
 use Modules\UserManagement\Entities\Profile;
 use Modules\UserManagement\Entities\Membership;
+use App\Models\Admin;
 
 class User extends Authenticatable implements HasMedia
 {
@@ -27,7 +28,14 @@ class User extends Authenticatable implements HasMedia
         'surname',
         'last_name',
         'email',
+        'email_verified_at',
         'password',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
+        'two_factor_confirmed_at',
+        'remember_token',
+        'phone_number',
+        'id_number',
         'status',
         'role',
     ];
@@ -90,5 +98,21 @@ class User extends Authenticatable implements HasMedia
             ->useDisk('media')
             ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/gif'])
             ->withResponsiveImages();
+    }
+
+    /**
+     * Get the corresponding admin record if this user also has an admin account.
+     */
+    public function adminAccount()
+    {
+        return $this->hasOne(Admin::class, 'email', 'email');
+    }
+
+    /**
+     * Check if this user also has an admin account.
+     */
+    public function hasAdminAccount()
+    {
+        return $this->adminAccount()->exists();
     }
 }

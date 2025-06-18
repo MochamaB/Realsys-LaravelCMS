@@ -21,11 +21,14 @@ class Admin extends Authenticatable implements HasMedia
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
+        'first_name',
+        'last_name',
+        'surname',
+        'phone_number',
         'email',
+        'email_verified_at',
         'password',
         'status',
-        'role',
     ];
 
     /**
@@ -53,10 +56,29 @@ class Admin extends Authenticatable implements HasMedia
      */
     public function registerMediaCollections(): void
     {
-        $this->addMediaCollection('avatar')
+        $this->addMediaCollection('profile_photos')
             ->singleFile()
-            ->useDisk('public');
+            ->useDisk('media')
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/gif'])
+            ->withResponsiveImages();
     }
+
+    /**
+     * Get the corresponding user record if this admin also has a user account.
+     */
+    public function userAccount()
+    {
+        return $this->hasOne(User::class, 'email', 'email');
+    }
+
+    /**
+     * Check if this admin also has a user account.
+     */
+    public function hasUserAccount()
+    {
+        return $this->userAccount()->exists();
+    }
+
     // No model methods needed here for role assignment
     // Role assignment is handled in the RolesSeeder
 }

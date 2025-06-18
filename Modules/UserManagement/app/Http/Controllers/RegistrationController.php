@@ -458,28 +458,10 @@ class RegistrationController extends Controller
      */
     private function generateMembershipNumber($profileTypeCode)
     {
-        $prefix = 'NPK';
+        $prefix = strtoupper('NPK-'.$profileTypeCode);
+        $year = date('Y');
+        $count = \Modules\UserManagement\Entities\Membership::whereYear('created_at', $year)->count() + 1;
         
-        switch ($profileTypeCode) {
-            case 'PM':
-                $prefix = 'NPK-M';
-                break;
-            case 'VOLUNTEER':
-                $prefix = 'NPK-V';
-                break;
-            case 'VOTER':
-                $prefix = 'NPK-S'; // Supporter
-                break;
-            default:
-                $prefix = 'NPK';
-        }
-        
-        // Get count of members with this profile type
-        $count = Membership::count() + 1;
-        
-        // Create number: e.g., NPK-M-23001
-        $membershipNumber = $prefix . '-' . date('y') . str_pad($count, 3, '0', STR_PAD_LEFT);
-        
-        return $membershipNumber;
+        return $prefix . $year . str_pad($count, 4, '0', STR_PAD_LEFT);
     }
 }
