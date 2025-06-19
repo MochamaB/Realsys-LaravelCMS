@@ -75,13 +75,39 @@
                 z-index: 1;
                 border-radius: 2px;
             }
+
             
             .wizard-progress-bar {
                 width: 100%;
-                background-color: #343a40;
-                height: 0%;
-                transition: height 0.5s ease;
+                background: linear-gradient(to bottom, 
+                    #343a40 0%, 
+                    #343a40 var(--completed-progress, 0%), 
+                    #dc3545 var(--completed-progress, 0%), 
+                    #dc3545 var(--current-progress, 0%), 
+                    transparent var(--current-progress, 0%)
+                );
+                height: 100%;
+                transition: all 0.5s ease;
                 border-radius: 2px;
+            }
+            .wizard-progress-bar.solid-color {
+                    background-color: #dc3545; /* Current step color */
+                    height: var(--current-progress, 0%);
+                    transition: all 0.5s ease;
+                    border-radius: 2px;
+            }
+
+                /* For completed sections */
+            .wizard-progress-bar.with-completed::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    height: var(--completed-progress, 0%);
+                    background-color: #343a40; /* Completed color */
+                    border-radius: 2px;
+                    z-index: 1;
             }
             
             .wizard-content {
@@ -334,8 +360,20 @@
                 }
 
                 .wizard-progress-bar {
-                    width: 0%;
+                   background: linear-gradient(to right, 
+                    #343a40 0%, 
+                    #343a40 var(--completed-progress, 0%), 
+                    #dc3545 var(--completed-progress, 0%), 
+                    #dc3545 var(--current-progress, 0%), 
+                    transparent var(--current-progress, 0%)
+                    );
+                    width: var(--current-progress, 0%);
                     height: 100%;
+                }
+
+                .wizard-progress-bar.with-completed::before {
+                    height: 100%;
+                    width: var(--completed-progress, 0%);
                 }
 
                 .wizard-content {
@@ -372,8 +410,9 @@
         <div class="row">
             <div class="col-12 mb-4">
                 <h2 class="text-center">Join Our Party</h2>
-                <p class="text-center text-muted">Please confirm your membership status by dialing *509#<br>
-                Or register/ login on: <a class="text-danger"  href="https://ippms.orpp.or.ke/auth/login?ReturnUrl=%2F" target="_blank">ORPP IPPMS</a></p>
+                <p class="text-center text-muted">Please confirm your membership status by dialing *509#,<br>
+                 <a href="{{ route('verify-membership') }}"> Verify Membership here</a> 
+                or visiting ORRP register: <a class="text-danger"  href="https://ippms.orpp.or.ke/auth/login?ReturnUrl=%2F" target="_blank">ORPP IPPMS</a></p>
             </div>
         </div>
         <div class="row">
@@ -450,32 +489,58 @@
                 function updateProgressBar() {
                     // Get current active step
                     let currentStep = 1;
-                    if ($('.wizard-step.active').length > 0) {
-                        currentStep = $('.wizard-step').index($('.wizard-step.active')) + 1;
+                    const activeStep = $('.wizard-step.active');
+                    
+                    if (activeStep.length > 0) {
+                        currentStep = $('.wizard-step').index(activeStep) + 1;
                     } else {
                         currentStep = {{ Session::get('wizard_step', 1) }};
                     }
                     
                     const stepsCount = $('.wizard-step').length;
-                    const progressPercentage = ((currentStep - 1) / (stepsCount - 1)) * 100;
+                    const completedSteps = currentStep - 1;
+                    
+                    // Calculate percentages
+                    const completedPercentage = (completedSteps / (stepsCount - 1)) * 100;
+                    const currentPercentage = ((currentStep - 1) / (stepsCount - 1)) * 100;
                     
                     // Update progress bar based on screen size
                     if (window.innerWidth <= 991) {
                         // Mobile: horizontal progress
-                        $('#wizard-progress-bar').css('width', progressPercentage + '%');
+                        $('#wizard-progress-bar').css({
+                            '--completed-progress': completedPercentage + '%',
+                            '--current-progress': currentPercentage + '%',
+                            'width': currentPercentage + '%'
+                        });
                     } else {
                         // Desktop: vertical progress
-                        $('#wizard-progress-bar').css('height', progressPercentage + '%');
+                        $('#wizard-progress-bar').css({
+                            '--completed-progress': completedPercentage + '%',
+                            '--current-progress': currentPercentage + '%',
+                            'height': currentPercentage + '%'
+                        });
                     }
                     
-                    // Update completed steps
+                    // Add classes for styling
+                    if (completedSteps > 0) {
+                        $('#wizard-progress-bar').addClass('with-completed');
+                    } else {
+                        $('#wizard-progress-bar').removeClass('with-completed');
+                    }
+                    
+                    // Update step states
                     $('.wizard-step').each(function(index) {
+                        const $step = $(this);
                         if (index + 1 < currentStep) {
-                            $(this).addClass('completed');
+                            $step.addClass('completed').removeClass('active');
+                        } else if (index + 1 === currentStep) {
+                            $step.addClass('active').removeClass('completed');
+                        } else {
+                            $step.removeClass('completed active');
                         }
                     });
                 }
-                
+    
                 // Update progress bar on window resize
                 $(window).resize(function() {
                     updateProgressBar();
@@ -496,7 +561,7 @@
                     }
                 }
             });
-        
+        </script>
             @stack('scripts')
     </x-slot>
 </x-usermanagement::layouts.master>

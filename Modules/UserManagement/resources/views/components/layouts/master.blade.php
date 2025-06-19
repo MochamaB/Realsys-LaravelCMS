@@ -39,8 +39,8 @@
     </div>
     
     <!-- jQuery and Theme JavaScript -->
-    <script src="{{ asset('themes/miata/js/vendor/jquery-1.12.4.min.js') }}"></script>
-    <script src="{{ asset('themes/miata/js/vendor/modernizr-3.11.7.min.js') }}"></script>
+    <script src="{{ asset('themes/miata/js/jquery-1.12.4.min.js') }}"></script>
+    <script src="{{ asset('themes/miata/js/modernizr-3.11.7.min.js') }}"></script>
     <script src="{{ asset('themes/miata/js/bootstrap.min.js') }}"></script>
     <script src="{{ asset('themes/miata/js/main.js') }}"></script>
     

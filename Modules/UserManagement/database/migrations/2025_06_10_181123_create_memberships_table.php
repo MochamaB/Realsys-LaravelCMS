@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('memberships', function (Blueprint $table) {
             $table->id();
             $table->string('membership_number')->unique();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->unsignedBigInteger('user_id');
             $table->date('start_date');
             $table->date('end_date')->nullable();
             $table->string('status')->default('active'); // e.g., 'Active', 'Expired', 'Suspended'
@@ -27,6 +27,9 @@ return new class extends Migration
             $table->boolean('issued_card')->default(false);
             $table->date('card_issue_date')->nullable();
             $table->timestamps();
+            $table->softDeletes();
+            $table->index('user_id');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 

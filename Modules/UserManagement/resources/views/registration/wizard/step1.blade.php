@@ -46,7 +46,7 @@
     </form>
 @endsection
 
-@section('step-scripts')
+@push('scripts')
 <script>
     $(document).ready(function() {
         // Auto-check the radio when the card is clicked
@@ -55,4 +55,4 @@
         });
     });
 </script>
-@endsection
+@endpush

@@ -35,6 +35,9 @@ return new class extends Migration
             // Account Status
             $table->enum('status', ['active', 'inactive', 'suspended', 'pending'])->default('pending');
             
+            // Force password change on first login
+            $table->boolean('must_change_password')->default(false);
+            
            
             
             // Social Login

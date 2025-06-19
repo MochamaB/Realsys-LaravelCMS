@@ -36,30 +36,22 @@ class UserAuthController extends Controller
             'email' => ['required', 'email'],
             'password' => ['required'],
         ]);
-
-        // Check for default password
-        if ($request->input('password') === 'NPPK.123') {
-            // Store login attempt in session
-            $request->session()->put('login_attempt', true);
-            $request->session()->put('login_credentials', $credentials);
-            $request->session()->put('remember', $request->boolean('remember'));
-
-            // Attempt authentication with default password
-            if (Auth::guard('web')->attempt($credentials, $request->boolean('remember'))) {
+    
+        if (Auth::attempt($credentials)) {
+            $request->session()->regenerate();
+            
+            // Check if password change is required
+            if (auth()->user()->must_change_password) {
                 return redirect()->route('password.force_change')
-                    ->with('warning', 'For security reasons, you must change your default password before continuing.');
+                    ->with('warning', 'You must change your password before continuing.');
             }
-        } else {
-            // Normal authentication for non-default passwords
-            if (Auth::guard('web')->attempt($credentials, $request->boolean('remember'))) {
-                $request->session()->regenerate();
-                return redirect()->route('user.dashboard');
-            }
+    
+            return redirect()->intended(route('dashboard'));
         }
-
+    
         return back()->withErrors([
             'email' => 'The provided credentials do not match our records.',
-        ])->onlyInput('email');
+        ]);
     }
 
     /**

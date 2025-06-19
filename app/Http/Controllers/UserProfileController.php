@@ -107,32 +107,26 @@ class UserProfileController extends Controller
     public function updateForceChangePassword(Request $request)
     {
         $request->validate([
-            'current_password' => ['required', 'string'],
             'password' => ['required', 'string', 'min:8', 'confirmed', 'different:current_password'],
         ]);
 
         $user = Auth::guard('web')->user();
 
-        // Verify current password
-        if (!Hash::check($request->current_password, $user->password)) {
-            return back()->withErrors([
-                'current_password' => 'The provided password does not match your current password.',
-            ]);
-        }
-
+       
         // Update password
         $user->forceFill([
             'password' => Hash::make($request->password),
+            'must_change_password' => false,
         ])->save();
 
         // If this was a login attempt, complete the login
         if ($request->session()->has('login_attempt')) {
             $request->session()->regenerate();
-            return redirect()->route('user.dashboard')
+            return redirect()->route('dashboard')
                 ->with('success', 'Password changed successfully. Welcome to your dashboard!');
         }
 
-        return redirect()->route('user.dashboard')
+        return redirect()->route('dashboard')
             ->with('success', 'Password changed successfully.');
     }
 

@@ -4,29 +4,13 @@
 
 @section('content')
 <div>
-    <h5 class="text-primary">Change Your Password</h5>
-    <p class="text-muted">For security reasons, you must change your default password.</p>
+    <h5 class="text-primary">Create Your Password</h5>
+    <p class="text-muted">Create a new password for your account.</p>
 </div>
 
 <div class="mt-4">
     <form action="{{ route('password.force_change.update') }}" method="POST" id="forceChangeForm">
         @csrf
-
-        <div class="mb-3">
-            <label class="form-label" for="current-password">Current Password</label>
-            <div class="position-relative auth-pass-inputgroup mb-3">
-                <input type="password" class="form-control pe-5 @error('current_password') is-invalid @enderror" 
-                    id="current-password" name="current_password" required>
-                <button class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon" type="button" id="current-password-addon">
-                    <i class="ri-eye-fill align-middle"></i>
-                </button>
-                @error('current_password')
-                    <div class="invalid-feedback">
-                        {{ $message }}
-                    </div>
-                @enderror
-            </div>
-        </div>
 
         <div class="mb-3">
             <label class="form-label" for="new-password">New Password</label>

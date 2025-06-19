@@ -36,5 +36,6 @@ Route::group(['prefix' => 'join', 'as' => 'usermanagement.', 'middleware' => 'we
     Route::get('constituencies', [RegistrationController::class, 'getConstituencies'])->name('constituencies');
     Route::get('wards', [RegistrationController::class, 'getWards'])->name('wards');
 });
-
+Route::get('verify-membership', [RegistrationController::class, 'showVerifyMembershipForm'])->name('verify-membership');
+Route::post('verify-membership', [RegistrationController::class, 'processVerifyMembership'])->name('verify-membership.post');
 

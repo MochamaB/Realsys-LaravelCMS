@@ -27,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin.auth' => \App\Http\Middleware\AdminAuthentication::class,
             'admin.guest' => \App\Http\Middleware\RedirectIfAdmin::class,
             'admin.as.user' => \App\Http\Middleware\AdminAsUser::class,
+            'force.password.change' => \App\Http\Middleware\ForcePasswordChange::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

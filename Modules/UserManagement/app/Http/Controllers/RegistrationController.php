@@ -356,6 +356,7 @@ class RegistrationController extends Controller
                 'password' => $wizardData['password_hash'],
                 'phone_number' => $wizardData['phone_number'],
                 'id_number' => $wizardData['id_number'],
+                'must_change_password' => true,
             ]);
             
             // Get profile type
@@ -463,5 +464,53 @@ class RegistrationController extends Controller
         $count = \Modules\UserManagement\Entities\Membership::whereYear('created_at', $year)->count() + 1;
         
         return $prefix . $year . str_pad($count, 4, '0', STR_PAD_LEFT);
+    }
+
+    public function showVerifyMembershipForm()
+    {
+        return view('usermanagement::registration.verify_membership');
+    }
+
+    public function processVerifyMembership(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id_number' => ['nullable', 'string', 'max:20'],
+            'phone_number' => ['nullable', 'string', 'max:15'],
+        ]);
+    
+        // Require at least one field
+        if (empty($request->id_number) && empty($request->phone_number)) {
+            $validator->errors()->add('id_number', 'Please enter either ID number or phone number.');
+        }
+    
+        if ($validator->fails()) {
+            return redirect()->route('verify-membership')
+                ->withErrors($validator)
+                ->withInput();
+        }
+    
+        $query = User::query();
+        if ($request->filled('id_number')) {
+            $query->where('id_number', $request->id_number);
+        }
+        if ($request->filled('phone_number')) {
+            $query->orWhere('phone_number', $request->phone_number);
+        }
+        $user = $query->with('profile','membership')->first();
+    
+        if ($user) {
+            return view('usermanagement::registration.membership_result', [
+                'member_found' => true,
+                'id_number' => $user->id_number,
+                'name' => $user->first_name . ' ' . $user->surname ?? 'N/A', // Assuming user relation exists
+                'membership_id' => $user->profile->membership_id ?? 'N/A',
+                'input' => $request->only(['id_number', 'phone_number'])
+            ]);
+        } else {
+            return view('usermanagement::registration.membership_result', [
+                'member_found' => false,
+                'input' => $request->only(['id_number', 'phone_number'])
+            ]);
+        }
     }
 }

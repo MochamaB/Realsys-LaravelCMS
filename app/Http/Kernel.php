@@ -54,5 +54,6 @@ class Kernel extends HttpKernel
         'admin.as.user' => \App\Http\Middleware\AdminAsUser::class,
         'admin.auth' => \App\Http\Middleware\AdminAuthentication::class,
         'admin.guest' => \App\Http\Middleware\RedirectIfAdmin::class,
+        'force.password.change' => \App\Http\Middleware\ForcePasswordChange::class,
     ];
 }

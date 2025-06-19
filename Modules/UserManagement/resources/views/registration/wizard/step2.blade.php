@@ -100,13 +100,29 @@
     </form>
 @endsection
 
-@section('step-scripts')
+@push('scripts')
 <script>
     $(document).ready(function() {
         // Add any step-specific JavaScript here
-        $('#email').on('blur', function() {
-            // Could add AJAX email verification here
-        });
+       // Add any step-specific JavaScript here
+       $('#email').on('blur', function() {
+    var $input = $(this);
+    var email = $input.val();
+    var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    // Remove any previous error message
+    $input.removeClass('is-invalid');
+    $input.siblings('.invalid-feedback').remove();
+
+    if (!emailRegex.test(email)) {
+        $input.addClass('is-invalid');
+        $input.after('<div class="invalid-feedback">Please enter a valid email address.</div>');
+    } else {
+        // Valid email format, can proceed to AJAX check if needed
+    }
+});
+
+
         
         $('#phone_number').on('input', function() {
             // Format phone number as the user types
@@ -116,4 +132,4 @@
         });
     });
 </script>
-@endsection
+@endpush

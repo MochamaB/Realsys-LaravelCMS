@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('profiles', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->unsignedBigInteger('user_id');
             $table->string('id_passport_number')->nullable();
             $table->string('membership_number')->nullable();
             $table->date('date_of_birth')->nullable();
@@ -33,6 +33,9 @@ return new class extends Migration
             $table->foreignId('profile_type_id')->constrained();
             $table->json('additional_data')->nullable();
             $table->timestamps();
+            $table->softDeletes();
+            $table->index('user_id');
+            
         });
     }
 

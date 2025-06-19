@@ -21,9 +21,8 @@ Route::get('/test-admin', function() {
     return 'Admin test route from web.php is working!';
 });
 
-// Guest routes for user authentication
+// Routes accessible without authentication
 Route::middleware('guest:web')->group(function () {
-    // User authentication routes with standard Laravel naming convention
     Route::get('/login', [UserAuthController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [UserAuthController::class, 'login'])->name('login.post');
     Route::get('/register', [UserAuthController::class, 'showRegistrationForm'])->name('register');
@@ -32,21 +31,25 @@ Route::middleware('guest:web')->group(function () {
     Route::post('/forgot-password', [UserAuthController::class, 'sendResetLink'])->name('password.email');
     Route::get('/reset-password/{token}', [UserAuthController::class, 'showResetForm'])->name('password.reset');
     Route::post('/reset-password', [UserAuthController::class, 'resetPassword'])->name('password.update');
-  
+});
+
+// Password force change routes (accessible to authenticated users who need to change password)
+Route::middleware('auth:web')->group(function () {
     Route::get('/force-change-password', [UserProfileController::class, 'showForceChangePassword'])
         ->name('password.force_change');
     Route::post('/force-change-password', [UserProfileController::class, 'updateForceChangePassword'])
         ->name('password.force_change.update');
 });
 
-// Auth routes for authenticated users
-Route::middleware(['auth:web'])->group(function () {
+// Protected routes that require password change if needed
+Route::middleware(['auth:web', 'force.password.change'])->group(function () {
     Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
     Route::get('/profile', [UserProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile', [UserProfileController::class, 'update'])->name('profile.update');
     Route::put('/profile/password', [UserProfileController::class, 'updatePassword'])->name('profile.password');
     Route::post('/logout', [UserAuthController::class, 'logout'])->name('logout');
-    Route::post('/user/profile/update-picture', [UserProfileController::class, 'updateProfilePicture'])->name('user.profile.update-picture');
+    Route::post('/user/profile/update-picture', [UserProfileController::class, 'updateProfilePicture'])
+        ->name('user.profile.update-picture');
 });
 
 // User routes with admin.as.user middleware
