@@ -133,6 +133,16 @@ Route::middleware(['web', 'auth:web', 'admin.as.user'])->group(function () {
         })->name('user.settings.notifications');
     });
 });
+// Admin to User View Switch Routes
+Route::middleware(['web', 'auth:admin'])->group(function () {
+    Route::get('/switch-to-user', [App\Http\Controllers\Admin\UserViewSwitchController::class, 'switchToUser'])
+        ->name('switch.to.user');
+});
+
+Route::middleware(['web', 'admin.as.user'])->group(function () {
+    Route::get('/switch-to-admin', [App\Http\Controllers\Admin\UserViewSwitchController::class, 'switchToAdmin'])
+        ->name('switch.to.admin');
+});
 
 // Dynamic page routes (accessible to all)
 Route::get('/', [PageController::class, 'show'])->name('home');
@@ -151,16 +161,7 @@ Route::get('/{slug}', [PageController::class, 'show'])
 // Fallback route for CMS pages
 Route::fallback([PageController::class, 'resolve'])->name('page.resolve');
 
-// Admin to User View Switch Routes
-Route::middleware(['web', 'auth:admin'])->group(function () {
-    Route::get('/switch-to-user', [App\Http\Controllers\Admin\UserViewSwitchController::class, 'switchToUser'])
-        ->name('switch.to.user');
-});
 
-Route::middleware(['web', 'auth:web'])->group(function () {
-    Route::get('/switch-to-admin', [App\Http\Controllers\Admin\UserViewSwitchController::class, 'switchToAdmin'])
-        ->name('switch.to.admin');
-});
 
 // User Management Routes
 // Removed conflicting routes - these are now handled in routes/admin.php

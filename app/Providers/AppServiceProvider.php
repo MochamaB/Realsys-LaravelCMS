@@ -125,7 +125,7 @@ class AppServiceProvider extends ServiceProvider
             // Get logged in admin
             $loggedInAdmin = null;
             if (auth()->guard('admin')->check()) {
-                $loggedInAdmin = auth()->guard('admin')->user();
+                $loggedInAdmin = auth()->guard('admin')->user()->load('roles');
             }
             
             // Get logged in user

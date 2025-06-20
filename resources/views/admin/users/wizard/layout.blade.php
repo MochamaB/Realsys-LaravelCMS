@@ -124,7 +124,7 @@
         background-color: transparent;
         border: 0;
         border-radius: 0;
-        padding: 1rem 0;
+        padding: 1rem 0.5rem;
         margin-bottom: 0.5rem;
         transition: all 0.3s ease;
     }
@@ -136,8 +136,9 @@
 
     .vertical-navs-step .nav-pills .nav-link.active {
         color: #556ee6;
-        background-color: transparent;
+        background-color: #f3f6f9;;
         font-weight: 600;
+
     }
 
     .vertical-navs-step .nav-pills .nav-link.done {

@@ -11,5 +11,13 @@
     --vz-vertical-menu-sub-item-hover-color: #fff;
     --vz-vertical-menu-sub-item-active-color: #fff;
 }
+.menu-title {
+    letter-spacing: .05em;
+    cursor: default;
+    font-size: 11px;
+    text-transform: uppercase;
+    color: #abb9e8;
+    font-weight: var(--vz-font-weight-semibold);
+}
 
 

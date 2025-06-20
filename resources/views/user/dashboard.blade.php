@@ -3,15 +3,19 @@
 @section('title', 'Dashboard')
 
 @section('content')
-<div class="row">
-    <div class="col-12">
-        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Dashboard</h4>
-        </div>
-    </div>
-</div>
+
 
 <div class="row">
+<div class="row mb-3 pb-1">
+                    <div class="col-12">
+                        <div class="d-flex align-items-lg-center flex-lg-row flex-column">
+                            <div class="flex-grow-1">
+                                <h4 class="fs-16 mb-1">Welcome back, {{ auth()->user()->name }}!</h4>
+                                <p class="text-muted mb-0">Here's what's happening with your website today.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
     <div class="col-xl-4">
         <div class="card card-h-100">
             <div class="card-body">

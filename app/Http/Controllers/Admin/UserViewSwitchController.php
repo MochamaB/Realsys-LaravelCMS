@@ -36,7 +36,21 @@ class UserViewSwitchController extends Controller
     {
         try {
             if (Auth::guard('admin')->check() && !session('admin_as_user')) {
-                $this->sessionService->createUserSession(Auth::guard('admin')->user());
+                $admin = Auth::guard('admin')->user();
+                
+                // Check if user account exists with the same email
+                $user = \App\Models\User::where('email', $admin->email)->first();
+                
+                if (!$user) {
+                    // If no user account exists, redirect to wizard step 1
+                    // Store admin ID in session for self-registration process
+                    session(['admin_self_registration' => true, 'admin_id' => $admin->id]);
+                    return redirect()->route('admin.users.wizard.step1')
+                        ->with('info', 'Please complete your user profile to view the site as a user');
+                }
+                
+                // If user exists, proceed with normal flow
+                $this->sessionService->createUserSession($admin);
                 return redirect()->route('dashboard');
             }
 

@@ -96,7 +96,15 @@
                                     Admin User
                                 @endif
                                 </span>
-                                <span class="d-none d-xl-block ms-1 fs-12 text-muted user-name-sub-text">Administrator:</span>
+                                <span class="d-none d-xl-block ms-1 fs-12 text-muted user-name-sub-text">
+                                @if($loggedInAdmin->roles->isNotEmpty())
+                                    <span class="">
+                                        {{ $loggedInAdmin->getRoleNames()->join(', ') }}
+                                    </span>
+                                @else
+                                    <span class="">Guest</span>
+                                @endif
+                                </span>
                             </span>
                         </span>
                     </button>

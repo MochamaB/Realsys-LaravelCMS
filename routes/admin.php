@@ -25,6 +25,7 @@ use App\Http\Controllers\Admin\PageSectionWidgetController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\UserViewSwitchController;
 
+
 // Guest routes for admin authentication (only for non-authenticated admin users)
 Route::middleware('admin.guest')->group(function () {
     Route::get('/login', [AdminAuthController::class, 'showLoginForm'])->name('login');

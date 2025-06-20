@@ -17,7 +17,7 @@ class AdminUserSessionService
     {
         try {
             // Create or get user account for admin
-            $user = $this->getOrCreateUserAccount($admin);
+         //  $user = $this->getOrCreateUserAccount($admin); 
             
             // Log the admin-to-user switch
             $this->logSessionSwitch($admin, $user);

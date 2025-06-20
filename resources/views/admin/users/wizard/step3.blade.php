@@ -77,7 +77,7 @@
                 </div>
             </div>
             
-            @if($userType === 'user')
+          
             <div class="row">
                 <div class="col-md-6">
                     <div class="mb-3">
@@ -92,7 +92,7 @@
                     </div>
                 </div>
             </div>
-            @endif
+          
             
             <div class="alert alert-info">
                 <i class="ri-information-line me-2"></i>
@@ -116,6 +116,23 @@
 @section('step-scripts')
 <script>
     $(document).ready(function() {
+        $('#email').on('blur', function() {
+            var $input = $(this);
+            var email = $input.val();
+            var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+            // Remove any previous error message
+            $input.removeClass('is-invalid');
+            $input.siblings('.invalid-feedback').remove();
+
+            if (!emailRegex.test(email)) {
+                $input.addClass('is-invalid');
+                $input.after('<div class="invalid-feedback">Please enter a valid email address.</div>');
+            } else {
+                // Valid email format, can proceed to AJAX check if needed
+            }
+        });
+
         // Phone number formatting
         $('#phone_number').on('input', function() {
             let input = $(this).val().replace(/\D/g, '');

@@ -123,6 +123,32 @@ class UserManagementController extends Controller
      */
     public function showStep1()
     {
+        // Initialize or reset wizard
+        Session::put('wizard_step', 1);
+        
+        // Check if this is an admin self-registration
+        if (session('admin_self_registration') && session('admin_id')) {
+            $admin = Admin::find(session('admin_id'));
+            
+            if ($admin) {
+                // Pre-populate wizard data with admin info
+                $wizardData = [
+                    'user_type' => 'user',
+                    'register_as_party_member' => true,
+                ];
+                
+                Session::put('wizard_data', $wizardData);
+                
+                // Skip to step 2 (role selection)
+                Session::put('wizard_step', 2);
+                return redirect()->route('admin.users.wizard.step2')
+                    ->with('info', 'Please select a role for your user account');
+            }
+        } else {
+            // Normal wizard flow
+            Session::put('wizard_data', []);
+        }
+        
         return view('admin.users.wizard.step1');
     }
 
@@ -209,9 +235,32 @@ class UserManagementController extends Controller
 
         $userType = Session::get('wizard_data.user_type');
         
-        return view('admin.users.wizard.step3', compact('userType'));
+        // Check if this is admin self-registration
+        $isAdminSelfRegistration = session('admin_self_registration') && session('admin_id');
+        
+        if ($isAdminSelfRegistration) {
+            $adminId = session('admin_id');
+            $admin = \App\Models\Admin::find($adminId);
+            
+            if ($admin) {
+                // Pre-populate the form with admin details
+                $this->storeWizardData('first_name', $admin->first_name ?? '');
+                $this->storeWizardData('surname', $admin->surname ?? '');
+                $this->storeWizardData('last_name', $admin->last_name ?? '');
+                $this->storeWizardData('email', $admin->email ?? '');
+                $this->storeWizardData('phone_number', $admin->phone_number ?? '');
+                
+                // Log that we've pre-populated form data
+                \Log::info('Pre-populated Step 3 form with admin details for admin ID: ' . $adminId);
+            }
+        }
+        
+        return view('admin.users.wizard.step3', [
+            'userType' => $userType,
+            'wizard_step' => 3
+        ]);
     }
-
+    
     /**
      * Process step 3 submission - Personal Information.
      */
@@ -223,12 +272,27 @@ class UserManagementController extends Controller
             'first_name' => ['required', 'string', 'max:255'],
             'surname' => ['required', 'string', 'max:255'],
             'last_name' => ['nullable', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'phone_number' => ['required', 'string', 'max:15'],
         ];
+        
+        // Check if this is admin self-registration
+        $isAdminSelfRegistration = session('admin_self_registration') && session('admin_id');
+        
+        // Email validation - exempt from uniqueness check for admin self-registration
+        if ($isAdminSelfRegistration) {
+            $rules['email'] = ['required', 'string', 'email', 'max:255'];
+        } else {
+            $rules['email'] = ['required', 'string', 'email', 'max:255', 'unique:users,email'];
+        }
 
-        // Add id_number validation for regular users
-        if ($userType === 'user') {
+        // Add id_number validation for all users
+        
+        // Always require ID number
+        if ($isAdminSelfRegistration) {
+            // For admin self-registration, don't check uniqueness
+            $rules['id_number'] = ['required', 'string', 'max:20'];
+        } else {
+            // For all other cases, check uniqueness
             $rules['id_number'] = ['required', 'string', 'max:20', 'unique:profiles,id_passport_number'];
         }
 
@@ -241,10 +305,8 @@ class UserManagementController extends Controller
         }
 
         // Store data in session
-        $fields = ['first_name', 'surname', 'last_name', 'email', 'phone_number'];
-        if ($userType === 'user') {
-            $fields[] = 'id_number';
-        }
+        // Always include id_number for all users
+        $fields = ['first_name', 'surname', 'last_name', 'email', 'phone_number', 'id_number'];
 
         foreach ($fields as $field) {
             if ($request->has($field)) {
@@ -568,6 +630,7 @@ class UserManagementController extends Controller
                         'last_name' => $wizardData['last_name'] ?? null,
                         'email' => $wizardData['email'],
                         'phone_number' => $wizardData['phone_number'],
+                        'id_number' => $wizardData['id_number'] ?? null,
                         'password' => $wizardData['password_hash'],
                         'status' => 'pending',
                     ]);
@@ -591,7 +654,7 @@ class UserManagementController extends Controller
                     'last_name' => $wizardData['last_name'] ?? null,
                     'email' => $wizardData['email'],
                     'phone_number' => $wizardData['phone_number'],
-                    'id_number' => $wizardData['id_number'],
+                    'id_number' => $wizardData['id_number'] ?? null,
                     'password' => $wizardData['password_hash'],
                     'status' => 'pending',
                 ]);
@@ -640,24 +703,34 @@ class UserManagementController extends Controller
 
             DB::commit();
             \Log::info('Registration completed successfully');
-
+            
+            // Check if this is admin self-registration
+            $isAdminSelfRegistration = session('admin_self_registration') && session('admin_id');
+            
             // Registration successful, clear wizard data
             $this->cleanupWizard();
-
-            // Create appropriate success message
-            $successMessage = 'User created successfully! Password: ' . $wizardData['password_hash'];
             
-            if ($wizardData['user_type'] === 'admin' && isset($wizardData['register_as_party_member']) && $wizardData['register_as_party_member']) {
-                $successMessage .= ' (Admin account + Party Member profile created)';
-            } elseif ($wizardData['user_type'] === 'admin') {
-                $successMessage .= ' (Admin account created)';
-            } else {
-                $successMessage .= ' (User account created)';
-                if (isset($wizardData['register_as_party_member']) && $wizardData['register_as_party_member']) {
-                    $successMessage .= ' + Party Member profile';
+            // Create appropriate success message
+            $successMessage = 'User created successfully!';
+            
+            // If this is admin self-registration, switch to user view
+            if ($isAdminSelfRegistration) {
+                $admin = Admin::find(session('admin_id'));
+                if ($admin && isset($createdUser) && $createdUser instanceof User) {
+                    // Clear admin self-registration session
+                    session()->forget(['admin_self_registration', 'admin_id']);
+                    
+                    // Set admin_as_user session flag
+                    session(['admin_as_user' => true, 'user_id' => $createdUser->id]);
+                    
+                    // Auth the user
+                    Auth::guard('web')->login($createdUser);
+                    
+                    return redirect()->route('dashboard')
+                        ->with('success', 'Your user account has been created successfully. You are now viewing the site as a user.');
                 }
             }
-
+            
             return redirect()->route('admin.users.index')
                 ->with('success', $successMessage);
 
