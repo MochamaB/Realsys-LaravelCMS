@@ -20,6 +20,11 @@ class BreadcrumbServiceProvider extends ServiceProvider
             $breadcrumbs = $this->generateBreadcrumbs();
             $view->with('breadcrumbs', $breadcrumbs);
         });
+
+        View::composer('layouts.breadcrumb', function ($view) {
+            $breadcrumbs = $this->generateUserBreadcrumbs();
+            $view->with('breadcrumbs', $breadcrumbs);
+        });
     }
 
     protected function generateBreadcrumbs()
@@ -104,6 +109,48 @@ class BreadcrumbServiceProvider extends ServiceProvider
         
         return $breadcrumbs;
     }
+    
+    protected function generateUserBreadcrumbs()
+    {
+    $route = Route::current();
+    
+    if (!$route) {
+        return [['title' => 'Dashboard', 'url' => route('dashboard')]];
+    }
+    
+    $name = $route->getName();
+    $parameters = $route->parameters();
+    
+    // Skip if admin route (already handled by admin breadcrumbs)
+    if (Str::startsWith($name, 'admin.')) {
+        return [['title' => 'Dashboard', 'url' => route('dashboard')]];
+    }
+    
+    // Handle user routes
+    // Check common user route prefixes like 'user.', 'account.', etc.
+    $isUserRoute = Str::startsWith($name, ['user.', 'account.', 'dashboard']);
+    
+    if (!$isUserRoute) {
+        return [['title' => 'Dashboard', 'url' => route('dashboard')]];
+    }
+    
+    // Process route segments similarly to admin routes but with user-specific logic
+    if (Str::startsWith($name, 'user.')) {
+        $name = Str::replaceFirst('user.', '', $name);
+    }
+    
+    // Rest of the code would be similar to generateBreadcrumbs but adapted for user routes
+    // ...
+
+    $breadcrumbs = [
+        ['title' => 'Dashboard', 'url' => route('dashboard')]
+    ];
+    
+    // Similar logic to process segments and build breadcrumbs
+    // ...
+    
+    return $breadcrumbs;
+}
     
     protected function segmentToTitle($segment)
     {

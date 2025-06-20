@@ -6,6 +6,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
+use Modules\UserManagement\Entities\Profile;
+use Modules\UserManagement\Entities\Membership;
+use Modules\UserManagement\Entities\ProfileType;
+use Spatie\Permission\Models\Role;
 
 class UserProfileController extends Controller
 {
@@ -26,11 +30,39 @@ class UserProfileController extends Controller
      */
     public function show()
     {
-        $user = Auth::user();
-        
-        return view('user.profile.show', [
-            'user' => $user,
-        ]);
+        try {
+            $user = Auth::user()->load([
+                'profile',
+                'profile.profileType',
+                'membership',
+                'roles'
+            ]);
+            
+            // Get all roles for the role selection dropdown
+            $roles = Role::all()->filter(function ($role) {
+                return !preg_match('/super-admin/i', $role->name);
+            });
+            
+            // Get all profile types for the profile type selection
+            $profileTypes = ProfileType::all();
+
+            // Ensure profile exists
+            if (!$user->profile) {
+                $user->profile = new Profile();
+            }
+
+            // Ensure membership exists
+            if (!$user->membership) {
+                $user->membership = new Membership();
+            }
+          //  dd($user);
+            return view('user.profile.show', compact('user', 'roles', 'profileTypes'));
+        } catch (\Exception $e) {
+            return redirect()
+                ->route('user.dashboard.dashboard')
+                ->with('error', 'Failed to load user details. Please try again.');
+        }
+       
     }
     
     /**

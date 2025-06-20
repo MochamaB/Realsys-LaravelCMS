@@ -42,12 +42,12 @@
                                 </span>
                             </a>
 
-                            <a href="{{ route('admin.dashboard') }}" class="logo logo-light">
+                            <a href="{{ route('admin.dashboard') }}" class="logo logo">
                                 <span class="logo-sm">
                                     <img src="{{ asset('assets/admin/images/logo-sm.png') }}" alt="" height="22">
                                 </span>
                                 <span class="logo-lg">
-                                    <img src="{{ asset('assets/admin/images/logo-light.png') }}" alt="" height="17">
+                                    <img src="{{ asset('assets/admin/images/logo.png') }}" alt="" height="47">
                                 </span>
                             </a>
                         </div>
@@ -119,12 +119,12 @@
                     </span>
                 </a>
                 <!-- Light Logo-->
-                <a href="{{ route('admin.dashboard') }}" class="logo logo-light">
+                <a href="{{ route('admin.dashboard') }}" class="logo logo">
                     <span class="logo-sm">
                         <img src="{{ asset('assets/admin/images/logo-sm.png') }}" alt="" height="22">
                     </span>
                     <span class="logo-lg">
-                        <img src="{{ asset('assets/admin/images/logo-light.png') }}" alt="" height="17">
+                        <img src="{{ asset('assets/admin/images/logo.png') }}" alt="" height="17">
                     </span>
                 </a>
                 <button type="button" class="btn btn-sm p-0 fs-20 header-item float-end btn-vertical-sm-hover" id="vertical-hover">
