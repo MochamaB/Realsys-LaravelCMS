@@ -25,7 +25,7 @@ use App\Http\Controllers\Admin\PageSectionWidgetController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\UserViewSwitchController;
 
-
+// Test route moved inside admin.auth middleware group
 // Guest routes for admin authentication (only for non-authenticated admin users)
 Route::middleware('admin.guest')->group(function () {
     Route::get('/login', [AdminAuthController::class, 'showLoginForm'])->name('login');
@@ -43,6 +43,11 @@ Route::middleware('admin.auth')->group(function () {
     Route::get('/test', function() {
         return 'Admin routes are working!';
     })->name('test');
+    
+    // Test flash message route
+    Route::get('/test-flash', function() {
+        return redirect()->route('admin.users.index')->with('success', 'Test flash message');
+    })->name('test-flash');
     
     // Dashboard routes
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
