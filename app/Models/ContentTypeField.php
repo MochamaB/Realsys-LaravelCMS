@@ -79,4 +79,12 @@ class ContentTypeField extends Model
     {
         return $this->field_type === $type;
     }
+    
+    /**
+     * Get the options for this field (used for select, radio, checkbox types)
+     */
+    public function options(): HasMany
+    {
+        return $this->hasMany(ContentTypeFieldOption::class, 'field_id');
+    }
 }

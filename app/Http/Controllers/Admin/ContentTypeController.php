@@ -43,14 +43,14 @@ class ContentTypeController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'key' => 'nullable|string|max:255|unique:content_types,key',
+            'slug' => 'nullable|string|max:255|unique:content_types,slug',
             'description' => 'nullable|string',
             'is_active' => 'boolean',
         ]);
         
-        // Generate key if not provided
-        if (empty($validated['key'])) {
-            $validated['key'] = Str::slug($validated['name']);
+        // Generate slug if not provided
+        if (empty($validated['slug'])) {
+            $validated['slug'] = Str::slug($validated['name']);
         }
         
         // Set user information
@@ -69,8 +69,8 @@ class ContentTypeController extends Controller
         // Create content type
         $contentType = ContentType::create($validated);
         
-        return redirect()->route('admin.content-types.edit', $contentType)
-            ->with('success', 'Content type created successfully.');
+        return redirect()->route('admin.content-types.show', $contentType)
+            ->with('success', 'Content type created successfully. Now you can add fields to define your content structure.');
     }
 
     /**
@@ -81,9 +81,16 @@ class ContentTypeController extends Controller
      */
     public function show(ContentType $contentType)
     {
-        $contentType->load(['fields' => function ($query) {
-            $query->orderBy('order_index');
-        }]);
+        // Eager load relationships needed for the tabbed interface
+        $contentType->load([
+            'fields' => function ($query) {
+                $query->orderBy('position');
+            },
+            'contentItems',
+            'widgets',
+            'creator',
+            'updater'
+        ]);
         
         return view('admin.content_types.show', compact('contentType'));
     }
@@ -97,7 +104,7 @@ class ContentTypeController extends Controller
     public function edit(ContentType $contentType)
     {
         $contentType->load(['fields' => function ($query) {
-            $query->orderBy('order_index');
+            $query->orderBy('position');
         }]);
         
         return view('admin.content_types.edit', compact('contentType'));
@@ -114,7 +121,7 @@ class ContentTypeController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'key' => 'required|string|max:255|unique:content_types,key,' . $contentType->id,
+            'slug' => 'required|string|max:255|unique:content_types,slug,' . $contentType->id,
             'description' => 'nullable|string',
             'is_active' => 'boolean',
         ]);

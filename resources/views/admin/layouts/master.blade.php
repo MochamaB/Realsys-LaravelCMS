@@ -20,6 +20,8 @@
     <link href="{{ asset('assets/admin/css/app.min.css') }}" rel="stylesheet" type="text/css" />
     <!-- Custom CSS -->
     <link href="{{ asset('assets/admin/css/custom.min.css') }}" rel="stylesheet" type="text/css" />
+    <!-- Sortable Components CSS -->
+    <link href="{{ asset('assets/admin/css/sortable-components.css') }}" rel="stylesheet" type="text/css" />
     
     @yield('css')
 </head>
@@ -125,6 +127,16 @@
         });
     </script>
 
-    @yield('js')
+     <!-- Scripts section -->
+      <!-- For scripts using section @section('js') -->
+     @yield('js')        
+
+     <!-- Sortable.js Library -->
+     <script src="{{ asset('assets/admin/libs/sortablejs/Sortable.min.js') }}"></script>
+     <!-- Sortable Components Manager -->
+     <script src="{{ asset('assets/admin/js/sortable-manager.js') }}"></script>
+
+ <!-- For scripts using push @push('scripts') -->
+    @stack('scripts')  
 </body>
 </html>

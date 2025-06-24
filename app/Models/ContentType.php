@@ -20,7 +20,11 @@ class ContentType extends Model
         'name',
         'slug',
         'description',
-        'icon'
+        'icon',
+        'is_active',
+        'is_system',
+        'created_by',
+        'updated_by'
     ];
 
     /**
@@ -73,14 +77,14 @@ class ContentType extends Model
     }
 
     /**
-     * Get content type by key.
+     * Get content type by slug.
      *
-     * @param string $key
+     * @param string $slug
      * @return ContentType|null
      */
-    public static function findByKey($key)
+    public static function findBySlug($slug)
     {
-        return static::where('key', $key)->first();
+        return static::where('slug', $slug)->first();
     }
 
     /**

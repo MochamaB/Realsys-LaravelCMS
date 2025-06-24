@@ -21,7 +21,7 @@ class ContentTypeFieldController extends Controller
      */
     public function index(ContentType $contentType)
     {
-        $fields = $contentType->fields()->orderBy('order_index')->get();
+        $fields = $contentType->fields()->orderBy('position')->get();
         
         return view('admin.content_type_fields.index', compact('contentType', 'fields'));
     }
@@ -34,31 +34,16 @@ class ContentTypeFieldController extends Controller
      */
     public function create(ContentType $contentType)
     {
-        $fieldTypes = [
-            'text' => 'Text',
-            'textarea' => 'Text Area',
-            'rich_text' => 'Rich Text',
-            'number' => 'Number',
-            'date' => 'Date',
-            'datetime' => 'Date and Time',
-            'boolean' => 'Boolean',
-            'select' => 'Select',
-            'multiselect' => 'Multi-select',
-            'image' => 'Image',
-            'gallery' => 'Gallery',
-            'file' => 'File',
-            'url' => 'URL',
-            'email' => 'Email',
-            'phone' => 'Phone',
-            'color' => 'Color',
-            'json' => 'JSON',
-            'relation' => 'Content Relation',
-        ];
+        // Get field types from config and format them for the form
+        $fieldTypes = [];
+        foreach (config('field_types') as $type => $info) {
+            $fieldTypes[$type] = $info['name'] ?? ucfirst($type);
+        }
         
-        // Get maximum order index
-        $maxOrderIndex = $contentType->fields()->max('order_index') ?? 0;
+        // Get maximum position
+        $maxPosition = $contentType->fields()->max('position') ?? 0;
         
-        return view('admin.content_type_fields.create', compact('contentType', 'fieldTypes', 'maxOrderIndex'));
+        return view('admin.content_type_fields.create', compact('contentType', 'fieldTypes', 'maxPosition'));
     }
 
     /**
@@ -72,52 +57,55 @@ class ContentTypeFieldController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'key' => 'nullable|string|max:255',
-            'type' => 'required|string|max:50',
+            'slug' => 'nullable|string|max:255',
+            'field_type' => 'required|string|max:50',
             'description' => 'nullable|string',
             'is_required' => 'boolean',
             'validation_rules' => 'nullable|string',
             'default_value' => 'nullable|string',
             'settings' => 'nullable|json',
-            'order_index' => 'nullable|integer',
+            'position' => 'nullable|integer',
+            'options' => 'nullable|array',
+            'options.*.value' => 'nullable|string',
+            'options.*.label' => 'nullable|string',
         ]);
         
-        // Generate key if not provided
-        if (empty($validated['key'])) {
-            $validated['key'] = Str::slug($validated['name']);
+        // Generate slug if not provided
+        if (empty($validated['slug'])) {
+            $validated['slug'] = Str::slug($validated['name']);
         }
         
-        // Make sure field key is unique for this content type
-        $existingField = $contentType->fields()->where('key', $validated['key'])->first();
+        // Make sure field slug is unique for this content type
+        $existingField = $contentType->fields()->where('slug', $validated['slug'])->first();
         if ($existingField) {
-            $validated['key'] = $validated['key'] . '_' . time();
-        }
-        
-        // Set content type ID
-        $validated['content_type_id'] = $contentType->id;
-        
-        // Set user information if available
-        if (Schema::hasColumn('content_type_fields', 'created_by')) {
-            $validated['created_by'] = Auth::id();
-        }
-        
-        if (Schema::hasColumn('content_type_fields', 'updated_by')) {
-            $validated['updated_by'] = Auth::id();
-        }
-        
-        // Default values
-        $validated['is_required'] = $validated['is_required'] ?? false;
-        
-        // Convert settings to JSON if it's not already
-        if (!empty($validated['settings']) && is_array($validated['settings'])) {
-            $validated['settings'] = json_encode($validated['settings']);
+            $validated['slug'] = $validated['slug'] . '_' . time();
         }
         
         // Create the field
-        $field = ContentTypeField::create($validated);
+        $field = $contentType->fields()->create([
+            'name' => $validated['name'],
+            'slug' => $validated['slug'],
+            'field_type' => $validated['field_type'],
+            'description' => $validated['description'] ?? null,
+            'is_required' => $validated['is_required'] ?? false,
+            'validation_rules' => $validated['validation_rules'] ?? null,
+            'position' => $validated['position'] ?? 0,
+            'settings' => $validated['settings'] ?? '{}',
+        ]);
         
-        // Process options for select and multiselect fields
-        if (in_array($field->type, ['select', 'multiselect']) && $request->has('options')) {
+        // Set user information if available
+        if (Schema::hasColumn('content_type_fields', 'created_by')) {
+            $field->created_by = Auth::id();
+            $field->save();
+        }
+        
+        if (Schema::hasColumn('content_type_fields', 'updated_by')) {
+            $field->updated_by = Auth::id();
+            $field->save();
+        }
+        
+        // Process field options for select/multiselect/radio/checkbox fields
+        if (in_array($field->field_type, ['select', 'multiselect', 'radio', 'checkbox']) && $request->has('options')) {
             $this->processFieldOptions($field, $request->input('options'));
         }
         
@@ -134,29 +122,14 @@ class ContentTypeFieldController extends Controller
      */
     public function edit(ContentType $contentType, ContentTypeField $field)
     {
-        $fieldTypes = [
-            'text' => 'Text',
-            'textarea' => 'Text Area',
-            'rich_text' => 'Rich Text',
-            'number' => 'Number',
-            'date' => 'Date',
-            'datetime' => 'Date and Time',
-            'boolean' => 'Boolean',
-            'select' => 'Select',
-            'multiselect' => 'Multi-select',
-            'image' => 'Image',
-            'gallery' => 'Gallery',
-            'file' => 'File',
-            'url' => 'URL',
-            'email' => 'Email',
-            'phone' => 'Phone',
-            'color' => 'Color',
-            'json' => 'JSON',
-            'relation' => 'Content Relation',
-        ];
+        // Get field types from config and format them for the form
+        $fieldTypes = [];
+        foreach (config('field_types') as $type => $info) {
+            $fieldTypes[$type] = $info['name'] ?? ucfirst($type);
+        }
         
         // Load options for select/multiselect fields
-        if (in_array($field->type, ['select', 'multiselect'])) {
+        if (in_array($field->field_type, ['select', 'multiselect'])) {
             $field->load('options');
         }
         
@@ -175,49 +148,54 @@ class ContentTypeFieldController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'key' => 'required|string|max:255',
-            'type' => 'required|string|max:50',
+            'slug' => 'required|string|max:255',
+            'field_type' => 'required|string|max:50',
             'description' => 'nullable|string',
             'is_required' => 'boolean',
             'validation_rules' => 'nullable|string',
             'default_value' => 'nullable|string',
             'settings' => 'nullable|json',
-            'order_index' => 'nullable|integer',
+            'position' => 'nullable|integer',
+            'options' => 'nullable|array',
+            'options.*.value' => 'nullable|string',
+            'options.*.label' => 'nullable|string',
         ]);
         
-        // Make sure field key is unique for this content type (excluding current field)
+        // Make sure field slug is unique for this content type (excluding current field)
         $existingField = $contentType->fields()
-            ->where('key', $validated['key'])
+            ->where('slug', $validated['slug'])
             ->where('id', '!=', $field->id)
             ->first();
             
         if ($existingField) {
-            $validated['key'] = $validated['key'] . '_' . time();
-        }
-        
-        // Set user information if available
-        if (Schema::hasColumn('content_type_fields', 'updated_by')) {
-            $validated['updated_by'] = Auth::id();
-        }
-        
-        // Default values
-        $validated['is_required'] = $validated['is_required'] ?? false;
-        
-        // Convert settings to JSON if it's not already
-        if (!empty($validated['settings']) && is_array($validated['settings'])) {
-            $validated['settings'] = json_encode($validated['settings']);
+            $validated['slug'] = $validated['slug'] . '_' . time();
         }
         
         // Update the field
-        $field->update($validated);
+        $field->update([
+            'name' => $validated['name'],
+            'slug' => $validated['slug'],
+            'field_type' => $validated['field_type'],
+            'description' => $validated['description'] ?? null,
+            'is_required' => $validated['is_required'] ?? false,
+            'validation_rules' => $validated['validation_rules'] ?? null,
+            'position' => $validated['position'] ?? $field->position,
+            'settings' => $validated['settings'] ?? '{}',
+        ]);
         
-        // Process options for select and multiselect fields
-        if (in_array($field->type, ['select', 'multiselect']) && $request->has('options')) {
-            // Delete existing options
+        // Set user information if available
+        if (Schema::hasColumn('content_type_fields', 'updated_by')) {
+            $field->updated_by = Auth::id();
+            $field->save();
+        }
+        
+        // Process field options for select/multiselect/radio/checkbox fields
+        if (in_array($field->field_type, ['select', 'multiselect', 'radio', 'checkbox']) && !empty($validated['options'])) {
+            // Clear existing options
             $field->options()->delete();
             
             // Create new options
-            $this->processFieldOptions($field, $request->input('options'));
+            $this->processFieldOptions($field, $validated['options']);
         }
         
         return redirect()->route('admin.content-types.fields.edit', [$contentType, $field])
@@ -249,31 +227,6 @@ class ContentTypeFieldController extends Controller
             ->with('success', 'Content type field deleted successfully.');
     }
     
-    /**
-     * Reorder fields for a content type.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\ContentType  $contentType
-     * @return \Illuminate\Http\Response
-     */
-    public function reorder(Request $request, ContentType $contentType)
-    {
-        $validated = $request->validate([
-            'field_ids' => 'required|array',
-            'field_ids.*' => 'required|integer|exists:content_type_fields,id',
-        ]);
-        
-        $fieldIds = $validated['field_ids'];
-        
-        // Update order indexes
-        foreach ($fieldIds as $index => $fieldId) {
-            ContentTypeField::where('id', $fieldId)
-                ->where('content_type_id', $contentType->id)
-                ->update(['order_index' => $index]);
-        }
-        
-        return response()->json(['success' => true]);
-    }
     
     /**
      * Process field options for select/multiselect fields.
@@ -284,7 +237,7 @@ class ContentTypeFieldController extends Controller
      */
     private function processFieldOptions(ContentTypeField $field, array $options)
     {
-        $orderIndex = 0;
+        $position = 0;
         
         foreach ($options as $option) {
             if (empty($option['value'])) {
@@ -295,8 +248,45 @@ class ContentTypeFieldController extends Controller
                 'field_id' => $field->id,
                 'value' => $option['value'],
                 'label' => $option['label'] ?? $option['value'],
-                'order_index' => $orderIndex++,
+                'position' => $position++,
             ]);
+        }
+    }
+    
+    /**
+     * Reorder content type fields via AJAX.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\ContentType  $contentType
+     * @return \Illuminate\Http\Response
+     */
+    public function reorder(Request $request, ContentType $contentType)
+    {
+        $request->validate([
+            'fields' => 'required|array',
+            'fields.*.id' => 'required|exists:content_type_fields,id',
+            'fields.*.position' => 'required|integer|min:1',
+        ]);
+
+        $fields = $request->input('fields');
+        
+        try {
+            // Update each field position
+            foreach ($fields as $field) {
+                ContentTypeField::where('id', $field['id'])
+                    ->where('content_type_id', $contentType->id)
+                    ->update(['position' => $field['position']]);
+            }
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Field order updated successfully.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update field order.'
+            ], 500);
         }
     }
 }

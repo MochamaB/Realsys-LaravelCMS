@@ -1,17 +1,15 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Modules\UserManagement\App\Http\Controllers\RegistrationController;
-
+use Modules\UserManagement\Http\Controllers\RegistrationController;
 
 // Public routes for registration
 Route::group(['prefix' => 'join', 'as' => 'usermanagement.', 'middleware' => 'web'], function () {
     // Registration form
-
     Route::get('success', [RegistrationController::class, 'showSuccess'])->name('registration.success');
     Route::get('wizard', [RegistrationController::class, 'showWizard'])->name('register.wizard');
+    
     // Registration Wizard
-
     // Step 1: Profile Type
     Route::get('register/step1', [RegistrationController::class, 'showStep1'])->name('register.wizard.step1');
     Route::post('register/step1', [RegistrationController::class, 'submitStep1'])->name('register.wizard.step1.post');
@@ -36,6 +34,6 @@ Route::group(['prefix' => 'join', 'as' => 'usermanagement.', 'middleware' => 'we
     Route::get('constituencies', [RegistrationController::class, 'getConstituencies'])->name('constituencies');
     Route::get('wards', [RegistrationController::class, 'getWards'])->name('wards');
 });
+
 Route::get('verify-membership', [RegistrationController::class, 'showVerifyMembershipForm'])->name('verify-membership');
 Route::post('verify-membership', [RegistrationController::class, 'processVerifyMembership'])->name('verify-membership.post');
-

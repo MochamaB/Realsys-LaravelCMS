@@ -1,0 +1,189 @@
+/**
+ * Sortable Components - Reusable CSS for all sortable lists
+ */
+
+/* Sortable List Styles */
+.sortable-container {
+    margin-bottom: 1.5rem;
+}
+
+.dd-list {
+    display: block;
+    position: relative;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.dd-list .dd-list {
+    padding-left: 30px;
+}
+
+.dd-item {
+    position: relative;
+    display: block;
+    margin: 8px 0;
+    padding: 0;
+    min-height: 50px;
+    font-size: 13px;
+    line-height: 20px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.dd-item:hover {
+    border-color: #ccc;
+    background-color: #f8f9fa;
+}
+
+.dd-handle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0;
+    padding: 10px 15px;
+    color: #333;
+    text-decoration: none;
+    font-weight: 400;
+    cursor: move;
+    border-radius: 3px;
+}
+
+.dd-handle:hover {
+    color: #2ea8dc;
+    background: #f4f4f4;
+}
+
+/* Sortable source item styles */
+.sortable-source-container {
+    margin-bottom: 1.5rem;
+}
+
+.sortable-source {
+    border-radius: 4px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.sortable-source-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    border-bottom: 1px solid #eee;
+    transition: all 0.2s ease;
+    cursor: grab;
+}
+
+.sortable-source-item:last-child {
+    border-bottom: none;
+}
+
+.sortable-source-item:hover {
+    background-color: #f8f9fa;
+    border-left: 3px solid #3370ff;
+}
+
+/* Item Components */
+.item-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #e5eefe;
+    border-radius: 6px;
+    margin-right: 12px;
+    color: #3370ff;
+}
+
+.item-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.item-title {
+    font-weight: 500;
+    margin-bottom: 2px;
+}
+
+.item-subtitle {
+    font-size: 12px;
+    color: #666;
+}
+
+.item-badges {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 3px;
+}
+
+.item-badge {
+    font-size: 11px;
+    padding: 2px 6px;
+    background: #f0f0f0;
+    border-radius: 3px;
+    color: #666;
+}
+
+.item-actions {
+    display: flex;
+    gap: 5px;
+}
+
+/* Drag indicator */
+.drag-handle {
+    opacity: 0.3;
+    transition: opacity 0.2s ease;
+    color: #3370ff;
+    margin-right: 5px;
+}
+
+.dd-item:hover .drag-handle,
+.sortable-source-item:hover .drag-handle {
+    opacity: 1;
+}
+
+/* Sortable visual states */
+.sortable-ghost {
+    opacity: 0.4;
+    background: #f0f4ff;
+}
+
+.sortable-chosen {
+    background: #e3f2fd;
+}
+
+.sortable-drag {
+    opacity: 0.8;
+    transform: rotate(1deg);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+}
+
+/* Empty state */
+.sortable-empty-state {
+    padding: 30px;
+    text-align: center;
+    background: #f9f9f9;
+    border: 2px dashed #ddd;
+    border-radius: 4px;
+    color: #666;
+}
+
+/* Drop area */
+.sortable-drop-area {
+    padding: 15px;
+    border: 2px dashed #ddd;
+    border-radius: 6px;
+    background: #f9f9f9;
+    transition: all 0.3s ease;
+    margin-top: 10px;
+    text-align: center;
+}
+
+.sortable-drop-area.active {
+    background-color: #e9f3ff;
+    border-color: #3370ff;
+}

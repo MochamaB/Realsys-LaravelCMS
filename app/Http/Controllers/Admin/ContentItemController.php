@@ -53,7 +53,7 @@ class ContentItemController extends Controller
     public function create(ContentType $contentType)
     {
         // Get fields for this content type
-        $fields = $contentType->fields()->orderBy('order_index')->get();
+        $fields = $contentType->fields()->orderBy('position')->get();
         
         return view('admin.content_items.create', compact('contentType', 'fields'));
     }
@@ -129,7 +129,7 @@ class ContentItemController extends Controller
     public function edit(ContentType $contentType, ContentItem $contentItem)
     {
         // Get fields for this content type
-        $fields = $contentType->fields()->orderBy('order_index')->get();
+        $fields = $contentType->fields()->orderBy('position')->get();
         
         // Load field values
         $contentItem->load('fieldValues');

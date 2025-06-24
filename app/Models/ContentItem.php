@@ -18,8 +18,12 @@ class ContentItem extends Model
      */
     protected $fillable = [
         'content_type_id',
+        'title',
+        'slug',
         'status',
-        'published_at'
+        'published_at',
+        'created_by',
+        'updated_by'
     ];
 
     /**

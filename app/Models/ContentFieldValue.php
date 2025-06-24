@@ -18,7 +18,7 @@ class ContentFieldValue extends Model
     protected $fillable = [
         'content_item_id',
         'content_type_field_id',
-        'field_value',
+        'value',
     ];
 
     /**
