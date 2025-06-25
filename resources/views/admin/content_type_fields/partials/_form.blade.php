@@ -56,21 +56,21 @@
         {{-- Basic Settings Tab --}}
         <div class="tab-pane fade show active" id="{{ $isModal ? 'modal-' : '' }}basics" role="tabpanel" aria-labelledby="{{ $isModal ? 'modal-' : '' }}basics-tab">
             <div class="mb-3">
-                <label for="{{ $isModal ? 'modal-' : '' }}name" class="form-label">Field Name *</label>
+                <label for="{{ $isModal ? 'modal-' : '' }}name" class="form-label">Field Name <span class="text-danger">*</span></label>
                 <input type="text" class="form-control" id="{{ $isModal ? 'modal-' : '' }}name" name="name" 
                        value="{{ old('name', $field->name ?? '') }}" required>
                 <small class="text-muted">Human-readable name for this field</small>
             </div>
 
             <div class="mb-3">
-                <label for="{{ $isModal ? 'modal-' : '' }}slug" class="form-label">Field Key</label>
+                <label for="{{ $isModal ? 'modal-' : '' }}slug" class="form-label">Field Key/Slug <span class="text-danger">*</span></label>
                 <input type="text" class="form-control" id="{{ $isModal ? 'modal-' : '' }}slug" name="slug" 
                        value="{{ old('slug', $field->slug ?? '') }}">
-                <small class="text-muted">Machine name for this field (will be auto-generated if left empty)</small>
+                <small class="text-muted">Name to match with widget key/slug for this field (will be auto-generated if left empty)</small>
             </div>
 
             <div class="mb-3">
-                <label for="{{ $isModal ? 'modal-' : '' }}field_type" class="form-label">Field Type *</label>
+                <label for="{{ $isModal ? 'modal-' : '' }}field_type" class="form-label">Field Type <span class="text-danger">*</span></label>
                 <select class="form-select" id="{{ $isModal ? 'modal-' : '' }}field_type" name="field_type" required 
                         {{ $selectedFieldType ? 'disabled' : '' }}>
                     <option value="">Select field type</option>

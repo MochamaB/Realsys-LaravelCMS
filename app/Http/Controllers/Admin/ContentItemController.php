@@ -123,24 +123,21 @@ class ContentItemController extends Controller
      * Show the form for editing the specified content item.
      *
      * @param  \App\Models\ContentType  $contentType
-     * @param  \App\Models\ContentItem  $contentItem
+     * @param  \App\Models\ContentItem  $item
      * @return \Illuminate\Http\Response
      */
-    public function edit(ContentType $contentType, ContentItem $contentItem)
+    public function edit(ContentType $contentType, ContentItem $item)
     {
         // Get fields for this content type
         $fields = $contentType->fields()->orderBy('position')->get();
         
-        // Load field values
-        $contentItem->load('fieldValues');
+        // Load field values with their field definitions for efficient access in the view
+        $item->load('fieldValues.field');
         
-        // Organize field values by field ID for easier access
-        $fieldValuesMap = [];
-        foreach ($contentItem->fieldValues as $fieldValue) {
-            $fieldValuesMap[$fieldValue->field_id] = $fieldValue;
-        }
+        // Using contentItem variable name in the view for consistency with partials
+        $contentItem = $item;
         
-        return view('admin.content_items.edit', compact('contentType', 'contentItem', 'fields', 'fieldValuesMap'));
+        return view('admin.content_items.edit', compact('contentType', 'contentItem', 'fields'));
     }
 
     /**
@@ -148,15 +145,15 @@ class ContentItemController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\ContentType  $contentType
-     * @param  \App\Models\ContentItem  $contentItem
+     * @param  \App\Models\ContentItem  $item
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, ContentType $contentType, ContentItem $contentItem)
+    public function update(Request $request, ContentType $contentType, ContentItem $item)
     {
         // Basic validation for content item
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|unique:content_items,slug,' . $contentItem->id,
+            'slug' => 'required|string|max:255|unique:content_items,slug,' . $item->id,
             'status' => 'required|string|in:draft,published,archived',
         ]);
         
@@ -166,12 +163,12 @@ class ContentItemController extends Controller
         }
         
         // Update content item
-        $contentItem->update($validated);
+        $item->update($validated);
         
         // Process field values
-        $this->processFieldValues($contentItem, $contentType, $request);
+        $this->processFieldValues($item, $contentType, $request);
         
-        return redirect()->route('admin.content-items.edit', [$contentType, $contentItem])
+        return redirect()->route('admin.content-types.show', $contentType)
             ->with('success', 'Content item updated successfully.');
     }
 
@@ -230,9 +227,9 @@ class ContentItemController extends Controller
             $fieldValue = $request->input('field_' . $field->id);
             
             // Handle special field types
-            if ($field->type == 'boolean') {
+            if ($field->field_type == 'boolean') {
                 $fieldValue = $request->has('field_' . $field->id) ? '1' : '0';
-            } elseif ($field->type == 'json' && is_array($fieldValue)) {
+            } elseif ($field->field_type == 'json' && is_array($fieldValue)) {
                 $fieldValue = json_encode($fieldValue);
             }
             
@@ -240,7 +237,7 @@ class ContentItemController extends Controller
             $contentFieldValue = ContentFieldValue::updateOrCreate(
                 [
                     'content_item_id' => $contentItem->id,
-                    'field_id' => $field->id,
+                    'content_type_field_id' => $field->id,
                 ],
                 [
                     'value' => $fieldValue,
@@ -248,8 +245,8 @@ class ContentItemController extends Controller
             );
             
             // Handle media uploads
-            if (in_array($field->type, ['image', 'gallery', 'file']) && $request->hasFile('field_' . $field->id)) {
-                if ($field->type == 'gallery') {
+            if (in_array($field->field_type, ['image', 'gallery', 'file']) && $request->hasFile('field_' . $field->id)) {
+                if ($field->field_type == 'gallery') {
                     // Handle multiple files
                     foreach ($request->file('field_' . $field->id) as $file) {
                         $contentItem->addMedia($file)

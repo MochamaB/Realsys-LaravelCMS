@@ -11,6 +11,14 @@
                     <a href="{{ route('admin.content-types.items.create', $contentType) }}" class="btn btn-primary">
                         <i class="bx bx-plus"></i> Create New Item
                     </a>
+                    <div class="btn-group">
+                        <a href="{{ route('admin.content-types.items.create', $contentType) }}" class="btn btn-secondary">
+                            <i class="bx bx-import"></i> Import
+                        </a>
+                        <button class="btn btn-outline-secondary" type="button" id="export-content-items">
+                            <i class="bx bx-export"></i> Export
+                        </button>
+                    </div>
                 </div>
             </div>
             <div class="card-body">
@@ -26,17 +34,28 @@
                 @else
                     <div class="table-responsive">
                         <table class="table table-hover" id="content-items-table">
-                            <thead>
+                            <thead class="table-light">
                                 <tr>
-                                    <th style="width: 40%">Title/Name</th>
-                                    <th>Status</th>
-                                    <th>Last Updated</th>
-                                    <th class="text-center">Actions</th>
+                                    <th scope="col" style="width: 25px;">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="checkAll" value="option1">
+                                        </div>
+                                    </th>
+                                    <th scope="col" style="width: 40%">Title/Name</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Editor</th>
+                                    <th scope="col">Last Updated</th>
+                                    <th scope="col" class="text-center">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($contentType->contentItems as $item)
                                     <tr>
+                                        <td>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="content_items[]" value="{{ $item->id }}">
+                                            </div>
+                                        </td>
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 @if(method_exists($item, 'getFirstMediaUrl') && $item->getFirstMediaUrl('featured_image'))
@@ -77,6 +96,13 @@
                                             @endif
                                         </td>
                                         <td>
+                                            @if($item->creator)
+                                                {{ $item->creator }}
+                                            @else
+                                                <span class="text-muted">System created</span>
+                                            @endif
+                                        </td>
+                                        <td>
                                             <div class="small text-muted">
                                                 {{ $item->updated_at->format('M d, Y') }}
                                                 <div>{{ $item->updated_at->format('h:i A') }}</div>
@@ -88,17 +114,17 @@
                                         <td class="text-center">
                                             <div class="btn-group btn-group-sm">
                                                 <a href="{{ route('admin.content-types.items.edit', [$contentType, $item]) }}" 
-                                                   class="btn btn-outline-primary" 
+                                                   class="btn btn-primary" 
                                                    title="Edit Item">
                                                     <i class="bx bx-edit"></i>
                                                 </a>
                                                 <a href="{{ route('admin.content-types.items.show', [$contentType, $item]) }}" 
-                                                   class="btn btn-outline-info" 
+                                                   class="btn btn-info" 
                                                    title="View Item">
                                                     <i class="bx bx-show"></i>
                                                 </a>
                                                 <button type="button" 
-                                                        class="btn btn-outline-danger delete-item-btn" 
+                                                        class="btn btn-danger delete-item-btn" 
                                                         data-item-id="{{ $item->id }}"
                                                         data-item-title="{{ $item->title ?? $item->name ?? 'Item #' . $item->id }}"
                                                         title="Delete Item">
@@ -113,18 +139,7 @@
                     </div>
                 @endif
             </div>
-            @if($contentType->contentItems->count() > 0)
-                <div class="card-footer d-flex justify-content-end">
-                    <div class="btn-group">
-                        <a href="{{ route('admin.content-types.items.create', $contentType) }}" class="btn btn-primary">
-                            <i class="bx bx-plus"></i> New Item
-                        </a>
-                        <button class="btn btn-outline-secondary" type="button" id="export-content-items">
-                            <i class="bx bx-export"></i> Export
-                        </button>
-                    </div>
-                </div>
-            @endif
+            
         </div>
     </div>
 </div>

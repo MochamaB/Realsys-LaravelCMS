@@ -50,7 +50,7 @@ return [
     ],
     'select' => [
         'name' => 'Select',
-        'icon' => 'list',
+        'icon' => 'list-plus',
         'description' => 'Single selection from options',
         'has_options' => true,
     ],

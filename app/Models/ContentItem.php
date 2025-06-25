@@ -6,10 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\HasMedia;
 
-class ContentItem extends Model
+class ContentItem extends Model implements HasMedia
 {
     use SoftDeletes;
+    use InteractsWithMedia;
 
     /**
      * The attributes that are mass assignable.
@@ -126,5 +129,16 @@ class ContentItem extends Model
                 $query->whereNull('published_at')
                     ->orWhere('published_at', '<=', now());
             });
+    }
+    /**
+ * Register media collections for this model
+ */
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('images')
+            ->singleFile()
+            ->useDisk('media')
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/gif'])
+            ->withResponsiveImages();
     }
 }
