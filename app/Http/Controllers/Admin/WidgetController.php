@@ -8,6 +8,7 @@ use App\Models\Widget;
 use App\Models\ContentType;
 use App\Services\WidgetDiscoveryService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 
 class WidgetController extends Controller
 {
@@ -72,7 +73,101 @@ class WidgetController extends Controller
     {
         $result = $widgetDiscovery->discoverAndRegisterWidgets($theme);
         
-        return redirect()->route('admin.themes.widgets.index', $theme)
-            ->with('success', "Widget scan completed! {$result['new']} new widgets discovered, {$result['updated']} widgets updated.");
+        // Build a detailed message about discovery results
+        $message = "Widget discovery completed for theme '{$theme->name}'.<br>";
+        $message .= "<strong>Results:</strong><br>";
+        $message .= "- {$result['new']} new widgets registered<br>";
+        $message .= "- {$result['updated']} existing widgets updated<br>";
+        
+        if ($result['skipped'] > 0) {
+            $message .= "- {$result['skipped']} widgets skipped<br>";
+        }
+        
+        if ($result['errors'] > 0) {
+            $message .= "- {$result['errors']} errors encountered<br>";
+            // Add error details if available
+            foreach ($result['details'] as $detail) {
+                if ($detail['status'] === 'error') {
+                    $message .= "&nbsp;&nbsp;Error in {$detail['widget']}: " . (isset($detail['message']) ? $detail['message'] : 'Unknown error') . "<br>";
+                }
+            }
+            return redirect()->route('admin.widgets.index')
+                ->with('warning', $message);
+        }
+        
+        // If there were new widgets, highlight their names
+        if ($result['new'] > 0) {
+            $message .= "<br><strong>New widgets:</strong><br>";
+            foreach ($result['details'] as $detail) {
+                if ($detail['status'] === 'new') {
+                    $message .= "- {$detail['widget']}<br>";
+                }
+            }
+        }
+        
+        return redirect()->route('admin.widgets.index')
+            ->with('success', $message);
+    }
+
+    /**
+     * Show the form to edit widget code files.
+     *
+     * @param Widget $widget
+     * @return \Illuminate\View\View
+     */
+    public function editWidgetCode(Widget $widget)
+    {
+        // Get theme path
+        $theme = $widget->theme;
+        $widgetPath = resource_path("themes/{$theme->slug}/widgets/{$widget->slug}");
+        
+        // Read widget.json file
+        $jsonPath = $widgetPath . '/widget.json';
+        $viewPath = $widgetPath . '/view.blade.php';
+        
+        $jsonContent = File::exists($jsonPath) ? File::get($jsonPath) : '';
+        $viewContent = File::exists($viewPath) ? File::get($viewPath) : '';
+        
+        return view('admin.widgets.edit_code', compact('widget', 'jsonContent', 'viewContent'));
+    }
+
+    /**
+     * Update widget code files.
+     *
+     * @param Request $request
+     * @param Widget $widget
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function updateWidgetCode(Request $request, Widget $widget)
+    {
+        $request->validate([
+            'json_content' => 'required',
+            'view_content' => 'required'
+        ]);
+        
+        // Validate JSON structure
+        try {
+            json_decode($request->json_content, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $e) {
+            return redirect()->back()->withErrors(['json_content' => 'Invalid JSON format: ' . $e->getMessage()])->withInput();
+        }
+        
+        $theme = $widget->theme;
+        $widgetPath = resource_path("themes/{$theme->slug}/widgets/{$widget->slug}");
+        
+        // Ensure directory exists
+        if (!File::exists($widgetPath)) {
+            File::makeDirectory($widgetPath, 0755, true);
+        }
+        
+        // Write files
+        File::put($widgetPath . '/widget.json', $request->json_content);
+        File::put($widgetPath . '/view.blade.php', $request->view_content);
+        
+        // Run widget discovery after update to refresh database
+        app(WidgetDiscoveryService::class)->scanThemeWidgets($theme);
+        
+        return redirect()->route('admin.widgets.show', $widget)
+            ->with('success', 'Widget code updated successfully.');
     }
 }

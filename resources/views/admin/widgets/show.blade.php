@@ -175,16 +175,16 @@
                 </div>
             </div>
         </div>
-        @endif
-                                                    @case('rich_text')
-                                                        {!! $fieldValue->value !!}
-                                                        @break
-                                                    @default
-                                                        {{ $fieldValue->value }}
-                                                @endswitch
-                                            </td>
+                                        @switch($fieldValue->type)
+                                            @case('rich_text')
+                                                {!! $fieldValue->value !!}
+                                                @break
+                                            @default
+                                                {{ $fieldValue->value }}
+                                        @endswitch
+                                                                            </td>
                                         </tr>
-                                    @endforeach
+                                    @endif
                                 </tbody>
                             </table>
                         </div>

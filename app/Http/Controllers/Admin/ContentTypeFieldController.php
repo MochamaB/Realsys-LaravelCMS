@@ -104,13 +104,20 @@ class ContentTypeFieldController extends Controller
             $field->save();
         }
         
-        // Process field options for select/multiselect/radio/checkbox fields
-        if (in_array($field->field_type, ['select', 'multiselect', 'radio', 'checkbox']) && $request->has('options')) {
+        if (in_array($field->field_type, $this->getFieldTypesWithOptions()) && $request->has('options')) {
             $this->processFieldOptions($field, $request->input('options'));
         }
         
-        return redirect()->route('admin.content-types.fields.index', $contentType)
+        return redirect()->route('admin.content-types.show', $contentType)
             ->with('success', 'Content type field created successfully.');
+    }
+
+    private function getFieldTypesWithOptions()
+    {
+        return collect(config('field_types'))
+            ->filter(fn($type) => $type['has_options'])
+            ->keys()
+            ->toArray();
     }
 
     /**
@@ -128,8 +135,7 @@ class ContentTypeFieldController extends Controller
             $fieldTypes[$type] = $info['name'] ?? ucfirst($type);
         }
         
-        // Load options for select/multiselect fields
-        if (in_array($field->field_type, ['select', 'multiselect'])) {
+        if (in_array($field->field_type, $this->getFieldTypesWithOptions())) {
             $field->load('options');
         }
         
@@ -189,16 +195,12 @@ class ContentTypeFieldController extends Controller
             $field->save();
         }
         
-        // Process field options for select/multiselect/radio/checkbox fields
-        if (in_array($field->field_type, ['select', 'multiselect', 'radio', 'checkbox']) && !empty($validated['options'])) {
-            // Clear existing options
+        if (in_array($field->field_type, $this->getFieldTypesWithOptions()) && !empty($validated['options'])) {
             $field->options()->delete();
-            
-            // Create new options
             $this->processFieldOptions($field, $validated['options']);
         }
         
-        return redirect()->route('admin.content-types.fields.edit', [$contentType, $field])
+        return redirect()->route('admin.content-types.show', $contentType)
             ->with('success', 'Content type field updated successfully.');
     }
 
@@ -213,7 +215,7 @@ class ContentTypeFieldController extends Controller
     {
         // Check if the field has any values
         if ($field->fieldValues()->count() > 0) {
-            return redirect()->route('admin.content-types.fields.index', $contentType)
+            return redirect()->route('admin.content-types.show', $contentType)
                 ->with('error', 'Cannot delete field that has values assigned to content items.');
         }
         
@@ -223,7 +225,7 @@ class ContentTypeFieldController extends Controller
         // Delete field
         $field->delete();
         
-        return redirect()->route('admin.content-types.fields.index', $contentType)
+        return redirect()->route('admin.content-types.show', $contentType)
             ->with('success', 'Content type field deleted successfully.');
     }
     

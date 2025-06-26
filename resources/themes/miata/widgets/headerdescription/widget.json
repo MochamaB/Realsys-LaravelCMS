@@ -1,0 +1,70 @@
+{
+  "name": "Header with Description",
+  "slug": "headerdescription",
+  "description": "A header section with title, icon and description text",
+  "icon": "ri-h-1",
+  "settings": {
+    "alignment": {
+      "name": "Text Alignment",
+      "field_type": "select",
+      "is_required": false,
+      "description": "Alignment of the header and description",
+      "options": [
+        {"value": "text-center", "label": "Center"},
+        {"value": "text-left", "label": "Left"},
+        {"value": "text-right", "label": "Right"}
+      ],
+      "default": "text-center"
+    },
+    "icon": {
+      "name": "Header Icon",
+      "field_type": "select",
+      "is_required": false,
+      "description": "Icon to display with the header",
+      "options": [
+        {"value": "fa fa-bookmark", "label": "Bookmark"},
+        {"value": "fa fa-star", "label": "Star"},
+        {"value": "fa fa-heart", "label": "Heart"},
+        {"value": "fa fa-check", "label": "Checkmark"},
+        {"value": "fa fa-flag", "label": "Flag"},
+        {"value": "", "label": "None"}
+      ],
+      "default": "fa fa-bookmark"
+    },
+    "background_color": {
+      "name": "Background Color",
+      "field_type": "color",
+      "is_required": false,
+      "description": "Background color for the header section",
+      "default": "#ffffff"
+    },
+    "padding": {
+      "name": "Section Padding",
+      "field_type": "select",
+      "is_required": false,
+      "description": "Padding size for the header section",
+      "options": [
+        {"value": "p-2", "label": "Small"},
+        {"value": "p-4", "label": "Medium"},
+        {"value": "p-5", "label": "Large"}
+      ],
+      "default": "p-4"
+    }
+  },
+  "fields": [
+    {
+      "name": "Title",
+      "slug": "title",
+      "field_type": "text",
+      "is_required": true,
+      "description": "The main heading text"
+    },
+    {
+      "name": "Description",
+      "slug": "description",
+      "field_type": "textarea",
+      "is_required": false,
+      "description": "Description text below the header"
+    }
+  ]
+}

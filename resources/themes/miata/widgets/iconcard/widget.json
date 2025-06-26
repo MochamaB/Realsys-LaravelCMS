@@ -1,0 +1,125 @@
+{
+  "name": "Icon Card Widget",
+  "slug": "iconcard",
+  "description": "Display content cards with icons and text",
+  "icon": "fa fa-id-card",
+  "settings": {
+    "section_padding": {
+      "name": "Section Padding",
+      "field_type": "select",
+      "is_required": false,
+      "description": "Padding size for the section",
+      "options": [
+        {"value": "ptb-30", "label": "Small"},
+        {"value": "ptb-50", "label": "Medium"},
+        {"value": "ptb-80", "label": "Large"},
+        {"value": "ptb-100", "label": "Extra Large"}
+      ],
+      "default": "ptb-80"
+    },
+    "background_color": {
+      "name": "Background Color",
+      "field_type": "color",
+      "is_required": false,
+      "description": "Background color for the section",
+      "default": "#ffffff"
+    },
+    "text_alignment": {
+      "name": "Text Alignment",
+      "field_type": "select",
+      "is_required": false,
+      "description": "Alignment of the cards",
+      "options": [
+        {"value": "text-left", "label": "Left"},
+        {"value": "text-center", "label": "Center"},
+        {"value": "text-right", "label": "Right"}
+      ],
+      "default": "text-center"
+    },
+    "cards_per_row": {
+      "name": "Cards Per Row",
+      "field_type": "select",
+      "is_required": false,
+      "description": "Number of cards to display per row",
+      "options": [
+        {"value": "1", "label": "1 Card"},
+        {"value": "2", "label": "2 Cards"},
+        {"value": "3", "label": "3 Cards"},
+        {"value": "4", "label": "4 Cards"}
+      ],
+      "default": "3"
+    }
+  },
+  "fields": [
+    {
+      "name": "Section Title",
+      "slug": "section_title",
+      "field_type": "text",
+      "is_required": false,
+      "description": "Optional title for the section"
+    },
+    {
+      "name": "Icon Cards",
+      "slug": "icon_cards",
+      "field_type": "repeater",
+      "is_required": true,
+      "description": "Cards with icons to display",
+      "settings": {
+        "min_items": 1,
+        "max_items": 12,
+        "subfields": [
+          {
+            "name": "Icon",
+            "slug": "icon",
+            "field_type": "select",
+            "is_required": true,
+            "description": "Font Awesome icon for the card",
+            "settings": {
+              "options": [
+                {"value": "fa fa-crosshairs", "label": "Target"},
+                {"value": "fa fa-lightbulb-o", "label": "Lightbulb"},
+                {"value": "fa fa-rocket", "label": "Rocket"},
+                {"value": "fa fa-cog", "label": "Gear"},
+                {"value": "fa fa-heart", "label": "Heart"},
+                {"value": "fa fa-check", "label": "Checkmark"},
+                {"value": "fa fa-star", "label": "Star"},
+                {"value": "fa fa-globe", "label": "Globe"}
+              ]
+            }
+          },
+          {
+            "name": "Heading",
+            "slug": "heading",
+            "field_type": "text",
+            "is_required": true,
+            "description": "Card heading"
+          },
+          {
+            "name": "Content",
+            "slug": "content",
+            "field_type": "textarea",
+            "is_required": true,
+            "description": "Card content text"
+          },
+          {
+            "name": "Link URL",
+            "slug": "link_url",
+            "field_type": "url",
+            "is_required": false,
+            "description": "Optional URL for the icon to link to"
+          }
+        ]
+      }
+    }
+  ],
+  "content_type_compatibility": {
+    "icon_cards": {
+      "compatible_with": ["team_member", "service", "feature"],
+      "field_mappings": {
+        "heading": ["title", "name", "feature_name"],
+        "content": ["description", "short_description", "content"],
+        "link_url": ["url", "link"]
+      }
+    }
+  }
+}

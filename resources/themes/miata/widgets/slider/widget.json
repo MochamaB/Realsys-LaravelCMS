@@ -108,5 +108,17 @@
       "description": "Show pagination dots",
       "default": true
     }
-  ]
+  ],
+  "content_type_compatibility": {
+    "slides": {
+      "compatible_with": ["slider", "banner", "carousel", "gallery", "hero"],
+      "field_mappings": {
+        "image": ["image", "featured_image", "photo", "thumbnail", "banner_image"],
+        "title": ["title", "name", "heading", "banner_title"],
+        "subtitle": ["subtitle", "excerpt", "summary", "caption", "description", "banner_subtitle"],
+        "button_text": ["button_text", "cta_text", "action_text"],
+        "button_url": ["button_url", "link", "url", "cta_link", "action_link"]
+      }
+    }
+  }
 }

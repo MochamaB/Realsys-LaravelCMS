@@ -8,20 +8,7 @@
 @endsection
 
 @section('content')
-    <div class="row">
-        <div class="col-12">
-            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                <h4 class="mb-sm-0">{{ isset($theme) ? "Widgets for {$theme->name}" : 'All Widgets' }}</h4>
-
-                <div class="page-title-right">
-                    <ol class="breadcrumb m-0">
-                        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Widgets</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
-    </div>
+    
 
     <div class="row">
         <div class="col-lg-12">
@@ -33,21 +20,7 @@
                             <i class="ri-scan-line align-bottom me-1"></i> Discover Widgets
                         </a>
                         
-                        <div class="dropdown">
-                            <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                {{ $theme->name }} Theme
-                            </button>
-                            <ul class="dropdown-menu">
-                                @foreach($themes as $t)
-                                    <li>
-                                        <a class="dropdown-item {{ $theme->id === $t->id ? 'active' : '' }}" 
-                                           href="{{ route('admin.themes.widgets.index', $t) }}">
-                                            {{ $t->name }} {{ $t->is_active ? '(Active)' : '' }}
-                                        </a>
-                                    </li>
-                                @endforeach
-                            </ul>
-                        </div>
+                       
                     </div>
                 </div>
                 <div class="card-body">
@@ -62,7 +35,6 @@
                                     <th scope="col">Description</th>
                                     <th scope="col">Content Types</th>
                                     <th scope="col">Fields</th>
-                                    <th scope="col">Status</th>
                                     <th scope="col" style="width: 150px;">Action</th>
                                 </tr>
                             </thead>
@@ -72,20 +44,22 @@
                                         <td>
                                             <div style="width: 70px; height: 50px;" class="d-flex justify-content-center align-items-center border rounded overflow-hidden">
                                                 @php
-                                                    $previewPath = resource_path("themes/{$widget->theme->slug}/widgets/{$widget->slug}/assets/preview.jpg");
-                                                    $hasPreview = file_exists($previewPath);
-                                                    $previewUrl = $hasPreview 
-                                                        ? asset("resources/themes/{$widget->theme->slug}/widgets/{$widget->slug}/assets/preview.jpg") 
-                                                        : asset('assets/admin/images/widget-placeholder.png');
+                                                    // Check for published preview image in public directory
+                                                    $previewUrl = asset("themes/{$widget->theme->slug}/widgets/{$widget->slug}/preview.png");
+                                                    
+                                                    // Fallback to placeholder if published preview doesn't exist
+                                                    if (!file_exists(public_path("themes/{$widget->theme->slug}/widgets/{$widget->slug}/preview.png"))) {
+                                                        $previewUrl = asset('assets/admin/images/widget-placeholder.png');
+                                                    }
                                                 @endphp
                                                 <img src="{{ $previewUrl }}" alt="{{ $widget->name }}" class="img-fluid" style="max-height: 50px; max-width: 100%;">
                                             </div>
                                         </td>
                                         <td>
                                             <div class="avatar-xs">
-                                                <span class="avatar-title rounded-circle bg-soft-primary text-primary">
+                                               
                                                     {{ $index + 1 }}
-                                                </span>
+                                                
                                             </div>
                                         </td>
                                         <td>
@@ -118,14 +92,7 @@
                                                 {{ $widget->fieldDefinitions->count() }} fields
                                             </span>
                                         </td>
-                                        <td>
-                                            <div class="form-check form-switch form-switch-success">
-                                                <input type="checkbox" 
-                                                       class="form-check-input widget-status-toggle" 
-                                                       data-widget-id="{{ $widget->id }}"
-                                                       {{ $widget->is_active ? 'checked' : '' }}>
-                                            </div>
-                                        </td>
+                                       
                                         <td>
                                             <div class="d-flex gap-2">
                                                 <a href="{{ route('admin.themes.widgets.show', [$widget->theme, $widget]) }}" 

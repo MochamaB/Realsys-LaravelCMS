@@ -78,6 +78,10 @@ Route::middleware('admin.auth')->group(function () {
     Route::post('/widgets/{widget}/content-types', [WidgetContentTypeController::class, 'store'])->name('widgets.content-types.store');
     Route::delete('/widgets/{widget}/content-types/{contentType}', [WidgetContentTypeController::class, 'destroy'])->name('widgets.content-types.destroy');
     
+    // Widget Code Editing
+    Route::get('/widgets/{widget}/code', [WidgetController::class, 'editWidgetCode'])->name('widgets.edit_code');
+    Route::post('/widgets/{widget}/code', [WidgetController::class, 'updateWidgetCode'])->name('widgets.update_code');
+    
     // Page Section Widgets
     Route::get('/pages/{page}/sections/{section}/widgets', [PageSectionWidgetController::class, 'index'])->name('pages.sections.widgets.index');
     Route::post('/pages/{page}/sections/{section}/widgets', [PageSectionWidgetController::class, 'store'])->name('pages.sections.widgets.store');

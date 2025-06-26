@@ -60,6 +60,18 @@ return [
         'description' => 'Multiple selections from options',
         'has_options' => true,
     ],
+    'radio' => [
+        'name' => 'Radio',
+        'icon' => 'radio-button',
+        'description' => 'Single selection from options',
+        'has_options' => true,
+    ],
+    'checkbox' => [
+        'name' => 'Checkbox',
+        'icon' => 'checkbox',
+        'description' => 'Multiple selections from options',
+        'has_options' => true,
+    ],
     'image' => [
         'name' => 'Image',
         'icon' => 'image',
@@ -107,6 +119,13 @@ return [
         'icon' => 'code',
         'description' => 'JSON data structure',
         'has_options' => false,
+    ],
+    // config/field_types.php
+    'repeater' => [
+        'name' => 'Repeater',
+        'icon' => 'layers',
+        'description' => 'Repeatable group of fields',
+        'has_fields' => true,  // New attribute to indicate it contains sub-fields
     ],
     'relation' => [
         'name' => 'Content Relation',

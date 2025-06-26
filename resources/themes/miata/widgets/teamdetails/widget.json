@@ -1,0 +1,187 @@
+{
+  "name": "Team Member Details Widget",
+  "slug": "teamdetails",
+  "description": "Display detailed information about a single team member with expanded biography",
+  "icon": "fa fa-user-circle",
+  "settings": {
+    "layout_style": {
+      "name": "Layout Style",
+      "field_type": "select",
+      "is_required": false,
+      "description": "Layout style for the team member details",
+      "options": [
+        {"value": "standard", "label": "Standard"},
+        {"value": "sidebar", "label": "With Sidebar"},
+        {"value": "full", "label": "Full Width"}
+      ],
+      "default": "standard"
+    },
+    "image_position": {
+      "name": "Image Position",
+      "field_type": "select",
+      "is_required": false,
+      "description": "Position of the team member image",
+      "options": [
+        {"value": "left", "label": "Left"},
+        {"value": "right", "label": "Right"},
+        {"value": "top", "label": "Top"}
+      ],
+      "default": "left"
+    },
+    "show_social": {
+      "name": "Show Social Links",
+      "field_type": "boolean",
+      "is_required": false,
+      "description": "Whether to display social media links",
+      "default": true
+    },
+    "show_contact_info": {
+      "name": "Show Contact Info",
+      "field_type": "boolean",
+      "is_required": false,
+      "description": "Whether to display contact information",
+      "default": true
+    },
+    "background_color": {
+      "name": "Background Color",
+      "field_type": "color",
+      "is_required": false,
+      "description": "Background color for the section",
+      "default": "#ffffff"
+    },
+    "section_padding": {
+      "name": "Section Padding",
+      "field_type": "select",
+      "is_required": false,
+      "description": "Padding size for the section",
+      "options": [
+        {"value": "ptb-30", "label": "Small"},
+        {"value": "ptb-50", "label": "Medium"},
+        {"value": "ptb-80", "label": "Large"},
+        {"value": "ptb-100", "label": "Extra Large"}
+      ],
+      "default": "ptb-80"
+    }
+  },
+  "fields": [
+    {
+      "name": "Photo",
+      "slug": "photo",
+      "field_type": "image",
+      "is_required": true,
+      "description": "Team member photo"
+    },
+    {
+      "name": "Name",
+      "slug": "name",
+      "field_type": "text",
+      "is_required": true,
+      "description": "Team member name"
+    },
+    {
+      "name": "Position",
+      "slug": "position",
+      "field_type": "text",
+      "is_required": true,
+      "description": "Team member job title or position"
+    },
+    {
+      "name": "Biography",
+      "slug": "biography",
+      "field_type": "rich_text",
+      "is_required": true,
+      "description": "Team member detailed biography"
+    },
+    {
+      "name": "Email",
+      "slug": "email",
+      "field_type": "email",
+      "is_required": false,
+      "description": "Team member email address"
+    },
+    {
+      "name": "Phone",
+      "slug": "phone",
+      "field_type": "phone",
+      "is_required": false,
+      "description": "Team member phone number"
+    },
+    {
+      "name": "Facebook URL",
+      "slug": "facebook",
+      "field_type": "url",
+      "is_required": false,
+      "description": "Team member Facebook profile URL"
+    },
+    {
+      "name": "Twitter URL",
+      "slug": "twitter",
+      "field_type": "url",
+      "is_required": false,
+      "description": "Team member Twitter profile URL"
+    },
+    {
+      "name": "LinkedIn URL",
+      "slug": "linkedin",
+      "field_type": "url",
+      "is_required": false,
+      "description": "Team member LinkedIn profile URL"
+    },
+    {
+      "name": "Instagram URL",
+      "slug": "instagram",
+      "field_type": "url",
+      "is_required": false,
+      "description": "Team member Instagram profile URL"
+    },
+    {
+      "name": "Areas of Expertise",
+      "slug": "expertise",
+      "field_type": "repeater",
+      "is_required": false,
+      "description": "Team member areas of expertise",
+      "settings": {
+        "min_items": 0,
+        "max_items": 10,
+        "subfields": [
+          {
+            "name": "Skill",
+            "slug": "skill",
+            "field_type": "text",
+            "is_required": true,
+            "description": "Skill or expertise area"
+          },
+          {
+            "name": "Proficiency Level",
+            "slug": "level",
+            "field_type": "select",
+            "is_required": true,
+            "description": "Proficiency level",
+            "settings": {
+              "options": [
+                {"value": "beginner", "label": "Beginner"},
+                {"value": "intermediate", "label": "Intermediate"},
+                {"value": "advanced", "label": "Advanced"},
+                {"value": "expert", "label": "Expert"}
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "content_type_compatibility": {
+    "name": ["name", "full_name", "title"],
+    "position": ["position", "job_title", "role"],
+    "biography": ["biography", "bio", "description", "long_description", "about", "content"],
+    "photo": ["photo", "image", "profile_image", "avatar"],
+    "email": ["email", "email_address", "contact_email"],
+    "phone": ["phone", "phone_number", "contact_phone", "telephone"],
+    "facebook": ["facebook_url", "facebook", "social_facebook"],
+    "twitter": ["twitter_url", "twitter", "social_twitter"],
+    "linkedin": ["linkedin_url", "linkedin", "social_linkedin"],
+    "instagram": ["instagram_url", "instagram", "social_instagram"],
+    "expertise": ["skills", "expertise", "competencies"],
+    "compatible_with": ["team_member", "staff", "employee", "person", "profile"]
+  }
+}

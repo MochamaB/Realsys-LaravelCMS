@@ -92,7 +92,7 @@
                 <select class="form-select" id="{{ $prefix }}field_{{ $field->id }}" 
                     name="field_{{ $field->id }}" {{ $field->is_required ? 'required' : '' }}>
                     <option value="">Select an option</option>
-                    @foreach(json_decode($field->options) as $option)
+                    @foreach($field->options()->orderBy('order_index')->get() as $option)
                         <option value="{{ $option->value }}" {{ $fieldValue == $option->value ? 'selected' : '' }}>
                             {{ $option->label }}
                         </option>
@@ -103,8 +103,8 @@
             @case('multiselect')
                 <select class="form-select" id="{{ $prefix }}field_{{ $field->id }}" 
                     name="field_{{ $field->id }}[]" multiple {{ $field->is_required ? 'required' : '' }}>
-                    @foreach(json_decode($field->options) as $option)
-                        @php 
+                    @foreach($field->options()->orderBy('order_index')->get() as $option)
+                       @php 
                             $selectedValues = is_array($fieldValue) ? $fieldValue : json_decode($fieldValue) ?? [];
                         @endphp
                         <option value="{{ $option->value }}" 
@@ -113,6 +113,30 @@
                         </option>
                     @endforeach
                 </select>
+                @break
+            @case('radio')
+                <div class="form-check">
+                    @foreach($field->options()->orderBy('order_index')->get() as $option)
+                        <input class="form-check-input" type="radio" id="{{ $prefix }}field_{{ $field->id }}_{{ $option->id }}" 
+                            name="field_{{ $field->id }}" value="{{ $option->value }}" 
+                            {{ $fieldValue == $option->value ? 'checked' : '' }}>
+                        <label class="form-check-label" for="{{ $prefix }}field_{{ $field->id }}_{{ $option->id }}">
+                            {{ $option->label }}
+                        </label>
+                    @endforeach
+                </div>
+                @break
+            @case('checkbox')
+                <div class="form-check">
+                    @foreach($field->options()->orderBy('order_index')->get() as $option)
+                        <input class="form-check-input" type="checkbox" id="{{ $prefix }}field_{{ $field->id }}_{{ $option->id }}" 
+                            name="field_{{ $field->id }}[]" value="{{ $option->value }}" 
+                            {{ in_array($option->value, $selectedValues) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="{{ $prefix }}field_{{ $field->id }}_{{ $option->id }}">
+                            {{ $option->label }}
+                        </label>
+                    @endforeach
+                </div>
                 @break
                 
             @case('image')

@@ -46,5 +46,14 @@
         ]
       }
     }
-  ]
+  ],
+  "content_type_compatibility": {
+    "compatible_with": ["*", "page", "post", "article", "product", "service", "project", "event", "news", "team_member", "testimonial", "faq", "gallery", "feature"],
+    "field_mappings": {
+      "title": ["title", "name", "heading", "subject", "label"],
+      "content": ["content", "description", "body", "text", "long_description", "details", "excerpt"],
+      "button_text": ["button_text", "cta_text", "action_text", "read_more"],
+      "button_url": ["button_url", "link", "url", "read_more_url", "cta_link"]
+    }
+  }
 }
