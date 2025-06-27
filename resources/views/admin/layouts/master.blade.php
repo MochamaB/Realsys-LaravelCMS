@@ -24,6 +24,7 @@
     <link href="{{ asset('assets/admin/css/sortable-components.css') }}" rel="stylesheet" type="text/css" />
     
     @yield('css')
+    @stack('styles')
 </head>
 
 <body>

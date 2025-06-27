@@ -16,7 +16,7 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="card-title mb-0">Widgets List</h4>
                     <div class="d-flex gap-2">
-                        <a href="{{ route('admin.themes.widgets.scan', $theme) }}" class="btn btn-success">
+                        <a href="{{ route('admin.widgets.scan', ['theme' => $theme->id]) }}" class="btn btn-success">
                             <i class="ri-scan-line align-bottom me-1"></i> Discover Widgets
                         </a>
                         
@@ -67,7 +67,7 @@
                                                 @if($widget->icon)
                                                     <i class="{{ $widget->icon }} me-2 text-muted"></i>
                                                 @endif
-                                                <a href="{{ route('admin.themes.widgets.show', [$widget->theme, $widget]) }}" class="fw-medium">
+                                                <a href="{{ route('admin.widgets.show',$widget) }}" class="fw-medium">
                                                     {{ $widget->name }}
                                                 </a>
                                             </div>
@@ -95,7 +95,7 @@
                                        
                                         <td>
                                             <div class="d-flex gap-2">
-                                                <a href="{{ route('admin.themes.widgets.show', [$widget->theme, $widget]) }}" 
+                                                <a href="{{ route('admin.widgets.show',$widget) }}" 
                                                    class="btn btn-sm btn-info view-item-btn">
                                                     <i class="ri-eye-line"></i>
                                                 </a>

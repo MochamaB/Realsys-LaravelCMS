@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\ThemeController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\WidgetController;
 use App\Http\Controllers\Admin\WidgetContentTypeController;
+use App\Http\Controllers\Admin\WidgetAssociationController;
 use App\Http\Controllers\Admin\PageSectionWidgetController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\UserViewSwitchController;
@@ -64,15 +65,14 @@ Route::middleware('admin.auth')->group(function () {
 
     // Widgets - Global routes
     Route::resource('widgets', WidgetController::class);
+    // Widget management routes
+    Route::get('/widgets', [WidgetController::class, 'index'])->name('widgets.index');
+    Route::get('/widgets/{widget}', [WidgetController::class, 'show'])->name('widgets.show');
     Route::get('/widgets/{widget}/preview', [WidgetController::class, 'preview'])->name('widgets.preview');
     Route::patch('/widgets/{widget}/toggle', [WidgetController::class, 'toggle'])->name('widgets.toggle');
     
-    // Theme-specific Widgets
-    Route::prefix('themes/{theme}')->name('themes.')->group(function () {
-        Route::get('/widgets', [WidgetController::class, 'index'])->name('widgets.index');
-        Route::get('/widgets/scan', [WidgetController::class, 'scanThemeWidgets'])->name('widgets.scan');
-        Route::get('/widgets/{widget}', [WidgetController::class, 'show'])->name('widgets.show');
-    });
+    // Widget discovery routes
+    Route::get('/widgets/scan/{theme?}', [WidgetController::class, 'scanThemeWidgets'])->name('widgets.scan');
     
     // Widget Content Type Associations
     Route::post('/widgets/{widget}/content-types', [WidgetContentTypeController::class, 'store'])->name('widgets.content-types.store');
@@ -82,6 +82,12 @@ Route::middleware('admin.auth')->group(function () {
     Route::get('/widgets/{widget}/code', [WidgetController::class, 'editWidgetCode'])->name('widgets.edit_code');
     Route::post('/widgets/{widget}/code', [WidgetController::class, 'updateWidgetCode'])->name('widgets.update_code');
     
+    // Widget Association routes
+    Route::post('/widgets/{widget}/associations', [WidgetAssociationController::class, 'store'])->name('widgets.associations.create');
+    Route::put('/widgets/associations/{association}/update', [WidgetAssociationController::class, 'update'])->name('widgets.associations.update');
+    Route::delete('/widgets/associations/{association}', [WidgetAssociationController::class, 'destroy'])->name('widgets.associations.delete');
+    Route::post('/widgets/associations/{association}/toggle', [WidgetAssociationController::class, 'toggle'])->name('widgets.associations.toggle');
+
     // Page Section Widgets
     Route::get('/pages/{page}/sections/{section}/widgets', [PageSectionWidgetController::class, 'index'])->name('pages.sections.widgets.index');
     Route::post('/pages/{page}/sections/{section}/widgets', [PageSectionWidgetController::class, 'store'])->name('pages.sections.widgets.store');

@@ -2,11 +2,17 @@
 
 namespace App\Services;
 
-use App\Models\Widget;
+use App\Models\PageSection;
 use App\Models\PageSectionWidget;
-use App\Models\WidgetFieldDefinition;
-use App\Models\WidgetContentTypeAssociation;
-use Illuminate\Support\Arr;
+use App\Models\Widget;
+use App\Models\WidgetDefinition;
+use App\Services\WidgetContentFetchService;
+use App\Services\WidgetContentCompatibilityService;
+use App\Services\WidgetContentAssociationService;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\View;
 
 class WidgetService
@@ -15,15 +21,39 @@ class WidgetService
      * @var ThemeManager
      */
     protected $themeManager;
+    
+    /**
+     * @var WidgetContentFetchService
+     */
+    protected $contentFetchService;
+    
+    /**
+     * @var WidgetContentCompatibilityService
+     */
+    protected $compatibilityService;
+    
+    /**
+     * @var WidgetContentAssociationService
+     */
+    protected $associationService;
 
     /**
-     * Constructor
-     *
+     * WidgetService constructor.
      * @param ThemeManager $themeManager
+     * @param WidgetContentFetchService $contentFetchService
+     * @param WidgetContentCompatibilityService $compatibilityService
+     * @param WidgetContentAssociationService $associationService
      */
-    public function __construct(ThemeManager $themeManager)
-    {
+    public function __construct(
+        ThemeManager $themeManager,
+        WidgetContentFetchService $contentFetchService,
+        WidgetContentCompatibilityService $compatibilityService,
+        WidgetContentAssociationService $associationService
+    ) {
         $this->themeManager = $themeManager;
+        $this->contentFetchService = $contentFetchService;
+        $this->compatibilityService = $compatibilityService;
+        $this->associationService = $associationService;
     }
 
     /**
@@ -149,55 +179,39 @@ class WidgetService
      */
     public function resolveWidgetViewPath(Widget $widget): string
     {
-        // If widget has explicit view_path, use that
-        if (!empty($widget->view_path)) {
-            return $this->formatViewPath($widget->view_path);
+        $theme = $widget->theme;
+        $widgetPath = "themes.{$theme->slug}.widgets.{$widget->slug}.view";
+
+        if (View::exists($widgetPath)) {
+            return $widgetPath;
         }
-        
-        // Otherwise use the widget slug to determine view path
-        $theme = $this->themeManager->getActiveTheme();
-        
-        // Check theme-specific path first
-        $themeWidgetPath = "theme::widgets.{$widget->slug}";
-        if ($this->viewExists($themeWidgetPath)) {
-            return $themeWidgetPath;
-        }
-        
-        // Check global widget path
-        $globalWidgetPath = "widgets.{$widget->slug}";
-        if ($this->viewExists($globalWidgetPath)) {
-            return $globalWidgetPath;
-        }
-        
-        // Fallback to a default widget template
-        return "theme::widgets.default";
+
+        // Fallback to default widget view if theme-specific one doesn't exist
+        return 'widgets.default';
     }
     
     /**
-     * Format view path to ensure it's properly namespaced
-     *
-     * @param string $path
-     * @return string
+     * Check if a widget is compatible with a content type
+     * 
+     * @param Widget $widget
+     * @param mixed $contentType
+     * @return array
      */
-    protected function formatViewPath(string $path): string
+    public function checkWidgetContentCompatibility($widget, $contentType): array
     {
-        // If path already has a namespace, return as is
-        if (strpos($path, '::') !== false) {
-            return $path;
-        }
-        
-        // If path starts with a slash, treat as absolute path
-        if (strpos($path, '/') === 0) {
-            return $path;
-        }
-        
-        // If path already starts with 'widgets.', just add theme namespace
-        if (strpos($path, 'widgets.') === 0) {
-            return 'theme::' . $path;
-        }
-        
-        // Otherwise, prefix with theme namespace and widgets directory
-        return "theme::widgets.{$path}";
+        return $this->compatibilityService->checkCompatibility($widget, $contentType);
+    }
+    
+    /**
+     * Generate field mappings for a widget and content type
+     * 
+     * @param Widget $widget
+     * @param mixed $contentType
+     * @return array
+     */
+    public function generateWidgetFieldMappings($widget, $contentType): array
+    {
+        return $this->compatibilityService->generateFieldMappings($widget, $contentType);
     }
     
     /**
@@ -212,41 +226,88 @@ class WidgetService
     }
     
     /**
-     * Get content for a widget based on its content type associations
+     * Get widget content from database based on content type association
+     *
+     * @param Widget $widget
+     * @param array $options Additional options for content fetching
+     * @return array
+     */
+    protected function getWidgetContent(Widget $widget, array $options = []): array
+    {
+        try {
+            // Use the specialized content fetch service
+            $collection = $this->contentFetchService->getContentForWidget($widget, $options);
+            
+            // Convert to array format for backwards compatibility
+            if ($collection) {
+                return $collection->toArray();
+            }
+            
+            return [];
+            
+        } catch (\Exception $e) {
+            Log::error('Error fetching widget content: ' . $e->getMessage(), [
+                'widget_id' => $widget->id,
+                'widget_slug' => $widget->slug
+            ]);
+            
+            // Fallback to legacy behavior in case of errors
+            return $this->getWidgetContentLegacy($widget);
+        }
+    }
+    
+    /**
+     * Legacy method for getting widget content (for backward compatibility)
      *
      * @param Widget $widget
      * @return array
      */
-    protected function getWidgetContent(Widget $widget): array
+    protected function getWidgetContentLegacy(Widget $widget): array
     {
-        // First try to get actual content from database based on content type associations
-        $content = $this->fetchContentFromDatabase($widget);
+        $contentData = [];
         
-        // If no content was found in the database, use default content
-        if (empty($content)) {
-            // Check the widget slug to determine what default content to provide
-            switch ($widget->slug) {
-                case 'post-list':
-                    $content = $this->getDefaultPostListContent();
-                    break;
-                    
-                case 'page-header':
-                    $content = $this->getDefaultHeaderContent();
-                    break;
-                    
-                case 'contact-form':
-                    $content = $this->getDefaultContactContent();
-                    break;
-                    
-                // Add more widget types as needed
-                
-                default:
-                    // Default empty content
-                    break;
-            }
+        // Check if widget has content type association
+        if (!$widget->contentTypeAssociations()->where('is_active', true)->exists()) {
+            return $contentData;
         }
         
-        return $content;
+        $association = $widget->contentTypeAssociations()->where('is_active', true)->first();
+        $contentType = $association->contentType;
+        $contentTable = $contentType->table_name;
+        
+        // Different handling based on widget slug
+        switch ($widget->slug) {
+            case 'post-list':
+                // For post lists, fetch multiple items
+                $limit = $association->options['limit'] ?? 10;
+                $contentData = DB::table($contentTable)
+                    ->select('*')
+                    ->limit($limit)
+                    ->get()
+                    ->toArray();
+                break;
+                
+            case 'page-header':
+            case 'featured-post':
+            case 'hero-banner':
+                // For single-item widgets, fetch first item
+                $contentItem = DB::table($contentTable)
+                    ->first();
+                    
+                if ($contentItem) {
+                    $contentData[] = (array)$contentItem;
+                }
+                break;
+                
+            default:
+                // Default behavior - fetch all items
+                $contentData = DB::table($contentTable)
+                    ->get()
+                    ->toArray();
+                break;
+        }
+        
+        return $contentData;
     }
     
     /**

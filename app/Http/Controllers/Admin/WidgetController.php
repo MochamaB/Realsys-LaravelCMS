@@ -15,32 +15,77 @@ class WidgetController extends Controller
     /**
      * Display a listing of the widgets.
      */
-    public function index(Theme $theme = null)
+    public function index()
     {
-        // If no theme is provided, use the active theme
+        // Always get the active theme
+        $theme = Theme::where('is_active', true)->first();
+        
         if (!$theme) {
-            $theme = Theme::where('is_active', true)->first();
+            return redirect()->route('admin.themes.index')
+                ->with('error', 'No active theme found. Please activate a theme first.');
         }
         
-        // Get widgets for the theme
+        // Get widgets for the active theme
         $widgets = $theme->widgets()->orderBy('name')->paginate(10);
         
-        // Get all themes for the filter dropdown
-        $themes = Theme::all();
-        
-        return view('admin.widgets.index', compact('theme', 'widgets', 'themes'));
+        return view('admin.widgets.index', compact('theme', 'widgets'));
     }
 
     /**
      * Display the specified widget.
      */
-    public function show(Theme $theme, Widget $widget)
+    public function show(Widget $widget, \App\Services\WidgetContentCompatibilityService $compatibilityService)
     {
-        // Load related data
-        $widget->load(['fieldDefinitions', 'contentTypes']);
-        $availableContentTypes = ContentType::whereNotIn('id', $widget->contentTypes->pluck('id'))->get();
-
-        return view('admin.widgets.show', compact('theme', 'widget', 'availableContentTypes'));
+        // Load relationships
+        $widget->load(['fieldDefinitions', 'contentTypeAssociations.contentType']);
+        
+        // Get available content types for relationships
+        $allContentTypes = ContentType::all();
+        $availableContentTypes = [];
+        
+        // Check compatibility for each content type
+        foreach ($allContentTypes as $contentType) {
+            $compatibility = $compatibilityService->checkCompatibility($widget, $contentType);
+            
+            if ($compatibility['compatible']) {
+                $availableContentTypes[] = $contentType;
+            }
+        }
+        
+        // Get widget view file and JSON file
+        $theme = $widget->theme;
+        $widgetDir = "resources/themes/{$theme->slug}/widgets/{$widget->slug}";
+        
+        // Get JSON content
+        $jsonPath = resource_path("themes/{$theme->slug}/widgets/{$widget->slug}/widget.json");
+        $jsonContent = '';
+        
+        if (file_exists($jsonPath)) {
+            $jsonContent = file_get_contents($jsonPath);
+            
+            // Pretty print JSON for display
+            if (!empty($jsonContent)) {
+                $jsonArray = json_decode($jsonContent, true);
+                if ($jsonArray) {
+                    $jsonContent = json_encode($jsonArray, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+                }
+            }
+        }
+        
+        // Get view file content
+        $viewPath = resource_path("themes/{$theme->slug}/widgets/{$widget->slug}/view.blade.php");
+        $viewContent = '';
+        
+        if (file_exists($viewPath)) {
+            $viewContent = file_get_contents($viewPath);
+        }
+        
+        return view('admin.widgets.show', compact(
+            'widget',
+            'availableContentTypes',
+            'jsonContent',
+            'viewContent'
+        ));
     }
 
     /**
@@ -68,9 +113,31 @@ class WidgetController extends Controller
 
     /**
      * Scan a theme for widgets and register them in the system
+     * 
+     * @param int|null $theme Optional theme ID parameter, defaults to active theme
+     * @param WidgetDiscoveryService $widgetDiscovery
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function scanThemeWidgets(Theme $theme, WidgetDiscoveryService $widgetDiscovery)
+    public function scanThemeWidgets($theme = null, WidgetDiscoveryService $widgetDiscovery)
     {
+        // If a theme ID is provided, find that theme
+        if ($theme) {
+            $theme = Theme::find($theme);
+            
+            if (!$theme) {
+                return redirect()->route('admin.widgets.index')
+                    ->with('error', 'Theme not found. Please check the theme ID.');
+            }
+        } else {
+            // Otherwise use the active theme
+            $theme = Theme::where('is_active', true)->first();
+            
+            if (!$theme) {
+                return redirect()->route('admin.widgets.index')
+                    ->with('error', 'No active theme found. Please activate a theme first.');
+            }
+        }
+        
         $result = $widgetDiscovery->discoverAndRegisterWidgets($theme);
         
         // Build a detailed message about discovery results
