@@ -3,9 +3,62 @@
   "slug": "iconcard",
   "description": "Display content cards with icons and text",
   "icon": "fa fa-id-card",
-  "settings": {
-    "section_padding": {
+  "fields": [
+    {
+      "name": "Icon Cards",
+      "slug": "icon_cards",
+      "field_type": "repeater",
+      "position": 2,
+      "is_required": true,
+      "description": "Cards with icons to display",
+      "min_items": 1,
+      "max_items": 12,
+      "subfields": [
+        {
+          "name": "Icon",
+          "slug": "icon",
+          "field_type": "select",
+          "is_required": true,
+          "description": "Font Awesome icon for the card",
+          "options": [
+            {"value": "fa fa-crosshairs", "label": "Target"},
+            {"value": "fa fa-lightbulb-o", "label": "Lightbulb"},
+            {"value": "fa fa-rocket", "label": "Rocket"},
+            {"value": "fa fa-cog", "label": "Gear"},
+            {"value": "fa fa-heart", "label": "Heart"},
+            {"value": "fa fa-check", "label": "Checkmark"},
+            {"value": "fa fa-star", "label": "Star"},
+            {"value": "fa fa-globe", "label": "Globe"}
+          ]
+        },
+        {
+          "name": "Heading",
+          "slug": "heading",
+          "field_type": "text",
+          "is_required": true,
+          "description": "Card heading"
+        },
+        {
+          "name": "Content",
+          "slug": "content",
+          "field_type": "textarea",
+          "is_required": true,
+          "description": "Card content text"
+        },
+        {
+          "name": "Link URL",
+          "slug": "link_url",
+          "field_type": "url",
+          "is_required": false,
+          "description": "Optional URL for the icon to link to"
+        }
+      ]
+    }
+  ],
+  "settings": [
+    {
       "name": "Section Padding",
+      "slug": "section_padding",
       "field_type": "select",
       "is_required": false,
       "description": "Padding size for the section",
@@ -17,15 +70,17 @@
       ],
       "default": "ptb-80"
     },
-    "background_color": {
+    {
       "name": "Background Color",
+      "slug": "background_color",
       "field_type": "color",
       "is_required": false,
       "description": "Background color for the section",
       "default": "#ffffff"
     },
-    "text_alignment": {
+    {
       "name": "Text Alignment",
+      "slug": "text_alignment",
       "field_type": "select",
       "is_required": false,
       "description": "Alignment of the cards",
@@ -36,8 +91,9 @@
       ],
       "default": "text-center"
     },
-    "cards_per_row": {
+    {
       "name": "Cards Per Row",
+      "slug": "cards_per_row",
       "field_type": "select",
       "is_required": false,
       "description": "Number of cards to display per row",
@@ -48,68 +104,6 @@
         {"value": "4", "label": "4 Cards"}
       ],
       "default": "3"
-    }
-  },
-  "fields": [
-    {
-      "name": "Section Title",
-      "slug": "section_title",
-      "field_type": "text",
-      "is_required": false,
-      "description": "Optional title for the section"
-    },
-    {
-      "name": "Icon Cards",
-      "slug": "icon_cards",
-      "field_type": "repeater",
-      "is_required": true,
-      "description": "Cards with icons to display",
-      "settings": {
-        "min_items": 1,
-        "max_items": 12,
-        "subfields": [
-          {
-            "name": "Icon",
-            "slug": "icon",
-            "field_type": "select",
-            "is_required": true,
-            "description": "Font Awesome icon for the card",
-            "settings": {
-              "options": [
-                {"value": "fa fa-crosshairs", "label": "Target"},
-                {"value": "fa fa-lightbulb-o", "label": "Lightbulb"},
-                {"value": "fa fa-rocket", "label": "Rocket"},
-                {"value": "fa fa-cog", "label": "Gear"},
-                {"value": "fa fa-heart", "label": "Heart"},
-                {"value": "fa fa-check", "label": "Checkmark"},
-                {"value": "fa fa-star", "label": "Star"},
-                {"value": "fa fa-globe", "label": "Globe"}
-              ]
-            }
-          },
-          {
-            "name": "Heading",
-            "slug": "heading",
-            "field_type": "text",
-            "is_required": true,
-            "description": "Card heading"
-          },
-          {
-            "name": "Content",
-            "slug": "content",
-            "field_type": "textarea",
-            "is_required": true,
-            "description": "Card content text"
-          },
-          {
-            "name": "Link URL",
-            "slug": "link_url",
-            "field_type": "url",
-            "is_required": false,
-            "description": "Optional URL for the icon to link to"
-          }
-        ]
-      }
     }
   ],
   "content_type_compatibility": {

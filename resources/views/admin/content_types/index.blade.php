@@ -2,14 +2,30 @@
 @extends('admin.layouts.master')
 
 @section('title', 'Content Types')
-@section('css')
-    <!-- Sweet Alert css-->
-    <link href="{{ asset('assets/admin/libs/sweetalert2/sweetalert2.min.css') }}" rel="stylesheet" type="text/css" />
-@endsection
+@push('css')
+.dropdown-menu {
+    z-index: 1000 !important;
+}
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    display: none;
+}
+
+.dropdown-menu.show {
+    display: block;
+}
+@endpush
 
 @section('content')
 <!-- Page title is now handled by the breadcrumb component -->
-<div class="container-fluid">
+
    
     <!-- Card for content types list -->
     <div class="row">
@@ -30,12 +46,13 @@
                             <p>Create a new content type to get started.</p>
                         </div>
                     @else
-                        <div class="table-responsive">
+                        <div class="">
                             <table class="table table-striped table-hover">
                                 <thead>
                                     <tr>
+                                        <th>#</th>
+                                        <th>Icon</th>
                                         <th>Name</th>
-                                        <th>Key</th>
                                         <th>Description</th>
                                         <th>Fields</th>
                                         <th>Status</th>
@@ -45,8 +62,9 @@
                                 <tbody>
                                     @foreach($contentTypes as $contentType)
                                         <tr>
+                                            <td>{{ $loop->iteration }}</td>
+                                            <td><i class="bx bx-{{ $contentType->icon }}"></i></td>
                                             <td>{{ $contentType->name }}</td>
-                                            <td><code>{{ $contentType->key }}</code></td>
                                             <td>{{ Str::limit($contentType->description, 50) }}</td>
                                             <td>{{ $contentType->fields->count() }}</td>
                                             <td>
@@ -57,46 +75,46 @@
                                                 @endif
                                             </td>
                                             <td>
-                                                        <div class="dropdown">
-                                                            <button class="btn btn-soft-secondary btn-sm " type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                                <i class="ri-more-fill align-middle"></i>
-                                                            </button>
-                                                            <ul class="dropdown-menu dropdown-menu-end">
-                                                                <li>
-                                                                    <a class="dropdown-item" href="{{ route('admin.content-types.show', $contentType) }}">
-                                                                        <i class="ri-eye-fill align-bottom me-2 text-muted"></i> View
-                                                                    </a>
-                                                                </li>
-                                                                <li>
-                                                                    <a class="dropdown-item" href="{{ route('admin.content-types.edit', $contentType) }}">
-                                                                        <i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Edit
-                                                                    </a>
-                                                                </li>
-                                                                <li>
-                                                                    <a class="dropdown-item" href="{{ route('admin.content-types.fields.index', $contentType) }}">
-                                                                        <i class="ri-list-check align-bottom me-2 text-muted"></i> Fields
-                                                                    </a>
-                                                                </li>
-                                                                <li>
-                                                                    <a class="dropdown-item" href="{{ route('admin.content-types.items.index', $contentType) }}">
-                                                                        <i class="ri-list-unordered align-bottom me-2 text-muted"></i> Content
-                                                                    </a>
-                                                                </li>
-                                                                @if(!$contentType->is_system)
-                                                                    <li class="dropdown-divider"></li>
-                                                                    <li>
-                                                                        <form action="{{ route('admin.content-types.destroy', $contentType) }}" method="POST" class="d-inline">
-                                                                            @csrf
-                                                                            @method('DELETE')
-                                                                            <button type="submit" class="dropdown-item remove-item-btn" onclick="return confirm('Are you sure you want to delete this content type?');">
-                                                                                <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i> Delete
-                                                                            </button>
-                                                                        </form>
-                                                                    </li>
-                                                                @endif
-                                                            </ul>
-                                                        </div>
-                                                    </td>
+                                                <div class="dropdown">
+                                                    <button class="btn btn-soft-secondary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton{{ $contentType->id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                                        <i class="ri-more-fill align-middle"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton{{ $contentType->id }}">
+                                                        <li>
+                                                            <a class="dropdown-item" href="{{ route('admin.content-types.show', $contentType) }}">
+                                                                <i class="ri-eye-fill align-bottom me-2 text-muted"></i> View
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a class="dropdown-item" href="{{ route('admin.content-types.edit', $contentType) }}">
+                                                                <i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Edit
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a class="dropdown-item" href="{{ route('admin.content-types.fields.index', $contentType) }}">
+                                                                <i class="ri-list-check align-bottom me-2 text-muted"></i> Fields
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a class="dropdown-item" href="{{ route('admin.content-types.items.index', $contentType) }}">
+                                                                <i class="ri-list-unordered align-bottom me-2 text-muted"></i> Content
+                                                            </a>
+                                                        </li>
+                                                        @if(!$contentType->is_system)
+                                                            <li class="dropdown-divider"></li>
+                                                            <li>
+                                                                <form action="{{ route('admin.content-types.destroy', $contentType) }}" method="POST" class="d-inline">
+                                                                    @csrf
+                                                                    @method('DELETE')
+                                                                    <button type="submit" class="dropdown-item remove-item-btn" onclick="return confirm('Are you sure you want to delete this content type?');">
+                                                                        <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i> Delete
+                                                                    </button>
+                                                                </form>
+                                                            </li>
+                                                        @endif
+                                                    </ul>
+                                                </div>
+                                            </td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -112,5 +130,5 @@
             </div>
         </div>
     </div>
-</div>
+
 @endsection

@@ -4,12 +4,13 @@
  * 
  * Available variables:
  * $widget - The widget instance
+ * $fields - Widget fields from content editor
  * $settings - Widget settings from admin panel
  */
 
 // Get field values with defaults
-$sectionTitle = $settings['section_title'] ?? '';
-$iconCards = $settings['icon_cards'] ?? [];
+$sectionTitle = $fields['section_title'] ?? '';
+$iconCards = $fields['icon_cards'] ?? [];
 
 // Get settings values with defaults
 $sectionPadding = $settings['section_padding'] ?? 'ptb-80';
@@ -36,8 +37,8 @@ switch($cardsPerRow) {
 }
 @endphp
 
-<div class="widget widget-iconcard">
-    <section class="what-area section-margin {{ $sectionPadding }}" style="background-color: {{ $backgroundColor }};">
+<section class="elements-area ptb-140 widget widget-iconcard">
+    <div class="what-area section-margin {{ $sectionPadding }}" style="background-color: {{ $backgroundColor }};">        
         <div class="container">
             @if(!empty($sectionTitle))
             <div class="row">
@@ -73,5 +74,5 @@ switch($cardsPerRow) {
                 @endforeach
             </div>
         </div>
-    </section>
-</div>
+    </div>
+</section>

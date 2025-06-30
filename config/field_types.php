@@ -28,7 +28,7 @@ return [
         'name' => 'Number',
         'icon' => 'hash',
         'description' => 'Numeric value',
-        'has_options' => true,
+        'has_options' => false,
     ],
     'date' => [
         'name' => 'Date',
@@ -123,9 +123,10 @@ return [
     // config/field_types.php
     'repeater' => [
         'name' => 'Repeater',
-        'icon' => 'layers',
+        'icon' => 'bracket-curly',
         'description' => 'Repeatable group of fields',
         'has_fields' => true,  // New attribute to indicate it contains sub-fields
+        'has_options' => false, // Doesn't need options like select fields
     ],
     'relation' => [
         'name' => 'Content Relation',

@@ -28,7 +28,7 @@
 @endphp
 
 <!-- Dynamic content fields -->
-<h5 class="mb-4">{{ $contentType->name }} Fields</h5>
+<h6 class="mb-4">Enter {{ $contentType->name }} values</h6>
 
 @foreach($fields as $field)
     <div class="mb-4">
@@ -210,6 +210,13 @@
                 <input type="email" class="form-control" id="{{ $prefix }}field_{{ $field->id }}" 
                     name="field_{{ $field->id }}" value="{{ $fieldValue }}" 
                     {{ $field->is_required ? 'required' : '' }}>
+                @break
+                
+            @case('repeater')
+                @include('admin.content_items.partials._repeater_field', [
+                    'field' => $field,
+                    'contentItem' => $contentItem
+                ])
                 @break
                 
             @case('phone')

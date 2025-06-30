@@ -18,7 +18,10 @@ class WidgetContentTypeAssociation extends Model
      */
     protected $fillable = [
         'widget_id',
-        'content_type',
+        'content_type_id',
+        'field_mappings',
+        'options',
+        'is_active',
         'filter_condition',
         'sort_field',
         'sort_direction',
@@ -31,8 +34,11 @@ class WidgetContentTypeAssociation extends Model
      * @var array<string, string>
      */
     protected $casts = [
+        'field_mappings' => 'array',
+        'options' => 'array',
         'filter_condition' => 'json',
         'limit' => 'integer',
+        'is_active' => 'boolean',
     ];
 
     // Sort direction method moved to bottom of class

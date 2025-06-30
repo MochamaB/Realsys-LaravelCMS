@@ -15,11 +15,13 @@ return new class extends Migration
             $table->id();
             $table->foreignId('widget_id')->constrained()->onDelete('cascade');
             $table->foreignId('content_type_id')->constrained()->onDelete('cascade');
+            $table->json('field_mappings')->nullable();
+            $table->json('options')->nullable();
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
             $table->softDeletes();
             
-            // Add unique constraint to prevent duplicate associations
-            $table->unique(['widget_id', 'content_type_id'], 'widget_content_type_unique');
+           
         });
     }
 

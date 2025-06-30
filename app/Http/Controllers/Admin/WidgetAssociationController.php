@@ -38,8 +38,15 @@ class WidgetAssociationController extends Controller
     {
         $request->validate([
             'content_type_id' => 'required|exists:content_types,id',
-            'auto_map' => 'nullable|boolean'
+            'auto_map' => 'nullable'
         ]);
+        
+        // Convert auto_map from checkbox value to boolean
+        $autoMap = false;
+        if ($request->has('auto_map')) {
+            // Convert various truthy values to boolean
+            $autoMap = in_array($request->input('auto_map'), [true, 'true', 1, '1', 'on', 'yes'], true);
+        }
 
         try {
             // Get the content type
@@ -56,7 +63,7 @@ class WidgetAssociationController extends Controller
             // Get field mappings
             $fieldMappings = [];
             
-            if ($request->boolean('auto_map', true)) {
+            if ($autoMap) {
                 // Auto-generate mappings
                 $fieldMappings = $this->compatibilityService->generateFieldMappings($widget, $contentType);
             } elseif ($request->has('field_mappings') && is_array($request->field_mappings)) {
@@ -194,6 +201,72 @@ class WidgetAssociationController extends Controller
             
             return redirect()->route('admin.widgets.show', $association->widget_id)
                 ->with('error', 'Failed to remove content type association: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Preview field mappings between a widget and content type
+     * 
+     * @param Request $request
+     * @param Widget $widget
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function previewMappings(Request $request, Widget $widget)
+    {
+        $request->validate([
+            'content_type_id' => 'required|exists:content_types,id'
+        ]);
+        
+        try {
+            // Get the content type
+            $contentType = ContentType::with('fields')->findOrFail($request->content_type_id);
+            
+            // Check compatibility
+            $compatibility = $this->compatibilityService->checkCompatibility($widget, $contentType);
+            
+            if (!$compatibility['compatible']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Widget is not compatible with this content type: ' . $compatibility['message']
+                ], 422);
+            }
+            
+            // Generate mappings
+            $fieldMappings = $this->compatibilityService->generateFieldMappings($widget, $contentType);
+            
+            // Get widget field info
+            $widgetFields = $widget->fieldDefinitions->keyBy('name');
+            
+            // Get content type field info
+            $contentFields = $contentType->fields->keyBy('name');
+            
+            // Prepare the response data with field details
+            $mappingDetails = [];
+            foreach ($fieldMappings as $widgetField => $contentField) {
+                $mappingDetails[] = [
+                    'widget_field' => $widgetField,
+                    'widget_field_type' => $widgetFields->has($widgetField) ? $widgetFields[$widgetField]->field_type : 'unknown',
+                    'content_field' => $contentField,
+                    'content_field_type' => $contentFields->has($contentField) ? $contentFields[$contentField]->field_type : 'unknown',
+                ];
+            }
+            
+            return response()->json([
+                'success' => true,
+                'mappings' => $mappingDetails,
+                'raw_mappings' => $fieldMappings
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Failed to preview widget association mappings: ' . $e->getMessage(), [
+                'widget_id' => $widget->id,
+                'content_type_id' => $request->content_type_id
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate field mappings: ' . $e->getMessage()
+            ], 500);
         }
     }
 }

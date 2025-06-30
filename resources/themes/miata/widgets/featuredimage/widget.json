@@ -5,24 +5,27 @@
   "icon": "ri-image-line",
   "fields": [
     {
-      "name": "Title",
-      "slug": "title",
-      "field_type": "text",
-      "is_required": false,
-      "description": "Optional title above the image"
-    },
-    {
       "name": "Image",
       "slug": "image",
       "field_type": "image",
       "is_required": true,
+      "position": 1,
       "description": "The main featured image"
+    },
+    {
+      "name": "Title",
+      "slug": "title",
+      "field_type": "text",
+      "is_required": false,
+      "position": 2,
+      "description": "Optional title above the image"
     },
     {
       "name": "Caption",
       "slug": "caption",
       "field_type": "text",
       "is_required": false,
+      "position": 3,
       "description": "Optional caption text below the image"
     },
     {
@@ -30,22 +33,23 @@
       "slug": "link_url",
       "field_type": "url",
       "is_required": false,
+      "position": 4,
       "description": "Optional URL for the image to link to"
-    },
+    }
+  ],
+  "settings": [
     {
       "name": "Display Style",
       "slug": "display_style",
       "field_type": "select",
       "is_required": false,
       "description": "How to display the featured image",
-      "settings": {
-        "options": [
-          {"value": "default", "label": "Default"},
-          {"value": "rounded", "label": "Rounded Corners"},
-          {"value": "circle", "label": "Circle"},
-          {"value": "polaroid", "label": "Polaroid Style"}
-        ]
-      }
+      "options": [
+        {"value": "default", "label": "Default"},
+        {"value": "rounded", "label": "Rounded Corners"},
+        {"value": "circle", "label": "Circle"},
+        {"value": "polaroid", "label": "Polaroid Style"}
+      ]
     },
     {
       "name": "Image Size",
@@ -53,14 +57,12 @@
       "field_type": "select",
       "is_required": false,
       "description": "Size of the featured image",
-      "settings": {
-        "options": [
-          {"value": "small", "label": "Small"},
-          {"value": "medium", "label": "Medium"},
-          {"value": "large", "label": "Large"},
-          {"value": "full", "label": "Full Width"}
-        ]
-      }
+      "options": [
+        {"value": "small", "label": "Small"},
+        {"value": "medium", "label": "Medium"},
+        {"value": "large", "label": "Large"},
+        {"value": "full", "label": "Full Width"}
+      ]
     }
   ]
 }

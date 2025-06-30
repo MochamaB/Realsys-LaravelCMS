@@ -48,7 +48,7 @@ class ContentFieldValue extends Model
             return $this->value;
         }
 
-        switch ($this->field->type) {
+        switch ($this->field->field_type) {
             case 'date':
                 return $this->value ? date('Y-m-d', strtotime($this->value)) : null;
             case 'datetime':
@@ -59,6 +59,8 @@ class ContentFieldValue extends Model
                 return is_numeric($this->value) ? (float) $this->value : null;
             case 'json':
                 return $this->value ? json_decode($this->value, true) : null;
+            case 'repeater':
+                return $this->value ? json_decode($this->value, true) : [];
             default:
                 return $this->value;
         }

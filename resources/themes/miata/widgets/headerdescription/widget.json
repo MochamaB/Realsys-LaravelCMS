@@ -3,6 +3,29 @@
   "slug": "headerdescription",
   "description": "A header section with title, icon and description text",
   "icon": "ri-h-1",
+  "fields": [
+    {
+      "name": "Title",
+      "slug": "title",
+      "field_type": "text",
+      "is_required": true,
+      "description": "The main heading text"
+    },
+    {
+      "name": "Icon",
+      "slug": "icon",
+      "field_type": "image",
+      "is_required": false,
+      "description": "Icon image for the header"
+    },
+    {
+      "name": "Description",
+      "slug": "description",
+      "field_type": "textarea",
+      "is_required": false,
+      "description": "Description text below the header"
+    }
+  ],
   "settings": {
     "alignment": {
       "name": "Text Alignment",
@@ -15,21 +38,6 @@
         {"value": "text-right", "label": "Right"}
       ],
       "default": "text-center"
-    },
-    "icon": {
-      "name": "Header Icon",
-      "field_type": "select",
-      "is_required": false,
-      "description": "Icon to display with the header",
-      "options": [
-        {"value": "fa fa-bookmark", "label": "Bookmark"},
-        {"value": "fa fa-star", "label": "Star"},
-        {"value": "fa fa-heart", "label": "Heart"},
-        {"value": "fa fa-check", "label": "Checkmark"},
-        {"value": "fa fa-flag", "label": "Flag"},
-        {"value": "", "label": "None"}
-      ],
-      "default": "fa fa-bookmark"
     },
     "background_color": {
       "name": "Background Color",
@@ -50,21 +58,5 @@
       ],
       "default": "p-4"
     }
-  },
-  "fields": [
-    {
-      "name": "Title",
-      "slug": "title",
-      "field_type": "text",
-      "is_required": true,
-      "description": "The main heading text"
-    },
-    {
-      "name": "Description",
-      "slug": "description",
-      "field_type": "textarea",
-      "is_required": false,
-      "description": "Description text below the header"
-    }
-  ]
+  }
 }

@@ -97,7 +97,7 @@ class ContentItemController extends Controller
         // Process field values
         $this->processFieldValues($contentItem, $contentType, $request);
         
-        return redirect()->route('admin.content-items.edit', [$contentType, $contentItem])
+        return redirect()->route('admin.content-types.show', $contentType)
             ->with('success', 'Content item created successfully.');
     }
 
@@ -231,6 +231,100 @@ class ContentItemController extends Controller
                 $fieldValue = $request->has('field_' . $field->id) ? '1' : '0';
             } elseif ($field->field_type == 'json' && is_array($fieldValue)) {
                 $fieldValue = json_encode($fieldValue);
+            } elseif ($field->field_type == 'repeater') {
+                // For repeater fields, normalize and encode the array of items
+                if (is_array($fieldValue)) {
+                    // Process each repeater item
+                    foreach ($fieldValue as $index => $itemData) {
+                        if (is_array($itemData)) {
+                            // Process file uploads and handle image data within each repeater item
+                            foreach ($itemData as $subFieldKey => $subFieldValue) {
+                                // Get the subfield configuration
+                                $fieldSettings = json_decode($field->settings, true);
+                                $subfields = $fieldSettings['subfields'] ?? [];
+                                $subFieldType = null;
+                                
+                                // Find the subfield type
+                                foreach ($subfields as $subfield) {
+                                    if ($subfield['name'] == $subFieldKey) {
+                                        $subFieldType = $subfield['type'];
+                                        break;
+                                    }
+                                }
+                                
+                                if ($subFieldType == 'image') {
+                                    $fileKey = "field_{$field->id}_{$index}_{$subFieldKey}";
+                                    
+                                    // Case 1: New file upload
+                                    if ($request->hasFile($fileKey)) {
+                                        $uploadedFile = $request->file($fileKey);
+                                        
+                                        // Use the repeater_images collection which can store multiple files
+                                        $media = $contentItem->addMedia($uploadedFile)
+                                            ->toMediaCollection('repeater_images');
+                                        
+                                        // Store the media ID and URL in the field value for future reference
+                                        $fieldValue[$index][$subFieldKey] = [
+                                            'id' => $media->id,
+                                            'url' => $media->getUrl(),
+                                            'name' => $media->file_name
+                                        ];
+                                        
+                                        // If there's an existing image, find and delete it
+                                        if (is_array($subFieldValue) && isset($subFieldValue['id'])) {
+                                            $existingMedia = $contentItem->getMedia('repeater_images')
+                                                ->where('id', $subFieldValue['id'])
+                                                ->first();
+                                                
+                                            if ($existingMedia) {
+                                                $existingMedia->delete();
+                                            }
+                                        }
+                                    }
+                                    // Case 2: Remove existing image
+                                    elseif (is_array($subFieldValue) && isset($subFieldValue['_remove']) && $subFieldValue['_remove'] == '1') {
+                                        // Find and delete the media
+                                        if (isset($subFieldValue['id'])) {
+                                            $existingMedia = $contentItem->getMedia('repeater_images')
+                                                ->where('id', $subFieldValue['id'])
+                                                ->first();
+                                                
+                                            if ($existingMedia) {
+                                                $existingMedia->delete();
+                                            }
+                                        }
+                                        
+                                        // Remove this field from the data
+                                        unset($fieldValue[$index][$subFieldKey]);
+                                    }
+                                    // Case 3: Keep existing image
+                                    elseif (is_array($subFieldValue) && isset($subFieldValue['id'])) {
+                                        // Keep the existing image data
+                                        $fieldValue[$index][$subFieldKey] = [
+                                            'id' => $subFieldValue['id'],
+                                            'url' => $subFieldValue['url'],
+                                            'name' => $subFieldValue['name']
+                                        ];
+                                    }
+                                }
+                            }
+                            
+                            // Remove empty values to save space
+                            $fieldValue[$index] = array_filter($itemData, function($value) {
+                                return $value !== null && $value !== '';
+                            });
+                        }
+                    }
+                    
+                    // Re-index array to ensure sequential keys
+                    $fieldValue = array_values($fieldValue);
+                    
+                    // Convert to JSON for storage
+                    $fieldValue = json_encode($fieldValue);
+                } else {
+                    // If no data, store as empty array
+                    $fieldValue = json_encode([]);
+                }
             }
             
             // Find existing field value or create new one
@@ -262,4 +356,4 @@ class ContentItemController extends Controller
             }
         }
     }
-}
+}  

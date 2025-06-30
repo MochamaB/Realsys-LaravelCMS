@@ -3,6 +3,91 @@
   "slug": "team",
   "description": "Display team members with images, titles and social links",
   "icon": "fa fa-users",
+  "fields": [
+    {
+      "name": "Section Title",
+      "slug": "section_title",
+      "field_type": "text",
+      "is_required": false,
+      "description": "Optional title for the team section"
+    },
+    {
+      "name": "Section Description",
+      "slug": "section_description",
+      "field_type": "textarea",
+      "is_required": false,
+      "description": "Optional description for the team section"
+    },
+    {
+      "name": "Team Members",
+      "slug": "team_members",
+      "field_type": "repeater",
+      "is_required": true,
+      "description": "Team members to display",
+      "settings": {
+        "min_items": 1,
+        "max_items": 12,
+        "subfields": [
+          {
+            "name": "Photo",
+            "slug": "photo",
+            "field_type": "image",
+            "is_required": true,
+            "description": "Team member photo"
+          },
+          {
+            "name": "Name",
+            "slug": "name",
+            "field_type": "text",
+            "is_required": true,
+            "description": "Team member name"
+          },
+          {
+            "name": "Designation",
+            "slug": "designation",
+            "field_type": "text",
+            "is_required": true,
+            "description": "Team member job title or position"
+          },
+          {
+            "name": "Bio",
+            "slug": "bio",
+            "field_type": "textarea",
+            "is_required": false,
+            "description": "Team member biography or description"
+          },
+          {
+            "name": "Facebook URL",
+            "slug": "facebook",
+            "field_type": "url",
+            "is_required": false,
+            "description": "Team member Facebook profile URL"
+          },
+          {
+            "name": "Twitter URL",
+            "slug": "twitter",
+            "field_type": "url",
+            "is_required": false,
+            "description": "Team member Twitter profile URL"
+          },
+          {
+            "name": "LinkedIn URL",
+            "slug": "linkedin",
+            "field_type": "url",
+            "is_required": false,
+            "description": "Team member LinkedIn profile URL"
+          },
+          {
+            "name": "Instagram URL",
+            "slug": "instagram",
+            "field_type": "url",
+            "is_required": false,
+            "description": "Team member Instagram profile URL"
+          }
+        ]
+      }
+    }
+  ],
   "settings": {
     "section_padding": {
       "name": "Section Padding",
@@ -57,97 +142,13 @@
       "default": true
     }
   },
-  "fields": [
-    {
-      "name": "Section Title",
-      "slug": "section_title",
-      "field_type": "text",
-      "is_required": false,
-      "description": "Optional title for the team section"
-    },
-    {
-      "name": "Section Description",
-      "slug": "section_description",
-      "field_type": "textarea",
-      "is_required": false,
-      "description": "Optional description for the team section"
-    },
-    {
-      "name": "Team Members",
-      "slug": "team_members",
-      "field_type": "repeater",
-      "is_required": true,
-      "description": "Team members to display",
-      "settings": {
-        "min_items": 1,
-        "max_items": 12,
-        "subfields": [
-          {
-            "name": "Photo",
-            "slug": "photo",
-            "field_type": "image",
-            "is_required": true,
-            "description": "Team member photo"
-          },
-          {
-            "name": "Name",
-            "slug": "name",
-            "field_type": "text",
-            "is_required": true,
-            "description": "Team member name"
-          },
-          {
-            "name": "Position",
-            "slug": "position",
-            "field_type": "text",
-            "is_required": true,
-            "description": "Team member job title or position"
-          },
-          {
-            "name": "Bio",
-            "slug": "bio",
-            "field_type": "textarea",
-            "is_required": false,
-            "description": "Team member biography or description"
-          },
-          {
-            "name": "Facebook URL",
-            "slug": "facebook",
-            "field_type": "url",
-            "is_required": false,
-            "description": "Team member Facebook profile URL"
-          },
-          {
-            "name": "Twitter URL",
-            "slug": "twitter",
-            "field_type": "url",
-            "is_required": false,
-            "description": "Team member Twitter profile URL"
-          },
-          {
-            "name": "LinkedIn URL",
-            "slug": "linkedin",
-            "field_type": "url",
-            "is_required": false,
-            "description": "Team member LinkedIn profile URL"
-          },
-          {
-            "name": "Instagram URL",
-            "slug": "instagram",
-            "field_type": "url",
-            "is_required": false,
-            "description": "Team member Instagram profile URL"
-          }
-        ]
-      }
-    }
-  ],
+
   "content_type_compatibility": {
     "team_members": {
       "compatible_with": ["team_member", "staff", "employee"],
       "field_mappings": {
         "name": ["name", "full_name", "title"],
-        "position": ["position", "job_title", "role"],
+        "designation": ["designation", "job_title", "role", "title", "position"],
         "bio": ["bio", "description", "about"],
         "photo": ["photo", "image", "avatar"],
         "facebook": ["facebook_url", "facebook"],

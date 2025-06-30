@@ -135,8 +135,15 @@ class ContentItem extends Model implements HasMedia
  */
     public function registerMediaCollections(): void
     {
+        // Main content image collection (single file)
         $this->addMediaCollection('images')
             ->singleFile()
+            ->useDisk('media')
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/gif'])
+            ->withResponsiveImages();
+            
+        // Repeater field images collection (multiple files)
+        $this->addMediaCollection('repeater_images')
             ->useDisk('media')
             ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/gif'])
             ->withResponsiveImages();

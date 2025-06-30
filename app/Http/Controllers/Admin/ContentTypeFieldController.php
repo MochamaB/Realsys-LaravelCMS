@@ -55,7 +55,8 @@ class ContentTypeFieldController extends Controller
      */
     public function store(Request $request, ContentType $contentType)
     {
-        $validated = $request->validate([
+        // Basic validation rules
+        $validationRules = [
             'name' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255',
             'field_type' => 'required|string|max:50',
@@ -68,7 +69,20 @@ class ContentTypeFieldController extends Controller
             'options' => 'nullable|array',
             'options.*.value' => 'nullable|string',
             'options.*.label' => 'nullable|string',
-        ]);
+        ];
+        
+        // Add specific validation for repeater fields
+        if ($request->input('field_type') === 'repeater') {
+            // If it's a repeater field, we should have subfields in the settings
+            $validationRules['subfields'] = 'sometimes|array';
+            $validationRules['subfields.*.name'] = 'required|string';
+            $validationRules['subfields.*.label'] = 'required|string';
+            $validationRules['subfields.*.type'] = 'required|string';
+            $validationRules['repeater_min_items'] = 'sometimes|integer|min:0';
+            $validationRules['repeater_max_items'] = 'sometimes|integer|min:0';
+        }
+        
+        $validated = $request->validate($validationRules);
         
         // Generate slug if not provided
         if (empty($validated['slug'])) {
@@ -79,6 +93,11 @@ class ContentTypeFieldController extends Controller
         $existingField = $contentType->fields()->where('slug', $validated['slug'])->first();
         if ($existingField) {
             $validated['slug'] = $validated['slug'] . '_' . time();
+        }
+        
+        // Process settings for repeater fields
+        if ($validated['field_type'] === 'repeater' && !isset($validated['settings'])) {
+            $validated['settings'] = $this->processRepeaterSettings($request);
         }
         
         // Create the field
@@ -115,9 +134,51 @@ class ContentTypeFieldController extends Controller
     private function getFieldTypesWithOptions()
     {
         return collect(config('field_types'))
-            ->filter(fn($type) => $type['has_options'])
+            ->filter(function($type) { 
+                return isset($type['has_options']) && $type['has_options']; 
+            })
             ->keys()
             ->toArray();
+    }
+    
+    /**
+     * Process repeater field settings from the request
+     * 
+     * @param Request $request
+     * @return string JSON string of processed settings
+     */
+    private function processRepeaterSettings(Request $request)
+    {
+        // Build the settings array for the repeater field
+        $settings = [
+            'subfields' => [],
+            'min_items' => $request->input('repeater_min_items', 1),
+            'max_items' => $request->input('repeater_max_items', 10),
+        ];
+        
+        // Process subfields if present
+        if ($request->has('subfields')) {
+            $subfields = $request->input('subfields', []);
+            
+            foreach ($subfields as $subfieldData) {
+                if (empty($subfieldData['name']) || empty($subfieldData['type'])) {
+                    continue; // Skip incomplete subfields
+                }
+                
+                $subfield = [
+                    'name' => $subfieldData['name'],
+                    'label' => $subfieldData['label'] ?? $subfieldData['name'],
+                    'type' => $subfieldData['type'],
+                    'required' => isset($subfieldData['required']),
+                    'settings' => [] // Empty settings for simple field types
+                ];
+                
+                $settings['subfields'][] = $subfield;
+            }
+        }
+        
+        // Return as JSON string
+        return json_encode($settings);
     }
 
     /**
@@ -152,7 +213,8 @@ class ContentTypeFieldController extends Controller
      */
     public function update(Request $request, ContentType $contentType, ContentTypeField $field)
     {
-        $validated = $request->validate([
+        // Basic validation rules
+        $validationRules = [
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255',
             'field_type' => 'required|string|max:50',
@@ -165,7 +227,19 @@ class ContentTypeFieldController extends Controller
             'options' => 'nullable|array',
             'options.*.value' => 'nullable|string',
             'options.*.label' => 'nullable|string',
-        ]);
+        ];
+        
+        // Add specific validation for repeater fields
+        if ($request->input('field_type') === 'repeater') {
+            $validationRules['subfields'] = 'sometimes|array';
+            $validationRules['subfields.*.name'] = 'required|string';
+            $validationRules['subfields.*.label'] = 'required|string';
+            $validationRules['subfields.*.type'] = 'required|string';
+            $validationRules['repeater_min_items'] = 'sometimes|integer|min:0';
+            $validationRules['repeater_max_items'] = 'sometimes|integer|min:0';
+        }
+        
+        $validated = $request->validate($validationRules);
         
         // Make sure field slug is unique for this content type (excluding current field)
         $existingField = $contentType->fields()
@@ -175,6 +249,11 @@ class ContentTypeFieldController extends Controller
             
         if ($existingField) {
             $validated['slug'] = $validated['slug'] . '_' . time();
+        }
+        
+        // Process settings for repeater fields
+        if ($validated['field_type'] === 'repeater' && !isset($validated['settings'])) {
+            $validated['settings'] = $this->processRepeaterSettings($request);
         }
         
         // Update the field

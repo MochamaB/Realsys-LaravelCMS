@@ -4,14 +4,20 @@
  * 
  * Available variables:
  * $widget - The widget instance
+ * $fields - Widget fields from content editor
  * $settings - Widget settings from admin panel
  */
 
-// Set default values if settings are not provided
+// Extract field values with defaults
+$icon = $fields['icon'] ?? '';
+$topText = $fields['top_text'] ?? '';
+$counterNumber = $fields['counter_number'] ?? 0;
+
+// Extract settings with defaults
+$countSuffix = $settings['count_suffix'] ?? '';
 $backgroundColor = $settings['background_color'] ?? '#f6f6f6';
 $padding = $settings['padding'] ?? 'ptb-70';
 $animationSpeed = $settings['animation_speed'] ?? 2000;
-$counterItems = $settings['counter_items'] ?? [];
 $layoutStyle = $settings['layout_style'] ?? 'default';
 
 // Generate a unique ID for this counter instance
@@ -35,38 +41,36 @@ switch ($layoutStyle) {
 }
 @endphp
 
-<div class="widget widget-counter">
-    <section class="counter_area {{ $padding }}" style="background-color: {{ $backgroundColor }};">
+<section class="elements-area ptb-140 widget widget-counter">
+    <div class="counter_area {{ $padding }}" style="background-color: {{ $backgroundColor }};">
         <div class="container">
             <div class="row {{ $containerClass }}">
-                @foreach($counterItems as $item)
-                    <div class="col-lg-{{ 12 / min(count($counterItems), 4) }} col-md-{{ 12 / min(count($counterItems), 3) }} col-12">
-                        <div class="counter-all {{ $counterClass }}">
-                            <div class="counter-top">
-                                <a href="javascript:void(0);">
-                                    @if(isset($item['icon']) && !empty($item['icon']))
-                                        <img src="{{ $item['icon'] }}" alt="{{ $item['title'] ?? '' }}" class="counter-icon">
-                                    @endif
-                                </a>
-                            </div>
-                            <div class="counter-bottom">
-                                <div class="counter-next">
-                                    <h2>{{ $item['title'] ?? 'Counter' }}</h2>
-                                </div>
-                                <div class="counter cnt-one res" 
-                                     data-count="{{ $item['count_value'] ?? 0 }}" 
-                                     data-speed="{{ $animationSpeed }}">0</div>
-                                @if(isset($item['count_suffix']) && !empty($item['count_suffix']))
-                                    <span class="counter-suffix">{{ $item['count_suffix'] }}</span>
+                <div class="col-md-6 offset-md-3 col-lg-4 offset-lg-4">
+                    <div class="counter-all {{ $counterClass }}">
+                        <div class="counter-top">
+                            <a href="javascript:void(0);">
+                                @if(!empty($icon))
+                                    <img src="{{ $icon }}" alt="{{ $topText }}" class="counter-icon">
                                 @endif
+                            </a>
+                        </div>
+                        <div class="counter-bottom">
+                            <div class="counter-next">
+                                <h2>{{ $topText }}</h2>
                             </div>
+                            <div class="counter cnt-one res" 
+                                 data-count="{{ $counterNumber }}" 
+                                 data-speed="{{ $animationSpeed }}">0</div>
+                            @if(!empty($countSuffix))
+                                <span class="counter-suffix">{{ $countSuffix }}</span>
+                            @endif
                         </div>
                     </div>
-                @endforeach
+                </div>
             </div>
         </div>
-    </section>
-</div>
+    </div>
+</section>
 
 @push('scripts')
 <script>

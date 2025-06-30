@@ -91,16 +91,6 @@ switch($membersPerRow) {
                             @endif
                         </div>
                         
-                        <div class="team-info mt-3">
-                            <h3>{{ $member['name'] ?? 'Team Member' }}</h3>
-                            <span class="position">{{ $member['position'] ?? 'Position' }}</span>
-                            
-                            @if(!empty($member['bio']))
-                            <div class="bio mt-2">
-                                <p>{{ $member['bio'] }}</p>
-                            </div>
-                            @endif
-                        </div>
                     </div>
                 </div>
                 @endforeach

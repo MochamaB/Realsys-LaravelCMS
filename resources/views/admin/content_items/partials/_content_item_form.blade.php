@@ -19,23 +19,24 @@
     <div class="card-body">
         <!-- Title -->
         <div class="mb-3">
-            <label for="{{ $prefix }}title" class="form-label">Title</label>
+            <label for="{{ $prefix }}title" class="form-label">Title</label><span class="text-danger fs-3">*</span>
             <input type="text" class="form-control" id="{{ $prefix }}title" name="title" 
                 value="{{ old('title', $contentItem->title ?? '') }}" required>
+                <small class="text-muted">Add the Page Name for clarity</small>
         </div>
         
       
         
         <!-- Slug -->
         <div class="mb-3">
-            <label for="{{ $prefix }}slug" class="form-label">Slug</label>
+            <label for="{{ $prefix }}slug" class="form-label">Slug</label><span class="text-danger fs-3">*</span>
             <input type="text" class="form-control" id="{{ $prefix }}slug" name="slug" 
                 value="{{ old('slug', $contentItem->slug ?? '') }}">
             <small class="text-muted">Leave empty to auto-generate from title</small>
         </div>
           <!-- Status -->
           <div class="mb-3">
-            <label class="form-label">Status</label>
+            <label class="form-label">Status</label><span class="text-danger fs-3">*</span>
             <select class="form-select" name="status" required>
                 <option value="draft" {{ old('status', $contentItem->status ?? 'draft') == 'draft' ? 'selected' : '' }}>Draft</option>
                 <option value="published" {{ old('status', $contentItem->status ?? '') == 'published' ? 'selected' : '' }}>Published</option>

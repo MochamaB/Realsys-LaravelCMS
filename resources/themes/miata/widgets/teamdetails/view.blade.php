@@ -4,21 +4,22 @@
  * 
  * Available variables:
  * $widget - The widget instance
+ * $fields - Widget fields for content
  * $settings - Widget settings from admin panel
  */
 
 // Get field values with defaults
-$photo = $settings['photo'] ?? null;
-$name = $settings['name'] ?? '';
-$position = $settings['position'] ?? '';
-$biography = $settings['biography'] ?? '';
-$email = $settings['email'] ?? '';
-$phone = $settings['phone'] ?? '';
-$facebook = $settings['facebook'] ?? '';
-$twitter = $settings['twitter'] ?? '';
-$linkedin = $settings['linkedin'] ?? '';
-$instagram = $settings['instagram'] ?? '';
-$expertise = $settings['expertise'] ?? [];
+$photo = $fields['photo'] ?? null;
+$name = $fields['name'] ?? '';
+$position = $fields['position'] ?? '';
+$biography = $fields['biography'] ?? '';
+$email = $fields['email'] ?? '';
+$phone = $fields['phone'] ?? '';
+$facebook = $fields['facebook'] ?? '';
+$twitter = $fields['twitter'] ?? '';
+$linkedin = $fields['linkedin'] ?? '';
+$instagram = $fields['instagram'] ?? '';
+$expertise = $fields['expertise'] ?? [];
 
 // Get settings values with defaults
 $layoutStyle = $settings['layout_style'] ?? 'standard';
@@ -60,131 +61,72 @@ switch($layoutStyle) {
         break;
 }
 @endphp
-
-<div class="widget widget-teamdetails">
-    <section class="team-details {{ $sectionPadding }}" style="background-color: {{ $backgroundColor }};">
-        <div class="container">
-            @if($imagePosition === 'top')
-                <div class="{{ $imageClasses }}">
-                    @if($photo)
-                        <img src="{{ $photo }}" alt="{{ $name }}" class="img-fluid rounded team-detail-image">
-                    @else
-                        <div class="placeholder-image" style="height: 350px; width: 350px; margin: 0 auto; background-color: #f2f2f2; display: flex; align-items: center; justify-content: center;">
-                            <i class="fa fa-user fa-4x" style="color: #cccccc;"></i>
-                        </div>
-                    @endif
-                </div>
-            @endif
-            
-            <div class="{{ $containerClasses }}">
-                @if($imagePosition !== 'top')
-                    <div class="{{ $imageClasses }}">
-                        @if($photo)
-                            <img src="{{ $photo }}" alt="{{ $name }}" class="img-fluid rounded team-detail-image">
-                        @else
-                            <div class="placeholder-image" style="height: 100%; min-height: 300px; background-color: #f2f2f2; display: flex; align-items: center; justify-content: center;">
-                                <i class="fa fa-user fa-4x" style="color: #cccccc;"></i>
-                            </div>
-                        @endif
-                        
-                        @if($showSocial && ($facebook || $twitter || $linkedin || $instagram))
-                            <div class="team-social-links mt-3">
-                                @if($facebook)
-                                    <a href="{{ $facebook }}" target="_blank" class="social-icon"><i class="fa fa-facebook"></i></a>
-                                @endif
-                                
-                                @if($twitter)
-                                    <a href="{{ $twitter }}" target="_blank" class="social-icon"><i class="fa fa-twitter"></i></a>
-                                @endif
-                                
-                                @if($linkedin)
-                                    <a href="{{ $linkedin }}" target="_blank" class="social-icon"><i class="fa fa-linkedin"></i></a>
-                                @endif
-                                
-                                @if($instagram)
-                                    <a href="{{ $instagram }}" target="_blank" class="social-icon"><i class="fa fa-instagram"></i></a>
-                                @endif
-                            </div>
-                        @endif
-                    </div>
-                @endif
-                
-                <div class="{{ $contentClasses }}">
-                    <div class="team-member-info">
-                        <h2 class="member-name">{{ $name }}</h2>
-                        <p class="member-position">{{ $position }}</p>
-                        
-                        @if($showContactInfo && ($email || $phone))
-                            <div class="contact-info mb-4">
-                                @if($email)
-                                    <p><i class="fa fa-envelope mr-2"></i> <a href="mailto:{{ $email }}">{{ $email }}</a></p>
-                                @endif
-                                
-                                @if($phone)
-                                    <p><i class="fa fa-phone mr-2"></i> <a href="tel:{{ $phone }}">{{ $phone }}</a></p>
-                                @endif
-                            </div>
-                        @endif
-                        
-                        @if($imagePosition === 'top' && $showSocial && ($facebook || $twitter || $linkedin || $instagram))
-                            <div class="team-social-links mb-4">
-                                @if($facebook)
-                                    <a href="{{ $facebook }}" target="_blank" class="social-icon"><i class="fa fa-facebook"></i></a>
-                                @endif
-                                
-                                @if($twitter)
-                                    <a href="{{ $twitter }}" target="_blank" class="social-icon"><i class="fa fa-twitter"></i></a>
-                                @endif
-                                
-                                @if($linkedin)
-                                    <a href="{{ $linkedin }}" target="_blank" class="social-icon"><i class="fa fa-linkedin"></i></a>
-                                @endif
-                                
-                                @if($instagram)
-                                    <a href="{{ $instagram }}" target="_blank" class="social-icon"><i class="fa fa-instagram"></i></a>
-                                @endif
-                            </div>
-                        @endif
-                        
-                        <div class="member-biography">
-                            {!! $biography !!}
-                        </div>
-                        
-                        @if(!empty($expertise))
-                            <div class="expertise-area mt-4">
-                                <h4>Areas of Expertise</h4>
-                                <div class="row">
-                                    @foreach($expertise as $item)
-                                        <div class="col-md-6 mb-3">
-                                            <div class="expertise-item">
-                                                <h5>{{ $item['skill'] ?? '' }}</h5>
-                                                @php
-                                                    $level = $item['level'] ?? 'beginner';
-                                                    $levelPercentage = [
-                                                        'beginner' => 25,
-                                                        'intermediate' => 50,
-                                                        'advanced' => 75,
-                                                        'expert' => 100
-                                                    ][$level] ?? 25;
-                                                @endphp
-                                                <div class="progress">
-                                                    <div class="progress-bar" role="progressbar" style="width: {{ $levelPercentage }}%;" 
-                                                         aria-valuenow="{{ $levelPercentage }}" aria-valuemin="0" aria-valuemax="100">
-                                                         {{ ucfirst($level) }}
-                                                    </div>
-                                                </div>
+<section class="team-details-area ptb-80">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="tab-content2 tab-content">
+                                <div role="tabpanel" class="tab-pane active" id="one">
+                                    @if($photo)
+                                    <div class="tab-img2">
+                                        <img src="{{ $photo }}" alt="">
+                                    </div>
+                                    @else
+                                    <div class="tab-img2">
+                                        <img src="{{asset('img/default-user.png')}}" alt="">
+                                    </div>
+                                    @endif
+                                    <div class="team-details-all fix">
+                                        <div class="team-details-top">
+                                            <div class="team-details-text">
+                                                <h1>{{ $name }}</h1>
+                                                <h3>{{ $position }}</h3>
+                                                <p class="stone"><span>{{ $name }}</span>{{ $biography }}</p>
+                                                
+                                            </div>
+                                            <div class="team-icon">
+                                                <ul>
+                                                    <li>
+                                                        <a href="{{ $facebook }}">
+                                                            <i class="fa fa-facebook"></i>
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="{{ $twitter }}">
+                                                            <i class="fa fa-google-plus"></i>
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="{{ $linkedin }}">
+                                                            <i class="fa fa-twitter" aria-hidden="true"></i>
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="{{ $instagram }}">
+                                                            <i class="fa fa-instagram" aria-hidden="true"></i>
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                            <div class="event-list">
+                                                <ul>
+                                                    <li><i class="fa fa-map-marker ex" aria-hidden="true"></i><span>Where: </span>  {{ $address }}</li>
+                                                    <li><i class="fa fa-phone" aria-hidden="true"></i><a href="#"><span>Phone: </span> {{ $phone }}</a></li>
+                                                    <li><i class="fa fa-envelope" aria-hidden="true"></i><a href="#"><span>Email: </span> {{ $email }}</a></li>
+                                                    <li><i class="fa fa-chrome" aria-hidden="true"></i><a href="#"><span>Website: </span> {{ $website }}</a></li>
+                                                </ul>
                                             </div>
                                         </div>
-                                    @endforeach
+                                    </div>
                                 </div>
-                            </div>
-                        @endif
+                               
+                        </div>
                     </div>
+
                 </div>
-            </div>
-        </div>
-    </section>
-</div>
+            </section>
+
+
 
 @push('styles')
 <style>

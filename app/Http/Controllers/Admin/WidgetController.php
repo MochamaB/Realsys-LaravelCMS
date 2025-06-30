@@ -9,9 +9,24 @@ use App\Models\ContentType;
 use App\Services\WidgetDiscoveryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
+use App\Services\ContentTypeGeneratorService;
 
 class WidgetController extends Controller
 {
+    /**
+     * @var ContentTypeGeneratorService
+     */
+    protected $contentTypeGeneratorService;    
+    
+    /**
+     * Constructor
+     * 
+     * @param ContentTypeGeneratorService $contentTypeGeneratorService
+     */
+    public function __construct(ContentTypeGeneratorService $contentTypeGeneratorService)
+    {
+        $this->contentTypeGeneratorService = $contentTypeGeneratorService;
+    }
     /**
      * Display a listing of the widgets.
      */
@@ -32,6 +47,30 @@ class WidgetController extends Controller
     }
 
     /**
+     * Get content types compatible with the given widget
+     *
+     * @param Widget $widget
+     * @param \App\Services\WidgetContentCompatibilityService $compatibilityService
+     * @return array
+     */
+    protected function getCompatibleContentTypes(Widget $widget, \App\Services\WidgetContentCompatibilityService $compatibilityService)
+    {
+        $allContentTypes = ContentType::all();
+        $compatibleContentTypes = [];
+        
+        // Check compatibility for each content type
+        foreach ($allContentTypes as $contentType) {
+            $compatibility = $compatibilityService->checkCompatibility($widget, $contentType);
+            
+            if ($compatibility['compatible']) {
+                $compatibleContentTypes[] = $contentType;
+            }
+        }
+        
+        return $compatibleContentTypes;
+    }
+
+    /**
      * Display the specified widget.
      */
     public function show(Widget $widget, \App\Services\WidgetContentCompatibilityService $compatibilityService)
@@ -40,17 +79,7 @@ class WidgetController extends Controller
         $widget->load(['fieldDefinitions', 'contentTypeAssociations.contentType']);
         
         // Get available content types for relationships
-        $allContentTypes = ContentType::all();
-        $availableContentTypes = [];
-        
-        // Check compatibility for each content type
-        foreach ($allContentTypes as $contentType) {
-            $compatibility = $compatibilityService->checkCompatibility($widget, $contentType);
-            
-            if ($compatibility['compatible']) {
-                $availableContentTypes[] = $contentType;
-            }
-        }
+        $availableContentTypes = $this->getCompatibleContentTypes($widget, $compatibilityService);
         
         // Get widget view file and JSON file
         $theme = $widget->theme;
@@ -236,5 +265,69 @@ class WidgetController extends Controller
         
         return redirect()->route('admin.widgets.show', $widget)
             ->with('success', 'Widget code updated successfully.');
+    }
+    
+    /**
+     * Generate a content type suggestion from a widget's field definitions
+     *
+     * @param Widget $widget
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function suggestContentType(Widget $widget)
+    {        
+        $suggestion = $this->contentTypeGeneratorService->generateContentTypeFromWidget($widget);
+        
+        if (!$suggestion['success']) {
+            return response()->json([
+                'success' => false,
+                'message' => $suggestion['message']
+            ], 422);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'content_type' => $suggestion['content_type'],
+            'widget' => $widget
+        ]);
+    }
+    
+    /**
+     * Create a content type from a suggested structure
+     *
+     * @param Widget $widget
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function createContentTypeFromSuggestion(Widget $widget, Request $request)
+    {        
+        $request->validate([
+            'content_type' => 'required|array',
+            'content_type.name' => 'required|string|max:100',
+            'content_type.slug' => 'required|string|max:100|unique:content_types,slug',
+            'content_type.description' => 'nullable|string',
+            'content_type.fields' => 'required|array'
+        ]);
+        
+        // Pass the widget instance to enable automatic association
+        $contentType = $this->contentTypeGeneratorService->createContentTypeFromStructure(
+            $request->content_type, 
+            null, 
+            null, 
+            $widget
+        );
+        
+        if (!$contentType) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create content type from suggested structure.'
+            ], 500);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Content type created successfully.',
+            'content_type' => $contentType,
+            'redirect' => route('admin.content-types.show', $contentType->id)
+        ]);
     }
 }

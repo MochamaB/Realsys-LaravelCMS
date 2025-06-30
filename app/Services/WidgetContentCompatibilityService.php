@@ -11,6 +11,12 @@ use Illuminate\Support\Arr;
 class WidgetContentCompatibilityService
 {
     /**
+     * Tracks which content fields have already been mapped to avoid duplicates
+     *
+     * @var array
+     */
+    protected $mappedContentFields = [];
+    /**
      * Check if a widget is compatible with a content type
      * 
      * @param Widget $widget
@@ -19,11 +25,21 @@ class WidgetContentCompatibilityService
      */
     public function checkCompatibility(Widget $widget, ContentType $contentType)
     {
-        // Get widget field definitions
+        // Get widget fields
         $widgetFields = $widget->fieldDefinitions;
         
         // Get content type fields
-        $contentFields = $contentType->fields ?? collect([]);
+        $contentTypeFields = $contentType->fields;
+        
+        // If widget has no fields, it's technically compatible with any content type
+        if ($widgetFields->isEmpty()) {
+            return [
+                'compatible' => true,
+                'explicitly_defined' => false,
+                'mapping' => [],
+                'message' => "Widget '{$widget->name}' has no fields that require content."
+            ];
+        }
         
         // Get widget.json content for detailed compatibility analysis
         $widgetJsonPath = resource_path("themes/{$widget->theme->slug}/widgets/{$widget->slug}/widget.json");
@@ -62,26 +78,66 @@ class WidgetContentCompatibilityService
         $missingFields = [];
         $fieldCompatibility = [];
         
-        foreach ($widgetFields as $widgetField) {
-            // Skip fields that aren't required for content
-            if (!$widgetField->settings || !Arr::get($widgetField->settings, 'required_for_content', false)) {
-                continue;
-            }
+        // Get required widget fields (those marked as is_required in the database)
+        $requiredWidgetFields = $widgetFields->where('is_required', true);
+        
+        // If no required fields, we'll do a more general compatibility check
+        if ($requiredWidgetFields->isEmpty()) {
+            // Just check if we have enough fields of compatible types
+            $minFieldsNeeded = min(3, $widgetFields->count()); // At least 3 fields or all if less than 3
+            $compatibleFieldCount = 0;
             
-            // Check if content type has a compatible field
-            $hasCompatibleField = false;
-            
-            foreach ($contentFields as $contentField) {
-                if ($this->areFieldTypesCompatible($widgetField->type, $contentField->type)) {
-                    $hasCompatibleField = true;
-                    $fieldCompatibility[$widgetField->key] = $contentField->name;
-                    break;
+            foreach ($widgetFields as $widgetField) {
+                foreach ($contentTypeFields as $contentField) {
+                    if ($this->areFieldTypesCompatible($widgetField->field_type, $contentField->field_type)) {
+                        $compatibleFieldCount++;
+                        break;
+                    }
                 }
             }
             
-            if (!$hasCompatibleField) {
+            if ($compatibleFieldCount >= $minFieldsNeeded) {
+                return [
+                    'compatible' => true,
+                    'explicitly_defined' => false,
+                    'mapping' => [],
+                    'message' => "Widget '{$widget->name}' has at least {$compatibleFieldCount} compatible fields with '{$contentType->name}' content type."
+                ];
+            }
+            
+            return [
+                'compatible' => false,
+                'explicitly_defined' => false,
+                'mapping' => [],
+                'message' => "Widget '{$widget->name}' does not have enough compatible fields with '{$contentType->name}' content type."
+            ];
+        }
+        
+        // Check specifically required widget fields against content type fields
+        foreach ($requiredWidgetFields as $widgetField) {
+            $fieldName = $widgetField->name;
+            $fieldType = $widgetField->field_type;
+            $matchFound = false;
+            
+            // Look for matching field in content type by name or slug
+            foreach ($contentTypeFields as $contentField) {
+                // Try to match by name or slug (case insensitive)
+                $nameMatches = strtolower($contentField->name) === strtolower($fieldName);
+                $slugMatches = strtolower($contentField->slug) === strtolower($fieldName);
+                
+                if ($nameMatches || $slugMatches) {
+                    // Check field type compatibility
+                    if ($this->areFieldTypesCompatible($fieldType, $contentField->field_type)) {
+                        $matchFound = true;
+                        $fieldCompatibility[$fieldName] = $contentField->name;
+                        break;
+                    }
+                }
+            }
+            
+            if (!$matchFound) {
                 $requiredFieldsCompatible = false;
-                $missingFields[] = $widgetField->key;
+                $missingFields[] = $fieldName;
             }
         }
         
@@ -104,36 +160,132 @@ class WidgetContentCompatibilityService
     }
     
     /**
-     * Generate field mappings between widget fields and content type fields
+     * Generate field mappings between a widget and a content type
      * 
      * @param Widget $widget
      * @param ContentType $contentType
-     * @return array Field mapping suggestions
+     * @return array
      */
     public function generateFieldMappings(Widget $widget, ContentType $contentType)
     {
-        $widgetFields = $widget->fieldDefinitions;
-        $contentFields = $contentType->fields ?? collect([]);
-        $mappings = [];
+        // Reset mapped content fields for this generation
+        $this->mappedContentFields = [];
         
-        foreach ($widgetFields as $widgetField) {
-            // Skip fields that don't need content mapping
-            if (!$widgetField->settings || !Arr::get($widgetField->settings, 'maps_to_content', false)) {
+        // Check if we have predefined mappings in the widget.json
+        $widgetJsonPath = resource_path("themes/{$widget->theme->slug}/widgets/{$widget->slug}/widget.json");
+        $widgetConfig = [];
+        
+        if (file_exists($widgetJsonPath)) {
+            $widgetConfig = json_decode(file_get_contents($widgetJsonPath), true) ?? [];
+        }
+        
+        // Use predefined mappings if available
+        $predefinedMappings = $this->getFieldMapping($widgetConfig, $contentType->slug);
+        if (!empty($predefinedMappings)) {
+            return $predefinedMappings;
+        }
+        
+        // Get widget fields
+        $widgetFields = $widget->fieldDefinitions;
+        
+        // Get content type fields
+        $contentFields = $contentType->fields;
+        
+        $mappings = [];
+        $mappedContentFields = []; // Keep track of already mapped content fields
+        
+        // First, prioritize required widget fields
+        $requiredWidgetFields = $widgetFields->where('is_required', true);
+        
+        // Process required fields first
+        foreach ($requiredWidgetFields as $widgetField) {
+            $widgetFieldName = $widgetField->name;
+            $widgetFieldSlug = $widgetField->slug;
+            $mappedFields = $this->mappedContentFields; // Create a copy for closure
+            
+            // First, try to find exact name match
+            $exactMatch = $contentFields->first(function ($field) use ($widgetFieldName, $widgetFieldSlug, $mappedFields) {
+                return !in_array($field->id, $mappedFields) && (
+                    strtolower($field->name) === strtolower($widgetFieldName) ||
+                    strtolower($field->slug) === strtolower($widgetFieldName) ||
+                    strtolower($field->name) === strtolower($widgetFieldSlug) ||
+                    strtolower($field->slug) === strtolower($widgetFieldSlug)
+                );
+            });
+            
+            if ($exactMatch) {
+                $mappings[$widgetFieldName] = $exactMatch->name;
+                $mappedContentFields[] = $exactMatch->id;
                 continue;
             }
             
-            // Handle repeater fields specially
-            if ($widgetField->type === 'repeater') {
-                $repeaterMappings = $this->generateRepeaterFieldMappings($widgetField, $contentFields);
-                $mappings = array_merge($mappings, $repeaterMappings);
+            // Second, try to find similar name (contains)
+            $similarMatch = $contentFields->first(function ($field) use ($widgetFieldName, $widgetFieldSlug, $mappedFields) {
+                return !in_array($field->id, $mappedFields) && (
+                    str_contains(strtolower($field->name), strtolower($widgetFieldName)) ||
+                    str_contains(strtolower($field->slug), strtolower($widgetFieldName)) ||
+                    str_contains(strtolower($field->name), strtolower($widgetFieldSlug)) ||
+                    str_contains(strtolower($field->slug), strtolower($widgetFieldSlug)) ||
+                    str_contains(strtolower($widgetFieldName), strtolower($field->name)) ||
+                    str_contains(strtolower($widgetFieldSlug), strtolower($field->name))
+                );
+            });
+            
+            if ($similarMatch) {
+                $mappings[$widgetFieldName] = $similarMatch->name;
+                $mappedContentFields[] = $similarMatch->id;
                 continue;
             }
             
-            // Find best matching content field by type and name similarity
-            $bestMatch = $this->findBestMatchingField($widgetField, $contentFields);
+            // Third, try to find compatible field types
+            $compatibleField = $contentFields->first(function ($field) use ($widgetField, $mappedFields) {
+                return !in_array($field->id, $mappedFields) && 
+                       $this->areFieldTypesCompatible($widgetField->field_type, $field->field_type);
+            });
             
-            if ($bestMatch) {
-                $mappings[$widgetField->key] = $bestMatch->name;
+            if ($compatibleField) {
+                $mappings[$widgetFieldName] = $compatibleField->name;
+                $this->mappedContentFields[] = $compatibleField->id;
+                continue;
+            }
+        }
+        
+        // Then process non-required fields if available capacity
+        $nonRequiredWidgetFields = $widgetFields->where('is_required', false);
+        
+        foreach ($nonRequiredWidgetFields as $widgetField) {
+            // Skip if we've already mapped all content fields
+            if (count($this->mappedContentFields) >= $contentFields->count()) {
+                break;
+            }
+            
+            $widgetFieldName = $widgetField->name;
+            $mappedFields = $this->mappedContentFields; // Create a copy for closure
+            
+            // First, try to find exact name match
+            $exactMatch = $contentFields->first(function ($field) use ($widgetFieldName, $mappedFields) {
+                return !in_array($field->id, $mappedFields) && (
+                    strtolower($field->name) === strtolower($widgetFieldName) ||
+                    strtolower($field->slug) === strtolower($widgetFieldName)
+                );
+            });
+            
+            if ($exactMatch) {
+                $mappings[$widgetFieldName] = $exactMatch->name;
+                $this->mappedContentFields[] = $exactMatch->id;
+                continue;
+            }
+            
+            // Second, try to find compatible field types
+            $compatibleField = $contentFields->first(function ($field) use ($widgetField, $mappedFields) {
+                return !in_array($field->id, $mappedFields) && 
+                       $this->areFieldTypesCompatible($widgetField->field_type, $field->field_type);
+            });
+            
+            if ($compatibleField) {
+                $mappings[$widgetFieldName] = $compatibleField->name;
+                $this->mappedContentFields[] = $compatibleField->id;
+                continue;
             }
         }
         
@@ -287,44 +439,75 @@ class WidgetContentCompatibilityService
     }
     
     /**
-     * Check if specific fields are compatible
+     * Check if two field types are compatible
      * 
      * @param string $widgetFieldType
      * @param string $contentFieldType
-     * @return bool Whether fields are compatible
+     * @return bool
      */
-    public function areFieldTypesCompatible($widgetFieldType, $contentFieldType)
+    protected function areFieldTypesCompatible($widgetFieldType, $contentFieldType)
     {
-        // Direct type matches
-        if ($widgetFieldType === $contentFieldType) {
+        // Exact match is always compatible
+        if (strtolower($widgetFieldType) === strtolower($contentFieldType)) {
             return true;
         }
         
-        // Define compatibility groups
-        $textTypes = ['text', 'textarea', 'wysiwyg', 'html', 'string', 'richtext'];
-        $numberTypes = ['number', 'integer', 'float', 'numeric'];
+        // Get field types from config if available
+        $fieldTypes = config('field_types', []);
+        
+        // Define compatibility groups based on common field type characteristics
+        $textTypes = ['text', 'textarea', 'rich_text', 'wysiwyg', 'html', 'string', 'richtext', 'markdown', 'code', 'url', 'email'];
+        $numberTypes = ['number', 'integer', 'float', 'numeric', 'decimal', 'currency'];
         $dateTypes = ['date', 'datetime', 'time'];
-        $mediaTypes = ['image', 'file', 'media', 'gallery'];
-        $booleanTypes = ['boolean', 'toggle', 'checkbox'];
-        $structuredTypes = ['repeater', 'group', 'flexible_content'];
-        $referenceTypes = ['relationship', 'post_object', 'page_link', 'reference'];
+        $mediaTypes = ['image', 'file', 'media', 'gallery', 'video', 'audio'];
+        $booleanTypes = ['boolean', 'toggle', 'checkbox', 'switch'];
+        $selectTypes = ['select', 'multiselect', 'radio', 'checkbox', 'dropdown'];
+        $locationTypes = ['map', 'location', 'address', 'coordinates'];
+        $referenceTypes = ['relationship', 'post_object', 'page_link', 'reference', 'content_reference'];
+        
+        // Normalize field types to lowercase for comparison
+        $widgetFieldType = strtolower($widgetFieldType);
+        $contentFieldType = strtolower($contentFieldType);
         
         // Check if both types are in the same compatibility group
-        foreach ([$textTypes, $numberTypes, $dateTypes, $mediaTypes, $booleanTypes, $structuredTypes, $referenceTypes] as $typeGroup) {
+        $typeGroups = [
+            $textTypes, 
+            $numberTypes, 
+            $dateTypes, 
+            $mediaTypes, 
+            $booleanTypes, 
+            $selectTypes,
+            $locationTypes,
+            $referenceTypes
+        ];
+        
+        foreach ($typeGroups as $typeGroup) {
             if (in_array($widgetFieldType, $typeGroup) && in_array($contentFieldType, $typeGroup)) {
                 return true;
             }
         }
         
-        // Special cases
+        // Special cases for broader compatibility
         
-        // Text can accept many different types for display purposes
+        // Text fields are generally compatible with most other types for display purposes
         if (in_array($widgetFieldType, $textTypes)) {
-            return true; // Text widgets can generally display any content
+            // Text widgets can generally display most content except complex types
+            return !in_array($contentFieldType, array_merge($mediaTypes, $locationTypes));
         }
         
-        // Some image fields can be references or actual images
-        if (in_array($widgetFieldType, $mediaTypes) && in_array($contentFieldType, $referenceTypes)) {
+        // Rich text can display content from most text-based fields
+        if ($widgetFieldType === 'rich_text' || $widgetFieldType === 'wysiwyg') {
+            return in_array($contentFieldType, $textTypes);
+        }
+        
+        // Media fields can accept URLs or references
+        if (in_array($widgetFieldType, $mediaTypes) && 
+            (in_array($contentFieldType, $referenceTypes) || $contentFieldType === 'url')) {
+            return true;
+        }
+        
+        // Select fields can accept boolean values
+        if (in_array($widgetFieldType, $selectTypes) && in_array($contentFieldType, $booleanTypes)) {
             return true;
         }
         

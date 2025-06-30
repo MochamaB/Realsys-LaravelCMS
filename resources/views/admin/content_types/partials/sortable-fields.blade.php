@@ -228,6 +228,31 @@ document.addEventListener('DOMContentLoaded', function() {
             hiddenFieldType.value = fieldType;
         }
         
+        // Manually trigger the options visibility check
+        // This ensures fields with has_options=true in config have their options tab accessible
+        setTimeout(() => {
+            if (typeof window.triggerOptionsVisibilityCheck === 'function') {
+                // The function might be defined in the modal's scope after it loads
+                window.triggerOptionsVisibilityCheck(fieldType);
+            } else {
+                // Direct DOM manipulation if the function isn't available
+                const optionFieldTypes = @json(collect(config('field_types'))->filter(function($type) { return $type['has_options'] ?? false; })->keys());
+                
+                const optionsTab = document.querySelector('a[href="#modal-options"]');
+                const optionsContainer = document.getElementById('modal-options-container');
+                
+                if (optionFieldTypes.includes(fieldType)) {
+                    if (optionsTab) {
+                        optionsTab.classList.remove('disabled');
+                        optionsTab.removeAttribute('tabindex');
+                    }
+                    if (optionsContainer) {
+                        optionsContainer.classList.remove('d-none');
+                    }
+                }
+            }
+        }, 100); // Small delay to ensure modal is fully initialized
+        
         // Show the modal
         const modal = new bootstrap.Modal(document.getElementById('addFieldModal'));
         modal.show();

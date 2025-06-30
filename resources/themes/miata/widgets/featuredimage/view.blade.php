@@ -4,8 +4,10 @@
     $image = $fields['image'] ?? '';
     $caption = $fields['caption'] ?? '';
     $linkUrl = $fields['link_url'] ?? '';
-    $displayStyle = $fields['display_style'] ?? 'default';
-    $imageSize = $fields['image_size'] ?? 'medium';
+    
+    // Extract settings with defaults
+    $displayStyle = $settings['display_style'] ?? 'default';
+    $imageSize = $settings['image_size'] ?? 'medium';
     
     // Determine CSS classes based on display style
     $imageClass = '';
@@ -41,7 +43,7 @@
     }
 @endphp
 
-<div class="widget widget-featuredimage py-4">
+<section class="elements-area ptb-140 widget widget-featuredimage">
     <div class="container">
         <div class="row">
             <div class="{{ $containerClass }}">
@@ -69,4 +71,4 @@
             </div>
         </div>
     </div>
-</div>
+</section>

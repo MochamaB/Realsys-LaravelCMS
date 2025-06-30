@@ -17,8 +17,8 @@ $iconClass = $settings['icon'] ?? 'fa fa-bookmark';
 $backgroundColor = $settings['background_color'] ?? '#ffffff';
 $padding = $settings['padding'] ?? 'p-4';
 @endphp
-
-<div class="widget widget-header-description" style="background-color: {{ $backgroundColor }};">
+<section class="counter_area ptb-70" style="background-color: {{ $backgroundColor }};">
+<div class="widget widget-header-description">
     <div class="row {{ $padding }}">
         <div class="col-md-12 {{ $alignment }}">
             <div class="what-top">
@@ -37,3 +37,4 @@ $padding = $settings['padding'] ?? 'p-4';
         </div>
     </div>
 </div>
+</section>

@@ -2,72 +2,72 @@
   "name": "Image Slider Widget",
   "slug": "slider",
   "description": "A responsive image carousel/slider with navigation controls and optional captions",
-  "icon": "ri-slideshow-line",
+  "icon": "fa fa-image",
   "fields": [
+    {
+      "name": "Main Image",
+      "slug": "main_image",
+      "field_type": "image",
+      "position": 1,
+      "is_required": true,
+      "description": "The main image displayed in the slider"
+    },
     {
       "name": "Slides",
       "slug": "slides",
       "field_type": "repeater",
+      "position": 2,
       "is_required": true,
       "description": "Slide items for the slider",
-      "settings": {
-        "min_items": 1,
-        "max_items": 10,
-        "subfields": [
-          {
-            "name": "Image",
-            "slug": "image",
-            "field_type": "image",
-            "is_required": true,
-            "description": "Slide image"
-          },
-          {
-            "name": "Title",
-            "slug": "title",
-            "field_type": "text",
-            "is_required": false,
-            "description": "Optional slide title"
-          },
-          {
-            "name": "Subtitle",
-            "slug": "subtitle",
-            "field_type": "text",
-            "is_required": false,
-            "description": "Optional slide subtitle or caption"
-          },
-          {
-            "name": "Button Text",
-            "slug": "button_text",
-            "field_type": "text",
-            "is_required": false,
-            "description": "Optional button text"
-          },
-          {
-            "name": "Button URL",
-            "slug": "button_url",
-            "field_type": "url",
-            "is_required": false,
-            "description": "URL for the button"
-          }
-        ]
-      }
-    },
-    {
-      "name": "Slider Height",
-      "slug": "slider_height",
-      "field_type": "select",
-      "is_required": false,
-      "description": "Height of the slider",
-      "settings": {
-        "options": [
-          {"value": "default", "label": "Default"},
-          {"value": "small", "label": "Small"},
-          {"value": "medium", "label": "Medium"},
-          {"value": "large", "label": "Large"},
-          {"value": "fullscreen", "label": "Fullscreen"}
-        ]
-      }
-    },
+      "min_items": 1,
+      "max_items": 10,
+      "subfields": [
+        {
+          "name": "Image",
+          "slug": "image",
+          "field_type": "image",
+          "is_required": true,
+          "description": "Slide image"
+        },
+        {
+          "name": "Title Line 1",
+          "slug": "title_line1",
+          "field_type": "text",
+          "is_required": false,
+          "description": "First line of title (Layer 1)"
+        },
+        {
+          "name": "Title Line 2",
+          "slug": "title_line2",
+          "field_type": "text",
+          "is_required": false,
+          "description": "Second line of title (Layer 2)"
+        },
+        {
+          "name": "Title Line 3",
+          "slug": "title_line3",
+          "field_type": "text",
+          "is_required": false,
+          "description": "Third line of title (Layer 2)"
+        },
+        {
+          "name": "Button Text",
+          "slug": "button_text",
+          "field_type": "text",
+          "is_required": false,
+          "description": "Optional button text (Layer 3)"
+        },
+        {
+          "name": "Button URL",
+          "slug": "button_url",
+          "field_type": "url",
+          "is_required": false,
+          "description": "URL for the button"
+        }
+      ]
+    }
+  ],
+  "settings": [
     {
       "name": "Animation Speed",
       "slug": "animation_speed",
@@ -114,8 +114,9 @@
       "compatible_with": ["slider", "banner", "carousel", "gallery", "hero"],
       "field_mappings": {
         "image": ["image", "featured_image", "photo", "thumbnail", "banner_image"],
-        "title": ["title", "name", "heading", "banner_title"],
-        "subtitle": ["subtitle", "excerpt", "summary", "caption", "description", "banner_subtitle"],
+        "title_line1": ["title", "name", "heading", "banner_title"],
+        "title_line2": ["subtitle", "excerpt", "summary", "description"],
+        "title_line3": ["caption", "description", "banner_subtitle"],
         "button_text": ["button_text", "cta_text", "action_text"],
         "button_url": ["button_url", "link", "url", "cta_link", "action_link"]
       }

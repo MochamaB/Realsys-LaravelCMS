@@ -84,9 +84,14 @@ Route::middleware('admin.auth')->group(function () {
     
     // Widget Association routes
     Route::post('/widgets/{widget}/associations', [WidgetAssociationController::class, 'store'])->name('widgets.associations.create');
+    Route::post('/widgets/{widget}/preview-mappings', [WidgetAssociationController::class, 'previewMappings'])->name('widgets.associations.preview-mappings');
     Route::put('/widgets/associations/{association}/update', [WidgetAssociationController::class, 'update'])->name('widgets.associations.update');
     Route::delete('/widgets/associations/{association}', [WidgetAssociationController::class, 'destroy'])->name('widgets.associations.delete');
     Route::post('/widgets/associations/{association}/toggle', [WidgetAssociationController::class, 'toggle'])->name('widgets.associations.toggle');
+    
+    // Content Type Generation from Widget routes
+    Route::get('/widgets/{widget}/suggest-content-type', [WidgetController::class, 'suggestContentType'])->name('widgets.suggest-content-type');
+    Route::post('/widgets/{widget}/create-content-type', [WidgetController::class, 'createContentTypeFromSuggestion'])->name('widgets.create-content-type');
 
     // Page Section Widgets
     Route::get('/pages/{page}/sections/{section}/widgets', [PageSectionWidgetController::class, 'index'])->name('pages.sections.widgets.index');
