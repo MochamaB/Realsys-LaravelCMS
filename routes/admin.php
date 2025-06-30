@@ -7,6 +7,8 @@ use App\Http\Controllers\Admin\ContentTypeController;
 use App\Http\Controllers\Admin\ContentTypeFieldController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\MediaController;
+use App\Http\Controllers\Admin\MediaFolderController;
+use App\Http\Controllers\Admin\MediaTagController;
 use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\MenuItemController;
 use App\Http\Controllers\Admin\PageController;
@@ -130,7 +132,22 @@ Route::middleware('admin.auth')->group(function () {
 
     // Media Library
     Route::resource('media', MediaController::class);
-    Route::post('/media/upload', [MediaController::class, 'upload'])->name('media.upload');
+    Route::get('/media/filter', [MediaController::class, 'filter'])->name('media.filter');
+    Route::get('/media/search', [MediaController::class, 'search'])->name('media.search');
+    Route::post('/media/upload', [MediaController::class, 'store'])->name('media.upload');
+    Route::get('/media-picker', [MediaController::class, 'picker'])->name('media.picker');
+    
+    // Media Tags
+    Route::resource('media-tags', MediaTagController::class)->except(['show']);
+    Route::post('/media/{media}/tags', [MediaController::class, 'updateTags'])->name('media.update-tags');
+    
+    // Media Folders
+    Route::resource('media-folders', MediaFolderController::class)->except(['show']);
+    Route::post('/media/move-to-folder', [MediaController::class, 'moveToFolder'])->name('media.move-to-folder');
+    
+    // Media Batch Operations
+    Route::post('/media/batch-delete', [MediaController::class, 'batchDelete'])->name('media.batch-delete');
+    Route::post('/media/batch-tag', [MediaController::class, 'batchTag'])->name('media.batch-tag');
 
     // Users
     Route::resource('users', UserManagementController::class)

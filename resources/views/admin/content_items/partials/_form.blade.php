@@ -140,64 +140,60 @@
                 @break
                 
             @case('image')
-                <input type="file" class="form-control" id="{{ $prefix }}field_{{ $field->id }}" 
-                    name="field_{{ $field->id }}" accept="image/*" 
-                    {{ $field->is_required && !$contentItem ? 'required' : '' }}>
-                
-                @if($contentItem && $media = $contentItem->getMedia('field_' . $field->id)->first())
-                    <div class="mt-2">
-                        <img src="{{ $media->getUrl() }}" alt="Current image" class="img-thumbnail" style="max-height: 150px">
-                        <div class="form-check mt-1">
-                            <input type="checkbox" class="form-check-input" id="{{ $prefix }}remove_image_{{ $field->id }}" 
-                                name="remove_image_{{ $field->id }}" value="1">
-                            <label class="form-check-label" for="{{ $prefix }}remove_image_{{ $field->id }}">
-                                Remove this image
-                            </label>
-                        </div>
-                    </div>
-                @endif
+                @php
+                    $selectedMediaId = null;
+                    if ($contentItem) {
+                        $media = $contentItem->getMedia('field_' . $field->id)->first();
+                        if ($media) {
+                            $selectedMediaId = $media->id;
+                        }
+                    }
+                @endphp
+                <x-media-picker
+                    name="field_{{ $field->id }}"
+                    label="{{ $field->label }}"
+                    :multiple="false"
+                    :selected="$selectedMediaId"
+                    :allowedTypes="['image']"
+                />
                 @break
                 
             @case('gallery')
-                <input type="file" class="form-control" id="{{ $prefix }}field_{{ $field->id }}" 
-                    name="field_{{ $field->id }}[]" accept="image/*" multiple 
-                    {{ $field->is_required && !$contentItem ? 'required' : '' }}>
-                
-                @if($contentItem && $contentItem->getMedia('field_' . $field->id)->count() > 0)
-                    <div class="row mt-2">
-                        @foreach($contentItem->getMedia('field_' . $field->id) as $media)
-                            <div class="col-md-3 mb-2">
-                                <img src="{{ $media->getUrl() }}" alt="Gallery image" class="img-thumbnail" style="max-height: 100px">
-                                <div class="form-check mt-1">
-                                    <input type="checkbox" class="form-check-input" 
-                                        id="{{ $prefix }}remove_media_{{ $media->id }}" 
-                                        name="remove_media[]" value="{{ $media->id }}">
-                                    <label class="form-check-label" for="{{ $prefix }}remove_media_{{ $media->id }}">
-                                        Remove
-                                    </label>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                @endif
+            @php
+                    $selectedMediaId = null;
+                    if ($contentItem) {
+                        $media = $contentItem->getMedia('field_' . $field->id)->first();
+                        if ($media) {
+                            $selectedMediaId = $media->id;
+                        }
+                    }
+                @endphp
+                <x-media-picker
+                    name="field_{{ $field->id }}"
+                    label="{{ $field->label }}"
+                    :multiple="true"
+                    :selected="$selectedMediaId"
+                    :allowedTypes="['image']"
+                />
                 @break
                 
             @case('file')
-                <input type="file" class="form-control" id="{{ $prefix }}field_{{ $field->id }}" 
-                    name="field_{{ $field->id }}" {{ $field->is_required && !$contentItem ? 'required' : '' }}>
-                
-                @if($contentItem && $media = $contentItem->getMedia('field_' . $field->id)->first())
-                    <div class="mt-2">
-                        <a href="{{ $media->getUrl() }}" target="_blank">{{ $media->file_name }}</a>
-                        <div class="form-check mt-1">
-                            <input type="checkbox" class="form-check-input" id="{{ $prefix }}remove_file_{{ $field->id }}" 
-                                name="remove_file_{{ $field->id }}" value="1">
-                            <label class="form-check-label" for="{{ $prefix }}remove_file_{{ $field->id }}">
-                                Remove this file
-                            </label>
-                        </div>
-                    </div>
-                @endif
+            @php
+                    $selectedMediaId = null;
+                    if ($contentItem) {
+                        $media = $contentItem->getMedia('field_' . $field->id)->first();
+                        if ($media) {
+                            $selectedMediaId = $media->id;
+                        }
+                    }
+                @endphp
+                <x-media-picker
+                    name="field_{{ $field->id }}"
+                    label="{{ $field->label }}"
+                    :multiple="true"
+                    :selected="$selectedMediaId"
+                    :allowedTypes="['file']"
+                />
                 @break
                 
             @case('url')

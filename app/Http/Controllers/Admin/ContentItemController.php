@@ -338,20 +338,47 @@ class ContentItemController extends Controller
                 ]
             );
             
-            // Handle media uploads
-            if (in_array($field->field_type, ['image', 'gallery', 'file']) && $request->hasFile('field_' . $field->id)) {
-                if ($field->field_type == 'gallery') {
-                    // Handle multiple files
-                    foreach ($request->file('field_' . $field->id) as $file) {
-                        $contentItem->addMedia($file)
+            // Handle media uploads and media picker selections
+            if (in_array($field->field_type, ['image', 'gallery', 'file'])) {
+                // Handle file uploads (legacy file input approach)
+                if ($request->hasFile('field_' . $field->id)) {
+                    if ($field->field_type == 'gallery') {
+                        // Handle multiple files
+                        foreach ($request->file('field_' . $field->id) as $file) {
+                            $contentItem->addMedia($file)
+                                ->withCustomProperties(['field_id' => $field->id])
+                                ->toMediaCollection('field_' . $field->id);
+                        }
+                    } else {
+                        // Handle single file
+                        $contentItem->addMedia($request->file('field_' . $field->id))
                             ->withCustomProperties(['field_id' => $field->id])
                             ->toMediaCollection('field_' . $field->id);
                     }
-                } else {
-                    // Handle single file
-                    $contentItem->addMedia($request->file('field_' . $field->id))
-                        ->withCustomProperties(['field_id' => $field->id])
-                        ->toMediaCollection('field_' . $field->id);
+                }
+                // Handle media picker selection (new approach)
+                elseif ($field->field_type == 'image' && $request->filled('field_' . $field->id)) {
+                    // First clear any existing media in this collection
+                    $contentItem->clearMediaCollection('field_' . $field->id);
+                    
+                    // Get the selected media ID
+                    $mediaId = $request->input('field_' . $field->id);
+                    
+                    // Find the existing media
+                    $media = \Spatie\MediaLibrary\MediaCollections\Models\Media::find($mediaId);
+                    
+                    if ($media) {
+                        // Create a new copy of the media attached to this content item
+                        $contentItem->addMediaFromUrl($media->getUrl())
+                            ->usingName($media->name)
+                            ->usingFileName($media->file_name)
+                            ->withCustomProperties(array_merge($media->custom_properties, ['field_id' => $field->id]))
+                            ->toMediaCollection('field_' . $field->id);
+                    }
+                }
+                // Handle media removal when input is empty
+                elseif ($field->field_type == 'image' && !$request->filled('field_' . $field->id)) {
+                    $contentItem->clearMediaCollection('field_' . $field->id);
                 }
             }
         }

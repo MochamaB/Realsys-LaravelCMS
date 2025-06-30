@@ -76,11 +76,7 @@
                     </button>
                 </div>
                 <div class="ms-1 header-item d-none d-sm-flex">
-                @if(auth()->guard('admin')->check() && !session('admin_as_user'))
-                        <a href="{{ route('admin.switch.to.user') }}" class="btn btn-sm btn-info me-2">
-                            <i class="ri-user-line me-1"></i> View as User
-                        </a>
-                    @endif
+               
                 </div>
 
                 <div class="dropdown ms-sm-3 header-item topbar-user">
@@ -113,6 +109,11 @@
                         <h6 class="dropdown-header">Welcome Admin!</h6>
                         <a class="dropdown-item" href="{{ route('admin.profile.show') }}"><i class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i> <span class="align-middle">Profile</span></a>
                         <div class="dropdown-divider"></div>
+                        @if(auth()->guard('admin')->check() && !session('admin_as_user'))
+                        <a href="{{ route('admin.switch.to.user') }}" class="dropdown-item">
+                            <i class="ri-user-line me-1"></i> View as User
+                        </a>
+                    @endif
                         <a class="dropdown-item" href="{{ route('admin.settings.index') }}"><i class="mdi mdi-cog-outline text-muted fs-16 align-middle me-1"></i> <span class="align-middle">Settings</span></a>
                         <form method="POST" action="{{ route('admin.logout') }}">
                             @csrf

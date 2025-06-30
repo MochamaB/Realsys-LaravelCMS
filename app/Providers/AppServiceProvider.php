@@ -7,6 +7,7 @@ use App\Providers\TemplateServiceProvider;
 use App\Providers\WidgetServiceProvider;
 use App\Services\MenuService;
 use App\View\Components\ThemeNavigation;
+use App\View\Components\MediaPicker;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Blade;
@@ -43,6 +44,9 @@ class AppServiceProvider extends ServiceProvider
         
         // Register theme navigation component
         Blade::component('theme-navigation', ThemeNavigation::class);
+        
+        // Register media picker component
+        Blade::component('media-picker', MediaPicker::class);
         
         // Custom Blade directives for template sections
         Blade::directive('renderSection', function ($expression) {

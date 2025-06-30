@@ -1,0 +1,141 @@
+/* Media Organization Styles */
+
+/* Folder Tree */
+.folder-tree {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.folder-item {
+    margin-bottom: 5px;
+    position: relative;
+}
+
+.folder-link {
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.folder-link:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.folder-item.active > .folder-link {
+    background-color: rgba(var(--bs-primary-rgb), 0.1);
+    color: var(--bs-primary);
+}
+
+.folder-collapse {
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.folder-collapse.expanded {
+    transform: rotate(90deg);
+}
+
+.folder-children {
+    padding-left: 15px;
+}
+
+.folder-actions {
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.folder-link:hover .folder-actions {
+    opacity: 1;
+}
+
+/* Tags */
+.tag-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.tag-item {
+    padding: 8px 10px;
+    border-radius: 5px;
+    transition: background-color 0.2s;
+}
+
+.tag-item:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.tag-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.tag-actions {
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.tag-item:hover .tag-actions {
+    opacity: 1;
+}
+
+/* Media Selection */
+.media-item {
+    position: relative;
+}
+
+.media-selection {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 5;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.media-item:hover .media-selection,
+.media-selection.checked {
+    opacity: 1;
+}
+
+/* Batch toolbar */
+.batch-toolbar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: #fff;
+    padding: 10px 0;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    transition: transform 0.3s;
+}
+
+.batch-toolbar.d-none {
+    transform: translateY(100%);
+}
+
+/* Media Grid Item */
+.media-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+}
+
+.media-tags .badge {
+    font-size: 0.7rem;
+    padding: 3px 6px;
+}
+
+/* Form select with color indicators */
+.tag-option-color {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    margin-right: 5px;
+}

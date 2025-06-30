@@ -1,0 +1,138 @@
+/**
+ * Media Picker CSS
+ * RealsysCMS Media Picker component styles
+ */
+
+/* Media Picker Field */
+.media-picker-field {
+    margin-bottom: 1.5rem;
+}
+
+/* Selected Media Preview */
+.selected-media-container {
+    width: 150px;
+    margin-bottom: 0.5rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    padding: 0.5rem;
+    background-color: #f8f9fa;
+}
+
+.selected-media-multiple {
+    margin-bottom: 0.5rem;
+}
+
+.selected-media-name {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-top: 0.25rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Media Picker Modal */
+.media-picker-container {
+    height: 70vh;
+    overflow-y: auto;
+}
+
+/* Media Grid */
+.media-item {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    border: 1px solid #dee2e6;
+    height: 100%;
+}
+
+.media-item:hover {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border-color: #adb5bd;
+}
+
+.media-item.selected {
+    border-color: #0d6efd;
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+.media-item-thumbnail {
+    height: 120px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+}
+
+.media-thumbnail {
+    max-height: 100%;
+    max-width: 100%;
+    object-fit: contain;
+}
+
+.media-icon {
+    font-size: 2rem;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+}
+
+.selected-badge {
+    position: absolute;
+    top: 0.25rem;
+    right: 0.25rem;
+    background-color: #0d6efd;
+    color: white;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Folder Tree */
+.folder-tree {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.folder-item {
+    color: #212529;
+    text-decoration: none;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    display: block;
+}
+
+.folder-item:hover {
+    background-color: #f8f9fa;
+}
+
+.folder-item.active {
+    background-color: #e9ecef;
+    font-weight: 500;
+}
+
+/* Tag List */
+.tag-list {
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.media-tag-filter {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.media-tag-filter:hover {
+    background-color: #e9ecef !important;
+}
+
+.media-tag-filter.active {
+    background-color: #0d6efd !important;
+    color: white !important;
+}

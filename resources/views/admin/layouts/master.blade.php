@@ -22,7 +22,8 @@
     <link href="{{ asset('assets/admin/css/custom.min.css') }}" rel="stylesheet" type="text/css" />
     <!-- Sortable Components CSS -->
     <link href="{{ asset('assets/admin/css/sortable-components.css') }}" rel="stylesheet" type="text/css" />
-    
+    <!-- Media Picker CSS -->
+    <link href="{{ asset('assets/admin/css/media-picker.css') }}" rel="stylesheet" type="text/css" />
     @yield('css')
     @stack('styles')
 </head>
@@ -129,6 +130,8 @@
     </script>
 
      <!-- Scripts section -->
+      <!-- Media Picker JS -->
+      <script src="{{ asset('assets/admin/js/media-picker.js') }}"></script>
       <!-- For scripts using section @section('js') -->
      @yield('js')        
 

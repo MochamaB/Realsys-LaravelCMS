@@ -8,4 +8,5 @@ return [
     App\Providers\PageServiceProvider::class,
     App\Providers\BladeServiceProvider::class,
     Modules\UserManagement\Providers\UserManagementServiceProvider::class,
+    App\Providers\StringHelperServiceProvider::class,
 ];
