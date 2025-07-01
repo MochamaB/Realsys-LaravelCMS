@@ -130,12 +130,12 @@ Route::middleware('admin.auth')->group(function () {
     Route::get('/themes/{theme}/templates/{template}', [TemplateController::class, 'show'])->name('themes.templates.show');
     Route::get('/themes/{theme}/templates/{template}/sections', [TemplateSectionController::class, 'index'])->name('themes.templates.sections.index');
 
-    // Media Library
+    // Media management
     Route::resource('media', MediaController::class);
-    Route::get('/media/filter', [MediaController::class, 'filter'])->name('media.filter');
+    Route::get('media/filter', [MediaController::class, 'filter'])->name('media.filter');
+    Route::get('media-picker', [MediaController::class, 'mediaPicker'])->name('media.picker');
     Route::get('/media/search', [MediaController::class, 'search'])->name('media.search');
     Route::post('/media/upload', [MediaController::class, 'store'])->name('media.upload');
-    Route::get('/media-picker', [MediaController::class, 'picker'])->name('media.picker');
     
     // Media Tags
     Route::resource('media-tags', MediaTagController::class)->except(['show']);

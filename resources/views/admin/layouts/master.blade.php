@@ -138,6 +138,9 @@
      <!-- Sortable.js Library -->
      <script src="{{ asset('assets/admin/libs/sortablejs/Sortable.min.js') }}"></script>
      <!-- Sortable Components Manager -->
+     
+     <!-- Include the media picker modal -->
+     @include('admin.media.partials._media_picker_modal')
      <script src="{{ asset('assets/admin/js/sortable-manager.js') }}"></script>
 
  <!-- For scripts using push @push('scripts') -->

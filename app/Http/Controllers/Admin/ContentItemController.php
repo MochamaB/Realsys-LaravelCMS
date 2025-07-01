@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ContentFieldValue;
 use App\Models\ContentItem;
 use App\Models\ContentType;
-use App\Models\ContentTypeField;
+use App\Models\ContentTypeField as Field;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
@@ -208,7 +208,7 @@ class ContentItemController extends Controller
         
         return view('admin.content_items.preview', compact('contentType', 'contentItem'));
     }
-    
+
     /**
      * Process field values from request.
      *
@@ -223,112 +223,38 @@ class ContentItemController extends Controller
         $fields = $contentType->fields;
         
         foreach ($fields as $field) {
-            // Get field value from request
-            $fieldValue = $request->input('field_' . $field->id);
-            
-            // Handle special field types
-            if ($field->field_type == 'boolean') {
-                $fieldValue = $request->has('field_' . $field->id) ? '1' : '0';
-            } elseif ($field->field_type == 'json' && is_array($fieldValue)) {
-                $fieldValue = json_encode($fieldValue);
-            } elseif ($field->field_type == 'repeater') {
-                // For repeater fields, normalize and encode the array of items
-                if (is_array($fieldValue)) {
-                    // Process each repeater item
-                    foreach ($fieldValue as $index => $itemData) {
-                        if (is_array($itemData)) {
-                            // Process file uploads and handle image data within each repeater item
-                            foreach ($itemData as $subFieldKey => $subFieldValue) {
-                                // Get the subfield configuration
-                                $fieldSettings = json_decode($field->settings, true);
-                                $subfields = $fieldSettings['subfields'] ?? [];
-                                $subFieldType = null;
-                                
-                                // Find the subfield type
-                                foreach ($subfields as $subfield) {
-                                    if ($subfield['name'] == $subFieldKey) {
-                                        $subFieldType = $subfield['type'];
-                                        break;
-                                    }
-                                }
-                                
-                                if ($subFieldType == 'image') {
-                                    $fileKey = "field_{$field->id}_{$index}_{$subFieldKey}";
-                                    
-                                    // Case 1: New file upload
-                                    if ($request->hasFile($fileKey)) {
-                                        $uploadedFile = $request->file($fileKey);
-                                        
-                                        // Use the repeater_images collection which can store multiple files
-                                        $media = $contentItem->addMedia($uploadedFile)
-                                            ->toMediaCollection('repeater_images');
-                                        
-                                        // Store the media ID and URL in the field value for future reference
-                                        $fieldValue[$index][$subFieldKey] = [
-                                            'id' => $media->id,
-                                            'url' => $media->getUrl(),
-                                            'name' => $media->file_name
-                                        ];
-                                        
-                                        // If there's an existing image, find and delete it
-                                        if (is_array($subFieldValue) && isset($subFieldValue['id'])) {
-                                            $existingMedia = $contentItem->getMedia('repeater_images')
-                                                ->where('id', $subFieldValue['id'])
-                                                ->first();
-                                                
-                                            if ($existingMedia) {
-                                                $existingMedia->delete();
-                                            }
-                                        }
-                                    }
-                                    // Case 2: Remove existing image
-                                    elseif (is_array($subFieldValue) && isset($subFieldValue['_remove']) && $subFieldValue['_remove'] == '1') {
-                                        // Find and delete the media
-                                        if (isset($subFieldValue['id'])) {
-                                            $existingMedia = $contentItem->getMedia('repeater_images')
-                                                ->where('id', $subFieldValue['id'])
-                                                ->first();
-                                                
-                                            if ($existingMedia) {
-                                                $existingMedia->delete();
-                                            }
-                                        }
-                                        
-                                        // Remove this field from the data
-                                        unset($fieldValue[$index][$subFieldKey]);
-                                    }
-                                    // Case 3: Keep existing image
-                                    elseif (is_array($subFieldValue) && isset($subFieldValue['id'])) {
-                                        // Keep the existing image data
-                                        $fieldValue[$index][$subFieldKey] = [
-                                            'id' => $subFieldValue['id'],
-                                            'url' => $subFieldValue['url'],
-                                            'name' => $subFieldValue['name']
-                                        ];
-                                    }
-                                }
-                            }
-                            
-                            // Remove empty values to save space
-                            $fieldValue[$index] = array_filter($itemData, function($value) {
-                                return $value !== null && $value !== '';
-                            });
-                        }
-                    }
-                    
-                    // Re-index array to ensure sequential keys
-                    $fieldValue = array_values($fieldValue);
-                    
-                    // Convert to JSON for storage
-                    $fieldValue = json_encode($fieldValue);
-                } else {
-                    // If no data, store as empty array
-                    $fieldValue = json_encode([]);
-                }
+            if ($field->field_type == 'repeater') {
+                $this->processRepeaterField($request, $contentItem, $field);
+            } else {
+                $this->processSingleField($request, $contentItem, $field);
             }
+        }
+    }
+
+    /**
+     * Process a single field value
+     * 
+     * @param Request $request
+     * @param ContentItem $contentItem
+     * @param Field $field
+     * @return void
+     */
+    protected function processSingleField(Request $request, ContentItem $contentItem, $field)
+    {
+        // Get field value from request
+        $fieldValue = $request->input('field_' . $field->id);
             
-            // Find existing field value or create new one
-            $contentFieldValue = ContentFieldValue::updateOrCreate(
+        // Handle special field types
+        if ($field->field_type == 'boolean') {
+            $fieldValue = $request->has('field_' . $field->id) ? '1' : '0';
+        } elseif ($field->field_type == 'json' && is_array($fieldValue)) {
+            $fieldValue = json_encode($fieldValue);
+        }
+
+        // Handle text, textarea, number, select, boolean, date, json
+        if (in_array($field->field_type, ['text', 'textarea', 'number', 'select', 'boolean', 'date', 'json'])) {
+            // Save to ContentFieldValue model
+            ContentFieldValue::updateOrCreate(
                 [
                     'content_item_id' => $contentItem->id,
                     'content_type_field_id' => $field->id,
@@ -337,50 +263,168 @@ class ContentItemController extends Controller
                     'value' => $fieldValue,
                 ]
             );
+        }
+        // Handle file uploads (old approach)
+        elseif ($field->field_type == 'image' && $request->hasFile('field_' . $field->id)) {
+            // Remove existing files
+            $contentItem->clearMediaCollection('field_' . $field->id);
             
-            // Handle media uploads and media picker selections
-            if (in_array($field->field_type, ['image', 'gallery', 'file'])) {
-                // Handle file uploads (legacy file input approach)
-                if ($request->hasFile('field_' . $field->id)) {
-                    if ($field->field_type == 'gallery') {
-                        // Handle multiple files
-                        foreach ($request->file('field_' . $field->id) as $file) {
-                            $contentItem->addMedia($file)
-                                ->withCustomProperties(['field_id' => $field->id])
-                                ->toMediaCollection('field_' . $field->id);
-                        }
-                    } else {
-                        // Handle single file
-                        $contentItem->addMedia($request->file('field_' . $field->id))
-                            ->withCustomProperties(['field_id' => $field->id])
-                            ->toMediaCollection('field_' . $field->id);
-                    }
+            if (is_array($request->file('field_' . $field->id))) {
+                // Handle multiple files
+                foreach ($request->file('field_' . $field->id) as $file) {
+                    $contentItem->addMedia($file)
+                        ->withCustomProperties(['field_id' => $field->id])
+                        ->toMediaCollection('field_' . $field->id);
                 }
-                // Handle media picker selection (new approach)
-                elseif ($field->field_type == 'image' && $request->filled('field_' . $field->id)) {
-                    // First clear any existing media in this collection
-                    $contentItem->clearMediaCollection('field_' . $field->id);
-                    
-                    // Get the selected media ID
-                    $mediaId = $request->input('field_' . $field->id);
-                    
-                    // Find the existing media
-                    $media = \Spatie\MediaLibrary\MediaCollections\Models\Media::find($mediaId);
-                    
-                    if ($media) {
-                        // Create a new copy of the media attached to this content item
-                        $contentItem->addMediaFromUrl($media->getUrl())
-                            ->usingName($media->name)
-                            ->usingFileName($media->file_name)
-                            ->withCustomProperties(array_merge($media->custom_properties, ['field_id' => $field->id]))
-                            ->toMediaCollection('field_' . $field->id);
-                    }
-                }
-                // Handle media removal when input is empty
-                elseif ($field->field_type == 'image' && !$request->filled('field_' . $field->id)) {
-                    $contentItem->clearMediaCollection('field_' . $field->id);
-                }
+            } else {
+                // Handle single file
+                $contentItem->addMedia($request->file('field_' . $field->id))
+                    ->withCustomProperties(['field_id' => $field->id])
+                    ->toMediaCollection('field_' . $field->id);
             }
         }
+        // Handle media picker selection (new approach)
+        elseif ($field->field_type == 'image' && $request->filled('field_' . $field->id)) {
+            // First clear any existing media in this collection
+            $contentItem->clearMediaCollection('field_' . $field->id);
+            
+            // Get the selected media ID
+            $mediaId = $request->input('field_' . $field->id);
+            
+            // Find the existing media
+            $media = \Spatie\MediaLibrary\MediaCollections\Models\Media::find($mediaId);
+            
+            if ($media) {
+                // Create a new copy of the media attached to this content item
+                $newMedia = $contentItem->addMediaFromUrl($media->getUrl())
+                    ->usingName($media->name)
+                    ->usingFileName($media->file_name)
+                    ->withCustomProperties(array_merge($media->custom_properties, ['field_id' => $field->id]))
+                    ->toMediaCollection('field_' . $field->id);
+                    
+                // Store the media ID in ContentFieldValue for reference
+                ContentFieldValue::updateOrCreate(
+                    [
+                        'content_item_id' => $contentItem->id,
+                        'content_type_field_id' => $field->id,
+                    ],
+                    [
+                        'value' => $newMedia->id,
+                    ]
+                );
+            }
+        }
+        // Handle media removal when input is empty
+        elseif ($field->field_type == 'image' && !$request->filled('field_' . $field->id)) {
+            $contentItem->clearMediaCollection('field_' . $field->id);
+            
+            // Clear the field value
+            ContentFieldValue::updateOrCreate(
+                [
+                    'content_item_id' => $contentItem->id,
+                    'content_type_field_id' => $field->id,
+                ],
+                [
+                    'value' => null,
+                ]
+            );
+        }
     }
-}  
+
+    /**
+     * Process a repeater field value
+     * 
+     * @param Request $request
+     * @param ContentItem $contentItem
+     * @param Field $field
+     * @return void
+     */
+    protected function processRepeaterField(Request $request, ContentItem $contentItem, $field)
+    {
+        // Get field value from request
+        $fieldValue = $request->input('field_' . $field->id);
+        
+        // Get field configuration
+        $fieldConfig = json_decode($field->options, true) ?? [];
+        $subfields = $fieldConfig['subfields'] ?? [];
+        
+        // Create a unique collection prefix for this repeater field
+        $mediaPrefix = 'field_' . $field->id . '_repeater_';
+        
+        // For repeater fields, normalize and encode the array of items
+        if (is_array($fieldValue)) {
+            // Process each repeater item
+            foreach ($fieldValue as $index => $itemData) {
+                if (is_array($itemData)) {
+                    // Process each subfield
+                    foreach ($itemData as $subFieldKey => $subFieldValue) {
+                        // Find the subfield type
+                        $subFieldType = null;
+                        foreach ($subfields as $subfield) {
+                            if ($subfield['name'] == $subFieldKey) {
+                                $subFieldType = $subfield['type'];
+                                break;
+                            }
+                        }
+                        
+                        // Handle media picker in repeater fields
+                        if ($subFieldType === 'image') {
+                            // Create a unique collection name for this repeater item's media
+                            $collectionName = $mediaPrefix . $index . '_' . $subFieldKey;
+                            
+                            // Clear existing media for this specific repeater item field
+                            $contentItem->clearMediaCollection($collectionName);
+                            
+                            // Handle media picker selection
+                            if (!empty($subFieldValue)) {
+                                $mediaId = $subFieldValue;
+                                $media = \Spatie\MediaLibrary\MediaCollections\Models\Media::find($mediaId);
+                                
+                                if ($media) {
+                                    // Create a new copy of the media attached to this content item
+                                    $newMedia = $contentItem->addMediaFromUrl($media->getUrl())
+                                        ->usingName($media->name)
+                                        ->usingFileName($media->file_name)
+                                        ->withCustomProperties(array_merge($media->custom_properties, [
+                                            'field_id' => $field->id,
+                                            'repeater_index' => $index,
+                                            'subfield_name' => $subFieldKey
+                                        ]))
+                                        ->toMediaCollection($collectionName);
+                                        
+                                    // Store the media ID for reference in the field value
+                                    $fieldValue[$index][$subFieldKey] = $newMedia->id;
+                                }
+                            } else {
+                                // If no media selected, remove from field value
+                                unset($fieldValue[$index][$subFieldKey]);
+                            }
+                        }
+                    }
+                    
+                    // Remove empty values to save space
+                    $fieldValue[$index] = array_filter($itemData, function($value) {
+                        return $value !== null && $value !== '';
+                    });
+                }
+            }
+            
+            // Re-index array to ensure sequential keys
+            $fieldValue = array_values($fieldValue);
+        } else {
+            // If no data, use empty array
+            $fieldValue = [];
+        }
+        
+        // Convert to JSON for storage and save to ContentFieldValue
+        ContentFieldValue::updateOrCreate(
+            [
+                'content_item_id' => $contentItem->id,
+                'content_type_field_id' => $field->id,
+            ],
+            [
+                'value' => json_encode($fieldValue),
+            ]
+        );
+    }
+}

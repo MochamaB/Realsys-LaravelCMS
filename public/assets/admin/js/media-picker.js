@@ -2,28 +2,28 @@
  * Media Picker JS - Core Functionality
  * RealsysCMS Media Picker component for content integration
  */
+// Global references
+let mediaPickerModal = null;
+let currentMediaPickerField = null;
+
+// Media state
+let mediaItems = [];
+let currentPage = 1;
+let totalPages = 1;
+let selectedMediaIds = [];
+let isMultipleSelection = false;
+
+// Filters state
+let filters = {
+    folder_id: null,
+    tag_id: null,
+    type: null,
+    search: null
+};
+
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize media picker on all fields
     initMediaPickers();
-    
-    // Global references
-    let mediaPickerModal = null;
-    let currentMediaPickerField = null;
-    
-    // Media state
-    let mediaItems = [];
-    let currentPage = 1;
-    let totalPages = 1;
-    let selectedMediaIds = [];
-    let isMultipleSelection = false;
-    
-    // Filters state
-    let filters = {
-        folder_id: null,
-        tag_id: null,
-        type: null,
-        search: null
-    };
     
     /**
      * Initialize all media pickers on the page
@@ -168,7 +168,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Create thumbnail based on media type
             let thumbnail = '';
             if (media.mime_type.startsWith('image/')) {
-                thumbnail = `<img src="${media.url}" class="img-fluid media-thumbnail" alt="${media.name}">`;
+                thumbnail = `<img src="${media.full_url}" class="img-fluid media-thumbnail" alt="${media.name}">`;
             } else if (media.mime_type.startsWith('video/')) {
                 thumbnail = '<div class="media-icon"><i class="ri-video-line"></i></div>';
             } else if (media.mime_type.startsWith('audio/')) {
@@ -305,7 +305,7 @@ document.addEventListener('DOMContentLoaded', function() {
             selectedMedia.forEach(media => {
                 const isImage = media.mime_type.startsWith('image/');
                 const thumbnail = isImage 
-                    ? `<img src="${media.url}" class="img-fluid" style="height: 60px; width: auto;">` 
+                    ? `<img src="${media.full_url}" class="img-fluid" style="height: 60px; width: auto;">` 
                     : `<div class="media-icon" style="height: 60px;"><i class="ri-file-line"></i></div>`;
                 
                 const itemHtml = `
@@ -334,7 +334,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const media = selectedMedia[0];
                 
                 if (media.mime_type.startsWith('image/')) {
-                    mediaImage.src = media.url;
+                    mediaImage.src = media.full_url;
                     mediaImage.style.display = '';
                 } else {
                     mediaImage.style.display = 'none';
@@ -391,6 +391,5 @@ document.addEventListener('DOMContentLoaded', function() {
         button.innerHTML = '<i class="ri-image-add-line me-1"></i> Select Media';
     }
     
-    // Initialize on load
-    initMediaPickers();
+    // No need for duplicate initialization
 });

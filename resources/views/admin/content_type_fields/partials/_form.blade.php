@@ -193,7 +193,7 @@
                     <div class="subfields-list sortable-list" data-group="subfields-group">
                         <!-- Subfields will be added here dynamically -->
                     </div>
-                    <button type="button" class="btn btn-sm btn-secondary add-subfield mt-2">
+                    <button type="button" class="btn btn-secondary add-subfield mt-2">
                         <i class="ri-add-line"></i> Add Subfield
                     </button>
                 </div>
@@ -313,6 +313,10 @@
         const isModal = {{ $isModal ? 'true' : 'false' }};
         const prefix = isModal ? 'modal-' : '';
         
+        // Initialize repeater field variables early to prevent access before initialization
+        const subfieldsContainer = document.querySelector('.subfields-list');
+        const addSubfieldBtn = document.querySelector('.add-subfield');
+        
         // Elements for options management
         const fieldTypeSelect = document.getElementById(prefix + 'field_type');
         const optionsContainer = document.getElementById(prefix + 'options-container');
@@ -400,10 +404,7 @@
             }
         };
         
-        // Repeater field functionality
-        const addSubfieldBtn = document.querySelector('.add-subfield');
-        const subfieldsContainer = document.querySelector('.subfields-list');
-        
+        // Add click handler for add subfield button (variable already declared at the top)
         if (addSubfieldBtn) {
             addSubfieldBtn.addEventListener('click', function() {
                 addSubfield();
@@ -526,47 +527,65 @@
         }
         
         // Load existing repeater configuration from settings JSON
-        function loadRepeaterConfigFromSettings() {
-            // Get the settings textarea
-            const settingsField = document.getElementById(prefix + 'settings');
-            if (!settingsField || !settingsField.value || !subfieldsContainer) return;
+       // Modify the loadRepeaterConfigFromSettings function to include debugging
+function loadRepeaterConfigFromSettings() {
+    // Get the settings textarea
+    const settingsField = document.getElementById(prefix + 'settings');
+    console.log('Looking for settings field with ID:', prefix + 'settings');
+    console.log('Settings field found:', settingsField ? 'Yes' : 'No');
+    
+    if (!settingsField || !settingsField.value || !subfieldsContainer) {
+        console.log('Early return because:', {
+            'settingsField exists': !!settingsField,
+            'settingsField has value': settingsField ? !!settingsField.value : false,
+            'subfieldsContainer exists': !!subfieldsContainer
+        });
+        return;
+    }
+    
+    try {
+        // Parse the settings JSON
+        console.log('Settings JSON content:', settingsField.value);
+        const settings = JSON.parse(settingsField.value);
+        console.log('Parsed settings object:', settings);
+        
+        // Clear existing subfields
+        subfieldsContainer.innerHTML = '';
+        
+        // If we have subfields defined
+        if (settings.subfields && Array.isArray(settings.subfields)) {
+            console.log('Found subfields array with', settings.subfields.length, 'items');
             
-            try {
-                // Parse the settings JSON
-                const settings = JSON.parse(settingsField.value);
-                
-                // Clear existing subfields
-                subfieldsContainer.innerHTML = '';
-                
-                // If we have subfields defined
-                if (settings.subfields && Array.isArray(settings.subfields)) {
-                    // Add each subfield
-                    settings.subfields.forEach(subfield => {
-                        addSubfield({
-                            name: subfield.name,
-                            label: subfield.label,
-                            type: subfield.type,
-                            required: subfield.required
-                        });
-                    });
-                }
-                
-                // Set min/max items
-                const minItemsInput = document.querySelector('input[name="repeater_min_items"]');
-                const maxItemsInput = document.querySelector('input[name="repeater_max_items"]');
-                
-                if (minItemsInput && settings.min_items !== undefined) {
-                    minItemsInput.value = settings.min_items;
-                }
-                
-                if (maxItemsInput && settings.max_items !== undefined) {
-                    maxItemsInput.value = settings.max_items;
-                }
-                
-            } catch (e) {
-                console.error('Error parsing repeater settings:', e);
-            }
+            // Add each subfield
+            settings.subfields.forEach((subfield, index) => {
+                console.log(`Adding subfield ${index}:`, subfield);
+                addSubfield({
+                    name: subfield.name,
+                    label: subfield.label,
+                    type: subfield.type,
+                    required: subfield.required
+                });
+            });
+        } else {
+            console.log('No subfields array found in settings');
         }
+        
+        // Set min/max items
+        const minItemsInput = document.querySelector('input[name="repeater_min_items"]');
+        const maxItemsInput = document.querySelector('input[name="repeater_max_items"]');
+        
+        if (minItemsInput && settings.min_items !== undefined) {
+            minItemsInput.value = settings.min_items;
+        }
+        
+        if (maxItemsInput && settings.max_items !== undefined) {
+            maxItemsInput.value = settings.max_items;
+        }
+        
+    } catch (e) {
+        console.error('Error parsing repeater settings:', e);
+    }
+}
         
         // Initialize sortable for subfields if SortableJS is available
         if (typeof Sortable !== 'undefined' && subfieldsContainer) {

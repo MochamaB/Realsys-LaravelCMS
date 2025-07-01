@@ -158,67 +158,53 @@ class MediaController extends Controller
      */
     public function store(Request $request)
     {
-    $validator = Validator::make($request->all(), [
-        'file' => 'required|file|max:10240', // 10MB max
-        'collection_name' => 'nullable|string',
-    ]);
-
-    if ($validator->fails()) {
-        return response()->json(['error' => $validator->errors()], 422);
-    }
-
-    try {
-        $file = $request->file('file');
-        $collection = $request->input('collection_name', 'default');
-        
-        // Instead of using a temporary model, add the file directly
-        // to the media library as an unattached media item
-        $media = \App\Models\Media::create([]);
-        
-        $media->name = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-        $media->file_name = Str::uuid() . '.' . $file->getClientOriginalExtension();
-        
-        // Generate a path for the file in the media disk
-        $mediaPath = $collection . '/' . date('Y-m-d') . '/' . $media->file_name;
-        
-        // Move the uploaded file to the media disk
-        $path = Storage::disk('media')->putFileAs(
-            dirname($mediaPath),
-            $file,
-            $media->file_name
-        );
-        
-        // Set the media properties
-        $media->collection_name = $collection;
-        $media->mime_type = $file->getMimeType();
-        $media->size = $file->getSize();
-        $media->disk = 'media';
-        $media->conversions_disk = 'media';
-        $media->manipulations = [];
-        $media->custom_properties = [
-            'alt' => $request->input('alt', ''),
-            'title' => $request->input('title', ''),
-            'caption' => $request->input('caption', ''),
-        ];
-        $media->responsive_images = [];
-        $media->order_column = \App\Models\Media::max('order_column') + 1;
-        
-        // Assign to folder if specified
-        if ($request->has('folder_id') && $request->folder_id != 'root' && $request->folder_id != '0') {
-            $media->folder_id = $request->folder_id;
-        }
-        
-        $media->save();
-        
-        // If it's an image, generate conversions
-        if (Str::startsWith($media->mime_type, 'image/')) {
-            $media->registerMediaConversions();
-        }
-        
-        return response()->json([
-            'success' => true,
-            'media' => $media
+        $validator = Validator::make($request->all(), [
+            'file' => 'required|file|max:10240', // 10MB max
+            'collection_name' => 'nullable|string',
+            'folder_id' => 'nullable|exists:media_folders,id',
+            'alt' => 'nullable|string',
+            'title' => 'nullable|string',
+            'caption' => 'nullable|string',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 422);
+        }
+
+        try {
+            $file = $request->file('file');
+            $collection = $request->input('collection_name', 'default');
+            
+            // Create a new MediaLibrary instance to hold the media
+            $mediaLibrary = new \App\Models\MediaLibrary();
+            $mediaLibrary->save();
+            
+            // Add metadata as custom properties
+            $customProperties = [
+                'alt' => $request->input('alt', ''),
+                'title' => $request->input('title', ''),
+                'caption' => $request->input('caption', ''),
+            ];
+            
+            // Add folder ID if provided
+            if ($request->has('folder_id')) {
+                $customProperties['folder_id'] = $request->input('folder_id');
+            }
+            
+            // Add the media to the MediaLibrary model
+            $media = $mediaLibrary->addMedia($file)
+                ->withCustomProperties($customProperties)
+                ->toMediaCollection($collection);
+                
+            // Generate responsive images if it's an image
+            if (Str::startsWith($media->mime_type, 'image/')) {
+                // Future: Add image conversion/optimization here if needed
+            }
+            
+            return response()->json([
+                'success' => true,
+                'media' => $media
+            ]);
     } catch (\Exception $e) {
         return response()->json([
             'success' => false,
@@ -355,6 +341,62 @@ class MediaController extends Controller
                            ->paginate(24);
         
         return response()->json($mediaItems);
+    }
+    
+    /**
+     * Provide media items for the media picker
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function mediaPicker(Request $request)
+    {
+        $query = Media::query();
+        
+        // Filter by type
+        if ($request->has('type')) {
+            $query->where('mime_type', 'like', $request->type . '%');
+        }
+        
+        // Filter by folder
+        if ($request->has('folder_id')) {
+            if ($request->folder_id == 'root') {
+                $query->whereNull('folder_id');
+            } else {
+                $query->where('folder_id', $request->folder_id);
+            }
+        }
+        
+        // Filter by tag
+        if ($request->has('tag_id')) {
+            $query->whereHas('tags', function($q) use ($request) {
+                $q->where('media_tags.id', $request->tag_id);
+            });
+        }
+        
+        // Search by name or filename
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('file_name', 'like', "%{$search}%");
+            });
+        }
+        
+        // Get paginated results
+        $media = $query->orderBy('created_at', 'desc')
+                      ->paginate(24);
+                      
+        // Add full URL to each media item
+        $media->getCollection()->transform(function($item) {
+            $item->full_url = $item->getFullUrl();
+            return $item;
+        });
+        
+        return response()->json([
+            'success' => true,
+            'media' => $media
+        ]);
     }
     
     /**

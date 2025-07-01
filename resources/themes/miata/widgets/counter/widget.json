@@ -5,30 +5,40 @@
   "icon": "ri-number-1",
   "fields": [
     {
-      "name": "Icon",
-      "slug": "icon",
-      "field_type": "image",
-      "is_required": true,
+      "name": "Counters",
+      "slug": "counters",
+      "field_type": "repeater",
       "position": 1,
-      "description": "Icon image for the counter"
-    },
-    {
-      "name": "Top Text",
-      "slug": "top_text",
-      "field_type": "text",
       "is_required": true,
-      "position": 2,
-      "description": "Title text displayed above the counter"
-    },
-    {
-      "name": "Counter Number",
-      "slug": "counter_number",
-      "field_type": "number",
-      "is_required": true,
-      "position": 3,
-      "description": "The number to count up to"
+      "description": "Counters to display",
+      "min_items": 1,
+      "max_items": 12,
+      "subfields": [
+        {
+          "name": "Icon",
+          "slug": "icon",
+          "field_type": "image",
+          "is_required": true,
+          "description": "Icon image for the counter"
+        },
+        {
+          "name": "Top Text",
+          "slug": "top_text",
+          "field_type": "text",
+          "is_required": true,
+          "description": "Top text for the counter"
+        },
+        {
+          "name": "Counter Number",
+          "slug": "counter_number",
+          "field_type": "number",
+          "is_required": true,
+          "description": "Counter number"
+        }
+        
+      ]
     }
-  ],
+  ],    
   "settings": [
     {
       "name": "Count Suffix",

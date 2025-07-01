@@ -60,32 +60,28 @@
                                             {{ isset($subfield['required']) && $subfield['required'] ? 'required' : '' }}>
                                         @break
                                     @case('image')
-                                        @php
-                                            $imageData = $itemData[$subfield['name']] ?? null;
-                                            $hasImage = is_array($imageData) && isset($imageData['url']);
-                                        @endphp
+                                    @php
+                                        // Get the stored media ID from field values
+                                        $selectedMediaId = isset($itemData[$subfield['name']]) ? $itemData[$subfield['name']] : null;
                                         
-                                        @if($hasImage)
-                                        <div class="mb-2">
-                                            <img src="{{ asset('storage/'.$imageData['url']) }}" alt="{{ $imageData['name'] ?? 'Image preview' }}" 
-                                                class="img-thumbnail" style="max-height: 100px;">
-                                            
-                                            <input type="hidden" name="field_{{ $field->id }}[{{ $index }}][{{ $subfield['name'] }}][id]" value="{{ $imageData['id'] }}">
-                                            <input type="hidden" name="field_{{ $field->id }}[{{ $index }}][{{ $subfield['name'] }}][url]" value="{{ $imageData['url'] }}">
-                                            <input type="hidden" name="field_{{ $field->id }}[{{ $index }}][{{ $subfield['name'] }}][name]" value="{{ $imageData['name'] }}">
-                                        </div>
-                                        @endif
-                                        
-                                        <div class="input-group">
-                                            <input type="file" class="form-control" name="field_{{ $field->id }}_{{ $index }}_{{ $subfield['name'] }}" 
-                                                accept="image/*" 
-                                                {{ !$hasImage && isset($subfield['required']) && $subfield['required'] ? 'required' : '' }}>
-                                            @if($hasImage)
-                                                <button type="button" class="btn btn-outline-danger remove-image-btn">Remove</button>
-                                            @endif
-                                        </div>
-                                        <small class="form-text text-muted">{{ $hasImage ? 'Upload a new file to replace the existing image' : 'Select an image to upload' }}</small>
-                                        @break
+                                        // If no ID in field values, try to find media by collection name
+                                        if (!$selectedMediaId && $contentItem) {
+                                            $collectionName = 'field_' . $field->id . '_repeater_' . $index . '_' . $subfield['name'];
+                                            $media = $contentItem->getMedia($collectionName)->first();
+                                            if ($media) {
+                                                $selectedMediaId = $media->id;
+                                            }
+                                        }
+                                    @endphp
+    
+                                    <x-media-picker
+                                        name="field_{{ $field->id }}[{{ $index }}][{{ $subfield['name'] }}]"
+                                        label="{{ $subfield['label'] }}"
+                                        :multiple="false"
+                                        :selected="$selectedMediaId"
+                                        :allowedTypes="['image']"
+                                    />
+                                    @break
                                     @case('boolean')
                                         <div class="form-check">
                                             <input type="checkbox" class="form-check-input" id="field_{{ $field->id }}_{{ $index }}_{{ $subfield['name'] }}" 
@@ -94,7 +90,7 @@
                                                 {{ isset($subfield['required']) && $subfield['required'] ? 'required' : '' }}>
                                             <label class="form-check-label" for="field_{{ $field->id }}_{{ $index }}_{{ $subfield['name'] }}">Yes</label>
                                         </div>
-                                        @break
+                                    @break
                                     @case('date')
                                         <input type="date" class="form-control" name="field_{{ $field->id }}[{{ $index }}][{{ $subfield['name'] }}]"
                                             value="{{ $itemData[$subfield['name']] ?? '' }}"
