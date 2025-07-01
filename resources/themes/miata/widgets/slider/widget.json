@@ -19,9 +19,10 @@
       "position": 2,
       "is_required": true,
       "description": "Slide items for the slider",
-      "min_items": 1,
-      "max_items": 10,
-      "subfields": [
+      "settings": {
+        "min_items": 1,
+        "max_items": 10,
+        "subfields": [
         {
           "name": "Image",
           "slug": "image",
@@ -65,50 +66,46 @@
           "description": "URL for the button"
         }
       ]
+      }
     }
   ],
-  "settings": [
-    {
+  "settings": {
+    "animation_speed": {
       "name": "Animation Speed",
-      "slug": "animation_speed",
       "field_type": "number",
       "is_required": false,
       "description": "Animation speed in milliseconds",
       "default": 500
     },
-    {
+    "autoplay": {
       "name": "Autoplay",
-      "slug": "autoplay",
       "field_type": "checkbox",
       "is_required": false,
       "description": "Auto-rotate slides",
       "default": true
     },
-    {
+    "autoplay_delay": {
       "name": "Autoplay Delay",
-      "slug": "autoplay_delay",
       "field_type": "number",
       "is_required": false,
       "description": "Delay between slides in milliseconds",
       "default": 5000
     },
-    {
+    "show_nav_arrows": {
       "name": "Show Navigation Arrows",
-      "slug": "show_nav_arrows",
       "field_type": "checkbox",
       "is_required": false,
       "description": "Show next/prev navigation arrows",
       "default": true
     },
-    {
+    "show_pagination": {
       "name": "Show Pagination Dots",
-      "slug": "show_pagination",
       "field_type": "checkbox",
       "is_required": false,
       "description": "Show pagination dots",
       "default": true
     }
-  ],
+  },
   "content_type_compatibility": {
     "slides": {
       "compatible_with": ["slider", "banner", "carousel", "gallery", "hero"],

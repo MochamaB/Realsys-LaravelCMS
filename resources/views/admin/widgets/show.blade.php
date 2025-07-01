@@ -35,6 +35,13 @@
                         <span class="badge bg-success">{{ $widget->contentTypeAssociations->count() }}</span>
                     </button>
                 </li>
+                <li class="nav-item" role="fields-tab">
+                    <button class="nav-link" id="fields-tab" data-bs-toggle="tab" 
+                          data-bs-target="#fields" type="button" role="tab">
+                        <i class="bx bx-list-ul"></i> Fields
+                        <span class="badge bg-info">{{ $widget->fieldDefinitions->count() }}</span>
+                    </button>
+                </li>
                 <li class="nav-item" role="code-tab">
                     <button class="nav-link" id="code-tab" data-bs-toggle="tab" 
                           data-bs-target="#code" type="button" role="tab">
@@ -60,6 +67,9 @@
         <div class="tab-pane fade" id="relationships" role="tabpanel">
            @include('admin.widgets.tabs.relationships')
         </div>
+        <div class="tab-pane fade" id="fields" role="tabpanel">
+           @include('admin.widgets.tabs.fields')
+        </div>
          <div class="tab-pane fade" id="code" role="tabpanel">
             @include('admin.widgets.tabs.edit_code')
            
@@ -77,14 +87,12 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const tabKey = 'activeWidgetTab';
-
-    // Restore the saved tab
-    const savedTab = localStorage.getItem(tabKey);
-    if (savedTab) {
-        const trigger = document.querySelector(`[data-bs-target="${savedTab}"]`);
-        if (trigger) {
-            new bootstrap.Tab(trigger).show();
-        }
+    
+    // Always default to preview tab first
+    const defaultTab = '#preview';
+    const trigger = document.querySelector(`[data-bs-target="${defaultTab}"]`);
+    if (trigger) {
+        new bootstrap.Tab(trigger).show();
     }
 
     // Store the active tab when changed

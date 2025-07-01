@@ -41,39 +41,62 @@ class WidgetContentCompatibilityService
             ];
         }
         
-        // Get widget.json content for detailed compatibility analysis
-        $widgetJsonPath = resource_path("themes/{$widget->theme->slug}/widgets/{$widget->slug}/widget.json");
+        // Check for explicit compatibility in widget.json if available
+        $explicitlyCompatible = false;
+        $explicitMapping = [];
         $widgetConfig = [];
+        
+        $widgetJsonPath = resource_path("themes/{$widget->theme->slug}/widgets/{$widget->slug}/widget.json");
         
         if (file_exists($widgetJsonPath)) {
             $widgetConfig = json_decode(file_get_contents($widgetJsonPath), true) ?? [];
-        }
-        
-        // Check if content_type_compatibility is defined in the widget.json
-        $explicitlyCompatible = false;
-        $compatibilityData = [];
-        
-        if (isset($widgetConfig['content_type_compatibility'])) {
-            $compatibilityData = $widgetConfig['content_type_compatibility'];
             
-            // Check if this content type is explicitly listed as compatible
-            if (isset($compatibilityData['compatible_content_types'])) {
-                $explicitlyCompatible = in_array($contentType->slug, $compatibilityData['compatible_content_types']) || 
-                                       in_array('*', $compatibilityData['compatible_content_types']);
+            // Check if content_type_compatibility is defined in the widget.json
+            if (isset($widgetConfig['content_type_compatibility'])) {
+                $compatibilityData = $widgetConfig['content_type_compatibility'];
+                
+                // Check if this content type is explicitly listed as compatible
+                if (isset($compatibilityData['compatible_content_types'])) {
+                    $explicitlyCompatible = in_array($contentType->slug, $compatibilityData['compatible_content_types']) || 
+                                           in_array('*', $compatibilityData['compatible_content_types']);
+                    
+                    if ($explicitlyCompatible) {
+                        $explicitMapping = $this->getFieldMapping($widgetConfig, $contentType->slug);
+                    }
+                }
             }
         }
         
-        // If universal compatibility is defined, it's compatible
+        // First, perform field-by-field compatibility analysis regardless of explicit config
+        // This ensures we always get a complete compatibility picture
+        $fieldCompatibilityResult = $this->analyzeFieldCompatibility($widget, $contentType, $widgetFields, $contentTypeFields);
+        
+        // If explicitly defined as compatible in widget.json, override the compatibility result
         if ($explicitlyCompatible) {
             return [
                 'compatible' => true,
                 'explicitly_defined' => true,
-                'mapping' => $this->getFieldMapping($widgetConfig, $contentType->slug),
+                'mapping' => $explicitMapping,
+                'field_compatibility' => $fieldCompatibilityResult['field_compatibility'] ?? [],
                 'message' => "Widget '{$widget->name}' is explicitly compatible with '{$contentType->name}' content type."
             ];
         }
         
-        // Check for field compatibility if not explicitly defined
+        // Return the field-based compatibility analysis result
+        return $fieldCompatibilityResult;
+    }
+    
+    /**
+     * Analyze field-by-field compatibility between widget and content type
+     *
+     * @param Widget $widget The widget to check
+     * @param ContentType $contentType The content type to check against
+     * @param Collection $widgetFields Collection of widget field definitions
+     * @param Collection $contentTypeFields Collection of content type fields
+     * @return array Compatibility result
+     */
+    protected function analyzeFieldCompatibility(Widget $widget, ContentType $contentType, $widgetFields, $contentTypeFields)
+    {
         $requiredFieldsCompatible = true;
         $missingFields = [];
         $fieldCompatibility = [];
@@ -83,7 +106,31 @@ class WidgetContentCompatibilityService
         
         // If no required fields, we'll do a more general compatibility check
         if ($requiredWidgetFields->isEmpty()) {
-            // Just check if we have enough fields of compatible types
+            // First, check if there are any repeater fields on both sides
+            $widgetHasRepeater = $widgetFields->where('field_type', 'repeater')->count() > 0;
+            $contentTypeHasRepeater = $contentTypeFields->where('field_type', 'repeater')->count() > 0;
+            
+            if ($widgetHasRepeater && $contentTypeHasRepeater) {
+                // Check repeater compatibility
+                $widgetRepeater = $widgetFields->where('field_type', 'repeater')->first();
+                $contentTypeRepeater = $contentTypeFields->where('field_type', 'repeater')->first();
+                
+                // Generate mappings for the repeater fields
+                $repeaterMappings = $this->generateRepeaterFieldMappings($widgetRepeater, $contentTypeFields->where('field_type', 'repeater'));
+                
+                if (!empty($repeaterMappings)) {
+                    return [
+                        'compatible' => true,
+                        'explicitly_defined' => false,
+                        'field_compatibility' => $repeaterMappings,
+                        'missing_fields' => [],
+                        'suggested_mapping' => $this->generateFieldMappings($widget, $contentType),
+                        'message' => "Widget '{$widget->name}' has compatible repeater fields with '{$contentType->name}' content type."
+                    ];
+                }
+            }
+            
+            // If repeater check didn't find compatibility, do general field check
             $minFieldsNeeded = min(3, $widgetFields->count()); // At least 3 fields or all if less than 3
             $compatibleFieldCount = 0;
             
@@ -91,6 +138,7 @@ class WidgetContentCompatibilityService
                 foreach ($contentTypeFields as $contentField) {
                     if ($this->areFieldTypesCompatible($widgetField->field_type, $contentField->field_type)) {
                         $compatibleFieldCount++;
+                        $fieldCompatibility[$widgetField->name] = $contentField->name;
                         break;
                     }
                 }
@@ -100,7 +148,9 @@ class WidgetContentCompatibilityService
                 return [
                     'compatible' => true,
                     'explicitly_defined' => false,
-                    'mapping' => [],
+                    'field_compatibility' => $fieldCompatibility,
+                    'missing_fields' => [],
+                    'suggested_mapping' => $this->generateFieldMappings($widget, $contentType),
                     'message' => "Widget '{$widget->name}' has at least {$compatibleFieldCount} compatible fields with '{$contentType->name}' content type."
                 ];
             }
@@ -108,7 +158,8 @@ class WidgetContentCompatibilityService
             return [
                 'compatible' => false,
                 'explicitly_defined' => false,
-                'mapping' => [],
+                'field_compatibility' => $fieldCompatibility,
+                'missing_fields' => [],
                 'message' => "Widget '{$widget->name}' does not have enough compatible fields with '{$contentType->name}' content type."
             ];
         }
@@ -119,14 +170,24 @@ class WidgetContentCompatibilityService
             $fieldType = $widgetField->field_type;
             $matchFound = false;
             
-            // Look for matching field in content type by name or slug
-            foreach ($contentTypeFields as $contentField) {
-                // Try to match by name or slug (case insensitive)
-                $nameMatches = strtolower($contentField->name) === strtolower($fieldName);
-                $slugMatches = strtolower($contentField->slug) === strtolower($fieldName);
-                
-                if ($nameMatches || $slugMatches) {
-                    // Check field type compatibility
+            // Special handling for repeater fields
+            if ($fieldType === 'repeater') {
+                foreach ($contentTypeFields->where('field_type', 'repeater') as $contentRepeater) {
+                    // Generate mappings for the repeater fields
+                    $repeaterMappings = $this->generateRepeaterFieldMappings($widgetField, collect([$contentRepeater]));
+                    
+                    if (!empty($repeaterMappings)) {
+                        $matchFound = true;
+                        foreach ($repeaterMappings as $widgetPath => $contentPath) {
+                            $fieldCompatibility[$widgetPath] = $contentPath;
+                        }
+                        break;
+                    }
+                }
+            } 
+            // Standard fields
+            else {
+                foreach ($contentTypeFields as $contentField) {
                     if ($this->areFieldTypesCompatible($fieldType, $contentField->field_type)) {
                         $matchFound = true;
                         $fieldCompatibility[$fieldName] = $contentField->name;
@@ -299,21 +360,42 @@ class WidgetContentCompatibilityService
      * @param Collection $contentFields
      * @return array Field mappings for repeater
      */
+    /**
+     * Generate mappings for repeater field and its sub-fields
+     * 
+     * @param object $repeaterField The widget repeater field
+     * @param Collection $contentFields Collection of content type fields
+     * @return array Field mappings for repeater
+     */
     protected function generateRepeaterFieldMappings($repeaterField, $contentFields)
     {
         $mappings = [];
         
         // Find content repeater fields
         $contentRepeaterFields = $contentFields->filter(function($field) {
-            return $field->type === 'repeater';
+            return $field->field_type === 'repeater';
         });
         
         if ($contentRepeaterFields->isEmpty()) {
             return $mappings;
         }
         
-        // Get repeater field's sub-fields
-        $subFields = Arr::get($repeaterField->settings, 'sub_fields', []);
+        // Get repeater field's subfields with fallbacks for different formats
+        $subFields = [];
+        
+        // First check for standardized location
+        if (isset($repeaterField->settings) && isset($repeaterField->settings['subfields'])) {
+            $subFields = $repeaterField->settings['subfields'];
+        } 
+        // Check legacy format
+        elseif (isset($repeaterField->settings) && isset($repeaterField->settings['sub_fields'])) {
+            $subFields = $repeaterField->settings['sub_fields'];
+        }
+        // Check if settings is a JSON string
+        elseif (is_string($repeaterField->settings)) {
+            $settingsArray = json_decode($repeaterField->settings, true);
+            $subFields = $settingsArray['subfields'] ?? $settingsArray['sub_fields'] ?? [];
+        }
         
         // Find best matching content repeater field
         $bestContentRepeater = $this->findBestMatchingField($repeaterField, $contentRepeaterFields);
@@ -323,15 +405,160 @@ class WidgetContentCompatibilityService
         }
         
         // Add main repeater mapping
-        $mappings[$repeaterField->key] = $bestContentRepeater->name;
+        $fieldKey = $repeaterField->name ?? $repeaterField->key ?? $repeaterField->slug ?? null;
+        if (!$fieldKey) {
+            return $mappings;
+        }
+        
+        $mappings[$fieldKey] = $bestContentRepeater->name;
         
         // Map sub-fields if content repeater has sub-fields too
-        $contentSubFields = Arr::get($bestContentRepeater->settings, 'sub_fields', []);
+        $contentSubFields = [];
+        
+        // First check for standardized location in content field
+        if (isset($bestContentRepeater->settings) && isset($bestContentRepeater->settings['subfields'])) {
+            $contentSubFields = $bestContentRepeater->settings['subfields'];
+        } 
+        // Check legacy format
+        elseif (isset($bestContentRepeater->settings) && isset($bestContentRepeater->settings['sub_fields'])) {
+            $contentSubFields = $bestContentRepeater->settings['sub_fields'];
+        }
+        // Check if settings is a JSON string
+        elseif (is_string($bestContentRepeater->settings)) {
+            $settingsArray = json_decode($bestContentRepeater->settings, true);
+            $contentSubFields = $settingsArray['subfields'] ?? $settingsArray['sub_fields'] ?? [];
+        }
         
         foreach ($subFields as $subField) {
+            // Normalize subfield to object if it's an array
+            $subFieldObj = is_array($subField) ? (object)$subField : $subField;
+            
+            // Get field type using different possible property names
+            $subFieldType = $subFieldObj->field_type ?? $subFieldObj->type ?? null;
+            $subFieldName = $subFieldObj->name ?? $subFieldObj->key ?? $subFieldObj->slug ?? null;
+            
+            if (!$subFieldType || !$subFieldName) {
+                continue;
+            }
+            
             foreach ($contentSubFields as $contentSubField) {
-                if ($this->areFieldTypesCompatible($subField['type'], $contentSubField['type'])) {
-                    $mappings["{$repeaterField->key}.{$subField['key']}"] = "{$bestContentRepeater->name}.{$contentSubField['name']}";
+                // Normalize content subfield to object if it's an array
+                $contentSubFieldObj = is_array($contentSubField) ? (object)$contentSubField : $contentSubField;
+                
+                // Get field type using different possible property names
+                $contentSubFieldType = $contentSubFieldObj->field_type ?? $contentSubFieldObj->type ?? null;
+                $contentSubFieldName = $contentSubFieldObj->name ?? $contentSubFieldObj->key ?? $contentSubFieldObj->slug ?? null;
+                
+                if (!$contentSubFieldType || !$contentSubFieldName) {
+                    continue;
+                }
+                
+                if ($this->areFieldTypesCompatible($subFieldType, $contentSubFieldType)) {
+                    $mappings["{$fieldKey}.{$subFieldName}"] = "{$bestContentRepeater->name}.{$contentSubFieldName}";
+                    
+                    // Handle nested repeaters recursively
+                    if ($subFieldType === 'repeater' && $contentSubFieldType === 'repeater') {
+                        $nestedMappings = $this->generateNestedRepeaterMappings($subFieldObj, $contentSubFieldObj, "{$fieldKey}.{$subFieldName}", "{$bestContentRepeater->name}.{$contentSubFieldName}");
+                        $mappings = array_merge($mappings, $nestedMappings);
+                    }
+                    
+                    break;
+                }
+            }
+        }
+        
+        return $mappings;
+    }
+    
+    /**
+     * Generate mappings for nested repeater fields
+     * 
+     * @param object $widgetRepeaterField The widget repeater field
+     * @param object $contentRepeaterField The content type repeater field
+     * @param string $widgetParentPath The parent path for widget field (e.g. 'main_repeater.nested_repeater')
+     * @param string $contentParentPath The parent path for content field (e.g. 'content_repeater.nested_content_repeater')
+     * @return array Nested field mappings
+     */
+    protected function generateNestedRepeaterMappings($widgetRepeaterField, $contentRepeaterField, $widgetParentPath, $contentParentPath)
+    {
+        $mappings = [];
+        
+        // Get widget repeater's subfields with fallbacks
+        $widgetSubfields = [];
+        
+        // Check different locations for subfields
+        if (isset($widgetRepeaterField->settings)) {
+            if (is_array($widgetRepeaterField->settings)) {
+                $widgetSubfields = $widgetRepeaterField->settings['subfields'] ?? 
+                                  $widgetRepeaterField->settings['sub_fields'] ?? [];
+            } elseif (is_string($widgetRepeaterField->settings)) {
+                $settingsArray = json_decode($widgetRepeaterField->settings, true) ?: [];
+                $widgetSubfields = $settingsArray['subfields'] ?? $settingsArray['sub_fields'] ?? [];
+            } elseif (is_object($widgetRepeaterField->settings)) {
+                $widgetSubfields = $widgetRepeaterField->settings->subfields ?? 
+                                  $widgetRepeaterField->settings->sub_fields ?? [];
+            }
+        }
+        
+        // Get content type repeater's subfields with fallbacks
+        $contentSubfields = [];
+        
+        // Check different locations for subfields
+        if (isset($contentRepeaterField->settings)) {
+            if (is_array($contentRepeaterField->settings)) {
+                $contentSubfields = $contentRepeaterField->settings['subfields'] ?? 
+                                    $contentRepeaterField->settings['sub_fields'] ?? [];
+            } elseif (is_string($contentRepeaterField->settings)) {
+                $settingsArray = json_decode($contentRepeaterField->settings, true) ?: [];
+                $contentSubfields = $settingsArray['subfields'] ?? $settingsArray['sub_fields'] ?? [];
+            } elseif (is_object($contentRepeaterField->settings)) {
+                $contentSubfields = $contentRepeaterField->settings->subfields ?? 
+                                    $contentRepeaterField->settings->sub_fields ?? [];
+            }
+        }
+        
+        // Map each subfield if types are compatible
+        foreach ($widgetSubfields as $widgetSubfield) {
+            // Normalize to object
+            $widgetSubfieldObj = is_array($widgetSubfield) ? (object)$widgetSubfield : $widgetSubfield;
+            
+            // Get field properties
+            $widgetSubfieldType = $widgetSubfieldObj->field_type ?? $widgetSubfieldObj->type ?? null;
+            $widgetSubfieldName = $widgetSubfieldObj->name ?? $widgetSubfieldObj->key ?? $widgetSubfieldObj->slug ?? null;
+            
+            if (!$widgetSubfieldType || !$widgetSubfieldName) {
+                continue;
+            }
+            
+            foreach ($contentSubfields as $contentSubfield) {
+                // Normalize to object
+                $contentSubfieldObj = is_array($contentSubfield) ? (object)$contentSubfield : $contentSubfield;
+                
+                // Get field properties
+                $contentSubfieldType = $contentSubfieldObj->field_type ?? $contentSubfieldObj->type ?? null;
+                $contentSubfieldName = $contentSubfieldObj->name ?? $contentSubfieldObj->key ?? $contentSubfieldObj->slug ?? null;
+                
+                if (!$contentSubfieldType || !$contentSubfieldName) {
+                    continue;
+                }
+                
+                if ($this->areFieldTypesCompatible($widgetSubfieldType, $contentSubfieldType)) {
+                    $widgetPath = "{$widgetParentPath}.{$widgetSubfieldName}";
+                    $contentPath = "{$contentParentPath}.{$contentSubfieldName}";
+                    
+                    $mappings[$widgetPath] = $contentPath;
+                    
+                    // Handle deeper nesting if needed
+                    if ($widgetSubfieldType === 'repeater' && $contentSubfieldType === 'repeater') {
+                        $deeperMappings = $this->generateNestedRepeaterMappings(
+                            $widgetSubfieldObj, 
+                            $contentSubfieldObj, 
+                            $widgetPath, 
+                            $contentPath
+                        );
+                        $mappings = array_merge($mappings, $deeperMappings);
+                    }
+                    
                     break;
                 }
             }

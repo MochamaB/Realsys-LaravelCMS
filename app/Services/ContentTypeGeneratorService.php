@@ -158,23 +158,45 @@ class ContentTypeGeneratorService
                 // Special handling for repeater fields - process subfields
                 $subfields = [];
                 
-                // Check for subfields in different possible locations
+                // Check for subfields in different possible locations using a consistent approach
                 $fieldList = null;
                 
-                // Option 1: Check if fields property exists directly
-                if (isset($widgetField->fields) && is_array($widgetField->fields)) {
+                // First check settings.subfields (our new standardized location)
+                if (isset($existingSettings['subfields']) && is_array($existingSettings['subfields'])) {
+                    $fieldList = $existingSettings['subfields'];
+                }
+                // Then check direct fields property (legacy format)
+                elseif (isset($widgetField->fields) && is_array($widgetField->fields)) {
                     $fieldList = $widgetField->fields;
                 }
-                // Option 2: Check if subfields exists in settings
-                elseif (isset($existingSettings['subfields']) && is_array($existingSettings['subfields'])) {
-                    $fieldList = $existingSettings['subfields'];
+                // Last try widget field settings in JSON format if stored as string
+                elseif (isset($widgetField->settings) && is_string($widgetField->settings)) {
+                    $settingsArray = json_decode($widgetField->settings, true);
+                    if (isset($settingsArray['subfields']) && is_array($settingsArray['subfields'])) {
+                        $fieldList = $settingsArray['subfields'];
+                    }
                 }
                 
                 // Process subfields if we found them
                 if ($fieldList) {
                     foreach ($fieldList as $subfield) {
+                        // Create a proper object structure for the recursive call
+                        $subfieldObj = is_array($subfield) ? (object)$subfield : $subfield;
+                        
+                        // Ensure name property exists
+                        if (!isset($subfieldObj->name) && isset($subfieldObj->slug)) {
+                            $subfieldObj->name = $subfieldObj->slug;
+                        } elseif (!isset($subfieldObj->name) && isset($subfieldObj->label)) {
+                            $subfieldObj->name = Str::slug($subfieldObj->label);
+                        }
+                        
+                        // Ensure field_type property exists
+                        if (!isset($subfieldObj->field_type) && isset($subfieldObj->type)) {
+                            $subfieldObj->field_type = $subfieldObj->type;
+                        }
+                        
                         // Convert each subfield recursively
-                        $processedSubfield = $this->convertWidgetFieldToContentField($subfield);
+                        $processedSubfield = $this->convertWidgetFieldToContentField($subfieldObj);
                         if ($processedSubfield) {
                             $subfields[] = $processedSubfield;
                         }

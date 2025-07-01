@@ -11,25 +11,16 @@
       "position": 2,
       "is_required": true,
       "description": "Cards with icons to display",
-      "min_items": 1,
-      "max_items": 12,
-      "subfields": [
+      "settings": {
+        "min_items": 1,
+        "max_items": 12,
+        "subfields": [
         {
           "name": "Icon",
           "slug": "icon",
-          "field_type": "select",
+          "field_type": "image",
           "is_required": true,
-          "description": "Font Awesome icon for the card",
-          "options": [
-            {"value": "fa fa-crosshairs", "label": "Target"},
-            {"value": "fa fa-lightbulb-o", "label": "Lightbulb"},
-            {"value": "fa fa-rocket", "label": "Rocket"},
-            {"value": "fa fa-cog", "label": "Gear"},
-            {"value": "fa fa-heart", "label": "Heart"},
-            {"value": "fa fa-check", "label": "Checkmark"},
-            {"value": "fa fa-star", "label": "Star"},
-            {"value": "fa fa-globe", "label": "Globe"}
-          ]
+          "description": "Icon image for the card"
         },
         {
           "name": "Heading",
@@ -53,12 +44,12 @@
           "description": "Optional URL for the icon to link to"
         }
       ]
+      }
     }
   ],
-  "settings": [
-    {
+  "settings": {
+    "section_padding": {
       "name": "Section Padding",
-      "slug": "section_padding",
       "field_type": "select",
       "is_required": false,
       "description": "Padding size for the section",
@@ -70,17 +61,15 @@
       ],
       "default": "ptb-80"
     },
-    {
+    "background_color": {
       "name": "Background Color",
-      "slug": "background_color",
       "field_type": "color",
       "is_required": false,
       "description": "Background color for the section",
       "default": "#ffffff"
     },
-    {
+    "text_alignment": {
       "name": "Text Alignment",
-      "slug": "text_alignment",
       "field_type": "select",
       "is_required": false,
       "description": "Alignment of the cards",
@@ -91,9 +80,8 @@
       ],
       "default": "text-center"
     },
-    {
+    "cards_per_row": {
       "name": "Cards Per Row",
-      "slug": "cards_per_row",
       "field_type": "select",
       "is_required": false,
       "description": "Number of cards to display per row",
@@ -105,7 +93,7 @@
       ],
       "default": "3"
     }
-  ],
+  },
   "content_type_compatibility": {
     "icon_cards": {
       "compatible_with": ["team_member", "service", "feature"],

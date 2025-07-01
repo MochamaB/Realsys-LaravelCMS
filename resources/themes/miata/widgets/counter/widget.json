@@ -11,53 +11,51 @@
       "position": 1,
       "is_required": true,
       "description": "Counters to display",
-      "min_items": 1,
-      "max_items": 12,
-      "subfields": [
-        {
-          "name": "Icon",
-          "slug": "icon",
-          "field_type": "image",
-          "is_required": true,
-          "description": "Icon image for the counter"
-        },
-        {
-          "name": "Top Text",
-          "slug": "top_text",
-          "field_type": "text",
-          "is_required": true,
-          "description": "Top text for the counter"
-        },
-        {
-          "name": "Counter Number",
-          "slug": "counter_number",
-          "field_type": "number",
-          "is_required": true,
-          "description": "Counter number"
-        }
-        
-      ]
+      "settings": {
+        "min_items": 1,
+        "max_items": 12,
+        "subfields": [
+          {
+            "name": "Icon",
+            "slug": "icon",
+            "field_type": "image",
+            "is_required": true,
+            "description": "Icon image for the counter"
+          },
+          {
+            "name": "Top Text",
+            "slug": "top_text",
+            "field_type": "text",
+            "is_required": true,
+            "description": "Top text for the counter"
+          },
+          {
+            "name": "Counter Number",
+            "slug": "counter_number",
+            "field_type": "number",
+            "is_required": true,
+            "description": "Counter number"
+          }
+        ]
+      }
     }
-  ],    
-  "settings": [
-    {
+  ],
+  "settings": {
+    "count_suffix": {
       "name": "Count Suffix",
-      "slug": "count_suffix",
       "field_type": "text",
       "is_required": false,
       "description": "Optional suffix to display after the number (e.g., +, k, M)"
     },
-    {
+    "background_color": {
       "name": "Background Color",
-      "slug": "background_color",
       "field_type": "color",
       "is_required": false,
       "description": "Background color for the counter section",
       "default": "#f6f6f6"
     },
-    {
+    "padding": {
       "name": "Section Padding",
-      "slug": "padding",
       "field_type": "select",
       "is_required": false,
       "description": "Padding size for the counter section",
@@ -69,17 +67,15 @@
       ],
       "default": "ptb-70"
     },
-    {
+    "animation_speed": {
       "name": "Animation Speed",
-      "slug": "animation_speed",
       "field_type": "number",
       "is_required": false,
       "description": "Speed of the counter animation in milliseconds",
       "default": 2000
     },
-    {
+    "layout_style": {
       "name": "Layout Style",
-      "slug": "layout_style",
       "field_type": "select",
       "is_required": false,
       "description": "Layout style for counter items",
@@ -90,5 +86,5 @@
       ],
       "default": "default"
     }
-  ]
+  }
 }

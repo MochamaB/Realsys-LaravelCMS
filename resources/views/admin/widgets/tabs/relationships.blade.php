@@ -141,7 +141,7 @@
 
 <!-- Modal for adding content type association -->
 <div class="modal fade" id="associateContentTypeModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Associate Content Type</h5>
@@ -673,6 +673,7 @@
                                 input.name = `content_type[fields][${index}][name]`;
                                 input.value = field.name;
                                 input.required = true;
+                                input.readOnly = true; // <-- Make the input readonly
                                 cell.appendChild(input);
                                 row.appendChild(cell);
                                 
@@ -680,20 +681,30 @@
                                 cell = document.createElement('td');
                                 let select = document.createElement('select');
                                 select.className = 'form-select';
-                                select.name = `content_type[fields][${index}][field_type]`; // Changed from type to field_type
-                                
+                                select.name = `content_type[fields][${index}][field_type]`;
+                                select.disabled = true; // Prevent editing
+
                                 const fieldTypes = ['text', 'textarea', 'rich_text', 'number', 'email', 'url', 'date', 'datetime', 'select', 'radio', 'checkbox', 'boolean', 'image', 'file', 'gallery', 'repeater'];
-                                
+
                                 fieldTypes.forEach(type => {
                                     let option = document.createElement('option');
                                     option.value = type;
                                     option.textContent = type.replace('_', ' ');
-                                    option.selected = type === field.field_type; // Changed from field.type to field.field_type
+                                    option.selected = type === field.field_type;
                                     select.appendChild(option);
                                 });
-                                
+
                                 cell.appendChild(select);
+
+                                // Add hidden input to preserve value during form submission
+                                let hidden = document.createElement('input');
+                                hidden.type = 'hidden';
+                                hidden.name = select.name;
+                                hidden.value = field.field_type;
+                                cell.appendChild(hidden);
+
                                 row.appendChild(cell);
+
                                 
                                 // Label field
                                 cell = document.createElement('td');
@@ -710,7 +721,7 @@
                                 // Required field
                                 cell = document.createElement('td');
                                 let checkDiv = document.createElement('div');
-                                checkDiv.className = 'form-check';
+                                checkDiv.className = 'form-check me-2';
                                 
                                 input = document.createElement('input');
                                 input.type = 'checkbox';
@@ -721,7 +732,7 @@
                                 checkDiv.appendChild(input);
                                 
                                 let label = document.createElement('label');
-                                label.className = 'form-check-label';
+                                label.className = 'form-check-label ml-2';
                                 label.htmlFor = `field-required-${index}`;
                                 label.textContent = 'Required';
                                 checkDiv.appendChild(label);
@@ -745,10 +756,18 @@
                                 if (field.settings) {
                                     let settingsList = [];
                                     Object.entries(field.settings).forEach(([key, value]) => {
-                                        if (typeof value !== 'object') {
+                                        if (key === 'subfields' && Array.isArray(value)) {
+                                            // Special handling for repeater subfields
+                                            let subfieldItems = [];
+                                            value.forEach(subfield => {
+                                                subfieldItems.push(`${subfield.name} (${subfield.field_type || subfield.type})`);
+                                            });
+                                            settingsList.push(`${key}: [${subfieldItems.join(', ')}]`);
+                                        } else if (typeof value !== 'object') {
                                             settingsList.push(`${key}: ${value}`);
                                         } else {
-                                            settingsList.push(`${key}: [Object]`);
+                                            // For other objects, try to show something more descriptive
+                                            settingsList.push(`${key}: ${JSON.stringify(value).substring(0, 20)}...`);
                                         }
                                     });
                                     
