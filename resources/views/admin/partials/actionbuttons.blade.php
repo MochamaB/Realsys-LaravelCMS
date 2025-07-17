@@ -34,20 +34,7 @@
 </div>
 
 <div class="d-flex gap-2">
-    @if($itemsRoute)
-        <a href="{{ route($itemsRoute, $model->id) }}" class="btn btn-sm btn-soft-primary" data-bs-toggle="tooltip" title="Manage Items">
-            <i class="ri-list-check"></i>
-            @if($type === 'inline') 
-                Manage 
-                @if($itemsRoute === 'admin.templates.sections.index')
-                    Sections 
-                @else
-                    Items 
-                @endif
-            @endif
-        </a>
-    @endif
-
+   
     @if($previewRoute)
         <a href="{{ route($previewRoute, $model->id) }}" class="btn btn-sm btn-soft-info" data-bs-toggle="tooltip" title="Preview" @if(str_contains($previewRoute, 'preview')) target="_blank" @endif>
             <i class="ri-eye-line"></i>

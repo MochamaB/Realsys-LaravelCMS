@@ -35,11 +35,10 @@
                             <table class="table table-bordered table-striped table-hover">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>ID</th>
-                                        <th>Thumbnail</th>
+                                        <th>#</th>
                                         <th>Name</th>
                                         <th>Theme</th>
-                                        <th>Sections</th>
+                                        <th>Description</th>
                                         <th>Status</th>
                                         <th>Actions</th>
                                     </tr>
@@ -47,16 +46,7 @@
                                 <tbody>
                                     @foreach($templates as $template)
                                         <tr>
-                                            <td>{{ $template->id }}</td>
-                                            <td style="width: 80px;">
-                                                @if($template->thumbnail_path)
-                                                    <img src="{{ asset($template->thumbnail_path) }}" alt="{{ $template->name }}" class="img-thumbnail" style="max-width: 60px;">
-                                                @else
-                                                    <div class="bg-light d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
-                                                        <i class="mdi mdi-file-outline text-muted" style="font-size: 24px;"></i>
-                                                    </div>
-                                                @endif
-                                            </td>
+                                            <td>{{ $loop->iteration }}</td>
                                             <td>
                                                 <strong>{{ $template->name }}</strong>
                                                 @if($template->is_default)
@@ -68,7 +58,7 @@
                                                 {{ $template->theme->name ?? 'N/A' }}
                                             </td>
                                             <td>
-                                               {{ $template->sections->count() }} sections
+                                               {{ $template->description }}
                                             </td>
                                             <td>
                                                 @if($template->is_active)
@@ -82,7 +72,7 @@
                                                     'model' => $template,
                                                     'type' => 'inline',
                                                     'itemsRoute' => 'admin.templates.sections.index',
-                                                    'previewRoute' => 'admin.templates.preview',
+                                                    'previewRoute' => '',
                                                     'viewRoute' => 'admin.templates.show',
                                                     'editRoute' => 'admin.templates.edit',
                                                     'destroyRoute' => 'admin.templates.destroy',

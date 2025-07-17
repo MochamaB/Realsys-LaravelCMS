@@ -21,6 +21,9 @@ return new class extends Migration
             $table->unique(['theme_id', 'slug']);
             // No image URL fields as we're using Spatie Media Library
             $table->text('description')->nullable();
+            $table->json('settings')->nullable();
+            $table->json('layout_data')->nullable(); // optional, for designer state
+            $table->boolean('is_default')->default(false);
             $table->boolean('is_active')->default(false);
             $table->timestamps();
             $table->softDeletes();

@@ -1,0 +1,202 @@
+/* GridStack Template Designer Styles */
+
+.grid-stack-item {
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    background-color: #f9f9ff;
+    overflow: visible;
+}
+
+.grid-stack-item.ui-draggable-dragging {
+    z-index: 100;
+}
+
+.grid-stack-item.system-container {
+    background-color: #e6eeff;
+}
+
+.system-section {
+    background-color: #e6eeff;
+    padding: 15px;
+    text-align: center;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    position: relative;
+}
+
+.template-tabs {
+    margin-bottom: 20px;
+}
+
+.template-designer-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.control-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.grid-stack-item-content {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.layout-controls {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.section-controls {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    display: flex;
+    gap: 5px;
+}
+
+.section-label {
+    font-weight: 500;
+    margin-bottom: 10px;
+}
+
+.template-sidebar {
+    background-color: #f5f7fa;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.template-sidebar-title {
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.section-item {
+    cursor: pointer;
+    padding: 8px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    background: white;
+}
+
+.section-item:hover {
+    background-color: #f8f9fa;
+}
+
+.item-preview-container {
+    height: 100px;
+    width: 100%;
+    background: #fafafa;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 5px;
+}
+
+/* Template Structure Components */
+.structure-item {
+    padding: 10px;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.structure-icon {
+    width: 20px;
+    text-align: center;
+}
+
+.structure-label {
+    flex-grow: 1;
+}
+
+/* Sidebar and content areas */
+.sidebar-area {
+    background-color: #f0f4ff;
+    padding: 15px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+}
+
+.content-area {
+    background-color: #f9f9ff;
+    min-height: 300px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    padding: 15px;
+}
+
+/* Grid Elements */
+/* Make rows visually distinct */
+.grid-row {
+    border: 2px solid #4a90e2;
+    background-color: #eaf3fb;
+    border-radius: 8px;
+    margin-bottom: 32px;
+    padding: 24px 16px 32px 16px;
+    min-height: 120px;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(74, 144, 226, 0.08);
+}
+
+/* Make boxes appear nested and larger */
+.row-boxes-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    margin-top: 16px;
+}
+
+.template-box {
+    background: #fff;
+    border: 2px solid #b2c7e6;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(74, 144, 226, 0.10);
+    min-width: 220px;
+    min-height: 100px;
+    margin-right: 12px;
+    margin-bottom: 12px;
+    padding: 18px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.grid-box {
+    background: #f7faff;
+    border: 1.5px dashed #4a90e2;
+    border-radius: 4px;
+    min-height: 80px;
+    min-width: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+}
+
+/* Make section labels and controls larger */
+.section-label {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+.section-controls {
+    gap: 10px;
+    font-size: 1.1rem;
+}
