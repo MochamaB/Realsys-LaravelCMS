@@ -175,7 +175,7 @@
             templateFileSelect.innerHTML = '<option value="">Loading template files...</option>';
             
             // Fetch template files for selected theme
-            fetch(`{{ route('templates.files') }}?theme_id=${themeId}`)
+            fetch(`{{ route('admin.templates.files') }}?theme_id=${themeId}`)
                 .then(response => response.json())
                 .then(files => {
                     // Reset the select

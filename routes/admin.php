@@ -284,4 +284,32 @@ Route::middleware('admin.auth')->group(function () {
         Route::get('/wizard/constituencies', [UserManagementController::class, 'getConstituencies'])->name('wizard.constituencies');
         Route::get('/wizard/wards', [UserManagementController::class, 'getWards'])->name('wizard.wards');
     });
+
+    // API routes for GrapeJS (using web middleware for sessions)
+Route::prefix('api')->middleware('admin.auth')->group(function () {
+    // Page Designer API
+    Route::get('/pages/{page}/render', [PageController::class, 'renderPageContent'])->name('api.pages.render');
+    Route::post('/pages/{page}/save-content', [PageController::class, 'savePageContent'])->name('api.pages.save-content');
+    
+    // Page Sections API
+    Route::get('/pages/{page}/sections', [App\Http\Controllers\Api\PageSectionController::class, 'index']);
+    Route::post('/pages/{page}/sections', [App\Http\Controllers\Api\PageSectionController::class, 'store']);
+    Route::put('/pages/{page}/sections/{section}', [App\Http\Controllers\Api\PageSectionController::class, 'update']);
+    Route::delete('/pages/{page}/sections/{section}', [App\Http\Controllers\Api\PageSectionController::class, 'destroy']);
+    Route::put('/pages/{page}/sections/reorder', [App\Http\Controllers\Api\PageSectionController::class, 'reorder']);
+
+    // Page Section Widgets API
+    Route::get('/sections/{section}/widgets', [App\Http\Controllers\Api\PageSectionWidgetController::class, 'index']);
+    Route::post('/sections/{section}/widgets', [App\Http\Controllers\Api\PageSectionWidgetController::class, 'store']);
+    Route::put('/widgets/{widget}', [App\Http\Controllers\Api\PageSectionWidgetController::class, 'update']);
+    Route::delete('/widgets/{widget}', [App\Http\Controllers\Api\PageSectionWidgetController::class, 'destroy']);
+    Route::put('/sections/{section}/widgets/reorder', [App\Http\Controllers\Api\PageSectionWidgetController::class, 'reorder']);
+
+    // Widgets API
+    Route::get('/widgets', [App\Http\Controllers\Api\WidgetController::class, 'index']);
+    
+    // Content Items API
+    Route::get('/content/{type}', [App\Http\Controllers\Api\ContentItemController::class, 'index']);
+    Route::post('/content/{type}', [App\Http\Controllers\Api\ContentItemController::class, 'store']);
+});
 });

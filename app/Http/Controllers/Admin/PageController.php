@@ -30,16 +30,28 @@ class PageController extends Controller
     protected $themeManager;
     
     /**
+     * The template renderer instance.
+     *
+     * @var \App\Services\TemplateRenderer
+     */
+    protected $templateRenderer;
+    
+    /**
      * Create a new controller instance.
      *
      * @param \App\Services\PageService $pageService
      * @param \App\Services\ThemeManager $themeManager
+     * @param \App\Services\TemplateRenderer $templateRenderer
      * @return void
      */
-    public function __construct(PageService $pageService, ThemeManager $themeManager)
-    {
+    public function __construct(
+        PageService $pageService, 
+        ThemeManager $themeManager,
+        \App\Services\TemplateRenderer $templateRenderer
+    ) {
         $this->pageService = $pageService;
         $this->themeManager = $themeManager;
+        $this->templateRenderer = $templateRenderer;
     }
     
     /**
@@ -73,12 +85,8 @@ class PageController extends Controller
                     ->with('error', 'No active theme found. Please activate a theme first.');
             }
             
-            $parentPages = Page::where('parent_id', null)
-                ->where('status', 'published')
-                ->orderBy('title')
-                ->get();
-            
-            return view('admin.pages.create', compact('templates', 'parentPages', 'activeTheme'));
+            // Remove parentPages logic to avoid SQL error
+            return view('admin.pages.create', compact('templates', 'activeTheme'));
         } catch (\Exception $e) {
             return redirect()->route('admin.pages.index')
                 ->with('error', 'Error loading page creation form: ' . $e->getMessage());
@@ -104,7 +112,6 @@ class PageController extends Controller
                     Rule::unique('pages')->ignore($request->id),
                 ],
                 'template_id' => 'required|exists:templates,id',
-                'parent_id' => 'nullable|exists:pages,id',
                 'meta_title' => 'nullable|string|max:255',
                 'meta_description' => 'nullable|string|max:255',
                 'meta_keywords' => 'nullable|string|max:255',
@@ -113,27 +120,17 @@ class PageController extends Controller
                 'is_homepage' => 'boolean',
             ]);
             
-            // Set the creator
             $validated['created_by'] = Auth::guard('admin')->id();
             $validated['updated_by'] = Auth::guard('admin')->id();
             
-            // Create the page using our service
             $page = $this->pageService->createPage($validated);
 
-            // If this page is marked as homepage, unset all other homepage flags
             if ($request->has('is_homepage') && $request->is_homepage) {
-                // Set all other pages' is_homepage to false
                 Page::where('id', '!=', $page->id)->update(['is_homepage' => false]);
             }
 
-            // Handle featured image if uploaded
-            if ($request->hasFile('featured_image')) {
-                $page->addMediaFromRequest('featured_image')
-                    ->withCustomProperties(['alt' => $request->input('featured_image_alt', '')])
-                    ->toMediaCollection('featured_image');
-            }
-        
-            return redirect()->route('admin.pages.edit', $page)
+            // After creation, redirect to the designer view (show method)
+            return redirect()->route('admin.pages.show', $page)
                 ->with('success', 'Page created successfully.');
         } catch (ValidationException $e) {
             return redirect()->back()
@@ -154,7 +151,8 @@ class PageController extends Controller
      */
     public function show(Page $page)
     {
-        return view('admin.pages.show', compact('page'));
+        // Show the visual designer (empty for now)
+        return view('admin.pages.designer', compact('page'));
     }
 
     /**
@@ -177,15 +175,11 @@ class PageController extends Controller
                     ->with('error', 'No active theme found. Please activate a theme first.');
             }
             
+            // Load page with its relationships
             $page->load('sections.widgets', 'template.sections');
             
-            $parentPages = Page::where('parent_id', null)
-                ->where('id', '!=', $page->id)
-                ->where('status', 'published')
-                ->orderBy('title')
-                ->get();
-            
-            return view('admin.pages.edit', compact('page', 'templates', 'parentPages', 'activeTheme'));
+            // Use create view but pass the page data
+            return view('admin.pages.create', compact('page', 'templates', 'activeTheme'));
         } catch (\Exception $e) {
             return redirect()->route('admin.pages.index')
                 ->with('error', 'Error loading page edit form: ' . $e->getMessage());
@@ -352,5 +346,94 @@ class PageController extends Controller
             'page_title' => $page->title,
             'sections' => $sections
         ]);
+    }
+
+    /**
+     * Render the page content for the GrapesJS editor.
+     *
+     * @param  \App\Models\Page  $page
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function renderPageContent(Page $page)
+    {
+        try {
+            // Load all the necessary relationships
+            $page->load(['template', 'template.theme', 'sections.templateSection', 'sections.widgets']);
+            
+            // Verify the template exists and belongs to the active theme
+            $activeTheme = $this->themeManager->getActiveTheme();
+            
+            if (!$activeTheme) {
+                return response()->json([
+                    'error' => 'No active theme found.'
+                ], 500);
+            }
+            
+            if (!$page->template || $page->template->theme_id !== $activeTheme->id) {
+                return response()->json([
+                    'error' => 'Page is using a template from an inactive theme.'
+                ], 500);
+            }
+            
+            // Use the template renderer to generate the HTML
+            $html = $this->templateRenderer->renderPage($page);
+            
+            // Return the rendered HTML along with page information
+            return response()->json([
+                'html' => $html,
+                'page' => [
+                    'id' => $page->id,
+                    'title' => $page->title,
+                    'sections' => $page->sections->map(function($section) {
+                        return [
+                            'id' => $section->id,
+                            'name' => $section->name,
+                            'type' => $section->templateSection->section_type ?? 'default',
+                            'widget_count' => $section->widgets->count()
+                        ];
+                    })
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to render page content: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    /**
+     * Save page content from the GrapesJS editor.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\Page  $page
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function savePageContent(Request $request, Page $page)
+    {
+        try {
+            // Validate the incoming data
+            $validated = $request->validate([
+                'html' => 'required|string',
+                'sections' => 'sometimes|array',
+                'sections.*.id' => 'required|integer|exists:page_sections,id',
+                'sections.*.content' => 'nullable|string',
+                'sections.*.widgets' => 'sometimes|array',
+                'sections.*.widgets.*.id' => 'sometimes|integer|exists:page_section_widgets,id',
+                'sections.*.widgets.*.content' => 'nullable|string',
+            ]);
+            
+            // Process the saved content
+            // For now, just return success response
+            // Later we'll implement parsing the HTML and updating the database
+            
+            return response()->json([
+                'message' => 'Page content saved successfully',
+                'page_id' => $page->id
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to save page content: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

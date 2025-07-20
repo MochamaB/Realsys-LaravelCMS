@@ -18,9 +18,15 @@ class PageSection extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'page_id',
+       'page_id',
         'template_section_id',
-        'layout_settings'
+        'position',
+        'column_span_override',
+        'column_offset_override',
+        'css_classes',
+        'background_color',
+        'padding',
+        'margin'
     ];
 
     /**

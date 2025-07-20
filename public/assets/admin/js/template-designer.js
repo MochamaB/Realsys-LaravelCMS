@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 ${isLoading ? 
                     '<span class="spinner-border spinner-border-sm me-2" role="status"></span>' : 
                     `<button class="btn btn-sm btn-outline-secondary edit-section-btn" title="Edit">
-                        <i class="ri-pencil-line"></i>
+                    <i class="ri-pencil-line"></i>
                     </button>`
                 }
                 <button class="btn btn-sm btn-outline-danger remove-section-btn" title="Remove" ${isLoading ? 'disabled' : ''}>
@@ -225,7 +225,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 } else {
                     // Just remove from grid if not saved yet
-                    grid.removeWidget(gridItem);
+                grid.removeWidget(gridItem);
                     grid.compact();
                 }
             }
@@ -252,7 +252,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
-
+    
     // Section editor modal logic
     function openSectionEditor(gridItem) {
         const modalEl = document.getElementById('sectionEditorModal');
@@ -261,7 +261,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const labelEl = contentEl.querySelector('.section-label');
         const metaEl = contentEl.querySelector('.section-meta');
         const gridData = grid.engine.nodes.find(n => n.el === gridItem);
-
+        
         // Populate form fields
         document.getElementById('section-id').value = gridItem.getAttribute('data-id') || '';
         document.getElementById('section-name').value = gridItem.getAttribute('data-name') || (labelEl ? labelEl.textContent : 'New Section');
@@ -271,7 +271,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('is-repeatable').checked = gridItem.getAttribute('data-repeatable') === 'true';
         document.getElementById('max-widgets').value = gridItem.getAttribute('data-max-widgets') || 0;
         document.getElementById('css-classes').value = gridItem.getAttribute('data-css-classes') || '';
-
+        
         // Remove any previous event listeners
         const saveBtn = document.getElementById('save-section-btn');
         const newSaveBtn = saveBtn.cloneNode(true);
@@ -321,7 +321,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             });
                         }
                         
-                        modal.hide();
+            modal.hide();
                         console.log('Section updated successfully');
                     } else {
                         alert('Error updating section: ' + (response.message || 'Unknown error'));
@@ -424,7 +424,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // You might want to implement this to load existing sections
     function loadExistingSections() {
         const templateId = document.getElementById('template-id').value;
-    
+        
         fetch(`/admin/templates/${templateId}/sections`)
             .then(response => response.json())
             .then(data => {

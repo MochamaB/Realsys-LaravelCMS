@@ -7,6 +7,8 @@ use App\Http\Controllers\Api\MenuController;
 use App\Http\Controllers\Api\WidgetController;
 use App\Http\Controllers\Api\PageSectionController;
 use App\Http\Controllers\Api\MediaController;
+use App\Http\Controllers\Api\PageSectionWidgetController;
+use App\Http\Controllers\Api\ContentItemController;
 
 /*
 |--------------------------------------------------------------------------

@@ -9,16 +9,18 @@ use Symfony\Component\HttpFoundation\Response;
 
 class AdminAuthentication
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
-     * @return mixed
-     */
     public function handle(Request $request, Closure $next): Response
     {
         if (!Auth::guard('admin')->check()) {
+            // Check if this is an API request
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'message' => 'Admin authentication required'
+                ], 401);
+            }
+            
+            // For web requests, redirect to login
             return redirect()->route('admin.login');
         }
 

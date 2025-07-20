@@ -25,6 +25,7 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
+        "grapesjs": "^0.22.11",
         "gridstack": "^12.2.2",
         "sortablejs": "^1.15.6"
     }

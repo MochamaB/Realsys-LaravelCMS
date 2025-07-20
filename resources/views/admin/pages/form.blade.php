@@ -76,274 +76,64 @@
                             @method('PUT')
                         @endif
 
-                        <div class="row">
-                            <div class="col-lg-8">
-                                <div class="mb-3">
-                                    <label class="form-label" for="title">Title</label>
-                                    <input type="text" 
-                                           class="form-control @error('title') is-invalid @enderror" 
-                                           id="title" 
-                                           name="title"
-                                           value="{{ old('title', $page->title ?? '') }}"
-                                           required>
-                                    @error('title')
-                                        <div class="invalid-feedback">
-                                            {{ $message }}
-                                        </div>
-                                    @enderror
+                        <div class="mb-3">
+                            <label class="form-label" for="title">Title</label>
+                            <input type="text" 
+                                   class="form-control @error('title') is-invalid @enderror" 
+                                   id="title" 
+                                   name="title"
+                                   value="{{ old('title', $page->title ?? '') }}"
+                                   required>
+                            @error('title')
+                                <div class="invalid-feedback">
+                                    {{ $message }}
                                 </div>
+                            @enderror
+                        </div>
 
-                                <div class="mb-3">
-                                    <label class="form-label" for="slug">Slug</label>
-                                    <input type="text" 
-                                           class="form-control @error('slug') is-invalid @enderror" 
-                                           id="slug" 
-                                           name="slug"
-                                           value="{{ old('slug', $page->slug ?? '') }}"
-                                           required>
-                                    @error('slug')
-                                        <div class="invalid-feedback">
-                                            {{ $message }}
-                                        </div>
-                                    @enderror
+                        <div class="mb-3">
+                            <label class="form-label" for="slug">Slug</label>
+                            <input type="text" 
+                                   class="form-control @error('slug') is-invalid @enderror" 
+                                   id="slug" 
+                                   name="slug"
+                                   value="{{ old('slug', $page->slug ?? '') }}"
+                                   required>
+                            @error('slug')
+                                <div class="invalid-feedback">
+                                    {{ $message }}
                                 </div>
+                            @enderror
+                        </div>
 
-                                <div class="mb-3">
-                                    <label class="form-label" for="description">Description</label>
-                                    <textarea class="form-control @error('description') is-invalid @enderror" 
-                                              id="description" 
-                                              name="description"
-                                              rows="3">{{ old('description', $page->description ?? '') }}</textarea>
-                                    @error('description')
-                                        <div class="invalid-feedback">
-                                            {{ $message }}
-                                        </div>
-                                    @enderror
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Template <span class="text-danger">*</span></label>
+                            <select class="form-select @error('template_id') is-invalid @enderror" name="template_id" required>
+                                <option value="">Select Template</option>
+                                @foreach($templates as $template)
+                                    <option value="{{ $template->id }}" {{ old('template_id', $page->template_id ?? '') == $template->id ? 'selected' : '' }}>
+                                        {{ $template->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('template_id')
+                                <div class="invalid-feedback d-block">
+                                    {{ $message }}
                                 </div>
+                            @enderror
+                        </div>
 
-                                <div class="mb-3">
-                                    <label class="form-label">Content</label>
-                                    <textarea class="form-control @error('content') is-invalid @enderror" 
-                                              id="ckeditor-classic" 
-                                              name="content">{{ old('content', $page->content ?? '') }}</textarea>
-                                    @error('content')
-                                        <div class="invalid-feedback">
-                                            {{ $message }}
-                                        </div>
-                                    @enderror
+                        <div class="mb-3">
+                            <label class="form-label" for="status">Status</label>
+                            <select class="form-select @error('status') is-invalid @enderror" name="status" required>
+                                <option value="draft" {{ old('status', $page->status ?? '') == 'draft' ? 'selected' : '' }}>Draft</option>
+                                <option value="published" {{ old('status', $page->status ?? '') == 'published' ? 'selected' : '' }}>Published</option>
+                            </select>
+                            @error('status')
+                                <div class="invalid-feedback d-block">
+                                    {{ $message }}
                                 </div>
-                            </div>
-
-                            <div class="col-lg-4">
-                                <!-- Template Selection with Visual Selector -->
-                                <div class="mb-4">
-                                    <label class="form-label fw-medium">Template <span class="text-danger">*</span></label>
-                                    <p class="text-muted small mb-2">Choose a template from the active theme "{{ $activeTheme->name }}"</p>
-                                    
-                                    <!-- Template Change Warning -->
-                                    @if(session('template_change'))
-                                        <div class="alert alert-warning" role="alert">
-                                            <h5 class="alert-heading"><i class="mdi mdi-alert-circle-outline me-2"></i> Template Change Warning</h5>
-                                            <p>You are about to change the template from <strong>"{{ session('old_template')->name }}"</strong> to <strong>"{{ session('new_template')->name }}"</strong>.</p>
-                                            <p class="mb-0">This may affect the layout and content of your page. Sections that don't exist in the new template will be removed.</p>
-                                            <hr>
-                                            <div class="form-check mb-3">
-                                                <input class="form-check-input" type="checkbox" id="confirm_template_change" name="confirm_template_change" value="1" required>
-                                                <label class="form-check-label" for="confirm_template_change">
-                                                    I understand and want to proceed with the template change
-                                                </label>
-                                            </div>
-                                        </div>
-                                    @endif
-                                    
-                                    <!-- Visual Template Selector -->
-                                    <div class="row row-cols-1 row-cols-md-2 g-3 mb-3">
-                                        @foreach($templates as $template)
-                                            <div class="col">
-                                                <div class="card h-100 template-card @if(old('template_id', $page->template_id ?? '') == $template->id) border-primary @endif">
-                                                    <input type="radio" 
-                                                           class="template-radio" 
-                                                           name="template_id" 
-                                                           id="template_{{ $template->id }}" 
-                                                           value="{{ $template->id }}" 
-                                                           @if(old('template_id', $page->template_id ?? '') == $template->id) checked @endif
-                                                           required>
-                                                    
-                                                    <!-- Template Thumbnail -->
-                                                    <div class="template-thumbnail ratio ratio-16x9">
-                                                        @if($template->thumbnail_path)
-                                                            <img src="{{ asset($template->thumbnail_path) }}" class="card-img-top" alt="{{ $template->name }}">
-                                                        @else
-                                                            <div class="d-flex align-items-center justify-content-center bg-light">
-                                                                <i class="mdi mdi-file-document-outline" style="font-size: 48px"></i>
-                                                            </div>
-                                                        @endif
-                                                    </div>
-                                                    
-                                                    <div class="card-body">
-                                                        <h6 class="card-title">{{ $template->name }}</h6>
-                                                        @if($template->description)
-                                                            <p class="card-text small text-muted">{{ $template->description }}</p>
-                                                        @endif
-                                                        
-                                                        <div class="template-sections small">
-                                                            <p class="mb-1 text-muted"><strong>Sections:</strong></p>
-                                                            <div class="d-flex flex-wrap gap-1">
-                                                                @foreach($template->sections as $section)
-                                                                    <span class="badge bg-light text-dark">{{ $section->name }}</span>
-                                                                @endforeach
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    <!-- Preview button -->
-                                                    <div class="card-footer d-flex justify-content-between align-items-center">
-                                                        @if($template->is_default)
-                                                            <span class="badge bg-success">Default</span>
-                                                        @else
-                                                            <span></span>
-                                                        @endif
-                                                        <a href="{{ route('admin.templates.preview', $template) }}" class="btn btn-sm btn-outline-primary" target="_blank">
-                                                            <i class="mdi mdi-eye me-1"></i> Preview
-                                                        </a>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                    
-                                    @error('template_id')
-                                        <div class="invalid-feedback d-block">
-                                            {{ $message }}
-                                        </div>
-                                    @enderror
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label" for="parent_id">Parent Page</label>
-                                    <select class="form-select @error('parent_id') is-invalid @enderror" 
-                                            id="parent_id" 
-                                            name="parent_id">
-                                        <option value="">No Parent</option>
-                                        @foreach($parentPages as $parentPage)
-                                            <option value="{{ $parentPage->id }}" 
-                                                    {{ old('parent_id', $page->parent_id ?? '') == $parentPage->id ? 'selected' : '' }}>
-                                                {{ $parentPage->title }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('parent_id')
-                                        <div class="invalid-feedback">
-                                            {{ $message }}
-                                        </div>
-                                    @enderror
-                                </div>
-
-                                <div class="mb-3">
-                                    <div class="form-check form-switch form-switch-success">
-                                        <input type="hidden" name="is_active" value="0">
-                                        <input class="form-check-input" 
-                                               type="checkbox" 
-                                               role="switch" 
-                                               id="is_active" 
-                                               name="is_active"
-                                               value="1"
-                                               {{ old('is_active', $page->is_active ?? true) ? 'checked' : '' }}>
-                                        <label class="form-check-label" for="is_active">Active</label>
-                                    </div>
-                                </div>
-
-                                <div class="mb-3">
-                                    <div class="form-check form-switch form-switch-success">
-                                        <input type="hidden" name="show_in_menu" value="0">
-                                        <input class="form-check-input" 
-                                               type="checkbox" 
-                                               role="switch" 
-                                               id="show_in_menu" 
-                                               name="show_in_menu"
-                                               value="1"
-                                               {{ old('show_in_menu', $page->show_in_menu ?? true) ? 'checked' : '' }}>
-                                        <label class="form-check-label" for="show_in_menu">Show in Menu</label>
-                                    </div>
-                                </div>
-
-                                <div class="mb-3">
-                                    <div class="form-check form-switch form-switch-success">
-                                    <input type="hidden" name="is_homepage" value="0">
-                                        <input class="form-check-input" 
-                                               type="checkbox" 
-                                               role="switch" 
-                                               id="is_homepage" 
-                                               name="is_homepage"
-                                               value="1"
-                                               {{ old('is_homepage', $page->is_homepage ?? false) ? 'checked' : '' }}>
-                                        <label class="form-check-label" for="is_homepage">Set as Homepage</label>
-                                    </div>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label" for="menu_order">Menu Order</label>
-                                    <input type="number" 
-                                           class="form-control @error('menu_order') is-invalid @enderror" 
-                                           id="menu_order" 
-                                           name="menu_order"
-                                           value="{{ old('menu_order', $page->menu_order ?? 0) }}">
-                                    @error('menu_order')
-                                        <div class="invalid-feedback">
-                                            {{ $message }}
-                                        </div>
-                                    @enderror
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label" for="meta_title">Meta Title</label>
-                                    <input type="text" 
-                                           class="form-control @error('meta_title') is-invalid @enderror" 
-                                           id="meta_title" 
-                                           name="meta_title"
-                                           value="{{ old('meta_title', $page->meta_title ?? '') }}">
-                                    @error('meta_title')
-                                        <div class="invalid-feedback">
-                                            {{ $message }}
-                                        </div>
-                                    @enderror
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label" for="meta_description">Meta Description</label>
-                                    <textarea class="form-control @error('meta_description') is-invalid @enderror" 
-                                              id="meta_description" 
-                                              name="meta_description"
-                                              rows="3">{{ old('meta_description', $page->meta_description ?? '') }}</textarea>
-                                    @error('meta_description')
-                                        <div class="invalid-feedback">
-                                            {{ $message }}
-                                        </div>
-                                    @enderror
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label" for="meta_keywords">Meta Keywords</label>
-                                    <input type="text" 
-                                           class="form-control @error('meta_keywords') is-invalid @enderror" 
-                                           id="meta_keywords" 
-                                           name="meta_keywords"
-                                           value="{{ old('meta_keywords', $page->meta_keywords ?? '') }}">
-                                    @error('meta_keywords')
-                                        <div class="invalid-feedback">
-                                            {{ $message }}
-                                        </div>
-                                    @enderror
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label">Featured Image</label>
-                                    <input type="file" 
-                                           class="filepond filepond-input-multiple"
-                                           name="image"
-                                           accept="image/*" />
-                                </div>
-                            </div>
+                            @enderror
                         </div>
 
                         <div class="row mt-2">

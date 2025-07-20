@@ -26,7 +26,7 @@ class PageSectionManager
             return ['created' => 0, 'deleted' => 0];
         }
         
-        $templateSections = $template->sections()->where('is_active', true)->get();
+        $templateSections = $template->sections()->orderBy('position')->get();
         $existingSections = $page->sections;
         
         $created = 0;
@@ -50,8 +50,8 @@ class PageSectionManager
                         'name' => $templateSection->name,
                         'identifier' => $templateSection->slug,
                         'description' => $templateSection->description,
-                        'order_index' => $templateSection->order_index,
-                        'is_active' => true
+                        'position' => $templateSection->position,
+                        
                     ]);
                     
                     $created++;
@@ -112,8 +112,8 @@ class PageSectionManager
         $sectionMap = [];
         
         // Get sections from both templates
-        $oldSections = $oldTemplate->sections()->where('is_active', true)->get();
-        $newSections = $newTemplate->sections()->where('is_active', true)->get();
+        $oldSections = $oldTemplate->sections()->orderBy('position')->get();
+        $newSections = $newTemplate->sections()->orderBy('position')->get();
         
         // Map sections with matching slugs (potential content preservation)
         foreach ($oldSections as $oldSection) {
@@ -146,7 +146,7 @@ class PageSectionManager
             return ['created' => 0, 'deleted' => 0, 'preserved' => 0];
         }
         
-        $templateSections = $template->sections()->where('is_active', true)->get();
+        $templateSections = $template->sections()->orderBy('position')->get();
         $existingSections = $page->sections;
         
         $created = 0;
@@ -197,8 +197,8 @@ class PageSectionManager
                         'name' => $templateSection->name,
                         'identifier' => $templateSection->slug,
                         'description' => $templateSection->description,
-                        'order_index' => $templateSection->order_index,
-                        'is_active' => true
+                        'position' => $templateSection->position,
+                        
                     ]);
                     
                     $created++;

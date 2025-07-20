@@ -29,6 +29,14 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin.as.user' => \App\Http\Middleware\AdminAsUser::class,
             'force.password.change' => \App\Http\Middleware\ForcePasswordChange::class,
         ]);
+            // Ensure API routes don't get web middleware
+            $middleware->validateCsrfTokens(except: [
+                'api/*',
+            ]);
+             // Add session middleware to API routes
+        $middleware->api(append: [
+            \Illuminate\Session\Middleware\StartSession::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
