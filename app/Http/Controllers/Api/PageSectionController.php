@@ -51,8 +51,8 @@ class PageSectionController extends Controller
     public function update(Request $request, Page $page, PageSection $section)
     {
         $validated = $request->validate([
-            'template_section_id' => 'required|exists:template_sections,id',
-            'name' => 'required|string|max:255',
+            'template_section_id' => 'sometimes|exists:template_sections,id',
+            'name' => 'sometimes|string|max:255',
             'identifier' => [
                 'nullable',
                 'string',
@@ -61,11 +61,15 @@ class PageSectionController extends Controller
                 'unique:page_sections,identifier,' . $section->id
             ],
             'description' => 'nullable|string',
-            'is_active' => 'boolean'
+            'is_active' => 'boolean',
+            'css_classes' => 'nullable|string|max:255',
+            'background_color' => 'nullable|string|max:50',
+            'padding' => 'nullable|string|max:50',
+            'margin' => 'nullable|string|max:50',
+            'column_span_override' => 'nullable|integer',
+            'column_offset_override' => 'nullable|integer',
+            'position' => 'nullable|integer',
         ]);
-        if (empty($validated['identifier'])) {
-            $validated['identifier'] = Str::slug($validated['name']);
-        }
         $section->update($validated);
         return response()->json(['success' => true, 'section' => $section]);
     }

@@ -20,4 +20,14 @@
     font-weight: var(--vz-font-weight-semibold);
 }
 
+.gjs-two-color {
+    color: #405189 !important;
+}
+.gjs-one-bg {
+    background-color: #f1f4f7 !important;
+}
+.gjs-three-bg {
+    background-color: #0ab39c;
+}
+
 

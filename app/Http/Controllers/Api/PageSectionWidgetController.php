@@ -29,17 +29,39 @@ class PageSectionWidgetController extends Controller
             'column_position' => 'nullable|string',
             'settings' => 'nullable|array',
             'content_query' => 'nullable|array',
+            'content_query.content_type_id' => 'nullable|integer|exists:content_types,id',
+            'content_query.content_item_ids' => 'nullable|array',
+            'content_query.content_item_ids.*' => 'integer|exists:content_items,id',
+            'content_query.limit' => 'nullable|integer|min:1|max:100',
+            'content_query.order_by' => 'nullable|string',
+            'content_query.order_direction' => 'nullable|string|in:asc,desc',
             'css_classes' => 'nullable|string',
             'padding' => 'nullable|array',
             'margin' => 'nullable|array',
             'min_height' => 'nullable|integer|min:0',
             'max_height' => 'nullable|integer|min:0',
+            'position' => 'nullable|integer|min:1',
         ]);
-        $maxPosition = $section->pageSectionWidgets()->max('position') ?? 0;
-        $widget = $section->pageSectionWidgets()->create(array_merge($validated, [
-            'position' => $maxPosition + 1,
-        ]));
-        return response()->json(['success' => true, 'widget' => $widget]);
+        
+        // Calculate position if not provided
+        if (!isset($validated['position'])) {
+            $maxPosition = $section->pageSectionWidgets()->max('position') ?? 0;
+            $validated['position'] = $maxPosition + 1;
+        }
+        
+        // Add the section ID
+        $validated['page_section_id'] = $section->id;
+        
+        $widget = PageSectionWidget::create($validated);
+        
+        // Load the widget relationship for response
+        $widget->load('widget');
+        
+        return response()->json([
+            'success' => true, 
+            'widget' => $widget,
+            'message' => 'Widget added to section successfully.'
+        ]);
     }
 
     /**

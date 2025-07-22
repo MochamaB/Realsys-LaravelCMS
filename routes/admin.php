@@ -307,8 +307,10 @@ Route::prefix('api')->middleware('admin.auth')->group(function () {
 
     // Widgets API
     Route::get('/widgets', [App\Http\Controllers\Api\WidgetController::class, 'index']);
+    Route::get('/widgets/{widget}/content-types', [App\Http\Controllers\Api\WidgetController::class, 'contentTypes']);
     
     // Content Items API
+    
     Route::get('/content/{type}', [App\Http\Controllers\Api\ContentItemController::class, 'index']);
     Route::post('/content/{type}', [App\Http\Controllers\Api\ContentItemController::class, 'store']);
 });

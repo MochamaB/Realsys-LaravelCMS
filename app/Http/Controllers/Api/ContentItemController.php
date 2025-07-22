@@ -17,8 +17,9 @@ class ContentItemController extends Controller
      */
     public function index($type)
     {
-        $contentType = ContentType::where('slug', $type)->firstOrFail();
-        $items = ContentItem::where('content_type_id', $contentType->id)->latest()->get();
+        // Prefer ID lookup, fallback to slug
+        $contentType = \App\Models\ContentType::where('id', $type)->orWhere('slug', $type)->firstOrFail();
+        $items = \App\Models\ContentItem::where('content_type_id', $contentType->id)->latest()->get();
         return response()->json(['items' => $items]);
     }
 
