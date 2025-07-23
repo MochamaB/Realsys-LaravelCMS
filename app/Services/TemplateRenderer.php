@@ -335,13 +335,28 @@ class TemplateRenderer
      */
     protected function ensureThemeNamespaceIsRegistered($theme): void
     {
-        // This ensures the theme namespace is correctly registered
-        // In case it wasn't already registered by the ThemeManager
+        if (!$theme) {
+            return;
+        }
+        
+        // Use ThemeManager to properly register theme paths
+        $this->themeManager->registerThemeViewPaths($theme);
+        
         $themePath = resource_path('themes/' . $theme->slug);
         
-        if (file_exists($themePath) && !\View::exists('theme::sections.default')) {
-            \Log::info("Registering theme namespace for {$theme->slug}");
-            \View::addNamespace('theme', $themePath);
+        // Verify registration worked
+        if (file_exists($themePath)) {
+            \Log::debug("Theme namespace registration verified", [
+                'theme_slug' => $theme->slug,
+                'theme_path' => $themePath,
+                'sections_available' => \View::exists('theme::sections.default'),
+                'widgets_available' => \View::exists('theme::widgets.default.view')
+            ]);
+        } else {
+            \Log::error("Theme path does not exist", [
+                'theme_slug' => $theme->slug,
+                'expected_path' => $themePath
+            ]);
         }
     }
     

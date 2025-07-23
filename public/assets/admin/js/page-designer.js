@@ -1,11 +1,30 @@
 // page-designer.js
 document.addEventListener('DOMContentLoaded', async function () {
+    
+    // Initialize sidebar toggle functionality
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    const sidebar = document.querySelector('.panel__blocks');
+    
+    if (sidebarToggle && sidebar) {
+        sidebarToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('collapsed');
+            
+            // Update canvas width when sidebar is collapsed/expanded
+            const canvas = document.getElementById('gjs');
+            if (canvas) {
+                // Force GrapesJS to recalculate dimensions
+                setTimeout(() => {
+                    window.dispatchEvent(new Event('resize'));
+                }, 300);
+            }
+        });
+    }
     const editor = grapesjs.init({
         container: '#gjs',
-        height: '80vh',
+        height: '100%',
         width: 'auto',
         storageManager: false,
-        blockManager: { appendTo: '.panel__blocks' }
+        blockManager: { appendTo: '#sidebar-content' }
     });
 
     // Get page ID from somewhere (URL, data attribute, etc.)
@@ -142,7 +161,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                         tagName: 'div',
                         attributes: { class: 'container' },
                         components: [
-                            {
+            {
                                 tagName: 'div',
                                 attributes: { class: 'row' },
                                 components: [
@@ -186,7 +205,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                                         attributes: { class: 'col-md-6' },
                                         components: [
                                             { type: 'text', content: 'Column 1' }
-                                        ]
+        ]
                                     },
                                     {
                                         tagName: 'div',
@@ -282,46 +301,88 @@ document.addEventListener('DOMContentLoaded', async function () {
     ];
     
     sectionBlocks.forEach(block => editor.BlockManager.add(block.id, block));
+    // Load widgets immediately with sections
+    loadWidgets();
 
-    // --- Widget Blocks ---
-    // Fetch widgets from the API
-    try {
-        const res = await fetch('/admin/api/widgets', {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': window.csrfToken
-            }
-        });
-        const data = await res.json();
-        (data.widgets || []).forEach(widget => {
-            const labelHtml = `
-                <div style='text-align:center'>
-                    <i class='${widget.icon || 'fa fa-cube'}' style='font-size:24px;display:block;margin-bottom:5px'></i>
-                    <div style='font-size:13px'>${widget.name}</div>
-                </div>`;
-            
-            editor.BlockManager.add('widget-' + widget.slug, {
-                label: labelHtml,
-                category: 'Widgets',
-                content: {
-                    type: 'widget',
-                    widgetSlug: widget.slug,
-                    widgetId: widget.id,
-                    name: widget.name,
-                    attributes: { 'data-widget-type': 'widget' }
+    // --- Widget Loading Function ---
+    async function loadWidgets() {
+        try {
+            console.log('Starting to load widgets...');
+            const res = await fetch('/admin/api/widgets', {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': window.csrfToken
                 }
             });
-        });
-    } catch (error) {
-        console.error('Error loading widgets:', error);
+            const data = await res.json();
+            console.log('Widgets data received:', data);
+
+            // Add widget blocks
+            let addedCount = 0;
+            (data.widgets || []).forEach(widget => {
+                const blockId = 'widget-' + widget.slug;
+                
+                console.log(`Processing widget: ${widget.name} with ID: ${blockId}`);
+                
+                const labelHtml = `
+                    <div style='text-align:center'>
+                        <i class='${widget.icon || 'fa fa-cube'}' style='font-size:24px;display:block;margin-bottom:5px'></i>
+                        <div style='font-size:13px'>${widget.name}</div>
+                    </div>`;
+                
+                try {
+                    const blockConfig = {
+                        label: labelHtml,
+                        category: 'Widgets',
+                        content: {
+                            type: 'widget',
+                            widgetSlug: widget.slug,
+                            widgetId: widget.id,
+                            name: widget.name,
+                            attributes: { 
+                                'data-widget-type': 'widget',
+                                'data-widget-slug': widget.slug,
+                                'data-widget-id': widget.id
+                            }
+                        }
+                    };
+                    
+                    console.log(`Adding block with config:`, blockConfig);
+                    const addedBlock = editor.BlockManager.add(blockId, blockConfig);
+                    console.log(`Block added successfully:`, addedBlock ? addedBlock.get('id') : 'failed');
+                    
+                    addedCount++;
+                } catch (blockError) {
+                    console.error(`Error adding block ${blockId}:`, blockError);
+        }
+    });
+
+            console.log(`Widgets processing complete. Added ${addedCount} widgets.`);
+            
+            // Force re-render after a short delay
+            setTimeout(() => {
+                editor.trigger('block:render');
+                editor.BlockManager.render();
+            }, 100);
+            
+            return Promise.resolve();
+        } catch (error) {
+            console.error('Error loading widgets:', error);
+            return Promise.reject(error);
+        }
     }
+    
+    // Initialize editor
+    editor.on('load', () => {
+        console.log('Editor loaded successfully');
+    });
 
     // Detect widget drop into section
 editor.on('component:add', function(component) {
     console.log('Component added:', component.get('type'), component.get('attributes'));
     
     // Only trigger for widgets
-    if (component.get('type') === 'widget') {
+        if (component.get('type') === 'widget') {
         console.log('Widget detected, checking parent...');
         
         // Small delay to ensure DOM is ready
@@ -345,15 +406,27 @@ editor.on('component:add', function(component) {
             }
             
             if (foundSection) {
-                console.log('Widget dropped in section, opening widget modal...');
+                console.log('Widget dropped in section, processing...');
+                
+                // Get widget information
+                const widgetSlug = component.get('widgetSlug') || component.get('attributes')['data-widget-slug'];
+                const widgetId = component.get('widgetId') || component.get('attributes')['data-widget-id'];
+
+                // Load actual widget HTML if we have an ID
+                if (widgetId && window.PageManager && window.PageManager.updateWidgetHTML) {
+                    console.log('Loading actual HTML for widget ID:', widgetId);
+                    window.PageManager.updateWidgetHTML(component, widgetId);
+                }
+                
+                // Open widget configuration modal
                 if (window.WidgetManager && window.WidgetManager.openWidgetModal) {
                     window.WidgetManager.openWidgetModal(component);
                 }
             }
         }, 100);
     }
-});
-});
+                });
+            });
 
 // Save section edit to backend
 async function saveSectionEdit(sectionComponent) {
@@ -372,13 +445,13 @@ async function saveSectionEdit(sectionComponent) {
     try {
         const res = await fetch(`/admin/api/pages/${pageId}/sections/${sectionId}`, {
             method: 'PUT',
-            headers: { 
-                'Content-Type': 'application/json',
+                        headers: {
+                            'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
                 'X-CSRF-TOKEN': window.csrfToken
-            },
+                        },
             body: JSON.stringify(payload)
-        });
+                    });
         if (res.ok) {
             showSaveIndicator(true);
         } else {

@@ -14,6 +14,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\View;
+use App\Models\WidgetFieldDefinition;
+use App\Models\ContentType;
+use App\Models\ContentItem;
 
 class WidgetService
 {
@@ -57,7 +60,7 @@ class WidgetService
     }
 
     /**
-     * Get widgets for a page section
+     * Get widgets for a specific page section
      *
      * @param int $pageSectionId
      * @return array
@@ -69,6 +72,7 @@ class WidgetService
         
         // Get widget relationships through the pivot table
         $pivotRecords = PageSectionWidget::where('page_section_id', $pageSectionId)
+            ->with('widget')
             ->orderBy('position')
             ->get();
         
@@ -80,7 +84,7 @@ class WidgetService
         $widgetData = [];
         
         foreach ($pivotRecords as $pivot) {
-            $widget = Widget::find($pivot->widget_id);
+            $widget = $pivot->widget;
             
             if ($widget) {
                 $widgetInfo = [
@@ -90,9 +94,10 @@ class WidgetService
                 ];
                 \Log::debug('Widget found', $widgetInfo);
                 
-                $widgetData[] = $this->prepareWidgetData($widget);
+                // Pass the pivot record to get proper field values
+                $widgetData[] = $this->prepareWidgetData($widget, $pivot);
             } else {
-                \Log::warning('Widget not found', ['widget_id' => $pivot->widget_id]);
+                \Log::warning('Widget not found', ['pivot_id' => $pivot->id]);
             }
         }
         
@@ -108,9 +113,10 @@ class WidgetService
      * Prepare widget data for rendering
      *
      * @param Widget $widget
+     * @param PageSectionWidget|null $pageSectionWidget
      * @return array
      */
-    public function prepareWidgetData(Widget $widget): array
+    public function prepareWidgetData(Widget $widget, PageSectionWidget $pageSectionWidget = null): array
     {
         // Basic widget data
         $data = [
@@ -118,8 +124,17 @@ class WidgetService
             'name' => $widget->name,
             'slug' => $widget->slug,
             'view_path' => $this->resolveWidgetViewPath($widget),
-            'fields' => $this->getWidgetFieldValues($widget),
+            'fields' => $this->getWidgetFieldValues($widget, $pageSectionWidget),
         ];
+        
+        // Add page section widget data if available
+        if ($pageSectionWidget) {
+            $data['position'] = $pageSectionWidget->position;
+            $data['column_position'] = $pageSectionWidget->column_position;
+            $data['css_classes'] = $pageSectionWidget->css_classes;
+            $data['settings'] = $pageSectionWidget->settings ?? [];
+            $data['content_query'] = $pageSectionWidget->content_query ?? [];
+        }
         
         // Add content data if this widget has content associations
         if ($widget->contentTypeAssociations()->exists()) {
@@ -130,44 +145,298 @@ class WidgetService
     }
     
     /**
-     * Get field values for a widget
+     * Get field values for a widget instance in a page section
      *
      * @param Widget $widget
+     * @param PageSectionWidget|null $pageSectionWidget
      * @return array
      */
-    public function getWidgetFieldValues(Widget $widget): array
+    public function getWidgetFieldValues(Widget $widget, PageSectionWidget $pageSectionWidget = null): array
     {
         $fieldValues = [];
         
-        // Get field definitions for this widget
-        $fieldDefinitions = WidgetFieldDefinition::where('widget_id', $widget->id)->get();
+        // Get field definitions for structure
+        $fieldDefinitions = WidgetFieldDefinition::where('widget_id', $widget->id)
+            ->orderBy('position')
+            ->get();
         
+        // If no page section widget provided, return defaults only
+        if (!$pageSectionWidget) {
+            foreach ($fieldDefinitions as $field) {
+                $fieldValues[$field->slug] = $this->getDefaultFieldValue($field);
+            }
+            return $fieldValues;
+        }
+        
+        // Get user-configured values from settings
+        $settings = $pageSectionWidget->settings ?? [];
+        
+        // Get content data from content query
+        $contentData = $this->getContentFromQuery($widget, $pageSectionWidget->content_query ?? []);
+        
+        // Process each field definition
         foreach ($fieldDefinitions as $field) {
-            $fieldValues[$field->field_name] = $this->formatFieldValue($field);
+            $fieldSlug = $field->slug;
+            
+            // Priority order:
+            // 1. User settings (from modal configuration)
+            // 2. Content data (from content query)
+            // 3. Default value (from field definition)
+            
+            if (isset($settings[$fieldSlug])) {
+                // User has configured this field
+                $fieldValues[$fieldSlug] = $this->formatFieldValue($settings[$fieldSlug], $field->field_type);
+            } elseif (isset($contentData[$fieldSlug])) {
+                // Field populated from content query
+                $fieldValues[$fieldSlug] = $this->formatFieldValue($contentData[$fieldSlug], $field->field_type);
+            } else {
+                // Use default value
+                $fieldValues[$fieldSlug] = $this->getDefaultFieldValue($field);
+            }
+        }
+        
+        // Add any additional content data that doesn't match field definitions
+        foreach ($contentData as $key => $value) {
+            if (!isset($fieldValues[$key])) {
+                $fieldValues[$key] = $value;
+            }
         }
         
         return $fieldValues;
     }
     
     /**
-     * Format a field value based on its type
+     * Get default value for a field definition
      *
      * @param WidgetFieldDefinition $field
      * @return mixed
      */
-    protected function formatFieldValue(WidgetFieldDefinition $field)
+    protected function getDefaultFieldValue(WidgetFieldDefinition $field)
     {
+        // Check if field has default value in settings
+        $settings = $field->settings ?? [];
+        if (isset($settings['default_value'])) {
+            return $this->formatFieldValue($settings['default_value'], $field->field_type);
+        }
+        
+        // Return appropriate default based on field type
         switch ($field->field_type) {
             case 'boolean':
-                return (bool) $field->field_value;
+                return false;
+            case 'number':
             case 'integer':
-                return (int) $field->field_value;
-            case 'json':
-                return json_decode($field->field_value, true) ?: [];
+                return 0;
             case 'array':
-                return explode(',', $field->field_value);
+            case 'repeater':
+                return [];
+            case 'json':
+                return [];
+            case 'text':
+            case 'textarea':
+            case 'rich_text':
+            case 'url':
+            case 'email':
+            case 'phone':
             default:
-                return $field->field_value;
+                return '';
+        }
+    }
+    
+    /**
+     * Get content data from content query
+     *
+     * @param Widget $widget
+     * @param array $contentQuery
+     * @return array
+     */
+    protected function getContentFromQuery(Widget $widget, array $contentQuery): array
+    {
+        if (empty($contentQuery)) {
+            return [];
+        }
+        
+        try {
+            // Get content type if specified
+            if (!isset($contentQuery['content_type_id'])) {
+                return [];
+            }
+            
+            $contentType = ContentType::find($contentQuery['content_type_id']);
+            if (!$contentType) {
+                return [];
+            }
+            
+            // Get field mappings from widget-content association
+            $association = $widget->contentTypeAssociations()
+                ->where('content_type_id', $contentType->id)
+                ->where('is_active', true)
+                ->first();
+            
+            $fieldMappings = [];
+            if ($association && $association->field_mappings) {
+                $fieldMappings = $association->field_mappings;
+                \Log::debug('Field mappings found', [
+                    'widget_id' => $widget->id,
+                    'content_type_id' => $contentType->id,
+                    'mappings' => $fieldMappings
+                ]);
+            }
+            
+            // Build query for content items
+            $query = ContentItem::where('content_type_id', $contentType->id);
+                // Remove status filter for now since content is in 'draft' status
+                // ->where('status', 'published');
+            
+            // Apply specific content item IDs if provided
+            if (!empty($contentQuery['content_item_ids'])) {
+                $query->whereIn('id', $contentQuery['content_item_ids']);
+            }
+            
+            // Apply ordering
+            $orderBy = $contentQuery['order_by'] ?? 'created_at';
+            $orderDirection = $contentQuery['order_direction'] ?? 'desc';
+            $query->orderBy($orderBy, $orderDirection);
+            
+            // Apply limit
+            $limit = $contentQuery['limit'] ?? 1;
+            $query->limit($limit);
+            
+            $contentItems = $query->with('fieldValues.field')->get();
+            
+            if ($contentItems->isEmpty()) {
+                return [];
+            }
+            
+            // For single item, return flat array with field mappings applied
+            if ($limit == 1) {
+                return $this->extractContentItemData($contentItems->first(), $fieldMappings);
+            }
+            
+            // For multiple items, return array of items
+            $result = [];
+            foreach ($contentItems as $item) {
+                $result[] = $this->extractContentItemData($item, $fieldMappings);
+            }
+            
+            return ['items' => $result];
+            
+        } catch (\Exception $e) {
+            \Log::error('Error fetching content from query', [
+                'widget_id' => $widget->id,
+                'content_query' => $contentQuery,
+                'error' => $e->getMessage()
+            ]);
+            return [];
+        }
+    }
+    
+    /**
+     * Extract field data from a content item
+     *
+     * @param ContentItem $contentItem
+     * @param array $fieldMappings Optional field mappings to apply
+     * @return array
+     */
+    protected function extractContentItemData(ContentItem $contentItem, array $fieldMappings = []): array
+    {
+        $data = [
+            'id' => $contentItem->id,
+            'title' => $contentItem->title,
+            'slug' => $contentItem->slug,
+            'status' => $contentItem->status,
+            'published_at' => $contentItem->published_at,
+            'created_at' => $contentItem->created_at,
+            'updated_at' => $contentItem->updated_at,
+        ];
+        
+        // Add field values
+        foreach ($contentItem->fieldValues as $fieldValue) {
+            if ($fieldValue->field) {
+                $contentFieldSlug = $fieldValue->field->slug;
+                $contentFieldName = $fieldValue->field->name;
+                $value = $fieldValue->getFormattedValue();
+                
+                \Log::debug('Processing content field', [
+                    'content_item_id' => $contentItem->id,
+                    'field_slug' => $contentFieldSlug,
+                    'field_name' => $contentFieldName,
+                    'value' => $value
+                ]);
+                
+                // Apply field mappings if provided
+                if (!empty($fieldMappings)) {
+                    // Find the widget field that maps to this content field
+                    $widgetFieldKey = null;
+                    foreach ($fieldMappings as $widgetField => $contentField) {
+                        // Check if this content field matches (by name or slug)
+                        if ($contentField === $contentFieldSlug || $contentField === $contentFieldName) {
+                            // Convert widget field name to lowercase slug format
+                            $widgetFieldKey = strtolower(str_replace(' ', '_', $widgetField));
+                            break;
+                        }
+                    }
+                    
+                    if ($widgetFieldKey) {
+                        $data[$widgetFieldKey] = $value;
+                        \Log::debug('Applied field mapping', [
+                            'content_field' => $contentFieldSlug,
+                            'widget_field' => $widgetFieldKey,
+                            'value' => $value
+                        ]);
+                    } else {
+                        // No mapping found, use original field slug
+                        $data[$contentFieldSlug] = $value;
+                        \Log::debug('No mapping found, using original field slug', [
+                            'content_field' => $contentFieldSlug,
+                            'value' => $value
+                        ]);
+                    }
+                } else {
+                    // No mappings, use original field slug
+                    $data[$contentFieldSlug] = $value;
+                    \Log::debug('No field mappings provided, using field slug', [
+                        'content_field' => $contentFieldSlug,
+                        'value' => $value
+                    ]);
+                }
+            }
+        }
+        
+        return $data;
+    }
+    
+    /**
+     * Format a field value based on its type
+     *
+     * @param mixed $value
+     * @param string $fieldType
+     * @return mixed
+     */
+    protected function formatFieldValue($value, string $fieldType)
+    {
+        switch ($fieldType) {
+            case 'boolean':
+                return (bool) $value;
+            case 'number':
+            case 'integer':
+                return is_numeric($value) ? (int) $value : 0;
+            case 'json':
+                if (is_string($value)) {
+                    return json_decode($value, true) ?: [];
+                }
+                return is_array($value) ? $value : [];
+            case 'array':
+                if (is_string($value)) {
+                    return explode(',', $value);
+                }
+                return is_array($value) ? $value : [];
+            case 'repeater':
+                if (is_string($value)) {
+                    return json_decode($value, true) ?: [];
+                }
+                return is_array($value) ? $value : [];
+            default:
+                return $value;
         }
     }
     
@@ -180,14 +449,69 @@ class WidgetService
     public function resolveWidgetViewPath(Widget $widget): string
     {
         $theme = $widget->theme;
-        $widgetPath = "themes.{$theme->slug}.widgets.{$widget->slug}.view";
-
-        if (View::exists($widgetPath)) {
-            return $widgetPath;
+        
+        if (!$theme) {
+            \Log::warning('Widget has no theme', ['widget_id' => $widget->id]);
+            return 'widgets.default';
         }
-
-        // Fallback to default widget view if theme-specific one doesn't exist
+        
+        // Ensure theme namespace is registered
+        $this->ensureThemeNamespaceIsRegistered($theme);
+        
+        // Try theme-specific widget view with namespace
+        $themeWidgetView = "theme::widgets.{$widget->slug}.view";
+        
+        if (View::exists($themeWidgetView)) {
+            \Log::debug('Using theme widget view', [
+                'widget_id' => $widget->id,
+                'widget_slug' => $widget->slug,
+                'view_path' => $themeWidgetView
+            ]);
+            return $themeWidgetView;
+        }
+        
+        // Try fallback to theme default widget
+        $themeDefaultView = 'theme::widgets.default.view';
+        if (View::exists($themeDefaultView)) {
+            \Log::debug('Using theme default widget view', [
+                'widget_id' => $widget->id,
+                'view_path' => $themeDefaultView
+            ]);
+            return $themeDefaultView;
+        }
+        
+        // Final fallback to system default
+        \Log::warning('Widget view not found, using system default', [
+            'widget_id' => $widget->id,
+            'widget_slug' => $widget->slug,
+            'theme_slug' => $theme->slug,
+            'attempted_view' => $themeWidgetView
+        ]);
+        
         return 'widgets.default';
+    }
+    
+    /**
+     * Ensure theme namespace is registered
+     *
+     * @param Theme $theme
+     * @return void
+     */
+    protected function ensureThemeNamespaceIsRegistered($theme): void
+    {
+        if (!$theme) {
+            return;
+        }
+        
+        $themePath = resource_path('themes/' . $theme->slug);
+        
+        if (is_dir($themePath)) {
+            // Check if namespace is already registered by trying to resolve a view
+            if (!View::exists('theme::widgets.test')) {
+                \Log::debug("Registering theme namespace for {$theme->slug}");
+                View::addNamespace('theme', $themePath);
+            }
+        }
     }
     
     /**

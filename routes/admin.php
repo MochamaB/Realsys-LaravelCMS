@@ -291,6 +291,10 @@ Route::prefix('api')->middleware('admin.auth')->group(function () {
     Route::get('/pages/{page}/render', [PageController::class, 'renderPageContent'])->name('api.pages.render');
     Route::post('/pages/{page}/save-content', [PageController::class, 'savePageContent'])->name('api.pages.save-content');
     
+    // Widget Rendering API for Designer
+    Route::get('/widgets/{widget}/render', [App\Http\Controllers\Api\WidgetController::class, 'renderWidget'])->name('api.widgets.render');
+    Route::get('/sections/{section}/render', [App\Http\Controllers\Api\PageSectionController::class, 'renderSection'])->name('api.sections.render');
+    
     // Page Sections API
     Route::get('/pages/{page}/sections', [App\Http\Controllers\Api\PageSectionController::class, 'index']);
     Route::post('/pages/{page}/sections', [App\Http\Controllers\Api\PageSectionController::class, 'store']);

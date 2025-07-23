@@ -446,12 +446,12 @@ class ThemeManager
     }
     
     /**
-     * Get the currently active theme
-     * 
-     * @return Theme|null Active theme or null if none is active
+     * Register theme view paths
+     *
+     * @param Theme $theme
+     * @return void
      */
-   
-    public function registerThemeViewPaths(Theme $theme)
+    public function registerThemeViewPaths(Theme $theme): void
     {
         if (!$theme) {
             return;
@@ -461,15 +461,27 @@ class ThemeManager
         $themePath = resource_path('themes/' . $theme->slug);
         
         if (is_dir($themePath)) {
-            // Register the theme namespace with Laravel's view finder
+            // Simply register or re-register the theme namespace
+            // Laravel will handle replacing existing paths automatically
             view()->addNamespace('theme', $themePath);
+            
+            \Log::debug('Registered theme namespace', [
+                'theme_slug' => $theme->slug,
+                'theme_path' => $themePath
+            ]);
             
             // Also register a fallback path for any theme-specific views
             // that aren't found in the active theme
             $fallbackPath = resource_path('themes/default');
             if (is_dir($fallbackPath) && $theme->slug !== 'default') {
                 view()->addNamespace('theme', $fallbackPath);
+                \Log::debug('Added fallback theme path', ['fallback_path' => $fallbackPath]);
             }
+        } else {
+            \Log::error('Theme directory not found', [
+                'theme_slug' => $theme->slug,
+                'expected_path' => $themePath
+            ]);
         }
     }
     protected function loadThemeAssets(Theme $theme)

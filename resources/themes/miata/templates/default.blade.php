@@ -11,9 +11,11 @@
                 @endphp
                 
                 @includeIf("theme::sections.{$templateSection->section_type}", [
-                    'templateSection' => $templateSection,
-                    'sectionData' => $sectionData,
-                    'pageSection' => $pageSection
+                    'section' => $templateSection,
+                    'widgets' => $sectionData['widgets'] ?? [],
+                    'pageSection' => $pageSection,
+                    'page' => $page,
+                    'template' => $template
                 ])
             @endforeach
         @elseif(isset($template) && $template->sections->count() > 0)
@@ -41,7 +43,5 @@
             </div>
         @endif
     </div>
-
-
 
 @endsection

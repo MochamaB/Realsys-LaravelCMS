@@ -6,7 +6,7 @@ window.PageManager = window.PageManager || {};
 /**
  * Convert a section (from API) to a GrapesJS component structure.
  */
-function sectionToComponent(section) {
+async function sectionToComponent(section) {
     // Determine section type with fallback logic
     const sectionType = section.type || 
                        (section.template_section && section.template_section.section_type) || 
@@ -23,6 +23,41 @@ function sectionToComponent(section) {
         style: 'min-height:200px;'
     };
     
+    // Try to fetch actual rendered HTML for this section
+    let actualHTML = null;
+    try {
+        const response = await fetch(`/admin/api/sections/${section.id}/render`, {
+            method: 'GET',
+            headers: {
+                'X-CSRF-TOKEN': window.csrfToken,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.html) {
+                actualHTML = data.html;
+                console.log('✅ Loaded actual HTML for section:', sectionName);
+            }
+        } else {
+            console.warn('Failed to load section HTML:', response.status);
+        }
+    } catch (error) {
+        console.warn('Error loading section HTML:', error);
+    }
+    
+    // If we have actual HTML, use it directly
+    if (actualHTML) {
+        return {
+            tagName: 'div',
+            attributes: sectionAttrs,
+            components: actualHTML
+        };
+    }
+    
+    // Otherwise, fall back to the structured approach
     // Base container structure
     let containerComponents = [];
     
@@ -188,7 +223,12 @@ window.PageManager.loadSectionsToGrapesJS = async function(editor, pageId) {
             return;
         }
         
-        const components = sections.map(sectionToComponent);
+        // Process sections asynchronously to load actual HTML
+        const components = [];
+        for (const section of sections) {
+            const component = await sectionToComponent(section);
+            components.push(component);
+        }
         console.log('Generated components:', components);
         
         // Clear existing content and add new components
@@ -255,4 +295,51 @@ window.PageManager.saveSectionsFromGrapesJS = async function(editor, pageId) {
         console.error('Error saving sections:', error);
         throw error;
     }
+};
+
+/**
+ * Render a widget with its actual HTML content
+ * @param {number} widgetId - The widget ID
+ * @returns {Promise<string>} The rendered HTML
+ */
+window.PageManager.renderWidget = async function(widgetId) {
+    try {
+        const response = await fetch(`/admin/api/widgets/${widgetId}/render`, {
+            method: 'GET',
+            headers: {
+                'X-CSRF-TOKEN': window.csrfToken,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.html) {
+                console.log('✅ Loaded actual HTML for widget ID:', widgetId);
+                return data.html;
+            }
+        } else {
+            console.warn('Failed to load widget HTML:', response.status);
+        }
+    } catch (error) {
+        console.warn('Error loading widget HTML:', error);
+    }
+    
+    // Fallback HTML
+    return `<div class="widget-placeholder">
+        <h5>Widget (ID: ${widgetId})</h5>
+        <p>Loading widget content...</p>
+    </div>`;
+};
+
+/**
+ * Update a widget component with its actual rendered HTML
+ * @param {Object} component - The GrapesJS component
+ * @param {number} widgetId - The widget ID
+ */
+window.PageManager.updateWidgetHTML = async function(component, widgetId) {
+    const html = await window.PageManager.renderWidget(widgetId);
+    component.components(html);
+    console.log('Updated widget component with actual HTML');
 };

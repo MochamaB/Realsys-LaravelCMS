@@ -306,15 +306,9 @@ class WidgetContentFetchService
      */
     protected function getContentModel(ContentType $contentType)
     {
-        // Get model class from content type
-        $modelClass = $contentType->model_class;
-        
-        if (!$modelClass || !class_exists($modelClass)) {
-            Log::error("Content type model class does not exist: {$modelClass}");
-            return null;
-        }
-        
-        return new $modelClass;
+        // In our system, all content types use the ContentItem model
+        // The content type differentiation happens via the content_type_id field
+        return new \App\Models\ContentItem();
     }
     
     /**

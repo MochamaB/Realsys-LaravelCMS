@@ -21,10 +21,15 @@
                         @forelse($sidebarWidgets as $widget)
                             <div class="sidebar-widget mb-3">
                                 @if(isset($widget['view_path']) && View::exists($widget['view_path']))
-                                    @include($widget['view_path'], ['widget' => $widget])
+                                    @include($widget['view_path'], [
+                                        'fields' => $widget['fields'] ?? [],
+                                        'settings' => $widget['settings'] ?? [],
+                                        'widget' => $widget
+                                    ])
                                 @else
                                     <div class="widget widget-{{ $widget['slug'] ?? 'unknown' }} p-3 bg-light border rounded">
                                         <h6>{{ $widget['name'] ?? 'Sidebar Widget' }}</h6>
+                                        <p class="text-muted small">View not found: {{ $widget['view_path'] ?? 'N/A' }}</p>
                                     </div>
                                 @endif
                             </div>
@@ -51,10 +56,15 @@
                         @forelse($mainWidgets as $widget)
                             <div class="main-widget mb-4">
                                 @if(isset($widget['view_path']) && View::exists($widget['view_path']))
-                                    @include($widget['view_path'], ['widget' => $widget])
+                                    @include($widget['view_path'], [
+                                        'fields' => $widget['fields'] ?? [],
+                                        'settings' => $widget['settings'] ?? [],
+                                        'widget' => $widget
+                                    ])
                                 @else
                                     <div class="widget widget-{{ $widget['slug'] ?? 'unknown' }} p-4 border rounded">
                                         <h5>{{ $widget['name'] ?? 'Main Widget' }}</h5>
+                                        <p class="text-muted">View not found: {{ $widget['view_path'] ?? 'N/A' }}</p>
                                     </div>
                                 @endif
                             </div>

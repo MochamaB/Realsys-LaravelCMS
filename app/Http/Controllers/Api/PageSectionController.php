@@ -100,4 +100,47 @@ class PageSectionController extends Controller
         }
         return response()->json(['success' => true]);
     }
+
+    /**
+     * Render a section with all its widgets for the page designer
+     */
+    public function renderSection(Request $request, PageSection $section)
+    {
+        try {
+            $templateRenderer = app(\App\Services\TemplateRenderer::class);
+            $page = $section->page;
+            $template = $page->template;
+            
+            if (!$template) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Page has no template'
+                ], 400);
+            }
+            
+            // Render the section using TemplateRenderer
+            $html = $templateRenderer->renderSectionById($section->id, [
+                'page' => $page,
+                'template' => $template
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'html' => $html,
+                'section_id' => $section->id,
+                'section_name' => $section->templateSection->name ?? 'Unknown Section'
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error rendering section: ' . $e->getMessage(), [
+                'section_id' => $section->id,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to render section: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

@@ -1,74 +1,495 @@
-/* Custom styles for page designer (currently empty) */
-/* Custom styles for page designer to match Velzon theme */
-#gjs {
+/* GrapesJS Velzon Theme Integration */
+
+/* Override GrapesJS CSS Variables to match Velzon */
+:root {
+    /* Primary Colors - Match Velzon */
+    --gjs-primary-color: #405189;
+    --gjs-secondary-color: #74788d;
+    --gjs-tertiary-color: #0ab39c;
+    --gjs-quaternary-color: #f06548;
+    
+    /* Background Colors */
+    --gjs-main-color: #ffffff;
+    --gjs-main-dark-color: #f3f6f9;
+    --gjs-secondary-dark-color: #e9ecef;
+    
+    /* Text Colors */
+    --gjs-font-color: #495057;
+    --gjs-font-color-active: #212529;
+    
+    /* Light Colors */
+    --gjs-main-light-color: rgba(64, 81, 137, 0.1);
+    --gjs-secondary-light-color: #6c757d;
+    --gjs-soft-light-color: rgba(64, 81, 137, 0.05);
+    
+    /* Accent Colors */
+    --gjs-color-blue: #405189;
+    --gjs-color-red: #f06548;
+    --gjs-color-yellow: #f7b84b;
+    --gjs-color-green: #0ab39c;
+    --gjs-color-highlight: #405189;
+    --gjs-color-warn: #f7b84b;
+    
+    /* Borders */
+    --gjs-light-border: #dee2e6;
+    --gjs-arrow-color: #6c757d;
+    
+    /* Typography */
+    --gjs-main-font: 'Poppins', sans-serif;
+    --gjs-font-size: 0.8125rem;
+}
+
+/* GrapesJS Container Styling */
+.gjs-editor {
+    font-family: var(--gjs-main-font);
     background-color: #f8f9fa;
+    height: 100% !important;
 }
 
-.panel__blocks {
-    background-color: #fff;
-    border-right: 1px solid #eff0f2 !important;
-}
-
-/* Style for blocks in the sidebar */
+/* Block Manager - Make blocks look like Velzon cards */
 .gjs-blocks-c {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-    padding: 10px;
+    padding: 1rem;
+    gap: 0.75rem;
 }
 
 .gjs-block {
-    background-color: #fff;
-    border: 1px solid #eff0f2;
-    border-radius: 6px;
-    padding: 10px;
-    margin: 0 !important;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    transition: all 0.2s;
+    background: #ffffff;
+    border: 1px solid #e9ecef;
+    border-radius: 0.375rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    transition: all 0.15s ease-in-out;
+    margin: 0;
+    padding: 1rem;
+    min-height: 80px;
 }
 
 .gjs-block:hover {
-    background-color: #f8f9fa;
-    border-color: #e9ebec;
+    border-color: var(--gjs-primary-color);
+    box-shadow: 0 0.5rem 1rem rgba(64, 81, 137, 0.15);
+    transform: translateY(-2px);
 }
 
-.gjs-block-category {
-    color: #495057;
+.gjs-block-label {
+    color: var(--gjs-font-color);
     font-weight: 500;
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    margin: 15px 10px 5px;
-    letter-spacing: 0.5px;
+    font-size: 0.75rem;
 }
 
-/* Canvas styles */
+/* Block Categories */
+.gjs-block-category .gjs-title {
+    background: linear-gradient(135deg, var(--gjs-primary-color) 0%, #32408f 100%);
+    color: #ffffff;
+    border-radius: 0.375rem 0.375rem 0 0;
+    font-weight: 600;
+    padding: 0.75rem 1rem;
+    margin: 0;
+}
+
+.gjs-block-category.gjs-open {
+    background: #ffffff;
+    border: 1px solid #e9ecef;
+    border-radius: 0.375rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+/* GrapesJS Container Styling */
+
+
+/* Canvas Styling */
 .gjs-cv-canvas {
-    background-color: #f8f9fa;
-    top: 0;
-    width: 100%;
-    height: 100%;
+    background: #f8f9fa;
+    border-left: 1px solid #e9ecef;
+    height: 100% !important;
+    min-height: calc(100vh - 60px) !important;
 }
 
-/* Toolbar styles */
+.gjs-frame {
+    background: #ffffff;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    border-radius: 0.375rem;
+    margin: 1rem;
+    border: 1px solid #e9ecef;
+}
+
+/* Toolbar Styling */
+.gjs-toolbar {
+    background: linear-gradient(135deg, var(--gjs-primary-color) 0%, #32408f 100%);
+    border-radius: 0.375rem;
+    box-shadow: 0 0.25rem 0.5rem rgba(64, 81, 137, 0.25);
+}
+
+.gjs-toolbar-item {
+    color: #ffffff;
+    transition: all 0.15s ease-in-out;
+}
+
+.gjs-toolbar-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 0.25rem;
+}
+
+/* Trait Manager Styling */
+.gjs-trt-traits {
+    background: #ffffff;
+    border-radius: 0.375rem;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.gjs-trt-trait {
+    border-bottom: 1px solid #f3f6f9;
+    padding: 0.75rem;
+}
+
+.gjs-trt-trait:last-child {
+    border-bottom: none;
+}
+
+.gjs-field {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    transition: all 0.15s ease-in-out;
+}
+
+.gjs-field input:focus,
+.gjs-field select:focus,
+.gjs-field textarea:focus {
+    border-color: var(--gjs-primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(64, 81, 137, 0.25);
+}
+
+/* Style Manager */
+.gjs-sm-sector-title {
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    color: var(--gjs-font-color);
+    font-weight: 600;
+}
+
+.gjs-sm-properties {
+    background: #ffffff;
+    border-radius: 0 0 0.375rem 0.375rem;
+}
+
+/* Layer Manager */
+.gjs-layer-item {
+    background: #ffffff;
+    border-bottom: 1px solid #f3f6f9;
+    transition: all 0.15s ease-in-out;
+}
+
+.gjs-layer-item:hover {
+    background: #f8f9fa;
+}
+
+.gjs-layer.gjs-selected .gjs-layer-item {
+    background: rgba(64, 81, 137, 0.1);
+    border-left: 3px solid var(--gjs-primary-color);
+}
+
+/* Panels */
 .gjs-pn-panel {
-    background-color: #fff;
-    border-bottom: 1px solid #eff0f2;
+    background: #ffffff;
+    border: 1px solid #e9ecef;
+    border-radius: 0.375rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
 }
 
 .gjs-pn-btn {
-    color: #74788d;
+    color: var(--gjs-font-color);
+    border-radius: 0.25rem;
+    transition: all 0.15s ease-in-out;
 }
 
-/* Adjust the main container */
-.container-fluid {
+.gjs-pn-btn:hover {
+    background: var(--gjs-main-light-color);
+    color: var(--gjs-primary-color);
+}
+
+.gjs-pn-btn.gjs-pn-active {
+    background: var(--gjs-primary-color);
+    color: #ffffff;
+    box-shadow: 0 0.125rem 0.25rem rgba(64, 81, 137, 0.5);
+}
+
+/* Resizer Handles */
+.gjs-resizer-h {
+    background: var(--gjs-primary-color);
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 0 1px var(--gjs-primary-color);
+}
+
+/* Highlighter */
+.gjs-cv-canvas .gjs-highlighter {
+    outline-color: var(--gjs-primary-color);
+}
+
+.gjs-cv-canvas .gjs-highlighter-sel {
+    outline-color: var(--gjs-color-green);
+}
+
+/* Badge */
+.gjs-badge {
+    background: var(--gjs-primary-color);
+    color: #ffffff;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* Scrollbars */
+.gjs-editor ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.gjs-editor ::-webkit-scrollbar-track {
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+.gjs-editor ::-webkit-scrollbar-thumb {
+    background: #dee2e6;
+    border-radius: 4px;
+    transition: background 0.15s ease-in-out;
+}
+
+.gjs-editor ::-webkit-scrollbar-thumb:hover {
+    background: #adb5bd;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .gjs-block {
+        min-height: 60px;
+        padding: 0.75rem;
+    }
+    
+    .gjs-block-label {
+        font-size: 0.6875rem;
+    }
+}
+
+/* Animation for smooth transitions */
+.gjs-block,
+.gjs-field,
+.gjs-layer-item,
+.gjs-pn-btn {
+    transition: all 0.15s ease-in-out;
+}
+
+/* Custom designer container styling */
+.designer-container {
+    background: #f8f9fa;
+    min-height: calc(100vh - 220px);
+}
+
+.section-sidebar {
+    background: #ffffff;
+    border-right: 1px solid #e9ecef;
+    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Panel blocks styling */
+.panel__blocks {
+    background: #ffffff !important;
+    border-right: 1px solid #e9ecef !important;
+}
+
+/* Sidebar Header Styling */
+.sidebar-header {
+    background: linear-gradient(135deg, var(--gjs-primary-color) 0%, #32408f 100%);
+    color: #ffffff;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.sidebar-header h6 {
+    color: #ffffff;
+    margin: 0;
+}
+
+.sidebar-header .btn-ghost-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    transition: all 0.15s ease-in-out;
+}
+
+.sidebar-header .btn-ghost-secondary:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+    transform: scale(1.05);
+}
+
+/* Sidebar Content Area */
+.sidebar-content {
     padding: 0;
-    height: calc(100vh - 60px); /* Adjust based on your header height */
+    height: calc(100% - 70px); /* Account for header height */
+    overflow-y: auto;
+    background: #ffffff;
 }
 
-/* Velzon theme colors */
-:root {
-    --velzon-primary: #405189;
-    --velzon-secondary: #3577f1;
-    --velzon-light: #f8f9fa;
-    --velzon-border: #eff0f2;
+/* Collapsed sidebar state */
+.panel__blocks.collapsed {
+    width: 60px !important;
+    transition: width 0.3s ease-in-out;
+}
+
+.panel__blocks.collapsed .sidebar-header h6 {
+    display: none;
+}
+
+.panel__blocks.collapsed .sidebar-content {
+    display: none;
+}
+
+.panel__blocks.collapsed #sidebar-toggle i {
+    transform: rotate(180deg);
+}
+
+/* Ensure blocks container fits properly */
+.sidebar-content .gjs-blocks-c {
+    padding: 1rem;
+    height: 100%;
+    overflow-y: auto;
+}
+
+/* Make GrapesJS main area blend with Velzon */
+.gjs-main-area {
+    background: #f8f9fa;
+}
+
+/* Section blocks specific styling */
+.gjs-block[id*="section-"] {
+    border-left: 4px solid var(--gjs-color-green);
+}
+
+.gjs-block[id*="section-"]:hover {
+    border-left-color: var(--gjs-primary-color);
+}
+
+/* Widget blocks specific styling */  
+.gjs-block[id*="widget-"] {
+    border-left: 4px solid var(--gjs-color-blue);
+}
+
+.gjs-block[id*="widget-"]:hover {
+    border-left-color: var(--gjs-primary-color);
+}
+
+/* Widget rendering in canvas */
+.gjs-cv-canvas .widget {
+    border: 1px dashed #dee2e6;
+    padding: 10px;
+    margin: 10px 0;
+    background: rgba(255, 255, 255, 0.9);
+    position: relative;
+}
+
+.gjs-cv-canvas .widget:hover {
+    border-color: var(--gjs-primary-color);
+    box-shadow: 0 2px 8px rgba(64, 81, 137, 0.15);
+}
+
+.gjs-cv-canvas .widget-placeholder {
+    background: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    padding: 20px;
+    text-align: center;
+    color: #6c757d;
+    border-radius: 0.375rem;
+}
+
+.gjs-cv-canvas .widget-placeholder h5 {
+    margin-bottom: 10px;
+    color: var(--gjs-primary-color);
+}
+
+/* Section loading states */
+.gjs-cv-canvas .section-loading {
+    background: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    padding: 30px;
+    text-align: center;
+    color: #6c757d;
+    border-radius: 0.375rem;
+    animation: pulse 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes pulse {
+    from { opacity: 0.6; }
+    to { opacity: 1; }
+}
+
+/* Make rendered content responsive in canvas */
+.gjs-cv-canvas .container {
+    max-width: 100%;
+    padding: 0 15px;
+}
+
+.gjs-cv-canvas .row {
+    margin: 0 -15px;
+}
+
+.gjs-cv-canvas .col-md-3,
+.gjs-cv-canvas .col-md-4,
+.gjs-cv-canvas .col-md-6,
+.gjs-cv-canvas .col-md-8,
+.gjs-cv-canvas .col-md-9,
+.gjs-cv-canvas .col-md-12,
+.gjs-cv-canvas .col-12 {
+    padding: 0 15px;
+    min-height: 50px;
+}
+
+/* Widget content styling */
+.gjs-cv-canvas .widget-content {
+    line-height: 1.5;
+}
+
+.gjs-cv-canvas .widget-title {
+    margin-bottom: 15px;
+    color: var(--gjs-primary-color);
+}
+
+/* Theme-specific widget styles */
+.gjs-cv-canvas .post-list-widget .post-preview {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+}
+
+.gjs-cv-canvas .post-list-widget .post-title {
+    font-size: 1.2em;
+    margin-bottom: 8px;
+}
+
+.gjs-cv-canvas .post-list-widget .post-meta {
+    font-size: 0.9em;
+    color: #6c757d;
+}
+
+/* Ensure images in widgets are responsive */
+.gjs-cv-canvas .widget img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Debug info styling */
+.gjs-cv-canvas .debug-info,
+.gjs-cv-canvas .debug-widget-info {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+}
+
+.gjs-cv-canvas .debug-info h4,
+.gjs-cv-canvas .debug-info h5 {
+    color: #856404;
+    margin-bottom: 8px;
 }
