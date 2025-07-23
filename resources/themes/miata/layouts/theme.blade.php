@@ -26,9 +26,9 @@
         <!-- Navigation/Header Section -->
         @include('theme::partials.header')
         <!-- Main Content -->
-        <div class="main-content">
+       
             @yield('content')
-        </div>
+        
 
         <!-- Footer Section -->
         @include('theme::partials.footer')

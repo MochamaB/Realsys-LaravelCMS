@@ -269,18 +269,35 @@ class ContentItemController extends Controller
             // Remove existing files
             $contentItem->clearMediaCollection('field_' . $field->id);
             
+            $lastMediaId = null;
+            
             if (is_array($request->file('field_' . $field->id))) {
                 // Handle multiple files
                 foreach ($request->file('field_' . $field->id) as $file) {
-                    $contentItem->addMedia($file)
+                    $media = $contentItem->addMedia($file)
                         ->withCustomProperties(['field_id' => $field->id])
                         ->toMediaCollection('field_' . $field->id);
+                    $lastMediaId = $media->id;
                 }
             } else {
                 // Handle single file
-                $contentItem->addMedia($request->file('field_' . $field->id))
+                $media = $contentItem->addMedia($request->file('field_' . $field->id))
                     ->withCustomProperties(['field_id' => $field->id])
                     ->toMediaCollection('field_' . $field->id);
+                $lastMediaId = $media->id;
+            }
+            
+            // Store the media ID in ContentFieldValue for consistent lookup
+            if ($lastMediaId) {
+                ContentFieldValue::updateOrCreate(
+                    [
+                        'content_item_id' => $contentItem->id,
+                        'content_type_field_id' => $field->id,
+                    ],
+                    [
+                        'value' => $lastMediaId,
+                    ]
+                );
             }
         }
         // Handle media picker selection (new approach)
@@ -367,7 +384,7 @@ class ContentItemController extends Controller
                             }
                         }
                         
-                        // Handle media picker in repeater fields
+                        // Handle image fields in repeater fields
                         if ($subFieldType === 'image') {
                             // Create a unique collection name for this repeater item's media
                             $collectionName = $mediaPrefix . $index . '_' . $subFieldKey;
@@ -375,8 +392,8 @@ class ContentItemController extends Controller
                             // Clear existing media for this specific repeater item field
                             $contentItem->clearMediaCollection($collectionName);
                             
-                            // Handle media picker selection
-                            if (!empty($subFieldValue)) {
+                            // Handle media picker selection (media ID provided)
+                            if (!empty($subFieldValue) && is_numeric($subFieldValue)) {
                                 $mediaId = $subFieldValue;
                                 $media = \Spatie\MediaLibrary\MediaCollections\Models\Media::find($mediaId);
                                 
@@ -395,7 +412,22 @@ class ContentItemController extends Controller
                                     // Store the media ID for reference in the field value
                                     $fieldValue[$index][$subFieldKey] = $newMedia->id;
                                 }
-                            } else {
+                            }
+                            // Handle direct file upload (UploadedFile object provided)
+                            elseif ($subFieldValue instanceof \Illuminate\Http\UploadedFile) {
+                                $media = $contentItem->addMedia($subFieldValue)
+                                    ->withCustomProperties([
+                                        'field_id' => $field->id,
+                                        'repeater_index' => $index,
+                                        'subfield_name' => $subFieldKey
+                                    ])
+                                    ->toMediaCollection($collectionName);
+                                    
+                                // Store the media ID for reference in the field value
+                                $fieldValue[$index][$subFieldKey] = $media->id;
+                            }
+                            // Handle empty value (remove media)
+                            else {
                                 // If no media selected, remove from field value
                                 unset($fieldValue[$index][$subFieldKey]);
                             }

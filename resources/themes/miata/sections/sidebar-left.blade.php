@@ -1,25 +1,19 @@
-{{-- sidebar-left.blade.php --}}
-<div class="section section-sidebar-left {{ $pageSection->css_classes ?? '' }}"
-     id="section-{{ $section->slug }}"
-     style="background-color: {{ $pageSection->background_color ?? 'transparent' }}; 
-            padding: {{ $pageSection->padding ?? '2rem 0' }}; 
-            margin: {{ $pageSection->margin ?? '0' }}">
-    
+{{-- Original Miata theme section structure with sidebar layout --}}
+<section class="elements-area ptb-140" id="section-{{ $section->slug }}">
     <div class="container">
         <div class="row">
-            {{-- Sidebar (Left) --}}
-            <div class="col-md-3 sidebar-column mb-4">
-                <div class="sidebar-content">
-                    @if(!empty($widgets))
-                        @php
-                            // Filter widgets for sidebar (column_position = 0)
-                            $sidebarWidgets = collect($widgets)->filter(function($widget) {
-                                return ($widget['column_position'] ?? 0) == 0;
-                            });
-                        @endphp
-                        
-                        @forelse($sidebarWidgets as $widget)
-                            <div class="sidebar-widget mb-3">
+            {{-- Sidebar Column (Left) --}}
+            <div class="col-lg-4 col-md-5">
+                <div class="sidebar">
+                    @php
+                        $sidebarWidgets = collect($widgets)->filter(function($widget) {
+                            return ($widget['position'] ?? 'main') === 'sidebar';
+                        });
+                    @endphp
+                    
+                    @if($sidebarWidgets->count() > 0)
+                        @foreach($sidebarWidgets as $widget)
+                            <div class="sidebar-widget mb-4">
                                 @if(isset($widget['view_path']) && View::exists($widget['view_path']))
                                     @include($widget['view_path'], [
                                         'fields' => $widget['fields'] ?? [],
@@ -27,33 +21,32 @@
                                         'widget' => $widget
                                     ])
                                 @else
-                                    <div class="widget widget-{{ $widget['slug'] ?? 'unknown' }} p-3 bg-light border rounded">
-                                        <h6>{{ $widget['name'] ?? 'Sidebar Widget' }}</h6>
-                                        <p class="text-muted small">View not found: {{ $widget['view_path'] ?? 'N/A' }}</p>
+                                    <div class="widget-fallback alert alert-warning">
+                                        <strong>Widget:</strong> {{ $widget['name'] ?? 'Unknown Widget' }}<br>
+                                        <small>View not found: {{ $widget['view_path'] ?? 'N/A' }}</small>
                                     </div>
                                 @endif
                             </div>
-                        @empty
-                            <div class="empty-sidebar p-3 text-center bg-light border rounded">
-                                <p class="text-muted small mb-0">Sidebar is empty</p>
-                            </div>
-                        @endforelse
+                        @endforeach
+                    @else
+                        <div class="empty-sidebar text-center text-muted">
+                            <em>No sidebar widgets</em>
+                        </div>
                     @endif
                 </div>
             </div>
             
-            {{-- Main Content (Right) --}}
-            <div class="col-md-9 main-column">
+            {{-- Main Content Column (Right) --}}
+            <div class="col-lg-8 col-md-7">
                 <div class="main-content">
-                    @if(!empty($widgets))
-                        @php
-                            // Filter widgets for main content (column_position = 1)
-                            $mainWidgets = collect($widgets)->filter(function($widget) {
-                                return ($widget['column_position'] ?? 1) == 1;
-                            });
-                        @endphp
-                        
-                        @forelse($mainWidgets as $widget)
+                    @php
+                        $mainWidgets = collect($widgets)->filter(function($widget) {
+                            return ($widget['position'] ?? 'main') === 'main' || !isset($widget['position']);
+                        });
+                    @endphp
+                    
+                    @if($mainWidgets->count() > 0)
+                        @foreach($mainWidgets as $widget)
                             <div class="main-widget mb-4">
                                 @if(isset($widget['view_path']) && View::exists($widget['view_path']))
                                     @include($widget['view_path'], [
@@ -62,21 +55,20 @@
                                         'widget' => $widget
                                     ])
                                 @else
-                                    <div class="widget widget-{{ $widget['slug'] ?? 'unknown' }} p-4 border rounded">
-                                        <h5>{{ $widget['name'] ?? 'Main Widget' }}</h5>
-                                        <p class="text-muted">View not found: {{ $widget['view_path'] ?? 'N/A' }}</p>
+                                    <div class="widget-fallback alert alert-warning">
+                                        <strong>Widget:</strong> {{ $widget['name'] ?? 'Unknown Widget' }}<br>
+                                        <small>View not found: {{ $widget['view_path'] ?? 'N/A' }}</small>
                                     </div>
                                 @endif
                             </div>
-                        @empty
-                            <div class="empty-main-content p-4 text-center bg-light border rounded">
-                                <h5>{{ $section->name ?? 'Main Content' }}</h5>
-                                <p class="text-muted">Main content area is empty</p>
-                            </div>
-                        @endforelse
+                        @endforeach
+                    @else
+                        <div class="empty-main text-center text-muted">
+                            <em>No main content widgets</em>
+                        </div>
                     @endif
                 </div>
             </div>
         </div>
     </div>
-</div>
+</section>

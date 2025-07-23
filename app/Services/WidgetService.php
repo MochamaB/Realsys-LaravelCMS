@@ -349,60 +349,726 @@ class WidgetService
             'updated_at' => $contentItem->updated_at,
         ];
         
-        // Add field values
-        foreach ($contentItem->fieldValues as $fieldValue) {
-            if ($fieldValue->field) {
-                $contentFieldSlug = $fieldValue->field->slug;
-                $contentFieldName = $fieldValue->field->name;
-                $value = $fieldValue->getFormattedValue();
+        \Log::debug('Starting content item data extraction', [
+            'content_item_id' => $contentItem->id,
+            'has_field_mappings' => !empty($fieldMappings),
+            'field_mappings' => $fieldMappings,
+            'field_values_count' => $contentItem->fieldValues->count()
+        ]);
+        
+        // If we have field mappings, process them (including repeater fields)
+        if (!empty($fieldMappings)) {
+            \Log::debug('Using field mappings processing');
+            $processedData = $this->processFieldMappings($contentItem, $fieldMappings);
+            $data = array_merge($data, $processedData);
+        } else {
+            \Log::debug('Using direct field processing (no mappings)');
+            // No mappings, process fields directly
+            $this->addDirectFieldValues($contentItem, $data);
+        }
+        
+        \Log::debug('Final extracted data', [
+            'content_item_id' => $contentItem->id,
+            'data_keys' => array_keys($data),
+            'data_sample' => array_slice($data, 0, 5, true)
+        ]);
+        
+        return $data;
+    }
+    
+    /**
+     * Process field mappings including repeater fields with dot notation
+     *
+     * @param ContentItem $contentItem
+     * @param array $fieldMappings
+     * @return array
+     */
+    protected function processFieldMappings(ContentItem $contentItem, array $fieldMappings): array
+    {
+        $data = [];
+        $repeaterMappings = [];
+        $flatMappings = [];
+        
+        // First, expand any flat repeater mappings to include subfield mappings
+        $expandedMappings = $this->expandRepeaterMappings($contentItem, $fieldMappings);
+        
+        \Log::debug('Expanded field mappings', [
+            'original_mappings' => $fieldMappings,
+            'expanded_mappings' => $expandedMappings
+        ]);
+        
+        // Separate flat mappings from repeater mappings (dot notation)
+        foreach ($expandedMappings as $widgetField => $contentField) {
+            if (strpos($widgetField, '.') !== false || strpos($contentField, '.') !== false) {
+                $repeaterMappings[$widgetField] = $contentField;
+            } else {
+                $flatMappings[$widgetField] = $contentField;
+            }
+        }
+        
+        \Log::debug('Separated field mappings', [
+            'flat_mappings' => $flatMappings,
+            'repeater_mappings' => $repeaterMappings
+        ]);
+        
+        // Process flat mappings first
+        foreach ($flatMappings as $widgetField => $contentField) {
+            $value = $this->getContentFieldValue($contentItem, $contentField);
+            if ($value !== null) {
+                $widgetFieldKey = strtolower(str_replace(' ', '_', $widgetField));
+                $data[$widgetFieldKey] = $value;
                 
-                \Log::debug('Processing content field', [
-                    'content_item_id' => $contentItem->id,
-                    'field_slug' => $contentFieldSlug,
-                    'field_name' => $contentFieldName,
-                    'value' => $value
+                \Log::debug('Applied flat field mapping', [
+                    'widget_field' => $widgetFieldKey,
+                    'content_field' => $contentField,
+                    'value_type' => gettype($value)
+                ]);
+            }
+        }
+        
+        // Process repeater mappings
+        if (!empty($repeaterMappings)) {
+            $repeaterData = $this->processRepeaterFieldMappings($contentItem, $repeaterMappings);
+            $data = array_merge($data, $repeaterData);
+        }
+        
+        return $data;
+    }
+    
+    /**
+     * Expand flat repeater mappings to include subfield mappings
+     *
+     * @param ContentItem $contentItem
+     * @param array $fieldMappings
+     * @return array
+     */
+    protected function expandRepeaterMappings(ContentItem $contentItem, array $fieldMappings): array
+    {
+        $expandedMappings = $fieldMappings;
+        
+        foreach ($fieldMappings as $widgetField => $contentField) {
+            // Skip if this is already a dot notation mapping
+            if (strpos($widgetField, '.') !== false || strpos($contentField, '.') !== false) {
+                continue;
+            }
+            
+            // Check if this is a repeater field mapping
+            if ($this->isRepeaterFieldMapping($contentItem, $widgetField, $contentField)) {
+                \Log::debug('Found flat repeater mapping, generating subfield mappings', [
+                    'widget_field' => $widgetField,
+                    'content_field' => $contentField
                 ]);
                 
-                // Apply field mappings if provided
-                if (!empty($fieldMappings)) {
-                    // Find the widget field that maps to this content field
-                    $widgetFieldKey = null;
-                    foreach ($fieldMappings as $widgetField => $contentField) {
-                        // Check if this content field matches (by name or slug)
-                        if ($contentField === $contentFieldSlug || $contentField === $contentFieldName) {
-                            // Convert widget field name to lowercase slug format
-                            $widgetFieldKey = strtolower(str_replace(' ', '_', $widgetField));
-                            break;
-                        }
-                    }
+                // Generate subfield mappings
+                $subfieldMappings = $this->generateAutomaticSubfieldMappings($contentItem, $widgetField, $contentField);
+                
+                if (!empty($subfieldMappings)) {
+                    $expandedMappings = array_merge($expandedMappings, $subfieldMappings);
                     
-                    if ($widgetFieldKey) {
-                        $data[$widgetFieldKey] = $value;
-                        \Log::debug('Applied field mapping', [
-                            'content_field' => $contentFieldSlug,
-                            'widget_field' => $widgetFieldKey,
-                            'value' => $value
-                        ]);
-                    } else {
-                        // No mapping found, use original field slug
-                        $data[$contentFieldSlug] = $value;
-                        \Log::debug('No mapping found, using original field slug', [
-                            'content_field' => $contentFieldSlug,
-                            'value' => $value
-                        ]);
-                    }
-                } else {
-                    // No mappings, use original field slug
-                    $data[$contentFieldSlug] = $value;
-                    \Log::debug('No field mappings provided, using field slug', [
-                        'content_field' => $contentFieldSlug,
-                        'value' => $value
+                    \Log::debug('Generated automatic subfield mappings', [
+                        'widget_parent' => $widgetField,
+                        'content_parent' => $contentField,
+                        'subfield_mappings' => $subfieldMappings
                     ]);
                 }
             }
         }
         
+        return $expandedMappings;
+    }
+    
+    /**
+     * Check if a field mapping represents a repeater field
+     *
+     * @param ContentItem $contentItem
+     * @param string $widgetField
+     * @param string $contentField
+     * @return bool
+     */
+    protected function isRepeaterFieldMapping(ContentItem $contentItem, string $widgetField, string $contentField): bool
+    {
+        // Check if the content field is a repeater field
+        $contentTypeField = $contentItem->contentType->fields->filter(function ($field) use ($contentField) {
+            return $field->slug === $contentField || $field->name === $contentField;
+        })->first();
+        
+        if (!$contentTypeField || $contentTypeField->field_type !== 'repeater') {
+            return false;
+        }
+        
+        // Check if the widget field is also a repeater field
+        // We need to get the widget from the current context
+        return true; // For now, assume it's a repeater if content field is repeater
+    }
+    
+    /**
+     * Generate automatic subfield mappings for a repeater field
+     *
+     * @param ContentItem $contentItem
+     * @param string $widgetField
+     * @param string $contentField
+     * @return array
+     */
+    protected function generateAutomaticSubfieldMappings(ContentItem $contentItem, string $widgetField, string $contentField): array
+    {
+        $subfieldMappings = [];
+        
+        // Get content field definition
+        $contentTypeField = $contentItem->contentType->fields->filter(function ($field) use ($contentField) {
+            return $field->slug === $contentField || $field->name === $contentField;
+        })->first();
+        
+        if (!$contentTypeField || $contentTypeField->field_type !== 'repeater') {
+            return $subfieldMappings;
+        }
+        
+        // Parse content field subfields
+        $contentSubfields = $this->parseRepeaterSubfields($contentTypeField);
+        
+        if (empty($contentSubfields)) {
+            \Log::debug('No content subfields found for repeater', [
+                'content_field' => $contentField
+            ]);
+            return $subfieldMappings;
+        }
+        
+        // For automatic mapping, we'll map subfields by name/slug matching
+        // This works when widget and content type have similar subfield names
+        foreach ($contentSubfields as $contentSubfield) {
+            $contentSubfieldName = $contentSubfield['name'] ?? $contentSubfield['slug'] ?? '';
+            $contentSubfieldSlug = $contentSubfield['slug'] ?? $contentSubfield['name'] ?? '';
+            
+            if (empty($contentSubfieldName)) {
+                continue;
+            }
+            
+            // Create dot notation mapping
+            // Widget: "Counters.icon" -> Content: "repeater.icon"
+            $widgetSubfieldPath = $widgetField . '.' . $contentSubfieldSlug;
+            $contentSubfieldPath = $contentField . '.' . $contentSubfieldSlug;
+            
+            $subfieldMappings[$widgetSubfieldPath] = $contentSubfieldPath;
+            
+            \Log::debug('Generated subfield mapping', [
+                'widget_path' => $widgetSubfieldPath,
+                'content_path' => $contentSubfieldPath,
+                'subfield_type' => $contentSubfield['field_type'] ?? $contentSubfield['type'] ?? 'unknown'
+            ]);
+        }
+        
+        return $subfieldMappings;
+    }
+    
+    /**
+     * Parse repeater field subfields from field settings
+     *
+     * @param mixed $repeaterField
+     * @return array
+     */
+    protected function parseRepeaterSubfields($repeaterField): array
+    {
+        $settings = $repeaterField->settings ?? [];
+        
+        // Handle different settings formats
+        if (is_string($settings)) {
+            $settings = json_decode($settings, true) ?? [];
+        } elseif (is_object($settings)) {
+            $settings = (array) $settings;
+        }
+        
+        // Check different possible locations for subfields
+        $subfields = $settings['subfields'] ?? $settings['sub_fields'] ?? [];
+        
+        if (!is_array($subfields)) {
+            return [];
+        }
+        
+        // Normalize subfield structure
+        $normalizedSubfields = [];
+        foreach ($subfields as $subfield) {
+            if (is_array($subfield)) {
+                $normalizedSubfields[] = $subfield;
+            } elseif (is_object($subfield)) {
+                $normalizedSubfields[] = (array) $subfield;
+            }
+        }
+        
+        \Log::debug('Parsed repeater subfields', [
+            'field_name' => $repeaterField->name ?? $repeaterField->slug ?? 'unknown',
+            'subfields_count' => count($normalizedSubfields),
+            'subfield_names' => array_map(function($sf) {
+                return $sf['name'] ?? $sf['slug'] ?? 'unnamed';
+            }, $normalizedSubfields)
+        ]);
+        
+        return $normalizedSubfields;
+    }
+    
+    /**
+     * Process repeater field mappings with dot notation
+     *
+     * @param ContentItem $contentItem
+     * @param array $repeaterMappings
+     * @return array
+     */
+    protected function processRepeaterFieldMappings(ContentItem $contentItem, array $repeaterMappings): array
+    {
+        $data = [];
+        $groupedMappings = [];
+        
+        // Group mappings by parent repeater field
+        foreach ($repeaterMappings as $widgetField => $contentField) {
+            // Parse widget field path
+            $widgetParts = explode('.', $widgetField, 2);
+            $widgetParent = $widgetParts[0];
+            $widgetChild = $widgetParts[1] ?? null;
+            
+            // Parse content field path
+            $contentParts = explode('.', $contentField, 2);
+            $contentParent = $contentParts[0];
+            $contentChild = $contentParts[1] ?? null;
+            
+            // Group by widget parent field
+            if (!isset($groupedMappings[$widgetParent])) {
+                $groupedMappings[$widgetParent] = [
+                    'content_parent' => $contentParent,
+                    'subfield_mappings' => []
+                ];
+            }
+            
+            // Add subfield mapping if both have children
+            if ($widgetChild && $contentChild) {
+                $groupedMappings[$widgetParent]['subfield_mappings'][$widgetChild] = $contentChild;
+            }
+        }
+        
+        \Log::debug('Grouped repeater mappings', [
+            'grouped_mappings' => $groupedMappings
+        ]);
+        
+        // Process each repeater field group
+        foreach ($groupedMappings as $widgetParent => $mappingInfo) {
+            $contentParent = $mappingInfo['content_parent'];
+            $subfieldMappings = $mappingInfo['subfield_mappings'];
+            
+            // Extract repeater data from content item
+            $repeaterData = $this->extractRepeaterData($contentItem, $contentParent);
+            
+            if (!empty($repeaterData) && is_array($repeaterData)) {
+                // Apply subfield mappings to each repeater item
+                $mappedRepeaterData = $this->mapRepeaterSubfields($contentItem, $repeaterData, $subfieldMappings, $contentParent);
+                
+                $widgetParentKey = strtolower(str_replace(' ', '_', $widgetParent));
+                $data[$widgetParentKey] = $mappedRepeaterData;
+                
+                \Log::debug('Processed repeater field', [
+                    'widget_parent' => $widgetParentKey,
+                    'content_parent' => $contentParent,
+                    'item_count' => count($mappedRepeaterData)
+                ]);
+            }
+        }
+        
         return $data;
+    }
+    
+    /**
+     * Extract repeater data from a content item field
+     *
+     * @param ContentItem $contentItem
+     * @param string $fieldName
+     * @return array
+     */
+    protected function extractRepeaterData(ContentItem $contentItem, string $fieldName): array
+    {
+        // Find the field value by field name/slug
+        $fieldValue = $contentItem->fieldValues->filter(function ($fv) use ($fieldName) {
+            return $fv->field && (
+                $fv->field->slug === $fieldName || 
+                $fv->field->name === $fieldName
+            );
+        })->first();
+        
+        if (!$fieldValue) {
+            \Log::debug('Repeater field not found', ['field_name' => $fieldName]);
+            return [];
+        }
+        
+        $value = $fieldValue->getFormattedValue();
+        
+        // Handle different data formats
+        if (is_string($value)) {
+            $decoded = json_decode($value, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $value = $decoded;
+            } else {
+                \Log::warning('Failed to decode repeater JSON', [
+                    'field_name' => $fieldName,
+                    'value' => $value,
+                    'json_error' => json_last_error_msg()
+                ]);
+                return [];
+            }
+        }
+        
+        if (!is_array($value)) {
+            \Log::debug('Repeater value is not an array', [
+                'field_name' => $fieldName,
+                'value_type' => gettype($value)
+            ]);
+            return [];
+        }
+        
+        \Log::debug('Extracted repeater data', [
+            'field_name' => $fieldName,
+            'item_count' => count($value),
+            'sample_item' => !empty($value) ? array_keys($value[0] ?? []) : []
+        ]);
+        
+        return $value;
+    }
+    
+    /**
+     * Apply subfield mappings to repeater items
+     *
+     * @param ContentItem $contentItem
+     * @param array $repeaterData
+     * @param array $subfieldMappings
+     * @param string $contentParentField
+     * @return array
+     */
+    protected function mapRepeaterSubfields(ContentItem $contentItem, array $repeaterData, array $subfieldMappings, string $contentParentField): array
+    {
+        $mappedData = [];
+        
+        foreach ($repeaterData as $index => $item) {
+            if (!is_array($item)) {
+                \Log::warning('Repeater item is not an array', [
+                    'index' => $index,
+                    'item_type' => gettype($item)
+                ]);
+                continue;
+            }
+            
+            $mappedItem = [];
+            
+            // Apply each subfield mapping
+            foreach ($subfieldMappings as $widgetSubfield => $contentSubfield) {
+                if (isset($item[$contentSubfield])) {
+                    $value = $item[$contentSubfield];
+                    
+                    // Handle image fields within repeaters
+                    if ($this->isImageField($contentItem, $contentParentField, $contentSubfield)) {
+                        $value = $this->getRepeaterImageUrl($contentItem, $contentParentField, $index, $contentSubfield, $value);
+                    }
+                    
+                    $mappedItem[$widgetSubfield] = $value;
+                    
+                    \Log::debug('Mapped repeater subfield', [
+                        'index' => $index,
+                        'widget_subfield' => $widgetSubfield,
+                        'content_subfield' => $contentSubfield,
+                        'value_type' => gettype($value)
+                    ]);
+                }
+            }
+            
+            // Add any unmapped fields from the original item
+            foreach ($item as $key => $value) {
+                if (!in_array($key, $subfieldMappings) && !isset($mappedItem[$key])) {
+                    $mappedItem[$key] = $value;
+                }
+            }
+            
+            $mappedData[] = $mappedItem;
+        }
+        
+        return $mappedData;
+    }
+    
+    /**
+     * Check if a subfield is an image field
+     *
+     * @param ContentItem $contentItem
+     * @param string $parentFieldName
+     * @param string $subfieldName
+     * @return bool
+     */
+    protected function isImageField(ContentItem $contentItem, string $parentFieldName, string $subfieldName): bool
+    {
+        // Find the parent repeater field
+        $parentField = $contentItem->contentType->fields->filter(function ($field) use ($parentFieldName) {
+            return $field->slug === $parentFieldName || $field->name === $parentFieldName;
+        })->first();
+        
+        if (!$parentField || $parentField->field_type !== 'repeater') {
+            return false;
+        }
+        
+        // Parse the repeater field settings to find subfield types
+        $settings = $parentField->settings ?? [];
+        if (is_string($settings)) {
+            $settings = json_decode($settings, true) ?? [];
+        }
+        
+        $subfields = $settings['subfields'] ?? [];
+        
+        foreach ($subfields as $subfield) {
+            $subfieldSlug = $subfield['slug'] ?? $subfield['name'] ?? '';
+            $subfieldType = $subfield['field_type'] ?? $subfield['type'] ?? '';
+            
+            if (($subfieldSlug === $subfieldName || $subfield['name'] === $subfieldName) && $subfieldType === 'image') {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Get image URL for a repeater subfield
+     *
+     * @param ContentItem $contentItem
+     * @param string $parentFieldName
+     * @param int $index
+     * @param string $subfieldName
+     * @param mixed $value
+     * @return string|null
+     */
+    protected function getRepeaterImageUrl(ContentItem $contentItem, string $parentFieldName, int $index, string $subfieldName, $value): ?string
+    {
+        // Method 1: Check if value contains a media ID
+        if (!empty($value) && is_numeric($value)) {
+            $media = \Spatie\MediaLibrary\MediaCollections\Models\Media::find($value);
+            if ($media) {
+                \Log::debug('Found repeater image via media ID', [
+                    'parent_field' => $parentFieldName,
+                    'index' => $index,
+                    'subfield' => $subfieldName,
+                    'media_id' => $value,
+                    'url' => $media->getUrl()
+                ]);
+                return $media->getUrl();
+            }
+        }
+        
+        // Method 2: Check Spatie Media Library collections for repeater items
+        // Collection name format: field_{parent_field_id}_repeater_{index}_{subfield_name}
+        $parentField = $contentItem->contentType->fields->filter(function ($field) use ($parentFieldName) {
+            return $field->slug === $parentFieldName || $field->name === $parentFieldName;
+        })->first();
+        
+        if ($parentField) {
+            $collectionName = "field_{$parentField->id}_repeater_{$index}_{$subfieldName}";
+            
+            if ($contentItem->hasMedia($collectionName)) {
+                $mediaUrl = $contentItem->getFirstMediaUrl($collectionName);
+                \Log::debug('Found repeater image via Spatie collection', [
+                    'collection_name' => $collectionName,
+                    'url' => $mediaUrl
+                ]);
+                return $mediaUrl;
+            }
+        }
+        
+        \Log::debug('No repeater image found', [
+            'parent_field' => $parentFieldName,
+            'index' => $index,
+            'subfield' => $subfieldName,
+            'value' => $value
+        ]);
+        
+        return null;
+    }
+    
+    /**
+     * Add direct field values without mappings
+     *
+     * @param ContentItem $contentItem
+     * @param array &$data
+     */
+    protected function addDirectFieldValues(ContentItem $contentItem, array &$data): void
+    {
+        foreach ($contentItem->fieldValues as $fieldValue) {
+            if ($fieldValue->field) {
+                $contentFieldSlug = $fieldValue->field->slug;
+                $contentFieldType = $fieldValue->field->field_type;
+                $value = $fieldValue->getFormattedValue();
+                
+                // Special handling for image fields
+                if ($contentFieldType === 'image') {
+                    $value = $this->getImageUrlForField($contentItem, $fieldValue, $value);
+                }
+                // Special handling for repeater fields
+                elseif ($contentFieldType === 'repeater') {
+                    $value = $this->processDirectRepeaterField($contentItem, $fieldValue, $value);
+                }
+                
+                $data[$contentFieldSlug] = $value;
+                
+                \Log::debug('Added direct field value', [
+                    'field_slug' => $contentFieldSlug,
+                    'field_type' => $contentFieldType,
+                    'value_type' => gettype($value)
+                ]);
+            }
+        }
+    }
+    
+    /**
+     * Process repeater field without mappings (direct access)
+     *
+     * @param ContentItem $contentItem
+     * @param ContentFieldValue $fieldValue
+     * @param mixed $value
+     * @return array
+     */
+    protected function processDirectRepeaterField(ContentItem $contentItem, $fieldValue, $value): array
+    {
+        // Ensure we have array data
+        if (is_string($value)) {
+            $decoded = json_decode($value, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $value = $decoded;
+            } else {
+                return [];
+            }
+        }
+        
+        if (!is_array($value)) {
+            return [];
+        }
+        
+        $parentFieldName = $fieldValue->field->slug;
+        
+        \Log::debug('Processing direct repeater field', [
+            'parent_field' => $parentFieldName,
+            'items_count' => count($value),
+            'sample_item_keys' => !empty($value) ? array_keys($value[0] ?? []) : []
+        ]);
+        
+        // Process each repeater item to handle image subfields
+        foreach ($value as $index => &$item) {
+            if (!is_array($item)) {
+                continue;
+            }
+            
+            \Log::debug('Processing repeater item', [
+                'parent_field' => $parentFieldName,
+                'index' => $index,
+                'item_keys' => array_keys($item)
+            ]);
+            
+            foreach ($item as $subfieldName => &$subfieldValue) {
+                $isImage = $this->isImageField($contentItem, $parentFieldName, $subfieldName);
+                
+                \Log::debug('Checking subfield', [
+                    'parent_field' => $parentFieldName,
+                    'index' => $index,
+                    'subfield_name' => $subfieldName,
+                    'original_value' => $subfieldValue,
+                    'is_image_field' => $isImage
+                ]);
+                
+                if ($isImage) {
+                    $originalValue = $subfieldValue;
+                    $subfieldValue = $this->getRepeaterImageUrl($contentItem, $parentFieldName, $index, $subfieldName, $subfieldValue);
+                    
+                    \Log::debug('Processed image subfield', [
+                        'parent_field' => $parentFieldName,
+                        'index' => $index,
+                        'subfield_name' => $subfieldName,
+                        'original_value' => $originalValue,
+                        'resolved_url' => $subfieldValue
+                    ]);
+                }
+            }
+        }
+        
+        return $value;
+    }
+    
+    /**
+     * Get content field value by field name/slug
+     *
+     * @param ContentItem $contentItem
+     * @param string $fieldName
+     * @return mixed
+     */
+    protected function getContentFieldValue(ContentItem $contentItem, string $fieldName)
+    {
+        $fieldValue = $contentItem->fieldValues->filter(function ($fv) use ($fieldName) {
+            return $fv->field && (
+                $fv->field->slug === $fieldName || 
+                $fv->field->name === $fieldName
+            );
+        })->first();
+        
+        if (!$fieldValue) {
+            return null;
+        }
+        
+        $value = $fieldValue->getFormattedValue();
+        
+        // Special handling for image fields
+        if ($fieldValue->field->field_type === 'image') {
+            return $this->getImageUrlForField($contentItem, $fieldValue, $value);
+        }
+        
+        return $value;
+    }
+    
+    /**
+     * Get image URL for a field, checking both ContentFieldValue and Spatie Media attachments
+     *
+     * @param ContentItem $contentItem
+     * @param ContentFieldValue $fieldValue
+     * @param mixed $value
+     * @return string|null
+     */
+    protected function getImageUrlForField(ContentItem $contentItem, $fieldValue, $value): ?string
+    {
+        // Method 1: Check if value contains a media ID (media picker approach)
+        if (!empty($value) && is_numeric($value)) {
+            $media = \Spatie\MediaLibrary\MediaCollections\Models\Media::find($value);
+            if ($media) {
+                \Log::debug('Found image via media ID reference', [
+                    'media_id' => $value,
+                    'url' => $media->getUrl()
+                ]);
+                return $media->getUrl();
+            }
+        }
+        
+        // Method 2: Check Spatie Media Library collections (direct upload approach)
+        $fieldId = $fieldValue->content_type_field_id;
+        $collectionName = 'field_' . $fieldId;
+        
+        if ($contentItem->hasMedia($collectionName)) {
+            $mediaUrl = $contentItem->getFirstMediaUrl($collectionName);
+            \Log::debug('Found image via Spatie Media collection', [
+                'collection_name' => $collectionName,
+                'url' => $mediaUrl
+            ]);
+            return $mediaUrl;
+        }
+        
+        // Method 3: Check generic image collections
+        if ($contentItem->hasMedia('images')) {
+            $mediaUrl = $contentItem->getFirstMediaUrl('images');
+            \Log::debug('Found image via generic images collection', [
+                'url' => $mediaUrl
+            ]);
+            return $mediaUrl;
+        }
+        
+        \Log::debug('No image found for field', [
+            'field_id' => $fieldId,
+            'collection_name' => $collectionName,
+            'value' => $value
+        ]);
+        
+        return null;
     }
     
     /**

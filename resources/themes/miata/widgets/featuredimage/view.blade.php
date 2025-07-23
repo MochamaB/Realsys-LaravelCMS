@@ -9,63 +9,55 @@
     $displayStyle = $settings['display_style'] ?? 'default';
     $imageSize = $settings['image_size'] ?? 'medium';
     
-    // Determine CSS classes based on display style
-    $imageClass = '';
-    switch($displayStyle) {
-        case 'rounded':
-            $imageClass = 'rounded';
-            break;
-        case 'circle':
-            $imageClass = 'rounded-circle';
-            break;
-        case 'polaroid':
-            $imageClass = 'polaroid shadow p-3 bg-white';
-            break;
-        default:
-            $imageClass = '';
+    // Generate dynamic background class based on page or widget settings
+    $backgroundClass = '';
+    if (!empty($image)) {
+        // Create a unique background class for this widget instance
+        $backgroundClass = 'featured-bg-' . md5($image);
     }
     
-    // Determine container width based on image size
-    $containerClass = '';
-    switch($imageSize) {
-        case 'small':
-            $containerClass = 'col-md-6 offset-md-3 col-lg-4 offset-lg-4';
-            break;
-        case 'medium':
-            $containerClass = 'col-md-8 offset-md-2 col-lg-6 offset-lg-3';
-            break;
-        case 'large':
-            $containerClass = 'col-md-10 offset-md-1 col-lg-8 offset-lg-2';
-            break;
-        case 'full':
-            $containerClass = 'col-12';
-            break;
-    }
+    // Custom CSS classes from widget settings
+    $customClasses = $widget['css_classes'] ?? '';
 @endphp
 
-<section class="elements-area ptb-140 widget widget-featuredimage">
+{{-- Dynamic background CSS injection --}}
+@if(!empty($image) && !empty($backgroundClass))
+@push('styles')
+<style>
+.{{ $backgroundClass }} {
+    background: rgba(0, 0, 0, 0.4) url({{ $image }}) no-repeat scroll center center / cover;
+    float: left;
+    position: relative;
+    width: 100%;
+}
+</style>
+@endpush
+@endif
+
+{{-- Original Miata theme breadcrumbs structure --}}
+<section class="breadcrumbs-area ptb-140 {{ $backgroundClass }} {{ $customClasses }}">
     <div class="container">
         <div class="row">
-            <div class="{{ $containerClass }}">
-                @if(!empty($title))
-                <div class="text-center mb-3">
-                    <h3>{{ $title }}</h3>
-                </div>
-                @endif
-                
-                <div class="featured-image-container text-center">
-                    @if(!empty($linkUrl))
-                        <a href="{{ $linkUrl }}">
-                            <img src="{{ $image }}" alt="{{ $title }}" class="img-fluid {{ $imageClass }}">
-                        </a>
-                    @else
-                        <img src="{{ $image }}" alt="{{ $title }}" class="img-fluid {{ $imageClass }}">
+            <div class="col-md-12 text-center">
+                <div class="breadcrumbs">
+                    @if(!empty($title))
+                        <h2 class="page-title">{{ $title }}</h2>
                     @endif
                     
-                    @if(!empty($caption))
-                    <div class="image-caption mt-2 text-center">
-                        <p class="text-muted">{{ $caption }}</p>
-                    </div>
+                    @if(!empty($caption) || !empty($linkUrl))
+                        <ul>
+                            @if(!empty($linkUrl))
+                                <li><a href="{{ $linkUrl }}">{{ $caption ?: 'Home' }}</a></li>
+                                @if(!empty($title))
+                                    <li>{{ $title }}</li>
+                                @endif
+                            @else
+                                <li><a href="#">Home</a></li>
+                                @if(!empty($caption))
+                                    <li>{{ $caption }}</li>
+                                @endif
+                            @endif
+                        </ul>
                     @endif
                 </div>
             </div>
