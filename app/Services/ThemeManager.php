@@ -175,15 +175,10 @@ class ThemeManager
             // Register view paths for active theme
             $this->registerThemeViewPaths($activeTheme);
             $this->loadThemeAssets($activeTheme);
-            // For debugging only
-    // dd([
-    //     'theme_slug' => $activeTheme->slug,
-    //     'css_assets' => $activeTheme->css,
-    //     'js_assets' => $activeTheme->js
-    // ]);
+            return $activeTheme;
         }
-      //  dd($activeTheme->css);
-        return $activeTheme;
+        
+        return null;
     }
     
     /**

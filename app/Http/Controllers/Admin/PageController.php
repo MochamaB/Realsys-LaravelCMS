@@ -152,7 +152,7 @@ class PageController extends Controller
     public function show(Page $page)
     {
         // Show the visual designer (empty for now)
-        return view('admin.pages.designer', compact('page'));
+        return view('admin.pages.gridstack-designer', compact('page'));
     }
 
     /**

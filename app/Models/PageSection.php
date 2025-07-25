@@ -35,7 +35,8 @@ class PageSection extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'layout_settings' => 'json'
+        'padding' => 'json',
+        'margin' => 'json'
     ];
 
     /**

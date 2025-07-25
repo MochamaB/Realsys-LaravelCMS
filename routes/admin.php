@@ -291,10 +291,36 @@ Route::prefix('api')->middleware('admin.auth')->group(function () {
     Route::get('/pages/{page}/render', [PageController::class, 'renderPageContent'])->name('api.pages.render');
     Route::post('/pages/{page}/save-content', [PageController::class, 'savePageContent'])->name('api.pages.save-content');
     
-    // Widget Rendering API for Designer
-    Route::get('/widgets/{widget}/render', [App\Http\Controllers\Api\WidgetController::class, 'renderWidget'])->name('api.widgets.render');
-    Route::get('/sections/{section}/render', [App\Http\Controllers\Api\PageSectionController::class, 'renderSection'])->name('api.sections.render');
+    // Theme Assets API for Canvas
+    Route::get('/themes/active/assets', [App\Http\Controllers\Api\ThemeController::class, 'getActiveThemeAssets'])->name('api.themes.assets');
+    Route::get('/themes/active/canvas-styles', [App\Http\Controllers\Api\ThemeController::class, 'getCanvasStyles'])->name('api.themes.canvas-styles');
+    Route::get('/themes/active/canvas-scripts', [App\Http\Controllers\Api\ThemeController::class, 'getCanvasScripts'])->name('api.themes.active.canvas-scripts');
     
+    // Widget Rendering API for Designer
+    Route::get('/widgets/available', [App\Http\Controllers\Api\WidgetController::class, 'getAvailableWidgets'])->name('api.widgets.available');
+    Route::get('/widgets/enhanced-blocks', [App\Http\Controllers\Api\WidgetController::class, 'getEnhancedWidgetBlocks'])->name('api.widgets.enhanced-blocks');
+    Route::get('/widgets/{widget}/render', [App\Http\Controllers\Api\WidgetController::class, 'renderWidget'])->name('api.widgets.render');
+    
+    // Enhanced Widget Preview API (Phase 1.2)
+    Route::match(['GET', 'POST'], '/widgets/{widget}/preview', [App\Http\Controllers\Api\WidgetController::class, 'renderWidgetPreview'])->name('api.widgets.preview');
+    Route::get('/widgets/{widget}/preview-data', [App\Http\Controllers\Api\WidgetController::class, 'getWidgetSampleData'])->name('api.widgets.preview-data');
+    
+    // Widget Schema API for GrapesJS
+    Route::get('/widgets/schemas', [App\Http\Controllers\Api\WidgetController::class, 'getWidgetSchemas'])->name('api.widgets.schemas');
+    Route::get('/widgets/{widget}/schema', [App\Http\Controllers\Api\WidgetController::class, 'getWidgetSchema'])->name('api.widgets.schema');
+    Route::get('/widgets/{widget}/sample-data', [App\Http\Controllers\Api\WidgetController::class, 'getWidgetSampleData'])->name('api.widgets.sample-data');
+    
+    // Section Schema API for GrapesJS (Phase 1.3)
+    Route::get('/pages/{page}/sections/schemas', [App\Http\Controllers\Api\SectionSchemaController::class, 'getPageSectionSchemas'])->name('api.pages.sections.schemas');
+    Route::get('/sections/{section}/schema', [App\Http\Controllers\Api\SectionSchemaController::class, 'getSectionSchema'])->name('api.sections.schema');
+    Route::get('/sections/types', [App\Http\Controllers\Api\SectionSchemaController::class, 'getAvailableSectionTypes'])->name('api.sections.types');
+    Route::post('/sections/schema/create', [App\Http\Controllers\Api\SectionSchemaController::class, 'createNewSectionSchema'])->name('api.sections.schema.create');
+    Route::post('/sections/schema/validate', [App\Http\Controllers\Api\SectionSchemaController::class, 'validateSectionSchema'])->name('api.sections.schema.validate');
+    Route::post('/sections/schema/clear-cache', [App\Http\Controllers\Api\SectionSchemaController::class, 'clearCache'])->name('api.sections.schema.clear-cache');
+    Route::get('/pages/{page}/sections/stats', [App\Http\Controllers\Api\SectionSchemaController::class, 'getPageSectionStats'])->name('api.pages.sections.stats');
+
+    Route::get('/sections/{section}/render', [App\Http\Controllers\Api\PageSectionController::class, 'renderSection'])->name('api.sections.render');
+
     // Page Sections API
     Route::get('/pages/{page}/sections', [App\Http\Controllers\Api\PageSectionController::class, 'index']);
     Route::post('/pages/{page}/sections', [App\Http\Controllers\Api\PageSectionController::class, 'store']);

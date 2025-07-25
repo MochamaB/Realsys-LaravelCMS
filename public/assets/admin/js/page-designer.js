@@ -19,17 +19,110 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
         });
     }
+
+    // Initialize GrapesJS
     const editor = grapesjs.init({
         container: '#gjs',
         height: '100%',
         width: 'auto',
         storageManager: false,
-        blockManager: { appendTo: '#sidebar-content' }
+        blockManager: { appendTo: '#sidebar-content' },
+        layerManager: { appendTo: '.layers-container' },
+        selectorManager: { appendTo: '.styles-container' },
+        styleManager: { appendTo: '.styles-container' },
+        traitManager: { appendTo: '.traits-container' },
+        panels: {
+            defaults: [
+                {
+                    id: 'basic-actions',
+                    el: '.panel__basic-actions',
+                    buttons: [
+                        {
+                            id: 'visibility',
+                            active: true,
+                            className: 'btn btn-sm btn-outline-secondary',
+                            label: '<i class="ri-eye-line"></i>',
+                            command: 'sw-visibility',
+                        },
+                        {
+                            id: 'export',
+                            className: 'btn btn-sm btn-outline-secondary',
+                            label: '<i class="ri-code-line"></i>',
+                            command: 'export-template',
+                            context: 'export-template',
+                        },
+                        {
+                            id: 'show-json',
+                            className: 'btn btn-sm btn-outline-secondary',
+                            label: '<i class="ri-file-code-line"></i>',
+                            context: 'show-json',
+                            command(editor) {
+                                editor.Modal.setTitle('Components JSON')
+                                    .setContent(`<textarea style="width:100%; height: 250px;">
+                                        ${JSON.stringify(editor.getComponents(), null, 2)}
+                                    </textarea>`)
+                                    .open();
+                            },
+                        }
+                    ],
+                },
+                {
+                    id: 'panel-devices',
+                    el: '.panel__devices',
+                    buttons: [
+                        {
+                            id: 'device-desktop',
+                            label: '<i class="ri-computer-line"></i>',
+                            className: 'btn btn-sm btn-outline-primary',
+                            command: 'set-device-desktop',
+                            active: true,
+                            togglable: false,
+                        },
+                        {
+                            id: 'device-tablet',
+                            label: '<i class="ri-tablet-line"></i>',
+                            className: 'btn btn-sm btn-outline-primary',
+                            command: 'set-device-tablet',
+                            togglable: false,
+                        },
+                        {
+                            id: 'device-mobile',
+                            label: '<i class="ri-smartphone-line"></i>',
+                            className: 'btn btn-sm btn-outline-primary',
+                            command: 'set-device-mobile',
+                            togglable: false,
+                        },
+                    ],
+                },
+            ]
+        }
+    });
+
+    // Make editor available globally for live preview module
+    window.editor = editor;
+
+    // Add missing device commands to prevent warnings
+    editor.Commands.add('set-device-desktop', {
+        run: function(editor) {
+            editor.setDevice('Desktop');
+        }
+    });
+    
+    editor.Commands.add('set-device-tablet', {
+        run: function(editor) {
+            editor.setDevice('Tablet');
+        }
+    });
+    
+    editor.Commands.add('set-device-mobile', {
+        run: function(editor) {
+            editor.setDevice('Mobile');
+        }
     });
 
     // Get page ID from somewhere (URL, data attribute, etc.)
     const pageId = getPageId(); // You'll need to implement this function
-    
+
     // --- Define custom component types BEFORE adding blocks ---
     
     // Define a custom widget component type
@@ -144,7 +237,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     // --- Section Blocks for adding new sections ---
     const sectionBlocks = [
-        {
+            {
             id: 'section-full-width',
             label: 'Full Width Section',
             category: 'Sections',
@@ -171,8 +264,8 @@ document.addEventListener('DOMContentLoaded', async function () {
                                         components: [
                                             { type: 'text', content: 'Full Width Section' }
                                         ]
-                                    }
-                                ]
+            }
+        ]
                             }
                         ]
                     }
@@ -346,7 +439,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                             }
                         }
                     };
-                    
+                
                     console.log(`Adding block with config:`, blockConfig);
                     const addedBlock = editor.BlockManager.add(blockId, blockConfig);
                     console.log(`Block added successfully:`, addedBlock ? addedBlock.get('id') : 'failed');
@@ -407,21 +500,26 @@ editor.on('component:add', function(component) {
             
             if (foundSection) {
                 console.log('Widget dropped in section, processing...');
-                
+
                 // Get widget information
                 const widgetSlug = component.get('widgetSlug') || component.get('attributes')['data-widget-slug'];
                 const widgetId = component.get('widgetId') || component.get('attributes')['data-widget-id'];
-
+                
                 // Load actual widget HTML if we have an ID
                 if (widgetId && window.PageManager && window.PageManager.updateWidgetHTML) {
                     console.log('Loading actual HTML for widget ID:', widgetId);
                     window.PageManager.updateWidgetHTML(component, widgetId);
                 }
                 
-                // Open widget configuration modal
-                if (window.WidgetManager && window.WidgetManager.openWidgetModal) {
-                    window.WidgetManager.openWidgetModal(component);
-                }
+                // TODO: Disable automatic modal opening for now to focus on visual design
+                // Users can manually configure widgets later through the properties panel
+                // 
+                // // Open widget configuration modal
+                // if (window.WidgetManager && window.WidgetManager.openWidgetModal) {
+                //     window.WidgetManager.openWidgetModal(component);
+                // }
+                
+                console.log('Widget added successfully without modal intervention');
             }
         }, 100);
     }

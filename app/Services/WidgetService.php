@@ -162,7 +162,7 @@ class WidgetService
         
         // If no page section widget provided, return defaults only
         if (!$pageSectionWidget) {
-            foreach ($fieldDefinitions as $field) {
+        foreach ($fieldDefinitions as $field) {
                 $fieldValues[$field->slug] = $this->getDefaultFieldValue($field);
             }
             return $fieldValues;

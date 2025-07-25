@@ -13,9 +13,20 @@
     window.csrfToken = '{{ csrf_token() }}';
 </script>
 <script src="{{ asset('assets/admin/libs/grapesjs/dist/grapes.min.js') }}"></script>
-<script src="{{ asset('assets/admin/js/page-manager.js') }}"></script>
-<script src="{{ asset('assets/admin/js/page-designer.js') }}"></script>
-<script src="{{ asset('assets/admin/js/widget-manager.js') }}"></script>
+<script src="{{ asset('assets/admin/js/page-manager.js') }}?v={{ time() }}"></script>
+<script src="{{ asset('assets/admin/js/page-designer.js') }}?v={{ time() }}"></script>
+<script src="{{ asset('assets/admin/js/widget-manager.js') }}?v={{ time() }}"></script>
+
+<!-- Phase 2.1 Widget Component System -->
+<script src="{{ asset('assets/admin/js/components/WidgetComponentFactory.js') }}?v={{ time() }}"></script>
+<script src="{{ asset('assets/admin/js/widget-component-integration.js') }}?v={{ time() }}"></script>
+
+<!-- Phase 2.3 Section Component System -->
+<script src="{{ asset('assets/admin/js/components/SectionComponentFactory.js') }}?v={{ time() }}"></script>
+<script src="{{ asset('assets/admin/js/section-component-integration.js') }}?v={{ time() }}"></script>
+
+<!-- Phase 3.1 Theme Integration System -->
+<script src="{{ asset('assets/admin/js/theme-integration.js') }}?v={{ time() }}"></script>
 @endsection
 
 
@@ -54,10 +65,75 @@
                             </div>
                         </div>
 
-                        <!-- GrapesJS Canvas -->
-                        <div id="gjs" 
-                             data-page-id="{{ $page->id }}" 
-                             style="flex-grow: 1; height: 100%; overflow: auto;">
+                        <!-- Main Content Area -->
+                        <div style="flex-grow: 1; display: flex; flex-direction: column;">
+                            
+                            <!-- Top Toolbar -->
+                            <div class="toolbar bg-white border-bottom p-2 d-flex justify-content-between align-items-center">
+                                <!-- Basic Actions Panel -->
+                                <div class="panel__basic-actions d-flex gap-2">
+                                    <!-- GrapesJS will populate this -->
+                                </div>
+                                
+                                <!-- Device Panel -->
+                                <div class="panel__devices d-flex gap-2">
+                                    <!-- GrapesJS will populate this -->
+                                </div>
+                            </div>
+                            
+                            <!-- GrapesJS Canvas -->
+                            <div id="gjs" 
+                                 data-page-id="{{ $page->id }}" 
+                                 style="flex-grow: 1; height: 100%; overflow: auto;">
+                            </div>
+                            
+                        </div>
+                        
+                        <!-- Right Sidebar for Properties -->
+                        <div class="properties-sidebar bg-light" 
+                             style="width: 300px; overflow-y: auto; border-left: 1px solid #e9ebec;">
+                            
+                            <!-- Properties Header -->
+                            <div class="properties-header p-3 border-bottom">
+                                <h6 class="mb-0 fw-semibold">
+                                    <i class="ri-settings-3-line me-2"></i>
+                                    Properties
+                                </h6>
+                            </div>
+                            
+                            <!-- Properties Content -->
+                            <div class="properties-content">
+                                <!-- Layers Manager -->
+                                <div class="property-section">
+                                    <div class="property-header p-2 border-bottom bg-light">
+                                        <small class="fw-semibold text-muted">LAYERS</small>
+                                    </div>
+                                    <div class="layers-container p-2">
+                                        <!-- GrapesJS Layers will be rendered here -->
+                                    </div>
+                                </div>
+                                
+                                <!-- Style Manager -->
+                                <div class="property-section">
+                                    <div class="property-header p-2 border-bottom bg-light">
+                                        <small class="fw-semibold text-muted">STYLES</small>
+                                    </div>
+                                    <div class="styles-container p-2">
+                                        <!-- GrapesJS Styles will be rendered here -->
+                                    </div>
+                                </div>
+                                
+                                <!-- Trait Manager -->
+                                <div class="property-section">
+                                    <div class="property-header p-2 border-bottom bg-light">
+                                        <small class="fw-semibold text-muted">SETTINGS</small>
+                                    </div>
+                                    <div class="traits-container p-2">
+                                        <!-- GrapesJS Traits will be rendered here -->
+                                    </div>
+                                </div>
+                            </div>
+                            
                         </div>
 
                     </div>

@@ -15,8 +15,29 @@ class PageSectionController extends Controller
      */
     public function index(Page $page)
     {
-        $sections = $page->sections()->with('templateSection')->orderBy('position')->get();
-        return response()->json(['sections' => $sections]);
+        try {
+            \Log::debug('Loading sections for page', ['page_id' => $page->id]);
+            
+            $sections = $page->sections()->with('templateSection')->orderBy('position')->get();
+            
+            \Log::debug('Sections loaded successfully', [
+                'page_id' => $page->id,
+                'sections_count' => $sections->count()
+            ]);
+            
+            return response()->json(['sections' => $sections]);
+        } catch (\Exception $e) {
+            \Log::error('Error loading page sections', [
+                'page_id' => $page->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'error' => 'Failed to load page sections',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
