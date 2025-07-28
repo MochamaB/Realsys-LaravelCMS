@@ -43,6 +43,11 @@ class Page extends Model implements HasMedia
         return $this->belongsTo(Template::class);
     }
 
+    public function templateSections()
+        {
+            return $this->template?->sections() ?? TemplateSection::query()->whereRaw('0=1');
+        }
+
     /**
      * Get the sections for the page.
      */

@@ -13,6 +13,46 @@ This plan outlines the **complete replacement of GrapesJS with GridStack.js** fo
 
 ## 🏗️ Architecture Overview
 
+### 📐 Layout Structure (Inspired by Media Library)
+
+The GridStack designer follows a **responsive layout pattern** inspired by the media library, maximizing the preview canvas while keeping all tools accessible:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        Designer Toolbar                                    │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  Left Sidebar  │           Canvas Area           │ Right Sidebar (Offcanvas) │
+│  (Collapsible) │        (Full Width)            │                         │
+│                │                                 │                         │
+│  • Widget Lib  │                                 │ • Properties Panel      │
+│  • Section Lib │                                 │ • Content Manager      │
+│  • Templates   │                                 │ • Style Editor         │
+│                │                                 │                         │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Layout Features:**
+- **Maximized Canvas**: Canvas takes 70-85% of available width
+- **Offcanvas Sidebars**: Right sidebar slides in when needed
+- **Collapsible Left Sidebar**: Toggle for mobile/tablet views
+- **Responsive Design**: Adapts to all screen sizes
+- **Professional UX**: Follows established admin patterns
+
+**File Structure:**
+```
+resources/views/admin/pages/designer/
+├── _toolbar.blade.php              # Designer toolbar
+├── _left_sidebar.blade.php         # Widget library & section templates
+├── _canvas_area.blade.php          # Main preview canvas
+├── _right_sidebar.blade.php        # Properties & content panels
+├── _widget_config_modal.blade.php  # Widget configuration modal
+├── _section_templates_modal.blade.php # Section template selection
+├── _content_selection_modal.blade.php # Content selection interface
+└── _responsive_preview_modal.blade.php # Full preview in new tab
+```
+
+### 🔧 Technical Architecture
+
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                        GridStack Page Builder                               │

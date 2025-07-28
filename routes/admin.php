@@ -327,17 +327,45 @@ Route::prefix('api')->middleware('admin.auth')->group(function () {
     Route::put('/pages/{page}/sections/{section}', [App\Http\Controllers\Api\PageSectionController::class, 'update']);
     Route::delete('/pages/{page}/sections/{section}', [App\Http\Controllers\Api\PageSectionController::class, 'destroy']);
     Route::put('/pages/{page}/sections/reorder', [App\Http\Controllers\Api\PageSectionController::class, 'reorder']);
+    Route::get('/pages/{page}/template-sections', [App\Http\Controllers\Api\PageSectionController::class, 'getTemplateSections']);
+    // Enhanced Section API with GridStack positioning
+    Route::patch('/page-sections/{section}/grid', [App\Http\Controllers\Api\PageSectionController::class, 'updateGridPosition']);
+    Route::patch('/page-sections/{section}/style', [App\Http\Controllers\Api\PageSectionController::class, 'updateStyles']);
+    Route::get('/page-sections/{section}/widgets', [App\Http\Controllers\Api\PageSectionController::class, 'getSectionWidgets']);
+
+    // Section Templates API
+    Route::get('/section-templates', [App\Http\Controllers\Api\PageSectionController::class, 'getTemplates']);
+    Route::get('/section-templates/{template}', [App\Http\Controllers\Api\PageSectionController::class, 'getTemplate']);
 
     // Page Section Widgets API
     Route::get('/sections/{section}/widgets', [App\Http\Controllers\Api\PageSectionWidgetController::class, 'index']);
     Route::post('/sections/{section}/widgets', [App\Http\Controllers\Api\PageSectionWidgetController::class, 'store']);
-    Route::put('/widgets/{widget}', [App\Http\Controllers\Api\PageSectionWidgetController::class, 'update']);
-    Route::delete('/widgets/{widget}', [App\Http\Controllers\Api\PageSectionWidgetController::class, 'destroy']);
+    Route::get('/page-section-widgets/{widget}', [App\Http\Controllers\Api\PageSectionWidgetController::class, 'show']);
+    Route::put('/page-section-widgets/{widget}', [App\Http\Controllers\Api\PageSectionWidgetController::class, 'update']);
+    Route::delete('/page-section-widgets/{widget}', [App\Http\Controllers\Api\PageSectionWidgetController::class, 'destroy']);
     Route::put('/sections/{section}/widgets/reorder', [App\Http\Controllers\Api\PageSectionWidgetController::class, 'reorder']);
+
+    // Enhanced Widget API with GridStack positioning
+    Route::patch('/page-section-widgets/{widget}/grid', [App\Http\Controllers\Api\PageSectionWidgetController::class, 'updateGridPosition']);
+
+    // PageSectionWidget API routes (for GridStack implementation)
+    Route::post('/page-section-widgets', [App\Http\Controllers\Api\PageSectionWidgetController::class, 'store']);
+    Route::get('/page-section-widgets/{pageSectionWidget}', [App\Http\Controllers\Api\PageSectionWidgetController::class, 'show']);
+    Route::put('/page-section-widgets/{pageSectionWidget}', [App\Http\Controllers\Api\PageSectionWidgetController::class, 'update']);
+    Route::delete('/page-section-widgets/{pageSectionWidget}', [App\Http\Controllers\Api\PageSectionWidgetController::class, 'destroy']);
 
     // Widgets API
     Route::get('/widgets', [App\Http\Controllers\Api\WidgetController::class, 'index']);
     Route::get('/widgets/{widget}/content-types', [App\Http\Controllers\Api\WidgetController::class, 'contentTypes']);
+    Route::get('/widgets/{widget}/render', [App\Http\Controllers\Api\WidgetController::class, 'renderWidget']);
+    Route::get('/widgets/{widget}/preview', [App\Http\Controllers\Api\WidgetController::class, 'renderWidgetPreview']);
+    Route::get('/widgets/{widget}/schema', [App\Http\Controllers\Api\WidgetController::class, 'getWidgetSchema']);
+    Route::get('/widgets/{widget}/sample-data', [App\Http\Controllers\Api\WidgetController::class, 'getWidgetSampleData']);
+    Route::get('/widgets/available', [App\Http\Controllers\Api\WidgetController::class, 'getAvailableWidgets']);
+    Route::get('/widgets/blocks', [App\Http\Controllers\Api\WidgetController::class, 'getEnhancedWidgetBlocks']);
+
+    // Test route for existing widget
+    Route::get('/widgets/test-existing', [App\Http\Controllers\Api\WidgetController::class, 'testExistingWidget']);
     
     // Content Items API
     

@@ -251,7 +251,15 @@ class WidgetService
      */
     protected function getContentFromQuery(Widget $widget, array $contentQuery): array
     {
+        \Log::debug('getContentFromQuery called', [
+            'widget_id' => $widget->id,
+            'content_query' => $contentQuery,
+            'content_query_type' => gettype($contentQuery),
+            'content_query_empty' => empty($contentQuery)
+        ]);
+        
         if (empty($contentQuery)) {
+            \Log::debug('Content query is empty, returning empty array');
             return [];
         }
         

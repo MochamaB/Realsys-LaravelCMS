@@ -151,8 +151,33 @@ class PageController extends Controller
      */
     public function show(Page $page)
     {
-        // Show the visual designer (empty for now)
-        return view('admin.pages.gridstack-designer', compact('page'));
+        try {
+            // Sync page sections with template sections to ensure consistency
+            $syncResult = $this->pageService->syncPageSections($page);
+            
+            // Log the sync result for debugging
+            \Log::info('Page sections synced', [
+                'page_id' => $page->id,
+                'created' => $syncResult['created'],
+                'deleted' => $syncResult['deleted']
+            ]);
+            
+            // Reload the page with its sections to get the latest data
+            $page->load('sections.templateSection', 'sections.pageSectionWidgets.widget', 'template.sections');
+            
+            // Show the visual designer with synced sections
+            return view('admin.pages.gridstack-designer', compact('page'));
+            
+        } catch (\Exception $e) {
+            \Log::error('Error syncing page sections: ' . $e->getMessage(), [
+                'page_id' => $page->id,
+                'exception' => $e
+            ]);
+            
+            // Still show the designer even if sync fails
+            $page->load('sections.templateSection', 'sections.pageSectionWidgets.widget', 'template.sections');
+            return view('admin.pages.gridstack-designer', compact('page'));
+        }
     }
 
     /**

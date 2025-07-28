@@ -16,6 +16,11 @@ return new class extends Migration
             $table->foreignId('page_section_id')->constrained()->onDelete('cascade');
             $table->foreignId('widget_id')->constrained()->onDelete('restrict');
             $table->integer('position')->default(0);
+            $table->integer('grid_x')->default(0);
+            $table->integer('grid_y')->default(0);
+            $table->integer('grid_w')->default(12);
+            $table->integer('grid_h')->default(4);
+            $table->string('grid_id')->unique();
             $table->string('column_position')->nullable(); // left, right, full
             $table->json('settings')->nullable();
             $table->json('content_query')->nullable();

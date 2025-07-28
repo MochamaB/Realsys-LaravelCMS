@@ -1,594 +1,743 @@
 /**
- * Widget Manager for GridStack
- * Handles widget configuration, editing, and content management
+ * GridStack Widget Manager
+ * Handles widget drag-drop, creation, and management within sections
+ * Refined to use existing content selection modal
  */
 window.WidgetManager = {
+    config: {},
     currentWidget: null,
+    dropTargetSection: null,
     modalInstance: null,
+    isSaving: false, // Flag to prevent multiple simultaneous saves
 
     /**
-     * Initialize widget manager
+     * Initialize the widget manager
      */
     init() {
         console.log('🔧 Initializing Widget Manager...');
-        this.setupModalEventListeners();
+        
+        this.config = {
+            apiBaseUrl: '/admin/api',
+            csrfToken: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+        };
+        
+        // Initialize state
+        this.isSaving = false;
+        this.currentWidget = null;
+        
+        this.setupWidgetDropHandling();
+        this.setupWidgetEvents();
+        this.setupContentSelectionModal();
+        
+        console.log('✅ Widget Manager initialized');
     },
 
     /**
-     * Setup modal event listeners
+     * Re-setup drop zones after sections are loaded
+     * This should be called from the page builder after sections are rendered
      */
-    setupModalEventListeners() {
-        const saveBtn = document.getElementById('saveWidgetConfigBtn');
-        if (saveBtn) {
-            saveBtn.addEventListener('click', () => {
-                this.saveWidgetConfiguration();
-            });
+    setupDropZonesAfterSectionsLoad() {
+        console.log('🔧 Setting up drop zones after sections load...');
+        this.setupSectionDropZones();
+    },
+
+    /**
+     * Setup widget drop handling for sections
+     */
+    setupWidgetDropHandling() {
+        // Listen for widget drops from the widget library
+        document.addEventListener('widgetDropped', (event) => {
+            this.handleWidgetDrop(event.detail);
+        });
+        
+        // Setup section drop zones
+        this.setupSectionDropZones();
+    },
+
+    /**
+     * Setup drop zones for sections
+     */
+    setupSectionDropZones() {
+        console.log('🔧 Setting up section drop zones...');
+        
+        // Find all widget drop zones in sections
+        const dropZones = document.querySelectorAll('.widget-drop-zone');
+        
+        dropZones.forEach(dropZone => {
+            const sectionId = dropZone.closest('.page-section')?.getAttribute('data-section-id');
+            
+            if (!sectionId) {
+                console.warn('⚠️ Drop zone not found within a section');
+                return;
+            }
+            
+            // Remove existing event listeners
+            dropZone.removeEventListener('dragover', this.handleDragOver);
+            dropZone.removeEventListener('dragleave', this.handleDragLeave);
+            dropZone.removeEventListener('drop', this.handleDrop);
+            
+            // Add new event listeners
+            dropZone.addEventListener('dragover', this.handleDragOver.bind(this));
+            dropZone.addEventListener('dragleave', this.handleDragLeave.bind(this));
+            dropZone.addEventListener('drop', (e) => this.handleDrop(e, sectionId, dropZone));
+            
+            console.log(`✅ Setup drop zone for section ${sectionId}`);
+        });
+        
+        console.log(`✅ Setup ${dropZones.length} drop zones`);
+    },
+
+    /**
+     * Handle drag over on drop zones
+     */
+    handleDragOver(e) {
+        e.preventDefault();
+        e.currentTarget.classList.add('drag-over');
+    },
+
+    /**
+     * Handle drag leave on drop zones
+     */
+    handleDragLeave(e) {
+        e.currentTarget.classList.remove('drag-over');
+    },
+
+    /**
+     * Handle drop on drop zones
+     */
+    handleDrop(e, sectionId, dropZone) {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        
+        try {
+            const widgetData = JSON.parse(e.dataTransfer.getData('text/plain'));
+            console.log('📋 Dropping widget to section:', widgetData.name, 'Section:', sectionId);
+            this.handleWidgetDropToSection(widgetData, sectionId, dropZone);
+        } catch (err) {
+            console.error('❌ Error dropping widget:', err);
         }
     },
 
     /**
-     * Edit widget content
+     * Handle widget drop to a specific section
      */
-    async editWidget(elementId) {
-        const element = document.getElementById(elementId);
-        if (!element) {
-            console.error('❌ Widget element not found:', elementId);
+    async handleWidgetDropToSection(widgetData, sectionId, dropZone) {
+        try {
+            console.log(`🎯 Widget dropped to section ${sectionId}:`, widgetData);
+            
+            // Check if section allows this widget type
+            const section = document.querySelector(`[data-section-id="${sectionId}"]`);
+            if (!this.canSectionAcceptWidget(section, widgetData)) {
+                this.showError('This widget type is not allowed in this section');
+                return;
+            }
+            
+            // Store widget data for content selection
+            this.currentWidget = {
+                ...widgetData,
+                sectionId: sectionId,
+                dropZone: dropZone
+            };
+            
+            // Open content selection modal
+            this.openContentSelectionModal(widgetData);
+            
+        } catch (error) {
+            console.error('❌ Error handling widget drop:', error);
+            this.showError('Failed to process widget drop');
+        }
+    },
+
+    /**
+     * Get allowed widget types for a section type
+     */
+    getAllowedWidgetTypes(sectionType) {
+        // Allow all widget types for now - remove restrictions
+        // This can be made configurable later based on section templates
+        return ['*']; // Allow all widget types
+    },
+
+    /**
+     * Check if section can accept this widget type
+     */
+    canSectionAcceptWidget(section, widgetData) {
+        const sectionType = section.getAttribute('data-section-type');
+        const widgetType = widgetData.type || widgetData.slug;
+        
+        console.log('🔍 Checking widget compatibility:', {
+            sectionType: sectionType,
+            widgetType: widgetType,
+            widgetData: widgetData
+        });
+        
+        // Get allowed widget types for this section type
+        const allowedTypes = this.getAllowedWidgetTypes(sectionType);
+        
+        console.log('✅ Allowed widget types for section:', allowedTypes);
+        
+        // If allowedTypes includes '*', allow all widgets
+        if (allowedTypes.includes('*')) {
+            console.log('✅ Widget allowed - all widgets permitted');
+            return true;
+        }
+        
+        const isAllowed = allowedTypes.includes(widgetType);
+        console.log(`✅ Widget ${isAllowed ? 'allowed' : 'not allowed'} for section type ${sectionType}`);
+        
+        return isAllowed;
+    },
+
+    /**
+     * Setup content selection modal
+     */
+    setupContentSelectionModal() {
+        const modal = document.getElementById('contentSelectionModal');
+        if (!modal) {
+            console.warn('⚠️ Content selection modal not found');
             return;
         }
 
-        this.currentWidget = element;
-        
-        const widgetId = element.getAttribute('data-widget-id');
-        const widgetName = element.getAttribute('data-widget-name');
-        const pageSectionWidgetId = element.getAttribute('data-page-section-widget-id');
-
-        console.log('📝 Editing widget:', {
-            elementId,
-            widgetId,
-            widgetName,
-            pageSectionWidgetId: pageSectionWidgetId || 'NEW WIDGET'
-        });
-
-        // Show modal (even for new widgets without page_section_widget_id)
-        await this.showWidgetConfigModal(widgetId, widgetName, pageSectionWidgetId);
+        const saveBtn = modal.querySelector('#saveContentSelectionBtn');
+        if (saveBtn) {
+            // Remove existing event listeners to prevent duplicates
+            saveBtn.removeEventListener('click', this.saveWidgetWithContentHandler);
+            
+            // Create a bound handler function
+            this.saveWidgetWithContentHandler = this.saveWidgetWithContent.bind(this);
+            
+            // Add new event listener
+            saveBtn.addEventListener('click', this.saveWidgetWithContentHandler);
+            
+            console.log('✅ Content selection modal setup complete');
+        }
     },
 
     /**
-     * Show widget configuration modal
+     * Open content selection modal
      */
-    async showWidgetConfigModal(widgetId, widgetName, pageSectionWidgetId = null) {
-        const modal = document.getElementById('widgetConfigModal');
-        const modalTitle = document.getElementById('widgetConfigModalLabel');
-        const formContainer = document.getElementById('widgetConfigForm');
+    async openContentSelectionModal(widgetData) {
+        const modal = document.getElementById('contentSelectionModal');
+        const modalTitle = document.getElementById('contentSelectionModalLabel');
+        const contentTypeSelect = document.getElementById('contentTypeSelect');
+        const contentItemsList = document.getElementById('contentItemsList');
+        const selectedContentItemInput = document.getElementById('selectedContentItemId');
+        
+        if (!modal) {
+            console.error('❌ Content selection modal not found');
+            return;
+        }
 
         // Set modal title
-        modalTitle.textContent = `Configure ${widgetName}`;
+        if (modalTitle) {
+            modalTitle.textContent = `Configure ${widgetData.name || widgetData.label || 'Widget'}`;
+        }
 
-        // Show loading state
-        formContainer.innerHTML = '<div class="text-center py-4"><div class="spinner-border"></div><p>Loading widget configuration...</p></div>';
+        // Reset modal state
+        contentTypeSelect.innerHTML = '<option value="" selected disabled>Select content type</option>';
+        contentTypeSelect.disabled = true;
+        contentItemsList.innerHTML = '';
+        selectedContentItemInput.value = '';
 
         // Show modal
         this.modalInstance = new bootstrap.Modal(modal);
         this.modalInstance.show();
 
+        // Load content types for this widget
+        await this.loadContentTypes(widgetData, contentTypeSelect, contentItemsList, selectedContentItemInput);
+    },
+
+    /**
+     * Load content types for widget
+     */
+    async loadContentTypes(widgetData, contentTypeSelect, contentItemsList, selectedContentItemInput) {
         try {
-            // Load widget schema and current data
-            const [schemaData, currentData] = await Promise.all([
-                this.loadWidgetSchema(widgetId),
-                pageSectionWidgetId ? this.loadWidgetCurrentData(pageSectionWidgetId) : null
-            ]);
-
-            // Render configuration form
-            this.renderWidgetConfigForm(schemaData, currentData);
-
-        } catch (error) {
-            console.error('❌ Failed to load widget configuration:', error);
-            formContainer.innerHTML = `
-                <div class="alert alert-danger">
-                    <h6>Error Loading Configuration</h6>
-                    <p>${error.message}</p>
-                    <button class="btn btn-outline-danger btn-sm" onclick="window.WidgetManager.retryLoadConfig()">Retry</button>
-                </div>
-            `;
-        }
-    },
-
-    /**
-     * Load widget schema
-     */
-    async loadWidgetSchema(widgetId) {
-        const response = await fetch(`/admin/api/widgets/${widgetId}/schema`, {
-            headers: {
-                'X-CSRF-TOKEN': window.GridStackPageBuilder.config.csrfToken,
-                'Accept': 'application/json'
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(`Failed to load widget schema: ${response.status}`);
-        }
-
-        const data = await response.json();
-        if (!data.success) {
-            throw new Error(data.message || 'Invalid schema response');
-        }
-
-        return data.schema;
-    },
-
-    /**
-     * Load widget current data
-     */
-    async loadWidgetCurrentData(pageSectionWidgetId) {
-        const response = await fetch(`/admin/api/page-section-widgets/${pageSectionWidgetId}`, {
-            headers: {
-                'X-CSRF-TOKEN': window.GridStackPageBuilder.config.csrfToken,
-                'Accept': 'application/json'
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(`Failed to load widget data: ${response.status}`);
-        }
-
-        const data = await response.json();
-        return data.data || {};
-    },
-
-    /**
-     * Render widget configuration form
-     */
-    renderWidgetConfigForm(schema, currentData = {}) {
-        const formContainer = document.getElementById('widgetConfigForm');
-        
-        let formHTML = '';
-
-        // Content Type Selection
-        formHTML += `
-            <div class="form-group mb-3">
-                <label class="form-label">Content Source</label>
-                <select class="form-control" id="contentTypeSelect">
-                    <option value="">Manual Content</option>
-                    <!-- Content types will be loaded dynamically -->
-                </select>
-                <small class="form-text text-muted">Choose how this widget gets its content</small>
-            </div>
-        `;
-
-        // Dynamic Fields Container
-        formHTML += '<div id="dynamicFields">';
-
-        // Render schema fields
-        if (schema && schema.fields) {
-            schema.fields.forEach(field => {
-                formHTML += this.renderFieldInput(field, currentData.settings || {});
-            });
-        }
-
-        formHTML += '</div>';
-
-        // Content Query Builder (hidden by default)
-        formHTML += `
-            <div id="contentQueryBuilder" style="display: none;">
-                <h6>Content Selection</h6>
-                <div class="form-group mb-3">
-                    <label class="form-label">Select Items</label>
-                    <select multiple class="form-control" id="contentItemsSelect">
-                        <!-- Populated via AJAX -->
-                    </select>
-                </div>
-                <div class="row">
-                    <div class="col-6">
-                        <div class="form-group">
-                            <label class="form-label">Limit</label>
-                            <input type="number" class="form-control" id="contentLimit" value="5" min="1" max="100">
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="form-group">
-                            <label class="form-label">Order By</label>
-                            <select class="form-control" id="contentOrderBy">
-                                <option value="created_at">Date Created</option>
-                                <option value="title">Title</option>
-                                <option value="updated_at">Date Updated</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        formContainer.innerHTML = formHTML;
-
-        // Setup form interactions
-        this.setupFormInteractions();
-
-        // Load content types
-        this.loadContentTypes();
-
-        // Populate current values
-        if (currentData) {
-            this.populateFormValues(currentData);
-        }
-    },
-
-    /**
-     * Render individual field input
-     */
-    renderFieldInput(field, currentValues = {}) {
-        const fieldValue = currentValues[field.name] || field.default || '';
-        let inputHTML = '';
-
-        switch (field.type) {
-            case 'text':
-                inputHTML = `
-                    <div class="form-group mb-3">
-                        <label class="form-label">${field.label}</label>
-                        <input type="text" class="form-control" name="${field.name}" value="${fieldValue}" ${field.required ? 'required' : ''}>
-                        ${field.help ? `<small class="form-text text-muted">${field.help}</small>` : ''}
-                    </div>
-                `;
-                break;
-
-            case 'textarea':
-                inputHTML = `
-                    <div class="form-group mb-3">
-                        <label class="form-label">${field.label}</label>
-                        <textarea class="form-control" name="${field.name}" rows="3" ${field.required ? 'required' : ''}>${fieldValue}</textarea>
-                        ${field.help ? `<small class="form-text text-muted">${field.help}</small>` : ''}
-                    </div>
-                `;
-                break;
-
-            case 'number':
-                inputHTML = `
-                    <div class="form-group mb-3">
-                        <label class="form-label">${field.label}</label>
-                        <input type="number" class="form-control" name="${field.name}" value="${fieldValue}" ${field.required ? 'required' : ''}>
-                        ${field.help ? `<small class="form-text text-muted">${field.help}</small>` : ''}
-                    </div>
-                `;
-                break;
-
-            case 'boolean':
-                inputHTML = `
-                    <div class="form-group mb-3">
-                        <div class="form-check">
-                            <input type="checkbox" class="form-check-input" name="${field.name}" ${fieldValue ? 'checked' : ''}>
-                            <label class="form-check-label">${field.label}</label>
-                        </div>
-                        ${field.help ? `<small class="form-text text-muted">${field.help}</small>` : ''}
-                    </div>
-                `;
-                break;
-
-            case 'select':
-                let options = '';
-                if (field.options) {
-                    field.options.forEach(option => {
-                        const selected = option.value === fieldValue ? 'selected' : '';
-                        options += `<option value="${option.value}" ${selected}>${option.label}</option>`;
-                    });
-                }
-                inputHTML = `
-                    <div class="form-group mb-3">
-                        <label class="form-label">${field.label}</label>
-                        <select class="form-control" name="${field.name}" ${field.required ? 'required' : ''}>
-                            ${options}
-                        </select>
-                        ${field.help ? `<small class="form-text text-muted">${field.help}</small>` : ''}
-                    </div>
-                `;
-                break;
-
-            case 'color':
-                inputHTML = `
-                    <div class="form-group mb-3">
-                        <label class="form-label">${field.label}</label>
-                        <input type="color" class="form-control form-control-color" name="${field.name}" value="${fieldValue || '#000000'}">
-                        ${field.help ? `<small class="form-text text-muted">${field.help}</small>` : ''}
-                    </div>
-                `;
-                break;
-
-            case 'image':
-                inputHTML = `
-                    <div class="form-group mb-3">
-                        <label class="form-label">${field.label}</label>
-                        <div class="input-group">
-                            <input type="text" class="form-control" name="${field.name}" value="${fieldValue}" readonly>
-                            <button type="button" class="btn btn-outline-secondary" onclick="window.WidgetManager.selectImage('${field.name}')">
-                                <i class="ri-image-line"></i> Select Image
-                            </button>
-                        </div>
-                        ${field.help ? `<small class="form-text text-muted">${field.help}</small>` : ''}
-                    </div>
-                `;
-                break;
-
-            default:
-                inputHTML = `
-                    <div class="form-group mb-3">
-                        <label class="form-label">${field.label}</label>
-                        <input type="text" class="form-control" name="${field.name}" value="${fieldValue}">
-                        ${field.help ? `<small class="form-text text-muted">${field.help}</small>` : ''}
-                    </div>
-                `;
-        }
-
-        return inputHTML;
-    },
-
-    /**
-     * Setup form interactions
-     */
-    setupFormInteractions() {
-        const contentTypeSelect = document.getElementById('contentTypeSelect');
-        const contentQueryBuilder = document.getElementById('contentQueryBuilder');
-
-        if (contentTypeSelect) {
-            contentTypeSelect.addEventListener('change', (e) => {
-                if (e.target.value) {
-                    contentQueryBuilder.style.display = 'block';
-                    this.onContentTypeChange(e.target.value);
-                } else {
-                    contentQueryBuilder.style.display = 'none';
-                }
-            });
-        }
-    },
-
-    /**
-     * Load available content types
-     */
-    async loadContentTypes() {
-        try {
-            const response = await fetch('/admin/api/content-types', {
+            contentTypeSelect.innerHTML = '<option value="" selected disabled>Loading content types...</option>';
+            
+            const widgetId = widgetData.id;
+            const url = `/admin/api/widgets/${widgetId}/content-types`;
+            
+            const response = await fetch(url, {
                 headers: {
-                    'X-CSRF-TOKEN': window.GridStackPageBuilder.config.csrfToken,
-                    'Accept': 'application/json'
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': this.config.csrfToken
                 }
             });
-
-            if (response.ok) {
-                const data = await response.json();
-                const select = document.getElementById('contentTypeSelect');
+            
+            if (!response.ok) {
+                throw new Error('Failed to fetch content types');
+            }
+            
+            const data = await response.json();
+            const types = data.content_types || data.data || [];
+            
+            contentTypeSelect.innerHTML = '<option value="" selected disabled>Select content type</option>';
+            
+            if (types.length === 0) {
+                contentTypeSelect.innerHTML += '<option disabled>No content types available</option>';
+            } else {
+                types.forEach(type => {
+                    const option = document.createElement('option');
+                    option.value = type.id;
+                    option.setAttribute('data-slug', type.slug);
+                    option.textContent = type.name + (type.description ? ` - ${type.description}` : '');
+                    contentTypeSelect.appendChild(option);
+                });
                 
-                // Add content type options
-                data.content_types?.forEach(contentType => {
-                    const option = document.createElement('option');
-                    option.value = contentType.id;
-                    option.textContent = contentType.name;
-                    select.appendChild(option);
-                });
+                // If only one content type exists, auto-select it
+                if (types.length === 1) {
+                    contentTypeSelect.selectedIndex = 1;
+                    setTimeout(() => contentTypeSelect.dispatchEvent(new Event('change')), 0);
+                }
             }
+            
+            contentTypeSelect.disabled = false;
+            
+            // Listen for content type selection
+            contentTypeSelect.onchange = async function() {
+                const selectedOption = contentTypeSelect.options[contentTypeSelect.selectedIndex];
+                if (!selectedOption || !selectedOption.value) {
+                    contentItemsList.innerHTML = '';
+                    selectedContentItemInput.value = '';
+                    return;
+                }
+                
+                const contentTypeId = selectedOption.value;
+                await this.loadContentItems(contentTypeId, contentItemsList, selectedContentItemInput);
+            }.bind(this);
+            
         } catch (error) {
-            console.error('❌ Failed to load content types:', error);
+            console.error('❌ Error loading content types:', error);
+            contentTypeSelect.innerHTML = '<option disabled>Error loading content types</option>';
+            contentTypeSelect.disabled = true;
         }
     },
 
     /**
-     * Handle content type change
+     * Load content items for selected content type
      */
-    async onContentTypeChange(contentTypeId) {
+    async loadContentItems(contentTypeId, contentItemsList, selectedContentItemInput) {
         try {
-            const response = await fetch(`/admin/api/content-types/${contentTypeId}/items`, {
+            contentItemsList.innerHTML = '<div class="text-muted">Loading content items...</div>';
+            
+            const url = `/admin/api/content/${contentTypeId}`;
+            const response = await fetch(url, {
                 headers: {
-                    'X-CSRF-TOKEN': window.GridStackPageBuilder.config.csrfToken,
-                    'Accept': 'application/json'
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': this.config.csrfToken
                 }
             });
-
-            if (response.ok) {
-                const data = await response.json();
-                const select = document.getElementById('contentItemsSelect');
-                select.innerHTML = '';
-
-                // Add content item options
-                data.items?.forEach(item => {
-                    const option = document.createElement('option');
-                    option.value = item.id;
-                    option.textContent = item.title || item.name || `Item ${item.id}`;
-                    select.appendChild(option);
-                });
+            
+            if (!response.ok) {
+                throw new Error('Failed to fetch content items');
             }
-        } catch (error) {
-            console.error('❌ Failed to load content items:', error);
-        }
-    },
-
-    /**
-     * Populate form values with current data
-     */
-    populateFormValues(currentData) {
-        // Populate content type
-        if (currentData.content_query?.content_type_id) {
-            const contentTypeSelect = document.getElementById('contentTypeSelect');
-            contentTypeSelect.value = currentData.content_query.content_type_id;
-            contentTypeSelect.dispatchEvent(new Event('change'));
-        }
-
-        // Populate other fields
-        const form = document.getElementById('widgetConfigForm');
-        const inputs = form.querySelectorAll('input, textarea, select');
-        
-        inputs.forEach(input => {
-            const fieldName = input.name;
-            if (fieldName && currentData.settings && currentData.settings[fieldName] !== undefined) {
-                if (input.type === 'checkbox') {
-                    input.checked = currentData.settings[fieldName];
-                } else {
-                    input.value = currentData.settings[fieldName];
+            
+            const data = await response.json();
+            const items = data.items || data.data || [];
+            
+            if (items.length === 0) {
+                contentItemsList.innerHTML = '<div class="alert alert-warning">No content items found for this content type.</div>';
+                selectedContentItemInput.value = '';
+            } else {
+                // Render as a checkbox list (allowing multiple selections)
+                let html = '<div class="list-group">';
+                items.forEach(item => {
+                    const itemId = item.id;
+                    const itemTitle = item.title || item.name || 'Untitled';
+                    html += `<label class='list-group-item'>
+                        <input type='checkbox' name='contentItemCheckbox' value='${itemId}' class='form-check-input me-2'>
+                        ${itemTitle} <span class='text-muted'>#${itemId}</span>
+                    </label>`;
+                });
+                html += '</div>';
+                contentItemsList.innerHTML = html;
+                
+                // Add event listeners to checkboxes
+                const checkboxes = contentItemsList.querySelectorAll("input[type='checkbox'][name='contentItemCheckbox']");
+                checkboxes.forEach(checkbox => {
+                    checkbox.addEventListener('change', function() {
+                        // Get all checked values
+                        const checkedValues = Array.from(checkboxes)
+                            .filter(cb => cb.checked)
+                            .map(cb => cb.value);
+                        selectedContentItemInput.value = checkedValues.join(',');
+                    });
+                });
+                
+                // Auto-select the first item
+                if (checkboxes.length > 0) {
+                    checkboxes[0].checked = true;
+                    selectedContentItemInput.value = checkboxes[0].value;
                 }
             }
-        });
+            
+        } catch (error) {
+            console.error('❌ Error loading content items:', error);
+            contentItemsList.innerHTML = '<div class="alert alert-danger">Error loading content items.</div>';
+            selectedContentItemInput.value = '';
+        }
     },
 
     /**
-     * Save widget configuration
+     * Save widget with selected content
      */
-    async saveWidgetConfiguration() {
-        if (!this.currentWidget) {
-            console.error('❌ No current widget to save');
+    async saveWidgetWithContent() {
+        // Prevent multiple simultaneous saves
+        if (this.isSaving) {
+            console.log('⚠️ Save already in progress, ignoring duplicate request');
             return;
         }
 
+        if (!this.currentWidget) {
+            this.showError('No widget data available');
+            return;
+        }
+
+        const modal = document.getElementById('contentSelectionModal');
+        const contentTypeSelect = modal.querySelector('#contentTypeSelect');
+        const selectedContentItemInput = modal.querySelector('#selectedContentItemId');
+        const saveBtn = modal.querySelector('#saveContentSelectionBtn');
+
+        const selectedTypeId = contentTypeSelect.value;
+        const selectedContentItemIds = selectedContentItemInput.value;
+
+        if (!selectedTypeId) {
+            this.showError('Please select a content type.');
+            return;
+        }
+
+        if (!selectedContentItemIds) {
+            this.showError('Please select at least one content item.');
+            return;
+        }
+
+        // Set saving flag
+        this.isSaving = true;
+        console.log('🔄 Starting widget save process...');
+
+        // Disable save button
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saving...';
+
         try {
-            const formData = this.serializeWidgetConfig();
-            
-            console.log('💾 Saving widget configuration:', formData);
+            // Parse content item IDs
+            const contentItemIds = selectedContentItemIds.split(',').map(id => parseInt(id.trim()));
 
-            // Save to backend
-            await this.saveWidgetToBackend(formData);
+            console.log('📝 Creating PageSectionWidget with data:', {
+                widgetId: this.currentWidget.id,
+                sectionId: this.currentWidget.sectionId,
+                contentTypeId: selectedTypeId,
+                contentItemIds: contentItemIds
+            });
 
-            // Refresh widget preview
-            await this.refreshWidgetPreview();
+            // Create PageSectionWidget
+            const pageSectionWidget = await this.createPageSectionWidget(this.currentWidget, contentItemIds, selectedTypeId);
 
-            // Close modal
-            if (this.modalInstance) {
+            if (pageSectionWidget) {
+                // Add widget to section's GridStack
+                await this.addWidgetToSection(pageSectionWidget, this.currentWidget.sectionId, this.currentWidget.dropZone);
+
+                // Close modal
                 this.modalInstance.hide();
-            }
 
-            console.log('✅ Widget configuration saved successfully');
+                // Show success message
+                this.showSuccess('Widget added successfully');
+
+                console.log('✅ Widget created and added to section:', pageSectionWidget);
+            }
 
         } catch (error) {
-            console.error('❌ Failed to save widget configuration:', error);
-            alert('Failed to save widget configuration. Please try again.');
+            console.error('❌ Error saving widget:', error);
+            this.showError('Failed to save widget');
+        } finally {
+            // Clear saving flag
+            this.isSaving = false;
+            
+            // Re-enable save button
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Save Widget';
+            
+            console.log('🔄 Widget save process completed');
         }
     },
 
     /**
-     * Serialize widget configuration from form
+     * Create PageSectionWidget in database
      */
-    serializeWidgetConfig() {
-        const form = document.getElementById('widgetConfigForm');
-        const formData = new FormData(form);
-        
-        const config = {
-            widget_id: this.currentWidget.getAttribute('data-widget-id'),
-            page_section_widget_id: this.currentWidget.getAttribute('data-page-section-widget-id'),
-            settings: {},
-            content_query: {},
-            css_classes: ''
-        };
+    async createPageSectionWidget(widgetData, contentItemIds, contentTypeId) {
+        try {
+            console.log('📝 Creating PageSectionWidget:', { widgetData, contentItemIds, contentTypeId });
 
-        // Serialize form fields
-        for (let [key, value] of formData.entries()) {
-            config.settings[key] = value;
-        }
+            const widgetPayload = {
+                page_section_id: widgetData.sectionId,
+                widget_id: widgetData.id,
+                position: 1, // Will be calculated by backend
+                grid_x: 0,
+                grid_y: 0,
+                grid_w: 6, // Default width
+                grid_h: 3, // Default height
+                grid_id: `widget_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                column_position: 0,
+                settings: {
+                    widget_type: widgetData.type || widgetData.slug,
+                    widget_name: widgetData.name || widgetData.label,
+                    width: 'half',
+                    order: 0,
+                    locked: false,
+                    noResize: false,
+                    resizeHandles: ['se', 'sw', 'ne', 'nw']
+                },
+                content_query: {
+                    content_type_id: parseInt(contentTypeId),
+                    content_item_ids: contentItemIds,
+                    query_type: 'multiple',
+                    filters: {},
+                    sort_by: 'created_at',
+                    sort_order: 'desc',
+                    limit: contentItemIds.length
+                },
+                css_classes: '',
+                padding: { top: 0, bottom: 0, left: 0, right: 0 },
+                margin: { top: 0, bottom: 0, left: 0, right: 0 },
+                min_height: null,
+                max_height: null
+            };
 
-        // Handle content query
-        const contentTypeSelect = document.getElementById('contentTypeSelect');
-        if (contentTypeSelect && contentTypeSelect.value) {
-            config.content_query.content_type_id = parseInt(contentTypeSelect.value);
-            
-            const contentItemsSelect = document.getElementById('contentItemsSelect');
-            const contentLimit = document.getElementById('contentLimit');
-            const contentOrderBy = document.getElementById('contentOrderBy');
-            
-            if (contentItemsSelect) {
-                config.content_query.content_item_ids = Array.from(contentItemsSelect.selectedOptions).map(opt => parseInt(opt.value));
-            }
-            
-            if (contentLimit) {
-                config.content_query.limit = parseInt(contentLimit.value);
-            }
-            
-            if (contentOrderBy) {
-                config.content_query.order_by = contentOrderBy.value;
-            }
-        }
-
-        return config;
-    },
-
-    /**
-     * Save widget to backend
-     */
-    async saveWidgetToBackend(configData) {
-        const pageSectionWidgetId = configData.page_section_widget_id;
-        
-        const url = pageSectionWidgetId 
-            ? `/admin/api/page-section-widgets/${pageSectionWidgetId}`
-            : `/admin/api/pages/${window.GridStackPageBuilder.config.pageId}/widgets`;
-            
-        const method = pageSectionWidgetId ? 'PUT' : 'POST';
-
-        const response = await fetch(url, {
-            method: method,
-            headers: {
-                'X-CSRF-TOKEN': window.GridStackPageBuilder.config.csrfToken,
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(configData)
-        });
-
-        if (!response.ok) {
-            throw new Error(`Failed to save widget: ${response.status}`);
-        }
-
-        return await response.json();
-    },
-
-    /**
-     * Refresh widget preview after configuration change
-     */
-    async refreshWidgetPreview() {
-        if (!this.currentWidget) return;
-
-        const widgetId = this.currentWidget.getAttribute('data-widget-id');
-        const pageSectionWidgetId = this.currentWidget.getAttribute('data-page-section-widget-id');
-
-        if (widgetId) {
-            // Reload widget preview
-            await window.WidgetLibrary.loadWidgetPreview(this.currentWidget, {
-                id: widgetId,
-                name: this.currentWidget.getAttribute('data-widget-name'),
-                slug: this.currentWidget.getAttribute('data-widget-slug')
+            const response = await fetch(`${this.config.apiBaseUrl}/page-section-widgets`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': this.config.csrfToken
+                },
+                body: JSON.stringify(widgetPayload)
             });
-        }
-    },
 
-    /**
-     * Duplicate widget
-     */
-    duplicateWidget(elementId) {
-        console.log('📋 Duplicating widget:', elementId);
-        // Implementation for duplicating widgets
-    },
-
-    /**
-     * Delete widget
-     */
-    deleteWidget(elementId) {
-        if (confirm('Are you sure you want to delete this widget?')) {
-            const element = document.getElementById(elementId);
-            if (element && window.GridStackPageBuilder.gridStack) {
-                window.GridStackPageBuilder.gridStack.removeWidget(element);
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to create widget');
             }
+
+            const result = await response.json();
+            return result.data;
+
+        } catch (error) {
+            console.error('❌ Error creating PageSectionWidget:', error);
+            throw error;
         }
     },
 
     /**
-     * Select image for image fields
+     * Add widget to section's GridStack
      */
-    selectImage(fieldName) {
-        console.log('🖼️ Selecting image for field:', fieldName);
-        // Implementation for image selection
-        // This would typically open a media library modal
+    async addWidgetToSection(pageSectionWidget, sectionId, dropZone) {
+        try {
+            // Find the section's GridStack
+            const section = document.querySelector(`[data-section-id="${sectionId}"]`);
+            const gridStack = section.querySelector('.section-grid-stack');
+
+            if (!gridStack) {
+                console.error('❌ GridStack not found for section:', sectionId);
+                return;
+            }
+
+            // Create widget HTML
+            const widgetHtml = await this.createWidgetHtml(pageSectionWidget);
+
+            // Add to GridStack
+            const gridInstance = GridStack.getGridStack(gridStack);
+            if (gridInstance) {
+                const widgetElement = gridInstance.addWidget({
+                    x: pageSectionWidget.grid_x,
+                    y: pageSectionWidget.grid_y,
+                    w: pageSectionWidget.grid_w,
+                    h: pageSectionWidget.grid_h,
+                    id: pageSectionWidget.grid_id,
+                    content: widgetHtml
+                });
+
+                // Set data attributes
+                widgetElement.setAttribute('data-page-section-widget-id', pageSectionWidget.id);
+                widgetElement.setAttribute('data-widget-id', pageSectionWidget.widget_id);
+                widgetElement.setAttribute('data-widget-type', pageSectionWidget.settings.widget_type);
+
+                // Remove drop zone content
+                dropZone.innerHTML = '';
+
+                console.log('✅ Widget added to GridStack:', widgetElement);
+            }
+
+        } catch (error) {
+            console.error('❌ Error adding widget to section:', error);
+        }
     },
 
     /**
-     * Retry loading configuration
+     * Create widget HTML with actual content
      */
-    retryLoadConfig() {
-        if (this.currentWidget) {
-            const widgetId = this.currentWidget.getAttribute('data-widget-id');
-            const widgetName = this.currentWidget.getAttribute('data-widget-name');
-            const pageSectionWidgetId = this.currentWidget.getAttribute('data-page-section-widget-id');
-            
-            this.showWidgetConfigModal(widgetId, widgetName, pageSectionWidgetId);
+    async createWidgetHtml(pageSectionWidget) {
+        const widgetType = pageSectionWidget.settings.widget_type;
+        const widgetName = pageSectionWidget.settings.widget_name;
+        const widgetId = pageSectionWidget.widget_id;
+
+        try {
+            console.log('🎨 Rendering widget content for:', {
+                widgetId: widgetId,
+                widgetType: widgetType,
+                pageSectionWidgetId: pageSectionWidget.id,
+                apiBaseUrl: this.config.apiBaseUrl
+            });
+
+            const apiUrl = `${this.config.apiBaseUrl}/widgets/${widgetId}/render?page_section_widget_id=${pageSectionWidget.id}`;
+            console.log('🌐 Calling API URL:', apiUrl);
+
+            // Fetch actual widget HTML from API
+            const response = await fetch(apiUrl, {
+                headers: {
+                    'X-CSRF-TOKEN': this.config.csrfToken,
+                    'Accept': 'application/json'
+                }
+            });
+
+            console.log('📡 API Response status:', response.status);
+            console.log('📡 API Response headers:', Object.fromEntries(response.headers.entries()));
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('📦 API Response data:', data);
+                
+                if (data.success && data.html) {
+                    console.log('✅ Widget content rendered successfully');
+                    console.log('📄 HTML content length:', data.html.length);
+                    console.log('📄 HTML preview:', data.html.substring(0, 200) + '...');
+                    
+                    return `
+                        <div class="widget-preview-container" data-widget-type="${widgetType}" data-page-section-widget-id="${pageSectionWidget.id}">
+                            <div class="widget-preview-content">
+                                ${data.html}
+                            </div>
+                            <div class="widget-preview-overlay">
+                                <div class="widget-controls">
+                                    <button class="widget-control-btn" onclick="window.WidgetManager.editWidget('${pageSectionWidget.id}')" title="Edit Widget">
+                                        <i class="ri-edit-line"></i>
+                                    </button>
+                                    <button class="widget-control-btn" onclick="window.WidgetManager.duplicateWidget('${pageSectionWidget.id}')" title="Duplicate Widget">
+                                        <i class="ri-file-copy-line"></i>
+                                    </button>
+                                    <button class="widget-control-btn" onclick="window.WidgetManager.deleteWidget('${pageSectionWidget.id}')" title="Delete Widget">
+                                        <i class="ri-delete-bin-line"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    console.warn('⚠️ Widget render failed:', data.error || 'No error message provided');
+                    console.warn('⚠️ Response data:', data);
+                    return this.createFallbackWidgetHtml(pageSectionWidget, data.error || 'Failed to render widget');
+                }
+            } else {
+                const errorText = await response.text();
+                console.error('❌ Widget render request failed:', response.status);
+                console.error('❌ Error response:', errorText);
+                return this.createFallbackWidgetHtml(pageSectionWidget, `Failed to load widget (HTTP ${response.status})`);
+            }
+
+        } catch (error) {
+            console.error('❌ Error rendering widget content:', error);
+            console.error('❌ Error details:', {
+                message: error.message,
+                stack: error.stack
+            });
+            return this.createFallbackWidgetHtml(pageSectionWidget, 'Error loading widget: ' + error.message);
         }
+    },
+
+    /**
+     * Create fallback widget HTML when rendering fails
+     */
+    createFallbackWidgetHtml(pageSectionWidget, errorMessage) {
+        const widgetType = pageSectionWidget.settings.widget_type;
+        const widgetName = pageSectionWidget.settings.widget_name;
+
+        return `
+            <div class="widget-preview-container" data-widget-type="${widgetType}" data-page-section-widget-id="${pageSectionWidget.id}">
+                <div class="widget-preview-content">
+                    <div class="text-center p-3">
+                        <i class="ri-apps-line fs-1 text-muted"></i>
+                        <h6>${widgetName}</h6>
+                        <small class="text-muted">${errorMessage}</small>
+                    </div>
+                </div>
+                <div class="widget-preview-overlay">
+                    <div class="widget-controls">
+                        <button class="widget-control-btn" onclick="window.WidgetManager.editWidget('${pageSectionWidget.id}')" title="Edit Widget">
+                            <i class="ri-edit-line"></i>
+                        </button>
+                        <button class="widget-control-btn" onclick="window.WidgetManager.duplicateWidget('${pageSectionWidget.id}')" title="Duplicate Widget">
+                            <i class="ri-file-copy-line"></i>
+                        </button>
+                        <button class="widget-control-btn" onclick="window.WidgetManager.deleteWidget('${pageSectionWidget.id}')" title="Delete Widget">
+                            <i class="ri-delete-bin-line"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    /**
+     * Setup widget events
+     */
+    setupWidgetEvents() {
+        // Widget edit event
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.widget-control-btn[onclick*="editWidget"]')) {
+                e.preventDefault();
+                const widgetId = e.target.closest('[data-page-section-widget-id]')?.getAttribute('data-page-section-widget-id');
+                if (widgetId) {
+                    this.editWidget(widgetId);
+                }
+            }
+        });
+    },
+
+    /**
+     * Edit widget (placeholder for future implementation)
+     */
+    editWidget(widgetId) {
+        console.log(`✏️ Edit widget ${widgetId} - Not implemented yet`);
+        alert('Widget editing will be implemented in Phase 4');
+    },
+
+    /**
+     * Duplicate widget (placeholder for future implementation)
+     */
+    duplicateWidget(widgetId) {
+        console.log(`📋 Duplicate widget ${widgetId} - Not implemented yet`);
+        alert('Widget duplication will be implemented in Phase 4');
+    },
+
+    /**
+     * Delete widget (placeholder for future implementation)
+     */
+    deleteWidget(widgetId) {
+        console.log(`🗑️ Delete widget ${widgetId} - Not implemented yet`);
+        alert('Widget deletion will be implemented in Phase 4');
+    },
+
+    /**
+     * Show success message
+     */
+    showSuccess(message) {
+        // You can implement a proper notification system here
+        console.log('✅ Success:', message);
+    },
+
+    /**
+     * Show error message
+     */
+    showError(message) {
+        // You can implement a proper notification system here
+        console.error('❌ Error:', message);
+        alert(message);
     }
 }; 

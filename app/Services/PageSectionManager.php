@@ -43,18 +43,48 @@ class PageSectionManager
                 });
                 
                 if (!$pageSection) {
-                    // Create a new page section
-                    PageSection::create([
-                        'page_id' => $page->id,
-                        'template_section_id' => $templateSection->id,
-                        'name' => $templateSection->name,
-                        'identifier' => $templateSection->slug,
-                        'description' => $templateSection->description,
-                        'position' => $templateSection->position,
+                    try {
+                        // Map template section data to page section data
+                        $pageSectionData = $this->mapTemplateSectionToPageSection($templateSection, $page);
                         
-                    ]);
-                    
-                    $created++;
+                        // Validate that all required fields are present
+                        $requiredFields = [
+                            'page_id', 'template_section_id', 'position', 
+                            'grid_x', 'grid_y', 'grid_w', 'grid_h', 'grid_id',
+                            'grid_config', 'allows_widgets', 'widget_types',
+                            'css_classes', 'background_color', 'padding', 'margin',
+                            'locked_position', 'resize_handles'
+                        ];
+                        
+                        $missingFields = array_diff($requiredFields, array_keys($pageSectionData));
+                        if (!empty($missingFields)) {
+                            Log::error('Missing required fields for page section creation:', [
+                                'missing_fields' => $missingFields,
+                                'template_section_id' => $templateSection->id,
+                                'page_id' => $page->id
+                            ]);
+                            throw new \Exception('Missing required fields: ' . implode(', ', $missingFields));
+                        }
+                        
+                        // Create a new page section
+                        $newPageSection = PageSection::create($pageSectionData);
+                        
+                        Log::info('Page section created successfully:', [
+                            'page_section_id' => $newPageSection->id,
+                            'template_section_id' => $templateSection->id,
+                            'page_id' => $page->id
+                        ]);
+                        
+                        $created++;
+                    } catch (\Exception $e) {
+                        Log::error('Failed to create page section:', [
+                            'template_section_id' => $templateSection->id,
+                            'page_id' => $page->id,
+                            'error' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString()
+                        ]);
+                        throw $e;
+                    }
                 }
             }
             
@@ -257,5 +287,186 @@ class PageSectionManager
                 $query->where('slug', $sectionSlug);
             })
             ->first();
+    }
+
+    /**
+     * Map template section data to page section data
+     * 
+     * @param TemplateSection $templateSection
+     * @param Page $page
+     * @return array
+     */
+    protected function mapTemplateSectionToPageSection(TemplateSection $templateSection, Page $page): array
+    {
+        // Map basic positioning from template to GridStack positioning
+        $gridPosition = $this->mapPositionToGridStack($templateSection);
+        
+        // Map section type to GridStack configuration
+        $gridConfig = $this->mapSectionTypeToGridConfig($templateSection);
+        
+        // Map column layout to widget constraints
+        $widgetTypes = $this->mapSectionTypeToWidgetTypes($templateSection);
+        
+        // Map styling based on section type
+        $styling = $this->mapSectionTypeToStyling($templateSection);
+        
+        $pageSectionData = [
+            'page_id' => $page->id,
+            'template_section_id' => $templateSection->id,
+            'position' => $templateSection->position,
+            
+            // GridStack positioning
+            'grid_x' => $gridPosition['x'],
+            'grid_y' => $gridPosition['y'],
+            'grid_w' => $gridPosition['w'],
+            'grid_h' => $gridPosition['h'],
+            'grid_id' => PageSection::generateUniqueGridId($templateSection->id),
+            'grid_config' => $gridConfig,
+            
+            // Widget configuration
+            'allows_widgets' => true,
+            'widget_types' => $widgetTypes,
+            
+            // Styling
+            'css_classes' => $styling['css_classes'],
+            'background_color' => $styling['background_color'],
+            'padding' => $styling['padding'],
+            'margin' => $styling['margin'],
+            'locked_position' => false,
+            'resize_handles' => $styling['resize_handles'],
+            
+            // Column overrides (if applicable)
+            'column_span_override' => $styling['column_span_override'] ?? null,
+            'column_offset_override' => $styling['column_offset_override'] ?? null,
+        ];
+
+        // Log the data being created for debugging
+        Log::info('Creating page section with data:', [
+            'template_section_id' => $templateSection->id,
+            'page_id' => $page->id,
+            'grid_id' => $pageSectionData['grid_id'],
+            'data_keys' => array_keys($pageSectionData)
+        ]);
+
+        return $pageSectionData;
+    }
+
+    /**
+     * Map template section positioning to GridStack positioning
+     * 
+     * @param TemplateSection $templateSection
+     * @return array
+     */
+    protected function mapPositionToGridStack(TemplateSection $templateSection): array
+    {
+        // Convert template positioning to GridStack positioning
+        return [
+            'x' => $templateSection->x ?? 0,
+            'y' => $templateSection->y ?? 0,
+            'w' => $templateSection->w ?? 12,
+            'h' => $templateSection->h ?? 4,
+        ];
+    }
+
+    /**
+     * Map section type to GridStack configuration
+     * 
+     * @param TemplateSection $templateSection
+     * @return array
+     */
+    protected function mapSectionTypeToGridConfig(TemplateSection $templateSection): array
+    {
+        $baseConfig = [
+            'column' => 12,
+            'cellHeight' => 80,
+            'verticalMargin' => 10,
+            'horizontalMargin' => 10,
+            'acceptWidgets' => true,
+            'animate' => true,
+            'float' => false,
+            'resizable' => [
+                'handles' => ['se', 'sw']
+            ]
+        ];
+
+        switch ($templateSection->section_type) {
+            case TemplateSection::TYPE_FULL_WIDTH:
+                $baseConfig['float'] = false;
+                $baseConfig['resizable']['handles'] = ['se', 'sw'];
+                break;
+                
+            case TemplateSection::TYPE_MULTI_COLUMN:
+                $baseConfig['float'] = true;
+                $baseConfig['resizable']['handles'] = ['se', 'sw', 'ne', 'nw'];
+                break;
+                
+            case TemplateSection::TYPE_SIDEBAR_LEFT:
+            case TemplateSection::TYPE_SIDEBAR_RIGHT:
+                $baseConfig['float'] = false;
+                $baseConfig['resizable']['handles'] = ['se', 'sw'];
+                break;
+        }
+
+        return $baseConfig;
+    }
+
+    /**
+     * Map section type to allowed widget types
+     * 
+     * @param TemplateSection $templateSection
+     * @return array
+     */
+    protected function mapSectionTypeToWidgetTypes(TemplateSection $templateSection): array
+    {
+        $baseWidgetTypes = ['text', 'image', 'counter', 'gallery', 'form', 'video'];
+        
+        switch ($templateSection->section_type) {
+            case TemplateSection::TYPE_SIDEBAR_LEFT:
+            case TemplateSection::TYPE_SIDEBAR_RIGHT:
+                // Add navigation widgets for sidebars
+                $baseWidgetTypes[] = 'navigation';
+                break;
+        }
+        
+        return $baseWidgetTypes;
+    }
+
+    /**
+     * Map section type to styling configuration
+     * 
+     * @param TemplateSection $templateSection
+     * @return array
+     */
+    protected function mapSectionTypeToStyling(TemplateSection $templateSection): array
+    {
+        $baseStyling = [
+            'css_classes' => 'container',
+            'background_color' => '#ffffff',
+            'padding' => ['top' => 40, 'bottom' => 40, 'left' => 0, 'right' => 0],
+            'margin' => ['top' => 0, 'bottom' => 0, 'left' => 0, 'right' => 0],
+            'resize_handles' => ['se', 'sw']
+        ];
+
+        switch ($templateSection->section_type) {
+            case TemplateSection::TYPE_FULL_WIDTH:
+                $baseStyling['css_classes'] = 'container-fluid';
+                $baseStyling['padding'] = ['top' => 40, 'bottom' => 40, 'left' => 0, 'right' => 0];
+                break;
+                
+            case TemplateSection::TYPE_MULTI_COLUMN:
+                $baseStyling['css_classes'] = 'container';
+                $baseStyling['background_color'] = '#f8f9fa';
+                $baseStyling['resize_handles'] = ['se', 'sw', 'ne', 'nw'];
+                break;
+                
+            case TemplateSection::TYPE_SIDEBAR_LEFT:
+            case TemplateSection::TYPE_SIDEBAR_RIGHT:
+                $baseStyling['css_classes'] = 'container';
+                $baseStyling['background_color'] = '#ffffff';
+                $baseStyling['sidebar_background'] = '#f8f9fa';
+                break;
+        }
+
+        return $baseStyling;
     }
 }

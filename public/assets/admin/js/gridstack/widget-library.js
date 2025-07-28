@@ -88,16 +88,31 @@ window.WidgetLibrary = {
         el.setAttribute('data-widget-slug', widget.slug);
         el.innerHTML = `
             <span class="widget-item-icon"><i class="ri-apps-line"></i></span>
-            <span class="widget-item-name">${widget.label || widget.name}</span>
+            <span class="widget-item-name">${widget.label || widget.name || 'Unknown Widget'}</span>
         `;
         
-        el.addEventListener('dragstart', e => {
-            e.dataTransfer.setData('text/plain', JSON.stringify(widget));
+        el.addEventListener('dragstart', function(e) {
+            // Ensure widget data is properly captured with correct field names
+            const widgetData = {
+                id: widget.id,
+                name: widget.label || widget.name, // Use label as name
+                slug: widget.slug,
+                category: widget.category || 'General',
+                label: widget.label || widget.name, // Keep label for compatibility
+                type: widget.slug // Add type for compatibility
+            };
+            
+            console.log('🔄 Dragging widget object:', widgetData);
+            console.log('🔄 Widget name:', widgetData.name);
+            console.log('🔄 Widget label:', widgetData.label);
+            console.log('🔄 Widget id:', widgetData.id);
+            
+            e.dataTransfer.setData('text/plain', JSON.stringify(widgetData));
             el.classList.add('dragging');
-            console.log('🔄 Dragging widget:', widget.name);
+            console.log('🔄 Dragging widget:', widgetData.name || widgetData.label || 'Unknown Widget');
         });
         
-        el.addEventListener('dragend', e => {
+        el.addEventListener('dragend', function(e) {
             el.classList.remove('dragging');
         });
         
@@ -105,37 +120,8 @@ window.WidgetLibrary = {
     },
 
     setupDragAndDrop() {
-        console.log('🔧 Setting up drag and drop...');
-        
-        // Setup drop on all .section-grid-stack containers
-        document.addEventListener('dragover', function(e) {
-            if (e.target.classList.contains('section-grid-stack')) {
-                e.preventDefault();
-                e.target.classList.add('drag-over');
-            }
-        });
-        
-        document.addEventListener('dragleave', function(e) {
-            if (e.target.classList.contains('section-grid-stack')) {
-                e.target.classList.remove('drag-over');
-            }
-        });
-        
-        document.addEventListener('drop', function(e) {
-            if (e.target.classList.contains('section-grid-stack')) {
-                e.preventDefault();
-                e.target.classList.remove('drag-over');
-                
-                try {
-                    const widgetData = JSON.parse(e.dataTransfer.getData('text/plain'));
-                    console.log('📋 Dropping widget:', widgetData.name);
-                    window.GridStackPageBuilder.addPlaceholderWidgetToSection(e.target, widgetData);
-                } catch (err) {
-                    console.error('❌ Error dropping widget:', err);
-                }
-            }
-        });
-        
-        console.log('✅ Drag and drop setup complete');
+        console.log('🔧 Widget library drag and drop setup - only handling dragstart');
+        // Only setup dragstart events, let widget-manager.js handle drops
+        console.log('✅ Widget library drag setup complete');
     }
 }; 

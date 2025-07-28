@@ -157,6 +157,7 @@ class WidgetController extends Controller
             // Get page section widget ID if provided
             $pageSectionWidgetId = $request->input('page_section_widget_id');
             $pageSectionWidget = null;
+            $useCustomData = false; // Add missing variable
 
             if ($pageSectionWidgetId) {
                 // Get the PageSectionWidget record
@@ -170,6 +171,19 @@ class WidgetController extends Controller
             
             // Get widget settings
             $settings = $pageSectionWidget ? ($pageSectionWidget->settings ?? []) : [];
+
+            // Add debugging for content query
+            if ($pageSectionWidget) {
+                \Log::debug('PageSectionWidget content query data', [
+                    'page_section_widget_id' => $pageSectionWidget->id,
+                    'content_query' => $pageSectionWidget->content_query,
+                    'content_query_type' => gettype($pageSectionWidget->content_query),
+                    'settings' => $settings,
+                    'field_values_count' => count($fieldValues),
+                    'field_values_keys' => array_keys($fieldValues),
+                    'field_values_sample' => array_slice($fieldValues, 0, 3, true)
+                ]);
+            }
 
             // Resolve widget view path
             $viewPath = $this->widgetService->resolveWidgetViewPath($widget);
@@ -191,8 +205,9 @@ class WidgetController extends Controller
                 ], 404);
             }
 
-            // Render the widget view
-            $html = view($viewPath, compact('widget', 'fields', 'settings'))->render();
+            // Render the widget view with all required variables
+            $fields = $fieldValues; // Alias for widget views
+            $html = view($viewPath, compact('widget', 'fields', 'settings', 'useCustomData'))->render();
             
             \Log::debug('Widget HTML rendered', [
                 'widget_id' => $widget->id,
@@ -829,6 +844,68 @@ class WidgetController extends Controller
             'widget' => $widget,
             'error' => $error ?? 'Widget could not be rendered'
         ])->render();
+    }
+
+    /**
+     * Test method to render existing widget
+     */
+    public function testExistingWidget(): JsonResponse
+    {
+        try {
+            // Test with the existing PageSectionWidget ID 1
+            $pageSectionWidget = PageSectionWidget::with(['widget.theme'])->find(1);
+            
+            if (!$pageSectionWidget) {
+                return response()->json(['error' => 'PageSectionWidget not found'], 404);
+            }
+            
+            $widget = $pageSectionWidget->widget;
+            
+            // Get widget field values using WidgetService
+            $fieldValues = $this->widgetService->getWidgetFieldValues($widget, $pageSectionWidget);
+            
+            // Get widget settings
+            $settings = $pageSectionWidget->settings ?? [];
+            
+            // Resolve widget view path
+            $viewPath = $this->widgetService->resolveWidgetViewPath($widget);
+            
+            \Log::debug('Testing existing widget', [
+                'widget_id' => $widget->id,
+                'widget_slug' => $widget->slug,
+                'page_section_widget_id' => $pageSectionWidget->id,
+                'content_query' => $pageSectionWidget->content_query,
+                'field_values' => $fieldValues,
+                'view_path' => $viewPath
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'widget' => [
+                    'id' => $widget->id,
+                    'name' => $widget->name,
+                    'slug' => $widget->slug,
+                ],
+                'page_section_widget' => [
+                    'id' => $pageSectionWidget->id,
+                    'content_query' => $pageSectionWidget->content_query,
+                    'settings' => $settings
+                ],
+                'field_values' => $fieldValues,
+                'view_path' => $viewPath
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error testing existing widget', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'error' => 'Failed to test widget',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 }
 

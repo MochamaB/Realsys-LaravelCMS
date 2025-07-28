@@ -1,0 +1,186 @@
+/* 
+ * GridStack Designer - Section Styles
+ * Custom styles for section management in GridStack page builder
+ */
+
+/* Section Drop Zone Styles */
+.sections-wrapper {
+    position: relative;
+    min-height: 100px;
+    width: 100%;
+}
+
+.section-drop-zone {
+    padding: 10px;
+    margin: 15px 0;
+    border: 2px dashed #dee2e6;
+    border-radius: 6px;
+    background-color: rgba(0, 123, 255, 0.04);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.section-drop-zone:hover {
+    border-color: #0d6efd;
+    background-color: rgba(0, 123, 255, 0.08);
+}
+
+.section-drop-zone.drag-over {
+    border-color: #0d6efd;
+    background-color: rgba(0, 123, 255, 0.15);
+    box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.25);
+    transform: scale(1.02);
+}
+
+.section-drop-indicator {
+    text-align: center;
+    color: #6c757d;
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+}
+
+.section-drop-indicator i {
+    font-size: 24px;
+    color: #0d6efd;
+}
+
+/* Section Styles */
+.page-section {
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    margin: 20px 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.page-section:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 15px;
+    border-bottom: 1px solid #dee2e6;
+    background-color: #f8f9fa;
+    border-radius: 6px 6px 0 0;
+}
+
+.section-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #495057;
+}
+
+.section-controls {
+    display: flex;
+    gap: 8px;
+}
+
+.section-control-btn {
+    background: none;
+    border: none;
+    color: #6c757d;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.section-control-btn:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    color: #0d6efd;
+}
+
+.section-content {
+    padding: 20px;
+}
+
+/* Section Grid Stack */
+.section-grid-stack {
+    min-height: 100px;
+    position: relative;
+    width: 100%;
+}
+
+.widget-drop-zone {
+    padding: 30px;
+    border: 2px dashed #dee2e6;
+    border-radius: 6px;
+    text-align: center;
+    color: #6c757d;
+    margin: 10px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.widget-drop-zone i {
+    font-size: 24px;
+    opacity: 0.7;
+}
+
+/* Hide widget drop zone when section has widgets */
+.section-grid-stack.has-widgets .widget-drop-zone {
+    display: none;
+}
+
+/* Drag Loading Indicator */
+.drag-loading-indicator {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 9999;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.drag-loading-indicator.active {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+/* Body state during dragging */
+body.is-dragging {
+    cursor: grabbing;
+}
+
+/* Animation for draggable items */
+.grid-stack-item.ui-draggable-dragging {
+    z-index: 100;
+}
+
+@media (max-width: 768px) {
+    .section-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .section-content {
+        padding: 15px 10px;
+    }
+}
