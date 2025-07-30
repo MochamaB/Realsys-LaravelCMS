@@ -15,42 +15,54 @@ class SectionTemplatesManager {
      */
     init() {
         console.log('🔧 Initializing Section Templates Manager...');
-        this.container = document.getElementById('sectionTemplates');
         
+        // Find the section templates container
+        this.container = document.getElementById('sectionTemplates');
         if (!this.container) {
-            console.error('❌ Section templates container not found');
+            console.error('❌ Section templates container not found. Looking for #sectionTemplates');
             return;
         }
-
-        console.log('✅ Section templates container found:', this.container);
         
-        this.loadTemplates();
-        this.setupDragAndDrop();
+        this.templates = this.getMockTemplates();
+        this.isCreatingSection = false;
+        
+        // Check if page is empty before showing placeholders
         this.checkEmptyPage();
-        this.updateSectionCounter(); // Initialize counter on load
+        
+        this.renderTemplates();
+        this.setupDragAndDrop();
+        
+        console.log('✅ Section Templates Manager initialized');
     }
 
     /**
-     * Check if page is empty and show placeholder
+     * Check if page is empty and show appropriate placeholder
      */
     checkEmptyPage() {
         const pageContainer = document.getElementById('pageSectionsContainer');
         if (!pageContainer) return;
-
-        const sections = pageContainer.querySelectorAll('.page-section');
-        const defaultSection = pageContainer.querySelector('#addFirstSection');
         
-        if (sections.length === 0) {
-            // No sections exist, show the default "Add Section" placeholder
-            if (!defaultSection) {
-                this.showDefaultSectionPlaceholder();
-            }
-        } else {
-            // Sections exist, hide the default placeholder
-            if (defaultSection) {
-                defaultSection.remove();
-            }
+        // Check if there are any sections already rendered
+        const existingSections = pageContainer.querySelectorAll('.page-section');
+        const existingPlaceholders = pageContainer.querySelectorAll('#addFirstSection, #emptyPagePlaceholder');
+        
+        console.log(`🔍 Page check: ${existingSections.length} sections, ${existingPlaceholders.length} placeholders`);
+        
+        // If there are sections, don't show any placeholders
+        if (existingSections.length > 0) {
+            console.log('✅ Page has sections, no placeholders needed');
+            return;
         }
+        
+        // If there are placeholders, don't add more
+        if (existingPlaceholders.length > 0) {
+            console.log('⚠️ Placeholders already exist, not adding more');
+            return;
+        }
+        
+        // Show default placeholder only if page is truly empty
+        console.log('📭 Page is empty, showing default placeholder');
+        this.showDefaultSectionPlaceholder();
     }
 
     /**
@@ -161,6 +173,22 @@ class SectionTemplatesManager {
         if (placeholder) {
             placeholder.remove();
         }
+    }
+
+    /**
+     * Clear all placeholders from different systems
+     */
+    clearAllPlaceholders() {
+        const container = document.getElementById('pageSectionsContainer');
+        if (!container) return;
+        
+        // Remove placeholders from different systems
+        const placeholders = container.querySelectorAll('#addFirstSection, #emptyPagePlaceholder, .section-add-zone');
+        placeholders.forEach(placeholder => {
+            placeholder.remove();
+        });
+        
+        console.log('🧹 Section Templates: Cleared all placeholders');
     }
 
     /**
@@ -378,6 +406,12 @@ class SectionTemplatesManager {
      * Setup drag and drop functionality
      */
     setupDragAndDrop() {
+        // Check if container exists
+        if (!this.container) {
+            console.error('❌ Cannot setup drag and drop: container not found');
+            return;
+        }
+        
         // Add drag event listeners to template items
         this.container.addEventListener('dragstart', (e) => {
             if (e.target.classList.contains('template-item')) {
@@ -424,18 +458,21 @@ class SectionTemplatesManager {
                 
                 try {
                     const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-                    
                     if (data.type === 'section-template') {
                         this.handleTemplateDrop(data.templateKey, e);
                     }
                 } catch (error) {
-                    console.error('❌ Error handling template drop:', error);
+                    console.error('❌ Error parsing drop data:', error);
                 }
             };
             
             canvasContainer.addEventListener('dragover', this.handleDragOver);
             canvasContainer.addEventListener('dragleave', this.handleDragLeave);
             canvasContainer.addEventListener('drop', this.handleDrop);
+            
+            console.log('✅ Drop zone setup complete');
+        } else {
+            console.warn('⚠️ Canvas container not found for drop zone');
         }
     }
 
@@ -578,6 +615,9 @@ class SectionTemplatesManager {
                 // Hide loader
                 this.hideSectionLoader();
                 this.isCreatingSection = false;
+                
+                // Clear any existing placeholders
+                this.clearAllPlaceholders();
                 
                 // Refresh the page sections
                 if (window.GridStackPageBuilder && window.GridStackPageBuilder.loadPageContent) {
@@ -927,5 +967,28 @@ class SectionTemplatesManager {
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
-    window.SectionTemplatesManager = new SectionTemplatesManager();
+    // Initialize with a small delay to ensure all elements are ready
+    setTimeout(() => {
+        // Check if we're already on the layout tab
+        const activeTab = document.querySelector('#pageTab .nav-link.active');
+        if (activeTab && activeTab.getAttribute('data-bs-target') === '#layout') {
+            console.log('🔄 Layout tab is active, initializing Section Templates immediately...');
+            window.SectionTemplatesManager = new SectionTemplatesManager();
+        } else {
+            console.log('🔄 Layout tab not active, waiting for tab switch...');
+        }
+    }, 100);
+});
+
+// Also initialize when tab becomes active (for tab-based systems)
+document.addEventListener('shown.bs.tab', function (e) {
+    if (e.target.getAttribute('data-bs-target') === '#layout') {
+        // Re-initialize section templates when layout tab becomes active
+        setTimeout(() => {
+            if (!window.SectionTemplatesManager || !window.SectionTemplatesManager.container) {
+                console.log('🔄 Re-initializing Section Templates Manager for layout tab...');
+                window.SectionTemplatesManager = new SectionTemplatesManager();
+            }
+        }, 200);
+    }
 }); 

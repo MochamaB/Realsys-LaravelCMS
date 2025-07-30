@@ -563,10 +563,50 @@ window.WidgetManager = {
                 dropZone.innerHTML = '';
 
                 console.log('✅ Widget added to GridStack:', widgetElement);
+                
+                // Refresh the section to ensure proper rendering
+                this.refreshSectionAfterWidgetAdd(sectionId, pageSectionWidget);
             }
 
         } catch (error) {
             console.error('❌ Error adding widget to section:', error);
+        }
+    },
+
+    /**
+     * Refresh section after widget is added to ensure proper rendering
+     */
+    async refreshSectionAfterWidgetAdd(sectionId, pageSectionWidget) {
+        try {
+            console.log(`🔄 Refreshing section ${sectionId} after widget add`);
+            
+            // Option 1: Refresh the specific section's widgets
+            if (window.GridStackPageBuilder && window.GridStackPageBuilder.loadSectionWidgets) {
+                const section = document.querySelector(`[data-section-id="${sectionId}"]`);
+                const gridStack = section.querySelector('.section-grid-stack');
+                const gridInstance = GridStack.getGridStack(gridStack);
+                
+                if (gridInstance) {
+                    // Clear existing widgets and reload
+                    gridInstance.removeAll();
+                    
+                    // Reload all widgets for this section
+                    await window.GridStackPageBuilder.loadSectionWidgets(sectionId, gridInstance);
+                    
+                    console.log(`✅ Section ${sectionId} refreshed successfully`);
+                }
+            }
+            
+            // Option 2: If Option 1 fails, reload entire page content
+            else {
+                console.log('🔄 Falling back to full page reload');
+                if (window.GridStackPageBuilder && window.GridStackPageBuilder.loadPageContent) {
+                    await window.GridStackPageBuilder.loadPageContent();
+                }
+            }
+            
+        } catch (error) {
+            console.error('❌ Error refreshing section after widget add:', error);
         }
     },
 
@@ -609,10 +649,27 @@ window.WidgetManager = {
                     console.log('📄 HTML content length:', data.html.length);
                     console.log('📄 HTML preview:', data.html.substring(0, 200) + '...');
                     
+                    // Extract the content part from the widget HTML
+                    // The widget HTML might contain a complete <section> element
+                    // We need to extract just the content part for the canvas
+                    let widgetContent = data.html;
+                    
+                    // If the widget HTML contains a complete section, extract the inner content
+                    if (widgetContent.includes('<section') && widgetContent.includes('</section>')) {
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = widgetContent;
+                        const sectionElement = tempDiv.querySelector('section');
+                        if (sectionElement) {
+                            // Extract the content inside the section
+                            widgetContent = sectionElement.innerHTML;
+                            console.log('🔧 Extracted widget content from section:', widgetContent.substring(0, 200) + '...');
+                        }
+                    }
+                    
                     return `
                         <div class="widget-preview-container" data-widget-type="${widgetType}" data-page-section-widget-id="${pageSectionWidget.id}">
                             <div class="widget-preview-content">
-                                ${data.html}
+                                ${widgetContent}
                             </div>
                             <div class="widget-preview-overlay">
                                 <div class="widget-controls">

@@ -355,14 +355,14 @@ Route::prefix('api')->middleware('admin.auth')->group(function () {
     Route::delete('/page-section-widgets/{pageSectionWidget}', [App\Http\Controllers\Api\PageSectionWidgetController::class, 'destroy']);
 
     // Widgets API
-    Route::get('/widgets', [App\Http\Controllers\Api\WidgetController::class, 'index']);
-    Route::get('/widgets/{widget}/content-types', [App\Http\Controllers\Api\WidgetController::class, 'contentTypes']);
-    Route::get('/widgets/{widget}/render', [App\Http\Controllers\Api\WidgetController::class, 'renderWidget']);
-    Route::get('/widgets/{widget}/preview', [App\Http\Controllers\Api\WidgetController::class, 'renderWidgetPreview']);
-    Route::get('/widgets/{widget}/schema', [App\Http\Controllers\Api\WidgetController::class, 'getWidgetSchema']);
-    Route::get('/widgets/{widget}/sample-data', [App\Http\Controllers\Api\WidgetController::class, 'getWidgetSampleData']);
-    Route::get('/widgets/available', [App\Http\Controllers\Api\WidgetController::class, 'getAvailableWidgets']);
-    Route::get('/widgets/blocks', [App\Http\Controllers\Api\WidgetController::class, 'getEnhancedWidgetBlocks']);
+    Route::get('/widgets', [App\Http\Controllers\Api\WidgetController::class, 'index'])->name('api.widgets.index');
+    Route::get('/widgets/{widget}/render', [App\Http\Controllers\Api\WidgetController::class, 'renderWidget'])->name('api.widgets.render');
+    Route::get('/widgets/{widget}/preview', [App\Http\Controllers\Api\WidgetController::class, 'renderWidgetPreview'])->name('api.widgets.preview');
+    Route::get('/widgets/{widget}/schema', [App\Http\Controllers\Api\WidgetController::class, 'getWidgetSchema'])->name('api.widgets.schema');
+    Route::get('/widgets/{widget}/sample-data', [App\Http\Controllers\Api\WidgetController::class, 'getWidgetSampleData'])->name('api.widgets.sample-data');
+    Route::get('/widgets/{widget}/content-types', [App\Http\Controllers\Api\WidgetController::class, 'contentTypes'])->name('api.widgets.content-types');
+    Route::get('/widgets/test-existing', [App\Http\Controllers\Api\WidgetController::class, 'testExistingWidget'])->name('api.widgets.test-existing');
+    Route::get('/widgets/test-featured-image', [App\Http\Controllers\Api\WidgetController::class, 'testFeaturedImageWidget'])->name('api.widgets.test-featured-image');
 
     // Test route for existing widget
     Route::get('/widgets/test-existing', [App\Http\Controllers\Api\WidgetController::class, 'testExistingWidget']);
@@ -371,5 +371,13 @@ Route::prefix('api')->middleware('admin.auth')->group(function () {
     
     Route::get('/content/{type}', [App\Http\Controllers\Api\ContentItemController::class, 'index']);
     Route::post('/content/{type}', [App\Http\Controllers\Api\ContentItemController::class, 'store']);
+    // Test route for live preview debugging
+    Route::get('/test-live-preview', function () {
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Live preview test route working',
+            'timestamp' => now()->toISOString()
+        ]);
+    })->name('api.test-live-preview');
 });
 });

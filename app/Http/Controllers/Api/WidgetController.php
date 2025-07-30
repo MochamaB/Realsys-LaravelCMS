@@ -183,6 +183,25 @@ class WidgetController extends Controller
                     'field_values_keys' => array_keys($fieldValues),
                     'field_values_sample' => array_slice($fieldValues, 0, 3, true)
                 ]);
+                
+                // Additional debugging for Featured Image widget
+                if ($widget->slug === 'featuredimage') {
+                    \Log::debug('Featured Image Widget Debug', [
+                        'widget_id' => $widget->id,
+                        'widget_slug' => $widget->slug,
+                        'content_query' => $pageSectionWidget->content_query,
+                        'field_values' => $fieldValues,
+                        'settings' => $settings,
+                        'has_title' => isset($fieldValues['title']),
+                        'has_image' => isset($fieldValues['image']),
+                        'has_caption' => isset($fieldValues['caption']),
+                        'has_link_url' => isset($fieldValues['link_url']),
+                        'title_value' => $fieldValues['title'] ?? 'NOT_SET',
+                        'image_value' => $fieldValues['image'] ?? 'NOT_SET',
+                        'caption_value' => $fieldValues['caption'] ?? 'NOT_SET',
+                        'link_url_value' => $fieldValues['link_url'] ?? 'NOT_SET'
+                    ]);
+                }
             }
 
             // Resolve widget view path
@@ -903,6 +922,86 @@ class WidgetController extends Controller
             
             return response()->json([
                 'error' => 'Failed to test widget',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Test method to debug Featured Image widget
+     */
+    public function testFeaturedImageWidget(): JsonResponse
+    {
+        try {
+            // Find the Featured Image widget
+            $widget = Widget::where('slug', 'featuredimage')->first();
+            
+            if (!$widget) {
+                return response()->json([
+                    'error' => 'Featured Image widget not found'
+                ], 404);
+            }
+            
+            // Get all PageSectionWidget records for this widget
+            $pageSectionWidgets = PageSectionWidget::where('widget_id', $widget->id)->get();
+            
+            $debugData = [];
+            
+            foreach ($pageSectionWidgets as $psw) {
+                $contentQuery = $psw->content_query ?? [];
+                $settings = $psw->settings ?? [];
+                
+                // Get field values
+                $fieldValues = $this->widgetService->getWidgetFieldValues($widget, $psw);
+                
+                $debugData[] = [
+                    'page_section_widget_id' => $psw->id,
+                    'page_section_id' => $psw->page_section_id,
+                    'content_query' => $contentQuery,
+                    'settings' => $settings,
+                    'field_values' => $fieldValues,
+                    'has_title' => isset($fieldValues['title']),
+                    'has_image' => isset($fieldValues['image']),
+                    'title_value' => $fieldValues['title'] ?? 'NOT_SET',
+                    'image_value' => $fieldValues['image'] ?? 'NOT_SET'
+                ];
+            }
+            
+            // Get all content types
+            $contentTypes = \App\Models\ContentType::all();
+            
+            // Get all content items
+            $contentItems = \App\Models\ContentItem::with('fieldValues.field')->get();
+            
+            return response()->json([
+                'success' => true,
+                'widget' => [
+                    'id' => $widget->id,
+                    'name' => $widget->name,
+                    'slug' => $widget->slug
+                ],
+                'page_section_widgets' => $debugData,
+                'content_types' => $contentTypes->map(function($ct) {
+                    return [
+                        'id' => $ct->id,
+                        'name' => $ct->name,
+                        'slug' => $ct->slug
+                    ];
+                }),
+                'content_items' => $contentItems->map(function($ci) {
+                    return [
+                        'id' => $ci->id,
+                        'title' => $ci->title,
+                        'content_type_id' => $ci->content_type_id,
+                        'status' => $ci->status,
+                        'field_values_count' => $ci->fieldValues->count()
+                    ];
+                })
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to debug Featured Image widget',
                 'message' => $e->getMessage()
             ], 500);
         }

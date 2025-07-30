@@ -1,10 +1,5 @@
-@extends('admin.layouts.master')
-
-@section('page-title', 'Page Designer: ' . $page->title)
-
-@section('content')
-
-<div class="container-fluid">
+<!-- GridStack Designer Content -->
+<div class="gridstack-designer-container">
     <!-- Designer Toolbar -->
     @include('admin.pages.designer._toolbar')
 
@@ -32,53 +27,25 @@
 @include('admin.pages.designer._responsive_preview_modal')
 @include('admin.pages.designer._delete_confirmation_modal')
 
-@endsection
-
-@push('styles')
-<!-- GridStack CSS -->
-<link href="{{ asset('assets/admin/libs/gridstack/dist/gridstack.min.css') }}" rel="stylesheet">
-<!-- Custom Designer CSS -->
-<link href="{{ asset('assets/admin/css/gridstack-designer.css') }}" rel="stylesheet">
-<link href="{{ asset('assets/admin/css/gridstack-designer-sections.css') }}" rel="stylesheet">
-@endpush
-
-@push('scripts')
-<!-- GridStack JS -->
-<script src="{{ asset('assets/admin/libs/gridstack/dist/gridstack-all.js') }}"></script>
-<!-- SortableJS for section reordering -->
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-<!-- Custom Designer JS -->
-<script src="{{ asset('assets/admin/js/gridstack/gridstack-page-builder.js') }}"></script>
-<script src="{{ asset('assets/admin/js/gridstack/widget-library.js') }}"></script>
-<script src="{{ asset('assets/admin/js/gridstack/widget-manager.js') }}"></script>
-<script src="{{ asset('assets/admin/js/gridstack/theme-integration.js') }}"></script>
-<script src="{{ asset('assets/admin/js/gridstack/section-templates.js') }}"></script>
-
 <script>
-// Initialize the page designer when DOM is ready
+// GridStack designer is now initialized by the main show.blade.php file
+// This script only handles sidebar controls and other UI interactions
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Configuration for the page builder
-    const config = {
-        pageId: {{ $page->id }},
-        apiBaseUrl: '/admin/api',
-        csrfToken: '{{ csrf_token() }}',
-        theme: '{{ $page->template->theme->slug ?? "default" }}'
-    };
+    // Initialize sidebar controls only
+    initializeSidebarControls();
     
-    // Initialize all components
-    Promise.all([
-        window.GridStackPageBuilder.init(config),
-        window.WidgetLibrary.init(),
-        window.WidgetManager.init(),
-        window.ThemeIntegration.init(),
-        window.SectionTemplatesManager.init()
-    ]).then(() => {
-        console.log('✅ GridStack Page Designer initialized successfully');
-        
-        // Initialize sidebar controls
-        initializeSidebarControls();
-    }).catch(error => {
-        console.error('❌ Error initializing page designer:', error);
+    // Initialize section templates when tab becomes active
+    document.addEventListener('shown.bs.tab', function (e) {
+        if (e.target.getAttribute('data-bs-target') === '#layout') {
+            // Re-initialize section templates when layout tab becomes active
+            setTimeout(() => {
+                if (!window.SectionTemplatesManager || !window.SectionTemplatesManager.container) {
+                    console.log('🔄 Re-initializing Section Templates Manager for layout tab...');
+                    window.SectionTemplatesManager = new SectionTemplatesManager();
+                }
+            }, 200);
+        }
     });
     
     // Initialize sidebar toggle controls
@@ -118,23 +85,13 @@ document.addEventListener('DOMContentLoaded', function() {
         // Full preview
         if (fullPreviewBtn) {
             fullPreviewBtn.addEventListener('click', function() {
-                const url = `/admin/pages/${config.pageId}/preview`;
-                window.open(url, '_blank');
-            });
-        }
-    }
-    
-    // Handle delete confirmation modal
-    document.addEventListener('DOMContentLoaded', function() {
-        const confirmDeleteBtn = document.getElementById('confirmDeleteSection');
-        if (confirmDeleteBtn) {
-            confirmDeleteBtn.addEventListener('click', function() {
-                if (window.GridStackPageBuilder && window.GridStackPageBuilder.confirmDeleteSection) {
-                    window.GridStackPageBuilder.confirmDeleteSection();
+                const previewModal = document.getElementById('responsivePreviewModal');
+                if (previewModal) {
+                    const modal = new bootstrap.Modal(previewModal);
+                    modal.show();
                 }
             });
         }
-    });
+    }
 });
-</script>
-@endpush 
+</script> 

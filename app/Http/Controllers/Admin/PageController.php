@@ -165,8 +165,8 @@ class PageController extends Controller
             // Reload the page with its sections to get the latest data
             $page->load('sections.templateSection', 'sections.pageSectionWidgets.widget', 'template.sections');
             
-            // Show the visual designer with synced sections
-            return view('admin.pages.gridstack-designer', compact('page'));
+            // Show the unified tab-based designer with both GridStack and GrapesJS
+            return view('admin.pages.show', compact('page'));
             
         } catch (\Exception $e) {
             \Log::error('Error syncing page sections: ' . $e->getMessage(), [
@@ -176,7 +176,7 @@ class PageController extends Controller
             
             // Still show the designer even if sync fails
             $page->load('sections.templateSection', 'sections.pageSectionWidgets.widget', 'template.sections');
-            return view('admin.pages.gridstack-designer', compact('page'));
+            return view('admin.pages.show', compact('page'));
         }
     }
 

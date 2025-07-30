@@ -9,6 +9,18 @@ window.WidgetLibrary = {
         console.log('✅ Widget Library initialized');
     },
 
+    // Add immediate initialization check
+    checkAndInit() {
+        // Check if we're already on the layout tab
+        const activeTab = document.querySelector('#pageTab .nav-link.active');
+        if (activeTab && activeTab.getAttribute('data-bs-target') === '#layout') {
+            console.log('🔄 Layout tab is active, initializing Widget Library immediately...');
+            this.init();
+        } else {
+            console.log('🔄 Layout tab not active, waiting for tab switch...');
+        }
+    },
+
     async loadAvailableWidgets() {
         try {
             const response = await fetch('/admin/api/widgets/available', {
@@ -124,4 +136,12 @@ window.WidgetLibrary = {
         // Only setup dragstart events, let widget-manager.js handle drops
         console.log('✅ Widget library drag setup complete');
     }
-}; 
+};
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if we should initialize immediately
+    if (window.WidgetLibrary) {
+        window.WidgetLibrary.checkAndInit();
+    }
+}); 

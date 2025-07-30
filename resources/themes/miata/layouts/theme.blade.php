@@ -8,8 +8,8 @@
         <meta name="author" content="{{ $page->meta_author ?? config('app.name') }}" />
         <title>{{ $page->title ?? config('app.name') }}</title>
         
-        <link rel="icon" type="image/x-icon" href="{{ theme_asset('assets/favicon.ico') }}" />
-        
+          <!-- App favicon -->
+    <link rel="shortcut icon" href="{{ asset('assets/admin/images/favicon.ico') }}">
         <!-- Theme CSS -->
         @foreach($theme->css as $css)
             <link rel="stylesheet" href="{{ $css }}" />

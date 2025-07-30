@@ -7,7 +7,8 @@
                         @include($widget['view_path'], [
                             'fields' => $widget['fields'] ?? [],
                             'settings' => $widget['settings'] ?? [],
-                            'widget' => $widget
+                            'widget' => $widget,
+                            'useCustomData' => false
                         ])
                     @else
                         {{-- Fallback if widget view not found --}}

@@ -21,7 +21,26 @@ window.GridStackPageBuilder = {
         
         // Initialize widget manager
         if (window.WidgetManager) {
+            console.log('🔧 Initializing Widget Manager...');
             window.WidgetManager.init();
+        } else {
+            console.warn('⚠️ WidgetManager not found');
+        }
+        
+        // Initialize widget library
+        if (window.WidgetLibrary) {
+            console.log('🔧 Initializing Widget Library...');
+            await window.WidgetLibrary.init();
+        } else {
+            console.warn('⚠️ WidgetLibrary not found');
+        }
+        
+        // Initialize section templates manager
+        if (window.SectionTemplatesManager) {
+            console.log('🔧 Section Templates Manager already initialized');
+        } else {
+            console.log('🔧 Initializing Section Templates Manager...');
+            // SectionTemplatesManager will initialize itself via DOMContentLoaded
         }
         
         // Show loader while loading content
@@ -193,13 +212,16 @@ window.GridStackPageBuilder = {
     },
     
     /**
-     * Load page content from the backend
+     * Load page content from backend
      */
     async loadPageContent() {
         if (!this.config.pageId) return;
         
         try {
             console.log(`🔄 Loading page content for page ID: ${this.config.pageId}...`);
+            
+            // Show page loader
+            this.showPageLoader();
             
             // Fetch sections from the API
             const response = await fetch(`${this.config.apiBaseUrl}/pages/${this.config.pageId}/sections`, {
@@ -216,6 +238,9 @@ window.GridStackPageBuilder = {
             
             const data = await response.json();
             
+            // Hide page loader
+            this.hidePageLoader();
+            
             if (data.success && data.data && data.data.length > 0) {
                 console.log(`📦 Loaded ${data.data.length} sections from backend`);
                 this.renderSections(data.data);
@@ -226,7 +251,8 @@ window.GridStackPageBuilder = {
             
         } catch (error) {
             console.error('❌ Error loading page content:', error);
-            // Show default placeholder on error
+            // Hide page loader and show default placeholder on error
+            this.hidePageLoader();
             this.showDefaultPlaceholder();
         }
     },
@@ -636,6 +662,9 @@ window.GridStackPageBuilder = {
     showDefaultPlaceholder() {
         const container = document.getElementById('pageSectionsContainer');
         if (container) {
+            // Clear any existing placeholders from other systems
+            this.clearAllPlaceholders();
+            
             container.innerHTML = `
                 <div class="section-add-zone" id="addFirstSection">
                     <div class="section-add-prompt">
@@ -669,6 +698,22 @@ window.GridStackPageBuilder = {
             `;
         }
         this.updateSectionCounter(0);
+    },
+
+    /**
+     * Clear all placeholders from different systems
+     */
+    clearAllPlaceholders() {
+        const container = document.getElementById('pageSectionsContainer');
+        if (!container) return;
+        
+        // Remove placeholders from different systems
+        const placeholders = container.querySelectorAll('#addFirstSection, #emptyPagePlaceholder, .section-add-zone');
+        placeholders.forEach(placeholder => {
+            placeholder.remove();
+        });
+        
+        console.log('🧹 Cleared all placeholders');
     },
 
     /**

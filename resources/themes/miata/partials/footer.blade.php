@@ -5,7 +5,7 @@
                             <div class="col-lg-6 col-md-6 col-sm-6 col-12">
                                 <div class="social-logo">
                                     <a href="index.html">
-                                        <img src="img/logo/logo2.png" alt="">
+                                        <img src="" alt="">
                                     </a>
                                 </div>
                             </div>
@@ -52,7 +52,7 @@
                                         <div class="img-text-both">
                                             <div class="img-both">
                                                 <a href="#">
-                                                    <img alt="" src="img/banner/11.jpg">
+                                                    <img alt="" src="">
                                                 </a>
                                             </div>
                                             <div class="text-both">
@@ -66,7 +66,7 @@
                                         <div class="img-text-both">
                                             <div class="img-both">
                                                 <a href="#">
-                                                    <img alt="" src="img/banner/12.jpg">
+                                                    <img alt="" src="">
                                                 </a>
                                             </div>
                                             <div class="text-both">
@@ -80,7 +80,7 @@
                                         <div class="img-text-both last-both">
                                             <div class="img-both">
                                                 <a href="#">
-                                                    <img alt="" src="img/banner/51.jpg">
+                                                    <img alt="" src="">
                                                 </a>
                                             </div>
                                             <div class="text-both">
@@ -120,15 +120,15 @@
                                 <div class="middle-text res-1">
                                     <h3>instagram</h3>
                                     <div class="middle-mgn">
-                                        <div class="img-one"><a href="#"><img alt="" src="img/banner/14.jpg"></a></div>
-                                        <div class="img-one"><a href="#"><img alt="" src="img/banner/15.jpg"></a></div>
-                                        <div class="img-one mgn-none md-mrg"><a href="#"><img alt="" src="img/banner/18.jpg"></a></div>
-                                        <div class="img-one"><a href="#"><img alt="" src="img/banner/17.jpg"></a></div>
-                                        <div class="img-one"><a href="#"><img alt="" src="img/banner/16.jpg"></a></div>
-                                        <div class="img-one mgn-none"><a href="#"><img alt="" src="img/banner/19.jpg"></a></div>
-                                        <div class="img-one"><a href="#"><img alt="" src="img/banner/20.jpg"></a></div>
-                                        <div class="img-one"><a href="#"><img alt="" src="img/banner/21.jpg"></a></div>
-                                        <div class="img-one mgn-none res-nn"><a href="#"><img alt="" src="img/banner/49.jpg"></a></div>
+                                        <div class="img-one"><a href="#"><img alt="" src=""></a></div>
+                                        <div class="img-one"><a href="#"><img alt="" src=""></a></div>
+                                        <div class="img-one mgn-none md-mrg"><a href="#"><img alt="" src=""></a></div>
+                                        <div class="img-one"><a href="#"><img alt="" src=""></a></div>
+                                        <div class="img-one"><a href="#"><img alt="" src=""></a></div>
+                                        <div class="img-one mgn-none"><a href="#"><img alt="" src=""></a></div>
+                                        <div class="img-one"><a href="#"><img alt="" src=""></a></div>
+                                        <div class="img-one"><a href="#"><img alt="" src=""></a></div>
+                                        <div class="img-one mgn-none res-nn"><a href="#"><img alt="" src=""></a></div>
                                     </div>
                                 </div>
                             </div>
