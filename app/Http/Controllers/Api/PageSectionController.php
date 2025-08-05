@@ -519,6 +519,10 @@ class PageSectionController extends Controller
                 'background_color' => 'nullable|string|max:50',
                 'padding' => 'nullable|array',
                 'margin' => 'nullable|array',
+                'grid_x' => 'nullable|integer|min:0|max:11',
+                'grid_y' => 'nullable|integer|min:0',
+                'grid_w' => 'nullable|integer|min:1|max:12',
+                'grid_h' => 'nullable|integer|min:1|max:20',
                 'column_span_override' => 'nullable|integer',
                 'column_offset_override' => 'nullable|integer'
             ]);
@@ -527,11 +531,16 @@ class PageSectionController extends Controller
 
             return response()->json([
                 'success' => true,
+                'section' => $section->fresh(),
                 'data' => [
                     'css_classes' => $section->css_classes,
                     'background_color' => $section->background_color,
                     'padding' => $section->padding,
                     'margin' => $section->margin,
+                    'grid_x' => $section->grid_x,
+                    'grid_y' => $section->grid_y,
+                    'grid_w' => $section->grid_w,
+                    'grid_h' => $section->grid_h,
                     'column_span_override' => $section->column_span_override,
                     'column_offset_override' => $section->column_offset_override
                 ],

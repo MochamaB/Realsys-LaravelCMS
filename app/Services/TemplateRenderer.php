@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\View;
 use App\Services\MenuService;
+use App\Services\UniversalStylingService;
 
 class TemplateRenderer
 {
@@ -231,6 +232,9 @@ class TemplateRenderer
             'pageSection' => $pageSection,
             'section' => $pageSection->templateSection,
             'widgets' => $widgetData,
+            
+            // NEW: Universal styling support
+            'universalStyling' => app(UniversalStylingService::class)
         ], $data);
         
         // Try to resolve section view using slug first (which should match the file names)
@@ -505,6 +509,9 @@ class TemplateRenderer
             'pageSection' => $pageSection,
             'section' => $pageSection->templateSection,
             'widgets' => $widgetData,
+            
+            // NEW: Universal styling support
+            'universalStyling' => app(UniversalStylingService::class)
         ], $data);
         
         // Try to resolve section view using section slug first

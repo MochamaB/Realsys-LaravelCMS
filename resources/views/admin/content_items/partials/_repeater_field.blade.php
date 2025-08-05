@@ -42,9 +42,9 @@
                     <div class="card-body">
                         @foreach($subfields as $subfield)
                             <div class="mb-3">
-                                <label class="form-label">{{ $subfield['label'] }}</label>
+                            <label class="form-label">{{ $subfield['label'] ?? $subfield['name'] }}</label>
                                
-                                @switch($subfield['type'])
+                                @switch($subfield['type'] ?? $subfield['field_type'])
                                     @case('text')
                                         <input type="text" class="form-control" name="field_{{ $field->id }}[{{ $index }}][{{ $subfield['name'] }}]" 
                                             value="{{ $itemData[$subfield['name']] ?? '' }}"
@@ -76,7 +76,7 @@
     
                                     <x-media-picker
                                         name="field_{{ $field->id }}[{{ $index }}][{{ $subfield['name'] }}]"
-                                        label="{{ $subfield['label'] }}"
+                                        label="{{ $subfield['label']?? $subfield['name'] }}"
                                         :multiple="false"
                                         :selected="$selectedMediaId"
                                         :allowedTypes="['image']"
@@ -123,8 +123,8 @@
             <div class="card-body">
                 @foreach($subfields as $subfield)
                     <div class="mb-3">
-                        <label class="form-label">{{ $subfield['label'] }}</label>
-                        @switch($subfield['type'])
+                        <label class="form-label">{{ $subfield['label'] ?? $subfield['name'] }}</label>
+                        @switch($subfield['type'] ?? $subfield['field_type'])
                             @case('text')
                                 <input type="text" class="form-control template-input" data-name="field_{{ $field->id }}[__INDEX__][{{ $subfield['name'] }}]" 
                                     {{ isset($subfield['required']) && $subfield['required'] ? 'data-required="required"' : '' }}>
@@ -138,29 +138,29 @@
                                     {{ isset($subfield['required']) && $subfield['required'] ? 'data-required="required"' : '' }}>
                                 @break
                             @case('image')
-                                <div class="input-group">
-                                    <input type="file" class="form-control template-input" 
-                                        data-name="field_{{ $field->id }}___INDEX___{{ $subfield['name'] }}" 
-                                        accept="image/*" 
-                                        {{ isset($subfield['required']) && $subfield['required'] ? 'data-required="required"' : '' }}>
-                                </div>
-                                <small class="form-text text-muted">Select an image to upload</small>
+                                <x-media-picker
+                                    name="field_{{ $field->id }}[__INDEX__][{{ $subfield['name'] }}]"
+                                    label="{{ $subfield['label'] ?? $subfield['name'] }}"
+                                    :multiple="false"
+                                    :selected="null"
+                                    :allowedTypes="['image']"
+                                />
                                 @break
                             @case('boolean')
                                 <div class="form-check">
-                                    <input type="checkbox" class="form-check-input template-input" data-id="field_{{ $field->id }}___INDEX___{{ $subfield['name'] }}" 
+                                    <input type="checkbox" class="form-check-input template-input" 
                                         data-name="field_{{ $field->id }}[__INDEX__][{{ $subfield['name'] }}]" value="1" 
                                         {{ isset($subfield['required']) && $subfield['required'] ? 'data-required="required"' : '' }}>
-                                    <label class="form-check-label template-label" data-for="field_{{ $field->id }}___INDEX___{{ $subfield['name'] }}">Yes</label>
+                                    <label class="form-check-label template-label">Yes</label>
                                 </div>
                                 @break
                             @case('date')
-                                <input type="date" class="form-control" name="field_{{ $field->id }}[__INDEX__][{{ $subfield['name'] }}]"
-                                    {{ isset($subfield['required']) && $subfield['required'] ? 'required' : '' }}>
+                                <input type="date" class="form-control template-input" data-name="field_{{ $field->id }}[__INDEX__][{{ $subfield['name'] }}]"
+                                    {{ isset($subfield['required']) && $subfield['required'] ? 'data-required="required"' : '' }}>
                                 @break
                             @default
-                                <input type="text" class="form-control" name="field_{{ $field->id }}[__INDEX__][{{ $subfield['name'] }}]"
-                                    {{ isset($subfield['required']) && $subfield['required'] ? 'required' : '' }}>
+                                <input type="text" class="form-control template-input" data-name="field_{{ $field->id }}[__INDEX__][{{ $subfield['name'] }}]"
+                                    {{ isset($subfield['required']) && $subfield['required'] ? 'data-required="required"' : '' }}>
                         @endswitch
                     </div>
                 @endforeach

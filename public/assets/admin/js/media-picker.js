@@ -21,6 +21,12 @@ let filters = {
     search: null
 };
 
+// Make functions globally accessible
+window.openMediaPicker = null;
+window.resetFilters = null;
+window.loadMediaItems = null;
+window.removeSelectedMedia = null;
+
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize media picker on all fields
     initMediaPickers();
@@ -73,6 +79,9 @@ document.addEventListener('DOMContentLoaded', function() {
         mediaPickerModal.show();
     }
     
+    // Make function globally accessible
+    window.openMediaPicker = openMediaPicker;
+    
     /**
      * Reset all filters to default state
      */
@@ -105,6 +114,9 @@ document.addEventListener('DOMContentLoaded', function() {
             rootFolder.classList.add('active');
         }
     }
+    
+    // Make function globally accessible
+    window.resetFilters = resetFilters;
     
     /**
      * Load media items with current filters and page
@@ -146,6 +158,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 container.innerHTML = '<div class="alert alert-danger m-3">Failed to load media items.</div>';
             });
     }
+    
+    // Make function globally accessible
+    window.loadMediaItems = loadMediaItems;
     
     /**
      * Render media items in the grid
@@ -390,6 +405,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const button = mediaField.querySelector('.open-media-picker');
         button.innerHTML = '<i class="ri-image-add-line me-1"></i> Select Media';
     }
+    
+    // Make function globally accessible
+    window.removeSelectedMedia = removeSelectedMedia;
     
     // No need for duplicate initialization
 });

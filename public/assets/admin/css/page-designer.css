@@ -98,9 +98,11 @@
 /* Canvas Styling */
 .gjs-cv-canvas {
     background: #f8f9fa;
+    padding: 0 !important;
     border-left: 1px solid #e9ecef;
     height: 100% !important;
     min-height: calc(100vh - 60px) !important;
+    --gjs-canvas-top: 0px !important;
 }
 
 .gjs-frame {
@@ -351,7 +353,7 @@
 
 /* Ensure blocks container fits properly */
 .sidebar-content .gjs-blocks-c {
-    padding: 1rem;
+    padding: 0.5rem;
     height: 100%;
     overflow-y: auto;
 }
@@ -359,6 +361,24 @@
 /* Make GrapesJS main area blend with Velzon */
 .gjs-main-area {
     background: #f8f9fa;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Ensure GrapesJS container works with our flexbox layout */
+.grapesjs-designer-container {
+    width: 100% !important;
+    height: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Ensure GrapesJS editor uses full available space */
+.gjs-editor {
+    width: 100% !important;
+    height: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
 }
 
 /* Section blocks specific styling */
@@ -382,8 +402,8 @@
 /* Widget rendering in canvas */
 .gjs-cv-canvas .widget {
     border: 1px dashed #dee2e6;
-    padding: 10px;
-    margin: 10px 0;
+    padding: 5px;
+    margin: 5px 0;
     background: rgba(255, 255, 255, 0.9);
     position: relative;
 }
@@ -396,7 +416,7 @@
 .gjs-cv-canvas .widget-placeholder {
     background: #f8f9fa;
     border: 2px dashed #dee2e6;
-    padding: 20px;
+    padding: 10px;
     text-align: center;
     color: #6c757d;
     border-radius: 0.375rem;
@@ -411,7 +431,7 @@
 .gjs-cv-canvas .section-loading {
     background: #f8f9fa;
     border: 2px dashed #dee2e6;
-    padding: 30px;
+    padding: 15px;
     text-align: center;
     color: #6c757d;
     border-radius: 0.375rem;
@@ -563,7 +583,7 @@
 
 /* Widget Drop Zones */
 .widget-drop-zone {
-    min-height: 60px;
+  
     border: 2px dashed #e9ecef;
     border-radius: 4px;
     display: flex;

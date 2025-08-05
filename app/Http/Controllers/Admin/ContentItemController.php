@@ -362,14 +362,71 @@ class ContentItemController extends Controller
         $fieldValue = $request->input('field_' . $field->id);
         
         // Get field configuration
-        $fieldConfig = json_decode($field->options, true) ?? [];
+        $fieldConfig = $field->settings ?? [];
+        if (is_string($fieldConfig)) {
+            $fieldConfig = json_decode($fieldConfig, true) ?? [];
+        }
+        
+        // Fallback to options if settings is empty (for backward compatibility)
+        if (empty($fieldConfig['subfields'])) {
+            $fieldConfig = json_decode($field->options, true) ?? [];
+        }
+        
         $subfields = $fieldConfig['subfields'] ?? [];
+        
+        // Log configuration for debugging
+        \Log::debug('Processing repeater field configuration', [
+            'field_id' => $field->id,
+            'field_name' => $field->name,
+            'subfields_count' => count($subfields),
+            'subfields' => array_map(function($subfield) {
+                return [
+                    'name' => $subfield['name'] ?? 'unknown',
+                    'type' => $subfield['type'] ?? $subfield['field_type'] ?? 'unknown'
+                ];
+            }, $subfields)
+        ]);
+        
+        // Validate subfields structure
+        foreach ($subfields as $index => $subfield) {
+            if (!isset($subfield['name'])) {
+                \Log::error('Subfield missing name', [
+                    'field_id' => $field->id,
+                    'subfield_index' => $index,
+                    'subfield' => $subfield
+                ]);
+                continue;
+            }
+            
+            if (!isset($subfield['type']) && !isset($subfield['field_type'])) {
+                \Log::warning('Subfield missing type', [
+                    'field_id' => $field->id,
+                    'subfield_name' => $subfield['name'],
+                    'subfield' => $subfield
+                ]);
+            }
+            
+            \Log::debug('Subfield structure', [
+                'field_id' => $field->id,
+                'subfield_index' => $index,
+                'subfield_name' => $subfield['name'] ?? 'unknown',
+                'subfield_type' => $subfield['type'] ?? $subfield['field_type'] ?? 'unknown',
+                'subfield_keys' => array_keys($subfield)
+            ]);
+        }
         
         // Create a unique collection prefix for this repeater field
         $mediaPrefix = 'field_' . $field->id . '_repeater_';
         
         // For repeater fields, normalize and encode the array of items
         if (is_array($fieldValue)) {
+            \Log::debug('Processing repeater field value', [
+                'field_id' => $field->id,
+                'field_name' => $field->name,
+                'item_count' => count($fieldValue),
+                'sample_item_keys' => !empty($fieldValue) ? array_keys($fieldValue[0] ?? []) : []
+            ]);
+            
             // Process each repeater item
             foreach ($fieldValue as $index => $itemData) {
                 if (is_array($itemData)) {
@@ -379,13 +436,33 @@ class ContentItemController extends Controller
                         $subFieldType = null;
                         foreach ($subfields as $subfield) {
                             if ($subfield['name'] == $subFieldKey) {
-                                $subFieldType = $subfield['type'];
+                                $subFieldType = $subfield['type'] ?? $subfield['field_type'] ?? 'text';
                                 break;
                             }
                         }
                         
+                        // If no subfield type found, log and skip
+                        if ($subFieldType === null) {
+                            \Log::warning('Subfield type not found', [
+                                'field_id' => $field->id,
+                                'index' => $index,
+                                'subfield_key' => $subFieldKey,
+                                'available_subfields' => array_map(function($sf) {
+                                    return $sf['name'] ?? 'unknown';
+                                }, $subfields)
+                            ]);
+                            continue;
+                        }
+                        
                         // Handle image fields in repeater fields
                         if ($subFieldType === 'image') {
+                            \Log::debug('Processing image subfield', [
+                                'field_id' => $field->id,
+                                'index' => $index,
+                                'subfield_key' => $subFieldKey,
+                                'subfield_type' => $subFieldType,
+                                'value_type' => gettype($subFieldValue)
+                            ]);
                             // Create a unique collection name for this repeater item's media
                             $collectionName = $mediaPrefix . $index . '_' . $subFieldKey;
                             

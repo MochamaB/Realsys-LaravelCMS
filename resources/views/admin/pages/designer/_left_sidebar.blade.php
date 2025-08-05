@@ -1,61 +1,260 @@
-<!-- Left Sidebar - Widget Library & Section Templates -->
-<div class="designer-left-sidebar" id="leftSidebar">
-    <div class="sidebar-header">
-        <h6 class="sidebar-title">
-            <i class="ri-apps-line"></i> Component Library
-        </h6>
-        <button class="btn btn-sm btn-outline-secondary" id="refreshWidgetsBtn" title="Refresh Widgets">
-            <i class="ri-refresh-line"></i>
-        </button>
+<!-- Left Sidebar - Component Library -->
+<div class="designer-left-sidebar bg-white border-end" id="leftSidebar" style="height: calc(100vh - 140px); overflow-y: auto;">
+    <!-- Sidebar Content -->
+    <div class="sidebar-content">
+        <nav class="nav nav-pills flex-column" id="componentNavigation">
+            
+            <!-- Sections Category -->
+            <div class="nav-item">
+                <a class="nav-link d-flex align-items-center collapsed" 
+                   data-bs-toggle="collapse" 
+                   href="#sectionsCollapse" 
+                   role="button" 
+                   aria-expanded="false" 
+                   aria-controls="sectionsCollapse">
+                    <i class="ri-layout-grid-line nav-icon me-2"></i>
+                    <span class="nav-text">Sections</span>
+                    <i class="ri-arrow-down-s-line ms-auto collapse-icon"></i>
+                </a>
+                <div class="collapse" id="sectionsCollapse">
+                    <div class="nav-item-content p-2">
+                        <div class="component-grid" id="sectionsGrid">
+                            <!-- 4 section blocks will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Theme Widgets Category -->
+            <div class="nav-item">
+                <a class="nav-link d-flex align-items-center collapsed" 
+                   data-bs-toggle="collapse" 
+                   href="#themeWidgetsCollapse" 
+                   role="button" 
+                   aria-expanded="false" 
+                   aria-controls="themeWidgetsCollapse">
+                    <i class="ri-palette-line nav-icon me-2"></i>
+                    <span class="nav-text">Theme Widgets</span>
+                    <i class="ri-arrow-down-s-line ms-auto collapse-icon"></i>
+                </a>
+                <div class="collapse" id="themeWidgetsCollapse">
+                    <div class="nav-item-content p-2">
+                        <div class="component-grid" id="themeWidgetsGrid">
+                            <!-- Theme widgets will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Page Layers -->
+            <div class="nav-item">
+                <a class="nav-link d-flex align-items-center collapsed" 
+                   data-bs-toggle="collapse" 
+                   href="#layersCollapse" 
+                   role="button" 
+                   aria-expanded="false" 
+                   aria-controls="layersCollapse">
+                    <i class="ri-stack-line nav-icon me-2"></i>
+                    <span class="nav-text">Page Layers</span>
+                    <i class="ri-arrow-down-s-line ms-auto collapse-icon"></i>
+                </a>
+                <div class="collapse" id="layersCollapse">
+                    <div class="nav-item-content p-2">
+                        <div id="pageLayersContainer">
+                            <!-- Page layers will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </nav>
     </div>
     
-    <div class="sidebar-body">
-         <!-- Section Templates -->
-         <div class="section-templates mt-2 mb-2">
-            <h6 class="category-title">Section Templates</h6>
-            <div class="template-grid" id="sectionTemplates">
-                <!-- Section templates loaded dynamically -->
-            </div>
+    <!-- Collapsed state icons (shown when sidebar is collapsed) -->
+    <div class="sidebar-collapsed-icons d-none">
+        <div class="collapsed-icon-item" data-target="#sectionsCollapse" title="Sections">
+            <i class="ri-layout-grid-line"></i>
         </div>
-        <!-- Widget Categories -->
-        <div class="widget-categories">
-            <div class="category-section">
-                <h6 class="category-title"> Widgets</h6>
-                <div class="widget-grid" id="contentWidgets">
-                    <!-- Content widgets loaded dynamically -->
-                </div>
-            </div>
-            
-            <div class="category-section">
-                <h6 class="category-title">Layout Widgets</h6>
-                <div class="widget-grid" id="layoutWidgets">
-                    <!-- Layout widgets loaded dynamically -->
-                </div>
-            </div>
-            
-            <div class="category-section">
-                <h6 class="category-title">Media Widgets</h6>
-                <div class="widget-grid" id="mediaWidgets">
-                    <!-- Media widgets loaded dynamically -->
-                </div>
-            </div>
-            
-            <div class="category-section">
-                <h6 class="category-title">Form Widgets</h6>
-                <div class="widget-grid" id="formWidgets">
-                    <!-- Form widgets loaded dynamically -->
-                </div>
-            </div>
+        <div class="collapsed-icon-item" data-target="#themeWidgetsCollapse" title="Theme Widgets">
+            <i class="ri-palette-line"></i>
         </div>
-        
-       
-        
-        <!-- Page Structure -->
-        <div class="page-structure mt-4">
-            <h6 class="category-title">Page Structure</h6>
-            <div class="structure-tree" id="pageStructure">
-                <!-- Page structure loaded dynamically -->
-            </div>
+        <div class="collapsed-icon-item" data-target="#layersCollapse" title="Page Layers">
+            <i class="ri-stack-line"></i>
         </div>
     </div>
-</div> 
+</div>
+
+<style>
+/* Left Sidebar Styling */
+.designer-left-sidebar {
+    width: 280px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+/* Collapsed state - handled by main CSS */
+#leftSidebarContainer.collapsed .designer-left-sidebar {
+    width: 60px;
+}
+
+#leftSidebarContainer.collapsed .sidebar-content {
+    display: none;
+}
+
+#leftSidebarContainer.collapsed .sidebar-collapsed-icons {
+    display: flex !important;
+    padding: 10px 0;
+}
+
+/* Navigation styling */
+.designer-left-sidebar .nav-link {
+    border: none;
+    border-radius: 0;
+    color: #6c757d;
+    padding: 12px 16px;
+    font-size: 14px;
+    background: transparent;
+    border-bottom: 1px solid #f1f3f4;
+    transition: all 0.2s ease;
+}
+
+.designer-left-sidebar .nav-link:hover {
+    background-color: #f8f9fa;
+    color: #495057;
+}
+
+.designer-left-sidebar .nav-link.active {
+    background-color: #e3f2fd;
+    color: #1976d2;
+}
+
+.designer-left-sidebar .nav-link.collapsed .collapse-icon {
+    transform: rotate(-90deg);
+}
+
+.designer-left-sidebar .nav-link:not(.collapsed) .collapse-icon {
+    transform: rotate(0deg);
+}
+
+.designer-left-sidebar .collapse-icon {
+    transition: transform 0.2s ease;
+    font-size: 16px;
+}
+
+.designer-left-sidebar .nav-icon {
+    font-size: 18px;
+    width: 20px;
+    text-align: center;
+}
+
+/* Collapsed icons styling */
+.sidebar-collapsed-icons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.collapsed-icon-item {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: transparent;
+    color: #6c757d;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.collapsed-icon-item:hover {
+    background-color: #f8f9fa;
+    color: #495057;
+}
+
+.collapsed-icon-item i {
+    font-size: 20px;
+}
+
+/* Component grid styling */
+.component-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Widget grid styling - stacked for better usability */
+#themeWidgetsGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+
+/* Section grid styling - full width stacked */
+#sectionsGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.component-item {
+    padding: 12px 8px;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: #fff;
+}
+
+.component-item:hover {
+    border-color: #007bff;
+    box-shadow: 0 2px 4px rgba(0,123,255,0.1);
+    transform: translateY(-1px);
+}
+
+.component-item i {
+    font-size: 24px;
+    color: #6c757d;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.component-item .label {
+    font-size: 11px;
+    color: #495057;
+    line-height: 1.2;
+}
+
+/* Navigation content styling */
+.nav-item-content {
+    background-color: #fafbfc;
+    border-top: 1px solid #e9ecef;
+}
+
+/* Responsive adjustments */
+@media (max-width: 991.98px) {
+    .designer-left-sidebar {
+        position: fixed;
+        left: -280px;
+        top: 140px;
+        z-index: 1050;
+        height: calc(100vh - 140px);
+        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    }
+    
+    .designer-left-sidebar.show {
+        left: 0;
+    }
+    
+    .collapsed .designer-left-sidebar {
+        left: -60px;
+    }
+    
+    .collapsed .designer-left-sidebar.show {
+        left: 0;
+        width: 60px;
+    }
+}
+</style> 

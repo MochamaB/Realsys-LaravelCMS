@@ -1,17 +1,15 @@
 <!-- GridStack Designer Content -->
 <div class="gridstack-designer-container">
     <!-- Designer Toolbar -->
-    @include('admin.pages.designer._toolbar')
+  
 
     <!-- Designer Layout -->
     <div class="row" id="designerLayout">
         <!-- Left Sidebar (Collapsible) -->
-        <div class="col-lg-3 col-md-4 d-none d-lg-block" id="leftSidebarContainer">
-            @include('admin.pages.designer._left_sidebar')
-        </div>
+       
         
         <!-- Canvas Area (Full Width) -->
-        <div class="col-lg-9 col-md-8" id="canvasContainer">
+        <div class="" id="canvasContainer">
             @include('admin.pages.designer._canvas_area')
         </div>
     </div>
@@ -48,28 +46,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Initialize sidebar toggle controls
+    // Initialize sidebar toggle controls (left sidebar handled by main show.blade.php)
     function initializeSidebarControls() {
-        const toggleLeftSidebarBtn = document.getElementById('toggleLeftSidebarBtn');
         const toggleRightSidebarBtn = document.getElementById('toggleRightSidebarBtn');
         const fullPreviewBtn = document.getElementById('fullPreviewBtn');
-        const leftSidebarContainer = document.getElementById('leftSidebarContainer');
-        const canvasContainer = document.getElementById('canvasContainer');
-        const designerLayout = document.getElementById('designerLayout');
-        
-        // Toggle left sidebar
-        if (toggleLeftSidebarBtn) {
-            toggleLeftSidebarBtn.addEventListener('click', function() {
-                leftSidebarContainer.classList.toggle('collapsed');
-                canvasContainer.classList.toggle('expanded');
-                toggleLeftSidebarBtn.classList.toggle('active');
-                
-                // Trigger window resize to update GridStack
-                setTimeout(() => {
-                    window.dispatchEvent(new Event('resize'));
-                }, 300);
-            });
-        }
         
         // Toggle right sidebar
         if (toggleRightSidebarBtn) {

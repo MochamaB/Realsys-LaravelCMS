@@ -26,7 +26,9 @@
                     </thead>
                     <tbody>
                         @foreach($widget->contentTypeAssociations as $association)
-                            <tr>
+                            <tr class="clickable-row" 
+                                data-href="{{ route('admin.content-types.show', $association->contentType->id) }}"
+                                style="cursor: pointer;">
                                 <td>
                                     <strong>{{ $association->contentType->name }}</strong>
                                     <br>
@@ -56,6 +58,11 @@
                                 </td>
                                 <td>
                                     <div class="btn-group">
+                                        <a href="{{ route('admin.content-types.show', $association->contentType->id) }}" 
+                                           class="btn btn-sm btn-info" 
+                                           title="View Content Type">
+                                            <i class="bx bx-show"></i>
+                                        </a>
                                         <button type="button" class="btn btn-sm btn-primary edit-mapping-btn"
                                                 data-association-id="{{ $association->id }}"
                                                 data-content-type-name="{{ $association->contentType->name }}"
@@ -304,6 +311,7 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+
         // Handle viewing field mappings
         const viewMappingButtons = document.querySelectorAll('.view-mappings-btn');
         viewMappingButtons.forEach(button => {

@@ -1,5 +1,5 @@
-{{-- Original Miata theme section structure with multi-column support --}}
-<div class="col-12" id="section-{{ $section->slug }}">
+{{-- ✅ NEW VERSION with Universal Styling --}}
+<x-universal-section :pageSection="$pageSection">
     <div class="container">
         @if($widgets && count($widgets) > 0)
             @php
@@ -22,11 +22,13 @@
                 @foreach($widgets as $widget)
                     <div class="{{ $colClass }} mb-4">
                         @if(isset($widget['view_path']) && View::exists($widget['view_path']))
-                            @include($widget['view_path'], [
-                                'fields' => $widget['fields'] ?? [],
-                                'settings' => $widget['settings'] ?? [],
-                                'widget' => $widget
-                            ])
+                            <x-universal-widget :pageSectionWidget="$widget['pageSectionWidget']">
+                                @include($widget['view_path'], [
+                                    'fields' => $widget['fields'] ?? [],
+                                    'settings' => $widget['settings'] ?? [],
+                                    'widget' => $widget
+                                ])
+                            </x-universal-widget>
                         @else
                             {{-- Fallback if widget view not found --}}
                             <div class="widget-fallback alert alert-warning">
@@ -47,4 +49,4 @@
             </div>
         @endif
     </div>
-</section>
+</x-universal-section>

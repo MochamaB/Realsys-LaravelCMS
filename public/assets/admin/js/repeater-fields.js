@@ -7,6 +7,39 @@ document.addEventListener('DOMContentLoaded', function() {
     initRepeaterFields();
 
     /**
+     * Initialize media pickers in a repeater item
+     * @param {HTMLElement} item - The repeater item element
+     */
+    function initializeMediaPickersInItem(item) {
+        // Find media picker fields in the new item
+        const mediaPickers = item.querySelectorAll('.media-picker-field');
+        
+        mediaPickers.forEach(picker => {
+            // Initialize media picker functionality
+            const openBtn = picker.querySelector('.open-media-picker');
+            const removeBtn = picker.querySelector('.remove-selected-media');
+            
+            if (openBtn) {
+                openBtn.addEventListener('click', function(e) {
+                    // Call the global openMediaPicker function
+                    if (window.openMediaPicker) {
+                        window.openMediaPicker(e);
+                    }
+                });
+            }
+            
+            if (removeBtn) {
+                removeBtn.addEventListener('click', function(e) {
+                    // Call the global removeSelectedMedia function
+                    if (window.removeSelectedMedia) {
+                        window.removeSelectedMedia(e);
+                    }
+                });
+            }
+        });
+    }
+
+    /**
      * Initialize all repeater fields on the page
      */
     function initRepeaterFields() {
@@ -160,9 +193,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     onEnd: function() {
                         renumberRepeaterItems(itemsContainer);
                     }
-                });
-            }
-        });
+                        });
+    }
+});
     }
 
     /**
@@ -219,6 +252,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 label.classList.remove('template-label');
             }
         });
+        
+        // Initialize media pickers in the new item
+        initializeMediaPickersInItem(newItem);
         
         // Append the new item to the container
         container.appendChild(newItem);

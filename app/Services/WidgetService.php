@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\View;
 use App\Models\WidgetFieldDefinition;
 use App\Models\ContentType;
 use App\Models\ContentItem;
+use App\Services\UniversalStylingService;
 
 class WidgetService
 {
@@ -134,6 +135,15 @@ class WidgetService
             $data['css_classes'] = $pageSectionWidget->css_classes;
             $data['settings'] = $pageSectionWidget->settings ?? [];
             $data['content_query'] = $pageSectionWidget->content_query ?? [];
+            
+            // ✅ ADD: Pass PageSectionWidget instance for universal styling
+            $data['pageSectionWidget'] = $pageSectionWidget;
+            
+            // ✅ ADD: Universal styling data
+            $universalStylingService = app(UniversalStylingService::class);
+            $data['universal_classes'] = $universalStylingService->buildWidgetClasses($pageSectionWidget);
+            $data['universal_styles'] = $universalStylingService->buildWidgetStyles($pageSectionWidget);
+            $data['grid_attributes'] = $universalStylingService->buildWidgetGridAttributes($pageSectionWidget);
         }
         
         // Add content data if this widget has content associations
@@ -162,7 +172,7 @@ class WidgetService
         
         // If no page section widget provided, return defaults only
         if (!$pageSectionWidget) {
-        foreach ($fieldDefinitions as $field) {
+            foreach ($fieldDefinitions as $field) {
                 $fieldValues[$field->slug] = $this->getDefaultFieldValue($field);
             }
             return $fieldValues;
@@ -1094,6 +1104,13 @@ class WidgetService
             case 'number':
             case 'integer':
                 return is_numeric($value) ? (int) $value : 0;
+            case 'image':
+                // Convert media ID to URL if it's numeric
+                if (is_numeric($value) && $value > 0) {
+                    return $this->convertMediaIdToUrl($value);
+                }
+                // If it's already a URL or path, return as is
+                return $value;
             case 'json':
                 if (is_string($value)) {
                     return json_decode($value, true) ?: [];
@@ -1112,6 +1129,35 @@ class WidgetService
             default:
                 return $value;
         }
+    }
+    
+    /**
+     * Convert media ID to URL
+     *
+     * @param int|string $mediaId
+     * @return string
+     */
+    protected function convertMediaIdToUrl($mediaId): string
+    {
+        if (empty($mediaId) || !is_numeric($mediaId)) {
+            return '';
+        }
+        
+        try {
+            // Try to find the media record
+            $media = \App\Models\Media::find($mediaId);
+            if ($media && $media->file_path) {
+                // Return the full URL to the media file
+                return asset('storage/' . $media->file_path);
+            }
+        } catch (\Exception $e) {
+            \Log::warning('Failed to convert media ID to URL', [
+                'media_id' => $mediaId,
+                'error' => $e->getMessage()
+            ]);
+        }
+        
+        return '';
     }
     
     /**

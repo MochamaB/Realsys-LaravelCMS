@@ -36,7 +36,9 @@
                             </thead>
                             <tbody>
                                 @forelse($pages as $page)
-                                    <tr>
+                                    <tr class="clickable-row" 
+                                        data-href="{{ route('admin.pages.show', $page->id) }}"
+                                        style="cursor: pointer;">
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <div class="flex-grow-1">{{ $page->title }}</div>
@@ -45,9 +47,8 @@
                                         <td>{{ $page->slug }}</td>
                                         <td>{{ $page->template->name ?? 'No Template' }}</td>
                                         <td>
-                                            <span class="badge badge-soft-{{ $page->is_active ? 'success' : 'danger' }} fs-11">
-                                                {{ $page->is_active ? 'Active' : 'Inactive' }}
-                                            </span>
+                                            {{ $page->status}}
+                                           
                                         </td>
                                         <td>{{ $page->created_at->format('M d, Y') }}</td>
                                         <td>

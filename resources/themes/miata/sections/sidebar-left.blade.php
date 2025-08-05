@@ -1,5 +1,5 @@
-{{-- Original Miata theme section structure with sidebar layout --}}
-<section class="elements-area ptb-140" id="section-{{ $section->slug }}">
+{{-- ✅ NEW VERSION with Universal Styling --}}
+<x-universal-section :pageSection="$pageSection">
     <div class="container">
         <div class="row">
             {{-- Sidebar Column (Left) --}}
@@ -15,11 +15,13 @@
                         @foreach($sidebarWidgets as $widget)
                             <div class="sidebar-widget mb-4">
                                 @if(isset($widget['view_path']) && View::exists($widget['view_path']))
-                                    @include($widget['view_path'], [
-                                        'fields' => $widget['fields'] ?? [],
-                                        'settings' => $widget['settings'] ?? [],
-                                        'widget' => $widget
-                                    ])
+                                    <x-universal-widget :pageSectionWidget="$widget['pageSectionWidget']">
+                                        @include($widget['view_path'], [
+                                            'fields' => $widget['fields'] ?? [],
+                                            'settings' => $widget['settings'] ?? [],
+                                            'widget' => $widget
+                                        ])
+                                    </x-universal-widget>
                                 @else
                                     <div class="widget-fallback alert alert-warning">
                                         <strong>Widget:</strong> {{ $widget['name'] ?? 'Unknown Widget' }}<br>
@@ -49,11 +51,13 @@
                         @foreach($mainWidgets as $widget)
                             <div class="main-widget mb-4">
                                 @if(isset($widget['view_path']) && View::exists($widget['view_path']))
-                                    @include($widget['view_path'], [
-                                        'fields' => $widget['fields'] ?? [],
-                                        'settings' => $widget['settings'] ?? [],
-                                        'widget' => $widget
-                                    ])
+                                    <x-universal-widget :pageSectionWidget="$widget['pageSectionWidget']">
+                                        @include($widget['view_path'], [
+                                            'fields' => $widget['fields'] ?? [],
+                                            'settings' => $widget['settings'] ?? [],
+                                            'widget' => $widget
+                                        ])
+                                    </x-universal-widget>
                                 @else
                                     <div class="widget-fallback alert alert-warning">
                                         <strong>Widget:</strong> {{ $widget['name'] ?? 'Unknown Widget' }}<br>
@@ -71,4 +75,4 @@
             </div>
         </div>
     </div>
-</section>
+</x-universal-section>

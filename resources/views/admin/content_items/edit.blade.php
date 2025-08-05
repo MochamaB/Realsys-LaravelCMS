@@ -45,4 +45,8 @@
 </div>
 @endsection
 
+@section('scripts')
+    <script src="{{ asset('assets/admin/js/repeater-fields.js') }}"></script>
+@endsection
+
 
