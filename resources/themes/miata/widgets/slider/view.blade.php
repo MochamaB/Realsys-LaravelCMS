@@ -1,34 +1,17 @@
 @php
 /**
  * Slider Widget View Template - Corrected to match original HTML structure
- * 
- * Available variables:
- * $widget - The widget instance
- * $fields - Widget fields from content editor (contains repeater data)
- * $settings - Widget settings from admin panel
  */
-
-// Extract repeater data - expecting array of slide items
 $slides = $fields['slides'] ?? [];
-
-// Extract settings with defaults
 $animationSpeed = $settings['animation_speed'] ?? 500;
 $autoplay = $settings['autoplay'] ?? true;
 $autoplayDelay = $settings['autoplay_delay'] ?? 5000;
 $showNavArrows = $settings['show_nav_arrows'] ?? true;
 $showPagination = $settings['show_pagination'] ?? true;
 
-// Ensure we have array data
-if (!is_array($slides)) {
-    $slides = [];
-}
+if (!is_array($slides)) $slides = [];
+if (empty($slides)) return;
 
-// If no slides, don't render anything
-if (empty($slides)) {
-    return;
-}
-
-// Generate a unique ID for this slider instance
 $sliderId = 'ensign-nivoslider-' . uniqid();
 @endphp
 
@@ -38,64 +21,49 @@ $sliderId = 'ensign-nivoslider-' . uniqid();
             <div id="{{ $sliderId }}" class="slides nivoSlider">
                 @foreach($slides as $index => $slide)
                     @php
-                        // Extract individual slide data with defaults
                         $image = $slide['image'] ?? '';
-                        $layer1Title = $slide['layer1_title'] ?? '';
-                        $layer2Line1 = $slide['layer2_line1'] ?? '';
-                        $layer2Line2 = $slide['layer2_line2'] ?? '';
-                        $buttonText = $slide['button_text'] ?? '';
-                        $buttonUrl = $slide['button_url'] ?? '#';
-                        
-                        // Generate direction ID for this slide
+                        $title = $slide['layer1_title'] ?? '';
                         $directionId = 'slider-direction-' . ($index + 1);
                     @endphp
                     
                     @if(!empty($image))
-                        <img src="{{ $image }}" alt="{{ $layer1Title }}" title="#{{ $directionId }}">
+                        <img src="{{ $image }}" alt="{{ $title }}" title="#{{ $directionId }}">
                     @endif
                 @endforeach
             </div>
             
             @foreach($slides as $index => $slide)
                 @php
-                    // Extract individual slide data with defaults
-                    $layer1Title = $slide['layer1_title'] ?? '';
-                    $layer2Line1 = $slide['layer2_line1'] ?? '';
-                    $layer2Line2 = $slide['layer2_line2'] ?? '';
+                    $title = $slide['layer1_title'] ?? '';
+                    $line1 = $slide['layer2_line1'] ?? '';
+                    $line2 = $slide['layer2_line2'] ?? '';
                     $buttonText = $slide['button_text'] ?? '';
                     $buttonUrl = $slide['button_url'] ?? '#';
-                    
-                    // Generate direction ID for this slide
                     $directionId = 'slider-direction-' . ($index + 1);
                 @endphp
                 
-                <!-- Direction content for slide {{ $index + 1 }} -->
-                <div id="{{ $directionId }}" class="t-cn slider-direction Builder">
+                <div id="{{ $directionId }}" class="slider-direction">
                     <div class="container">
                         <div class="slide-all {{ $index > 0 ? 'slide2' : '' }}">
-                            @if(!empty($layer1Title))
-                                <!-- layer 1 -->
+                            @if(!empty($title))
                                 <div class="layer-1">
-                                    <h3 class="title5 {{ $index > 0 ? 'moment' : '' }}">{{ $layer1Title }}</h3>
+                                    <h3 class="title5 {{ $index > 0 ? 'moment' : '' }}">{{ $title }}</h3>
                                 </div>
                             @endif
                             
-                            @if(!empty($layer2Line1))
-                                <!-- layer 2 - Line 1 -->
+                            @if(!empty($line1))
                                 <div class="layer-2">
-                                    <h1 class="title6">{{ $layer2Line1 }}</h1>
+                                    <h1 class="title6">{{ $line1 }}</h1>
                                 </div>
                             @endif
                             
-                            @if(!empty($layer2Line2))
-                                <!-- layer 2 - Line 2 -->
+                            @if(!empty($line2))
                                 <div class="layer-2">
-                                    <h1 class="title6">{{ $layer2Line2 }}</h1>
+                                    <h1 class="title6">{{ $line2 }}</h1>
                                 </div>
                             @endif
                             
                             @if(!empty($buttonText))
-                                <!-- layer 3 -->
                                 <div class="layer-3">
                                     <a class="min1" href="{{ $buttonUrl }}">{{ $buttonText }}</a>
                                 </div>
@@ -108,10 +76,51 @@ $sliderId = 'ensign-nivoslider-' . uniqid();
     </div>
 </section>
 
+@push('styles')
+<style>
+    /* Remove default spacing */
+    .slider-main-area, 
+    .main-slider, 
+    .bend.niceties.preview-2,
+    .nivoSlider {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+    }
+    
+    /* Ensure slider fills container */
+    .nivoSlider img {
+        width: 100%;
+        display: block;
+    }
+    
+    /* Position captions absolutely */
+    .slider-direction {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        width: 100%;
+        transform: translateY(-50%);
+        text-align: center;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .title5 { font-size: 18px; }
+        .title6 { font-size: 24px; }
+        .min1 { padding: 8px 20px; font-size: 14px; }
+    }
+    
+    @media (max-width: 576px) {
+        .title5 { font-size: 16px; }
+        .title6 { font-size: 20px; }
+    }
+</style>
+@endpush
+
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialize Nivo Slider for this instance
         $('#{{ $sliderId }}').nivoSlider({
             effect: 'random',
             slices: 15,
@@ -125,72 +134,8 @@ $sliderId = 'ensign-nivoslider-' . uniqid();
             pauseOnHover: true,
             manualAdvance: {{ $autoplay ? 'false' : 'true' }},
             prevText: 'Prev',
-            nextText: 'Next',
-            beforeChange: function(){},
-            afterChange: function(){},
-            slideshowEnd: function(){},
-            lastSlide: function(){},
-            afterLoad: function(){}
+            nextText: 'Next'
         });
     });
 </script>
-@endpush
-
-@push('styles')
-<style>
-    /* Ensure slider section has proper structure */
-    .slider-main-area {
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .main-slider {
-        position: relative;
-    }
-    
-    .bend.niceties.preview-2 {
-        position: relative;
-    }
-    
-    /* Slider direction content positioning */
-    .slider-direction {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        display: none;
-        z-index: 10;
-    }
-    
-    .slider-direction.Builder {
-        display: block;
-    }
-    
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-        .slide-all .title5 {
-            font-size: 18px;
-        }
-        
-        .slide-all .title6 {
-            font-size: 24px;
-        }
-        
-        .slide-all .min1 {
-            padding: 8px 20px;
-            font-size: 14px;
-        }
-    }
-    
-    @media (max-width: 576px) {
-        .slide-all .title5 {
-            font-size: 16px;
-        }
-        
-        .slide-all .title6 {
-            font-size: 20px;
-        }
-    }
-</style>
 @endpush
