@@ -21,6 +21,8 @@
 @endphp
 
 {{-- Dynamic background CSS injection --}}
+{{-- Note: This widget requires dynamic CSS due to user-uploaded background images --}}
+{{-- Static CSS is in custom.css, dynamic CSS remains in @push for flexibility --}}
 @if(!empty($image) && !empty($backgroundClass))
 @push('styles')
 <style>

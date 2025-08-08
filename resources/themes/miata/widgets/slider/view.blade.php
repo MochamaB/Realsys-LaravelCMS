@@ -76,66 +76,31 @@ $sliderId = 'ensign-nivoslider-' . uniqid();
     </div>
 </section>
 
-@push('styles')
-<style>
-    /* Remove default spacing */
-    .slider-main-area, 
-    .main-slider, 
-    .bend.niceties.preview-2,
-    .nivoSlider {
-        margin: 0;
-        padding: 0;
-        width: 100%;
-    }
-    
-    /* Ensure slider fills container */
-    .nivoSlider img {
-        width: 100%;
-        display: block;
-    }
-    
-    /* Position captions absolutely */
-    .slider-direction {
-        position: absolute;
-        top: 50%;
-        left: 0;
-        width: 100%;
-        transform: translateY(-50%);
-        text-align: center;
-    }
-    
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-        .title5 { font-size: 18px; }
-        .title6 { font-size: 24px; }
-        .min1 { padding: 8px 20px; font-size: 14px; }
-    }
-    
-    @media (max-width: 576px) {
-        .title5 { font-size: 16px; }
-        .title6 { font-size: 20px; }
-    }
-</style>
-@endpush
+{{-- Slider CSS moved to custom.css asset file --}}
+{{-- Styles will be handled by the widget asset system --}}
 
+{{-- Widget Configuration for JavaScript --}}
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        $('#{{ $sliderId }}').nivoSlider({
-            effect: 'random',
-            slices: 15,
-            boxCols: 8,
-            boxRows: 4,
-            animSpeed: {{ $animationSpeed }},
-            pauseTime: {{ $autoplayDelay }},
-            startSlide: 0,
-            directionNav: {{ $showNavArrows ? 'true' : 'false' }},
-            controlNav: {{ $showPagination ? 'true' : 'false' }},
-            pauseOnHover: true,
-            manualAdvance: {{ $autoplay ? 'false' : 'true' }},
-            prevText: 'Prev',
-            nextText: 'Next'
-        });
-    });
+    // Initialize slider configuration
+    if (!window.sliderConfigs) {
+        window.sliderConfigs = {};
+    }
+    
+    window.sliderConfigs['{{ $sliderId }}'] = {
+        effect: 'random',
+        slices: 15,
+        boxCols: 8,
+        boxRows: 4,
+        animSpeed: {{ $animationSpeed }},
+        pauseTime: {{ $autoplayDelay }},
+        startSlide: 0,
+        directionNav: {{ $showNavArrows ? 'true' : 'false' }},
+        controlNav: {{ $showPagination ? 'true' : 'false' }},
+        pauseOnHover: true,
+        manualAdvance: {{ $autoplay ? 'false' : 'true' }},
+        prevText: 'Prev',
+        nextText: 'Next'
+    };
 </script>
 @endpush

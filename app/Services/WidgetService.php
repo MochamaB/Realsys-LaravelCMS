@@ -151,6 +151,9 @@ class WidgetService
             $data['content'] = $this->getWidgetContent($widget);
         }
         
+        // ✅ ADD: Collect widget assets
+        $data['assets'] = $this->collectWidgetAssets($widget);
+        
         return $data;
     }
     
@@ -1754,5 +1757,82 @@ class WidgetService
                 'map_location' => '40.7128,-74.0060'
             ]
         ];
+    }
+    
+    /**
+     * Collect widget assets (CSS and JS files)
+     *
+     * @param Widget $widget
+     * @return array
+     */
+    protected function collectWidgetAssets(Widget $widget): array
+    {
+        $assets = [
+            'css' => [],
+            'js' => []
+        ];
+        
+        if (!$widget->theme) {
+            return $assets;
+        }
+        
+        $themeSlug = $widget->theme->slug;
+        $widgetSlug = $widget->slug;
+        
+        // Check for custom CSS file
+        $cssPath = public_path("themes/{$themeSlug}/css/widgets/{$widgetSlug}-custom.css");
+        if (file_exists($cssPath)) {
+            $assets['css'][] = asset("themes/{$themeSlug}/css/widgets/{$widgetSlug}-custom.css");
+        }
+        
+        // Check for custom JS file
+        $jsPath = public_path("themes/{$themeSlug}/js/widgets/{$widgetSlug}-custom.js");
+        if (file_exists($jsPath)) {
+            $assets['js'][] = asset("themes/{$themeSlug}/js/widgets/{$widgetSlug}-custom.js");
+        }
+        
+        return $assets;
+    }
+    
+    /**
+     * Collect all assets for widgets used on a page
+     *
+     * @param array $sections Array of page sections with widgets
+     * @return array
+     */
+    public function collectPageWidgetAssets(array $sections): array
+    {
+        $pageAssets = [
+            'css' => [],
+            'js' => []
+        ];
+        
+        foreach ($sections as $section) {
+            if (isset($section['widgets']) && is_array($section['widgets'])) {
+                foreach ($section['widgets'] as $widgetData) {
+                    if (isset($widgetData['assets'])) {
+                        // Merge CSS assets (avoid duplicates)
+                        if (isset($widgetData['assets']['css'])) {
+                            foreach ($widgetData['assets']['css'] as $css) {
+                                if (!in_array($css, $pageAssets['css'])) {
+                                    $pageAssets['css'][] = $css;
+                                }
+                            }
+                        }
+                        
+                        // Merge JS assets (avoid duplicates)
+                        if (isset($widgetData['assets']['js'])) {
+                            foreach ($widgetData['assets']['js'] as $js) {
+                                if (!in_array($js, $pageAssets['js'])) {
+                                    $pageAssets['js'][] = $js;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        return $pageAssets;
     }
 }

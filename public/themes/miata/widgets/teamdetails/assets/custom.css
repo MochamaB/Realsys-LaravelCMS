@@ -1,0 +1,44 @@
+.widget-teamdetails .team-detail-image {
+    max-width: 100%;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+.widget-teamdetails .member-name {
+    margin-bottom: 5px;
+}
+.widget-teamdetails .member-position {
+    color: #666;
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+}
+.widget-teamdetails .team-social-links a {
+    display: inline-block;
+    width: 36px;
+    height: 36px;
+    line-height: 36px;
+    text-align: center;
+    background: #f8f9fa;
+    border-radius: 50%;
+    color: #333;
+    margin-right: 8px;
+    transition: all 0.3s ease;
+}
+.widget-teamdetails .team-social-links a:hover {
+    background: #007bff;
+    color: white;
+}
+.widget-teamdetails .contact-info p {
+    margin-bottom: 5px;
+}
+.widget-teamdetails .member-biography {
+    line-height: 1.8;
+}
+.widget-teamdetails .expertise-area h4 {
+    margin-bottom: 15px;
+}
+.widget-teamdetails .expertise-item h5 {
+    font-size: 1rem;
+    margin-bottom: 8px;
+}
+.widget-teamdetails .progress {
+    height: 10px;
+}

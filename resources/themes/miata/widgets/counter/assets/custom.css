@@ -1,0 +1,88 @@
+/* Counter widget responsive styles */
+.widget-counter .counter-all {
+    text-align: center;
+    padding: 30px 20px;
+    margin-bottom: 30px;
+    transition: all 0.3s ease;
+}
+
+.widget-counter .counter-top {
+    margin-bottom: 20px;
+}
+
+.widget-counter .counter-icon {
+    max-width: 80px;
+    max-height: 80px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+}
+
+.widget-counter .counter-bottom h2 {
+    font-size: 18px;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.widget-counter .counter {
+    font-size: 48px;
+    font-weight: 700;
+    color: #333;
+    line-height: 1;
+}
+
+.widget-counter .counter-suffix {
+    font-size: 24px;
+    font-weight: 600;
+    color: #666;
+    margin-left: 5px;
+}
+
+/* Boxed style */
+.widget-counter .counter-boxed {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    border: 1px solid #f0f0f0;
+}
+
+.widget-counter .counter-boxed:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+
+/* Centered style */
+.widget-counter .counter-centered {
+    max-width: 300px;
+    margin: 0 auto;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .widget-counter .counter {
+        font-size: 36px;
+    }
+    
+    .widget-counter .counter-bottom h2 {
+        font-size: 16px;
+    }
+    
+    .widget-counter .counter-icon {
+        max-width: 60px;
+        max-height: 60px;
+    }
+    
+    .widget-counter .counter-all {
+        padding: 20px 15px;
+    }
+}
+
+@media (max-width: 576px) {
+    .widget-counter .counter {
+        font-size: 28px;
+    }
+    
+    .widget-counter .counter-bottom h2 {
+        font-size: 14px;
+    }
+}

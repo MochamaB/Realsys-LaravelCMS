@@ -110,6 +110,9 @@ class TemplateRenderer
         $menuService = app(MenuService::class);
         $menus = $menuService->getAllActiveMenus($page->id ?? null, $template->id ?? null);
         
+        // Collect widget assets for the page
+        $widgetAssets = $this->widgetService->collectPageWidgetAssets($sections);
+        
         // Prepare view data
         $viewData = array_merge([
             'page' => $page,
@@ -117,6 +120,7 @@ class TemplateRenderer
             'sections' => $sections,
             'theme' => $activeTheme,
             'menus' => $menus,
+            'widgetAssets' => $widgetAssets,
         ], $data);
         
         // Don't render immediately - let Laravel handle the view hierarchy

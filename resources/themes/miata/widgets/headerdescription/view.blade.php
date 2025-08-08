@@ -4,14 +4,16 @@
  * 
  * Available variables:
  * $widget - The widget instance
+ * $fields - Widget field values from content editor
  * $settings - Widget settings from admin panel
  */
 
-// Get field values with defaults
-$title = $settings['title'] ?? 'Heading';
-$description = $settings['description'] ?? '';
+// Get field values from content editor (these are the actual content)
+$title = $fields['title'] ?? 'Heading';
+$description = $fields['description'] ?? '';
+$iconImage = $fields['icon'] ?? null; // This is an image field
 
-// Get settings values with defaults
+// Get settings values from admin panel (these are styling/configuration)
 $alignment = $settings['alignment'] ?? 'text-center';
 $iconClass = $settings['icon'] ?? 'fa fa-bookmark';
 $backgroundColor = $settings['background_color'] ?? '#ffffff';

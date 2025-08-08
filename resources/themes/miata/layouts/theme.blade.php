@@ -14,8 +14,15 @@
         @foreach($theme->css as $css)
             <link rel="stylesheet" href="{{ $css }}" />
         @endforeach
+        
+        <!-- Widget CSS Assets -->
+        @if(isset($widgetAssets) && isset($widgetAssets['css']))
+            @foreach($widgetAssets['css'] as $css)
+                <link rel="stylesheet" href="{{ $css }}" />
+            @endforeach
+        @endif
 
-        <!-- Custom CSS -->
+        <!-- Custom CSS (Backward Compatibility) -->
         @stack('styles')
        
 
@@ -39,8 +46,15 @@
        @foreach($theme->js as $js)
             <script src="{{ $js }}"></script>
         @endforeach
+        
+        <!-- Widget JavaScript Assets -->
+        @if(isset($widgetAssets) && isset($widgetAssets['js']))
+            @foreach($widgetAssets['js'] as $js)
+                <script src="{{ $js }}"></script>
+            @endforeach
+        @endif
 
-        <!-- Custom JavaScript -->
+        <!-- Custom JavaScript (Backward Compatibility) -->
         @stack('scripts')
     </body>
 </html>

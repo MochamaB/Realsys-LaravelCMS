@@ -1,0 +1,6 @@
+/* Default Widget Styles */
+.widget-default {
+    display: block;
+    margin: 0;
+    padding: 0;
+}
