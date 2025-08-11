@@ -1765,7 +1765,7 @@ class WidgetService
      * @param Widget $widget
      * @return array
      */
-    protected function collectWidgetAssets(Widget $widget): array
+    public function collectWidgetAssets(Widget $widget): array
     {
         $assets = [
             'css' => [],

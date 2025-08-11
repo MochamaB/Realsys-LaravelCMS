@@ -5,11 +5,13 @@
             @if($widgets && count($widgets) > 0)
                 @foreach($widgets as $widget)
                     @if(isset($widget['view_path']) && View::exists($widget['view_path']))
-                        @include($widget['view_path'], [
-                            'fields' => $widget['fields'] ?? [],
-                            'settings' => $widget['settings'] ?? [],
-                            'widget' => $widget
-                        ])
+                        <div class="widget-container" data-widget-id="{{ $widget['id'] ?? '' }}" data-widget-slug="{{ $widget['slug'] ?? '' }}">
+                            @include($widget['view_path'], [
+                                'fields' => $widget['fields'] ?? [],
+                                'settings' => $widget['settings'] ?? [],
+                                'widget' => $widget
+                            ])
+                        </div>
                     @else
                         {{-- Fallback if widget view not found --}}
                         <div class="col-12">

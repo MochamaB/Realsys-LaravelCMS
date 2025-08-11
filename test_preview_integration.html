@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preview Integration Test</title>
+    <meta name="csrf-token" content="test-token">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+    </style>
+</head>
+<body>
+    <h1>UniversalPreviewManager Integration Test</h1>
+    
+    <div class="test-section">
+        <h2>1. Script Loading Test</h2>
+        <div id="script-test">Testing...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Manager Initialization Test</h2>
+        <div id="init-test">Testing...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. API Methods Test</h2>
+        <div id="api-test">Testing...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. Event System Test</h2>
+        <div id="event-test">Testing...</div>
+    </div>
+
+    <!-- Include the UniversalPreviewManager -->
+    <script src="/assets/admin/js/universal-preview-manager.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Test 1: Script Loading
+            const scriptTest = document.getElementById('script-test');
+            if (typeof window.UniversalPreviewManager !== 'undefined') {
+                scriptTest.innerHTML = '<span class="success">✓ UniversalPreviewManager class loaded successfully</span>';
+            } else {
+                scriptTest.innerHTML = '<span class="error">✗ UniversalPreviewManager class not found</span>';
+                return;
+            }
+            
+            // Test 2: Manager Initialization
+            const initTest = document.getElementById('init-test');
+            try {
+                if (!window.universalPreviewManager) {
+                    window.universalPreviewManager = new window.UniversalPreviewManager();
+                }
+                initTest.innerHTML = '<span class="success">✓ UniversalPreviewManager instance created successfully</span>';
+            } catch (error) {
+                initTest.innerHTML = '<span class="error">✗ Failed to create instance: ' + error.message + '</span>';
+                return;
+            }
+            
+            // Test 3: API Methods
+            const apiTest = document.getElementById('api-test');
+            const manager = window.universalPreviewManager;
+            
+            if (typeof manager.getWidgetContentOptions === 'function' &&
+                typeof manager.getContentWidgetOptions === 'function' &&
+                typeof manager.renderWidgetWithContent === 'function' &&
+                typeof manager.renderContentWithWidget === 'function') {
+                apiTest.innerHTML = '<span class="success">✓ All API methods are available</span>';
+            } else {
+                apiTest.innerHTML = '<span class="error">✗ Some API methods are missing</span>';
+                return;
+            }
+            
+            // Test 4: Event System
+            const eventTest = document.getElementById('event-test');
+            try {
+                let eventFired = false;
+                manager.on('test-event', function() {
+                    eventFired = true;
+                });
+                manager.emit('test-event');
+                
+                if (eventFired) {
+                    eventTest.innerHTML = '<span class="success">✓ Event system working correctly</span>';
+                } else {
+                    eventTest.innerHTML = '<span class="error">✗ Event system not working</span>';
+                }
+            } catch (error) {
+                eventTest.innerHTML = '<span class="error">✗ Event system error: ' + error.message + '</span>';
+            }
+            
+            // Additional info
+            const stats = manager.getStats();
+            document.body.innerHTML += `
+                <div class="test-section">
+                    <h2>Manager Stats</h2>
+                    <div class="info">
+                        Cache Size: ${stats.cacheSize}<br>
+                        Active Requests: ${stats.activeRequests}<br>
+                        Auto Refresh Active: ${stats.autoRefreshActive}<br>
+                        Current Preview: ${stats.currentPreview || 'None'}
+                    </div>
+                </div>
+            `;
+        });
+    </script>
+</body>
+</html>

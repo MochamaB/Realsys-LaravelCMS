@@ -305,6 +305,22 @@ Route::prefix('api')->middleware('admin.auth')->group(function () {
     Route::match(['GET', 'POST'], '/widgets/{widget}/preview', [App\Http\Controllers\Api\WidgetController::class, 'renderWidgetPreview'])->name('api.widgets.preview');
     Route::get('/widgets/{widget}/preview-data', [App\Http\Controllers\Api\WidgetController::class, 'getWidgetSampleData'])->name('api.widgets.preview-data');
     
+    // Unified Live Preview API (Phase 4.1)
+    Route::get('/widgets/{widget}/content-options', [App\Http\Controllers\Api\WidgetController::class, 'getWidgetContentOptions'])->name('api.widgets.content-options');
+    Route::get('/content/widget-options', [App\Http\Controllers\Api\WidgetController::class, 'getContentWidgetOptions'])->name('api.content.widget-options');
+    Route::post('/widgets/{widget}/render-with-content', [App\Http\Controllers\Api\WidgetController::class, 'renderWidgetWithContent'])->name('api.widgets.render-with-content');
+    Route::post('/content/render-with-widget', [App\Http\Controllers\Api\WidgetController::class, 'renderContentWithWidget'])->name('api.content.render-with-widget');
+    
+    // Frontend Preview API (New approach using frontend renderer)
+    Route::get('/widgets/{widget}/frontend-preview', [App\Http\Controllers\Admin\FrontendPreviewController::class, 'renderWidgetPreview'])->name('api.widgets.frontend-preview');
+    Route::post('/widgets/{widget}/frontend-preview-with-content', [App\Http\Controllers\Admin\FrontendPreviewController::class, 'renderWidgetWithContent'])->name('api.widgets.frontend-preview-with-content');
+    
+    // Full Page Preview (Complete frontend rendering)
+    Route::get('/widgets/{widget}/page-preview', [App\Http\Controllers\Admin\WidgetPreviewPageController::class, 'showPreviewPage'])->name('admin.widgets.page-preview');
+    
+    // Frontend Widget Preview (Uses existing pages + filtering)
+    Route::get('/widgets/{widget}/frontend-page-preview', [App\Http\Controllers\Admin\WidgetPreviewFrontendController::class, 'showWidgetPreview'])->name('admin.widgets.frontend-page-preview');
+    
     // Widget Schema API for GrapesJS
     Route::get('/widgets/schemas', [App\Http\Controllers\Api\WidgetController::class, 'getWidgetSchemas'])->name('api.widgets.schemas');
     Route::get('/widgets/{widget}/schema', [App\Http\Controllers\Api\WidgetController::class, 'getWidgetSchema'])->name('api.widgets.schema');

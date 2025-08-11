@@ -244,6 +244,8 @@
      <!-- Scripts section -->
       <!-- Media Picker JS -->
       <script src="{{ asset('assets/admin/js/media-picker.js') }}"></script>
+      <!-- Universal Preview Manager JS (Phase 4.2) -->
+      <script src="{{ asset('assets/admin/js/universal-preview-manager.js') }}"></script>
       <!-- For scripts using section @section('js') -->
      @yield('js')        
 

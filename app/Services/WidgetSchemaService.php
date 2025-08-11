@@ -360,9 +360,10 @@ class WidgetSchemaService
      * @param array $field
      * @return mixed
      */
-    protected function generateSampleValue(array $field)
+    public function generateSampleValue(array $field)
     {
-        switch ($field['type']) {
+        $fieldType = $field['field_type'] ?? $field['type'] ?? 'text';
+        switch ($fieldType) {
             case 'text':
                 return 'Sample ' . $field['label'];
             case 'number':
@@ -377,11 +378,13 @@ class WidgetSchemaService
                 return asset('assets/admin/images/placeholder.jpg');
             case 'repeater':
                 $sampleItems = [];
-                $minItems = $field['min_items'] ?? 1;
+                $settings = $field['settings'] ?? [];
+                $minItems = $settings['min_items'] ?? $field['min_items'] ?? 1;
+                $subfields = $settings['subfields'] ?? $field['subfields'] ?? [];
                 
                 for ($i = 0; $i < $minItems; $i++) {
                     $sampleItem = [];
-                    foreach ($field['subfields'] as $subfield) {
+                    foreach ($subfields as $subfield) {
                         $sampleItem[$subfield['slug']] = $this->generateSampleValue($subfield);
                     }
                     $sampleItems[] = $sampleItem;
