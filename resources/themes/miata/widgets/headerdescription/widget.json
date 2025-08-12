@@ -9,21 +9,27 @@
       "slug": "title",
       "field_type": "text",
       "is_required": true,
-      "description": "The main heading text"
+      "description": "The main heading text",
+      "default": "Welcome to Our Amazing Service",
+      "placeholder": "Enter your heading text..."
     },
     {
       "name": "Icon",
       "slug": "icon",
       "field_type": "image",
       "is_required": false,
-      "description": "Icon image for the header"
+      "description": "Icon image for the header",
+      "default": "/assets/images/sample-icon.svg",
+      "placeholder": "Upload an icon image..."
     },
     {
       "name": "Description",
       "slug": "description",
       "field_type": "textarea",
       "is_required": false,
-      "description": "Description text below the header"
+      "description": "Description text below the header",
+      "default": "We provide exceptional services that help parties grow and succeed. Our team of experts is dedicated to delivering high-quality solutions tailored to your specific needs.",
+      "placeholder": "Enter description text..."
     }
   ],
   "settings": {

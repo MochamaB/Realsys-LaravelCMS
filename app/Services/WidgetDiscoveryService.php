@@ -150,10 +150,28 @@ class WidgetDiscoveryService
             // Get base settings
             $settings = $field['settings'] ?? [];
             
+            // Add default value if specified in widget.json
+            if (isset($field['default'])) {
+                $settings['default_value'] = $field['default'];
+            }
+            
+            // Add placeholder if specified in widget.json
+            if (isset($field['placeholder'])) {
+                $settings['placeholder'] = $field['placeholder'];
+            }
+            
             // Special handling for repeater fields
             if ($field['field_type'] === 'repeater') {
                 // Ensure repeater has expected structure
                 $settings = $this->validateAndProcessRepeaterSettings($field);
+                
+                // Preserve default and placeholder for repeater fields
+                if (isset($field['default'])) {
+                    $settings['default_value'] = $field['default'];
+                }
+                if (isset($field['placeholder'])) {
+                    $settings['placeholder'] = $field['placeholder'];
+                }
             }
             
             $fieldDefinition->fill([
