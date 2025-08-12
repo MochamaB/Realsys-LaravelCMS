@@ -133,7 +133,7 @@ class TemplateRenderer
      * @param Template $template
      * @return string|null
      */
-    protected function getTemplatePath(Template $template): ?string 
+    public function getTemplatePath(Template $template): ?string 
 {
     $theme = $template->theme;
     
@@ -341,7 +341,7 @@ class TemplateRenderer
      * @param \App\Models\Theme $theme
      * @return void
      */
-    protected function ensureThemeNamespaceIsRegistered($theme): void
+    public function ensureThemeNamespaceIsRegistered($theme): void
     {
         if (!$theme) {
             return;

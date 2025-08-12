@@ -321,6 +321,9 @@ Route::prefix('api')->middleware('admin.auth')->group(function () {
     // Frontend Widget Preview (Uses existing pages + filtering)
     Route::get('/widgets/{widget}/frontend-page-preview', [App\Http\Controllers\Admin\WidgetPreviewFrontendController::class, 'showWidgetPreview'])->name('admin.widgets.frontend-page-preview');
     
+    // Isolated Widget Preview (Renders widget in isolation)
+    Route::get('/widgets/{widget}/isolated-preview', [App\Http\Controllers\Admin\WidgetPreviewFrontendController::class, 'renderWidgetIsolated'])->name('admin.widgets.isolated-preview');
+    
     // Content Options for Widget Preview
     Route::get('/widgets/{widget}/content-options', [App\Http\Controllers\Admin\WidgetPreviewFrontendController::class, 'getContentOptions'])->name('admin.widgets.content-options');
     

@@ -479,7 +479,7 @@ class ThemeManager
             ]);
         }
     }
-    protected function loadThemeAssets(Theme $theme)
+    public function loadThemeAssets(Theme $theme)
 {
     $themeConfig = $this->getThemeConfig($theme->slug);
     $cssAssets = [];

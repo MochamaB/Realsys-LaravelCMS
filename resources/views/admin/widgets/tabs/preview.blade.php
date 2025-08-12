@@ -480,6 +480,12 @@ document.addEventListener('DOMContentLoaded', function() {
     function handleContentChange() {
         currentContentId = contentSelect.value;
         if (currentMode === 'live') {
+            // Update status based on selection
+            if (!currentContentId) {
+                setStatus('info', 'Showing widget with default values');
+            } else {
+                setStatus('info', 'Loading widget with selected content...');
+            }
             loadLivePreview();
         }
     }
@@ -500,10 +506,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function loadStaticPreview() {
         try {
-            // Use frontend page preview approach - load existing page with widget filtering
-            const previewUrl = `/admin/api/widgets/${widgetId}/frontend-page-preview`;
+            // Show loading state
+            showLoading(true);
+            setStatus('info', 'Loading static preview with default values...');
             
-            // Create or update iframe for full page preview
+            // Use isolated widget preview for static mode too
+            const previewUrl = `/admin/api/widgets/${widgetId}/isolated-preview`;
+            
+            // Create or update iframe for isolated widget preview
             let iframe = previewContainer.querySelector('iframe');
             if (!iframe) {
                 iframe = document.createElement('iframe');
@@ -515,18 +525,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 previewContainer.appendChild(iframe);
             }
             
-            // Load the full preview page
+            // Load the isolated widget preview
             iframe.src = previewUrl;
             
             // Listen for iframe load
             iframe.onload = function() {
-                setStatus('success', 'Static preview loaded successfully');
+                showLoading(false);
+                setStatus('success', 'Static preview with default values loaded successfully');
                 updatePreviewMetadata('render-time', '< 200ms');
-                updatePreviewMetadata('assets-count', 'Full Theme Assets');
+                updatePreviewMetadata('assets-count', 'Theme + Widget Assets');
                 updatePreviewMetadata('cache-status', 'Fresh');
             };
             
             iframe.onerror = function() {
+                showLoading(false);
                 showError('Failed to load preview page');
             };
             
@@ -538,13 +550,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function loadLivePreview() {
         try {
+            // Show loading state
+            showLoading(true);
+            
             const fieldOverrides = parseJsonSafely(fieldOverridesTextarea.value);
             
             // Get selected content ID from dropdown
             const contentSelect = document.getElementById('content-select');
             const selectedContentId = contentSelect ? contentSelect.value : null;
             
-            // Build preview URL with parameters for full page preview
+            // Update status based on content selection
+            if (!selectedContentId) {
+                setStatus('info', 'Loading widget with default values...');
+            } else {
+                setStatus('info', 'Loading widget with selected content...');
+            }
+            
+            // Use isolated widget preview for better control
             const params = new URLSearchParams();
             if (selectedContentId) {
                 params.append('content_item_id', selectedContentId);
@@ -554,9 +576,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             params.append('device', currentDevice);
             
-            const previewUrl = `/admin/api/widgets/${widgetId}/frontend-page-preview?${params.toString()}`;
+            const previewUrl = `/admin/api/widgets/${widgetId}/isolated-preview?${params.toString()}`;
             
-            // Create or update iframe for full page preview
+            // Create or update iframe for isolated widget preview
             let iframe = previewContainer.querySelector('iframe');
             if (!iframe) {
                 iframe = document.createElement('iframe');
@@ -568,7 +590,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 previewContainer.appendChild(iframe);
             }
             
-            // Load the full preview page with content
+            // Load the isolated widget preview
             iframe.src = previewUrl;
             
             // Listen for iframe load
@@ -619,8 +641,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function populateContentSelect(contentOptions) {
         const contentSelect = document.getElementById('content-select');
         
-        // Clear existing options except the first one
-        contentSelect.innerHTML = '<option value="">Select content item...</option>';
+        // Clear existing options and add default values option
+        contentSelect.innerHTML = '<option value="">Default Values (No Content)</option>';
         
         // Group content by type for better organization
         const groupedContent = {};

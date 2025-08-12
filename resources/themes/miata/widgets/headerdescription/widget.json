@@ -19,7 +19,7 @@
       "field_type": "image",
       "is_required": false,
       "description": "Icon image for the header",
-      "default": "/assets/images/sample-icon.svg",
+      "default": "fa fa-bookmark",
       "placeholder": "Upload an icon image..."
     },
     {

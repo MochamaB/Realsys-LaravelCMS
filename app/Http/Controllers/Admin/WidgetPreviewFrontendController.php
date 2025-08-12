@@ -397,6 +397,469 @@ class WidgetPreviewFrontendController extends Controller
     }
 
     /**
+     * Render widget in isolation for preview
+     *
+     * @param Widget $widget
+     * @param Request $request
+     * @return Response
+     */
+    public function renderWidgetIsolated(Widget $widget, Request $request): Response
+    {
+        try {
+            // Create temporary PageSectionWidget for preview
+            $tempPageSectionWidget = new PageSectionWidget([
+                'id' => 'preview-' . $widget->id, // Set a preview ID
+                'widget_id' => $widget->id,
+                'position' => 1,
+                'settings' => $request->get('field_overrides', []),
+                'content_query' => $this->buildContentQuery($widget, $request)
+            ]);
+            
+            // Set the widget relationship
+            $tempPageSectionWidget->setRelation('widget', $widget);
+            
+            // Mark as existing so Laravel doesn't try to save it
+            $tempPageSectionWidget->exists = true;
+            
+            // Get widget field values (defaults + content overlay)
+            $widgetService = app(\App\Services\WidgetService::class);
+            $fieldValues = $widgetService->getWidgetFieldValues($widget, $tempPageSectionWidget);
+            
+            // Debug: Log the field values to see what's happening
+            \Log::debug('Widget field values for preview', [
+                'widget_id' => $widget->id,
+                'content_item_id' => $request->get('content_item_id'),
+                'content_query' => $tempPageSectionWidget->content_query,
+                'field_values' => $fieldValues
+            ]);
+            
+            // If content item is selected but no content data is showing, apply basic field mapping
+            $contentItemId = $request->get('content_item_id');
+            if ($contentItemId && $this->isShowingOnlyDefaults($fieldValues, $widget)) {
+                $fieldValues = $this->applyBasicContentMapping($fieldValues, $contentItemId, $widget);
+            }
+            
+            // Render widget in minimal theme context
+            return $this->renderWidgetWithThemeContext($widget, $tempPageSectionWidget, $fieldValues);
+            
+        } catch (\Exception $e) {
+            \Log::error('Isolated widget preview error: ' . $e->getMessage(), [
+                'widget_id' => $widget->id,
+                'exception' => $e
+            ]);
+            
+            return response()->view('admin.widgets.preview-error', [
+                'error' => $e->getMessage(),
+                'widget' => $widget
+            ], 500);
+        }
+    }
+
+    /**
+     * Build content query for widget preview
+     *
+     * @param Widget $widget
+     * @param Request $request
+     * @return array
+     */
+    protected function buildContentQuery(Widget $widget, Request $request): array
+    {
+        $contentItemId = $request->get('content_item_id');
+        
+        if (!$contentItemId) {
+            return []; // No content query = use defaults
+        }
+        
+        $contentItem = \App\Models\ContentItem::find($contentItemId);
+        if (!$contentItem) {
+            return [];
+        }
+        
+        // Build content query for specific content item (matching WidgetService expectations)
+        return [
+            'content_type_id' => $contentItem->content_type_id,
+            'content_item_ids' => [$contentItemId], // Use the correct key that WidgetService expects
+            'limit' => 1,
+            'order_by' => 'created_at',
+            'order_direction' => 'desc'
+        ];
+    }
+
+    /**
+     * Render widget with theme context
+     *
+     * @param Widget $widget
+     * @param PageSectionWidget $pageSectionWidget
+     * @param array $fieldValues
+     * @return Response
+     */
+    protected function renderWidgetWithThemeContext(Widget $widget, PageSectionWidget $pageSectionWidget, array $fieldValues): Response
+    {
+        // Get theme and ensure namespace is registered
+        $theme = $widget->theme;
+        $templateRenderer = app(\App\Services\TemplateRenderer::class);
+        $templateRenderer->ensureThemeNamespaceIsRegistered($theme);
+        
+        // CRITICAL: Load theme assets (CSS/JS) - this was missing!
+        $themeManager = app(\App\Services\ThemeManager::class);
+        $themeManager->loadThemeAssets($theme);
+        
+        // Prepare widget data for rendering
+        $widgetData = $this->prepareWidgetForRendering($widget, $pageSectionWidget, $fieldValues);
+        
+        // Create minimal section context
+        $sectionData = [
+            'widgets' => [$widgetData],
+            'theme' => $theme,
+            'universalStyling' => app(\App\Services\UniversalStylingService::class)
+        ];
+        
+        try {
+            // Try to render using widget-preview section template
+            $sectionView = 'theme::sections.widget-preview';
+            
+            if (!\View::exists($sectionView)) {
+                // Fallback to default section template
+                $sectionView = 'theme::sections.default';
+            }
+            
+            $html = view($sectionView, $sectionData)->render();
+            
+            // Wrap in minimal HTML structure with theme assets
+            return response($this->wrapInPreviewStructure($html, $theme, $widget));
+            
+        } catch (\Exception $e) {
+            \Log::error('Widget theme rendering error: ' . $e->getMessage(), [
+                'widget_id' => $widget->id,
+                'theme_id' => $theme->id
+            ]);
+            
+            // Fallback to simple widget rendering
+            return $this->renderWidgetFallback($widget, $fieldValues);
+        }
+    }
+
+    /**
+     * Prepare widget data for rendering
+     *
+     * @param Widget $widget
+     * @param PageSectionWidget $pageSectionWidget
+     * @param array $fieldValues
+     * @return PageSectionWidget
+     */
+    protected function prepareWidgetForRendering(Widget $widget, PageSectionWidget $pageSectionWidget, array $fieldValues): PageSectionWidget
+    {
+        // Set the field values on the PageSectionWidget for rendering
+        $pageSectionWidget->fieldValues = $fieldValues;
+        
+        // Ensure the widget relationship is loaded
+        if (!$pageSectionWidget->relationLoaded('widget')) {
+            $pageSectionWidget->setRelation('widget', $widget);
+        }
+        
+        return $pageSectionWidget;
+    }
+
+    /**
+     * Wrap widget HTML in preview structure (mimicking theme layout)
+     *
+     * @param string $html
+     * @param \App\Models\Theme $theme
+     * @param Widget $widget
+     * @return string
+     */
+    protected function wrapInPreviewStructure(string $html, \App\Models\Theme $theme, Widget $widget): string
+    {
+        // Get widget assets using the same method as TemplateRenderer
+        $widgetService = app(\App\Services\WidgetService::class);
+        $widgetAssets = $widgetService->collectPageWidgetAssets([]);
+        
+        // Build CSS links exactly like theme layout does
+        $themeCssLinks = '';
+        if (isset($theme->css) && is_array($theme->css)) {
+            foreach ($theme->css as $css) {
+                $themeCssLinks .= '<link rel="stylesheet" href="' . $css . '" />' . "\n        ";
+            }
+        }
+        
+        // Build widget CSS links
+        $widgetCssLinks = '';
+        if (isset($widgetAssets['css']) && is_array($widgetAssets['css'])) {
+            foreach ($widgetAssets['css'] as $css) {
+                $widgetCssLinks .= '<link rel="stylesheet" href="' . $css . '" />' . "\n        ";
+            }
+        }
+        
+        // Build JS scripts exactly like theme layout does
+        $themeJsScripts = '';
+        if (isset($theme->js) && is_array($theme->js)) {
+            foreach ($theme->js as $js) {
+                $themeJsScripts .= '<script src="' . $js . '"></script>' . "\n        ";
+            }
+        }
+        
+        // Build widget JS scripts
+        $widgetJsScripts = '';
+        if (isset($widgetAssets['js']) && is_array($widgetAssets['js'])) {
+            foreach ($widgetAssets['js'] as $js) {
+                $widgetJsScripts .= '<script src="' . $js . '"></script>' . "\n        ";
+            }
+        }
+        
+        return '<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>Widget Preview: ' . $widget->name . '</title>
+    
+    <!-- App favicon -->
+    <link rel="shortcut icon" href="' . asset('assets/admin/images/favicon.ico') . '">
+    
+    <!-- Theme CSS (exactly like theme layout) -->
+    ' . $themeCssLinks . '
+    
+    <!-- Widget CSS Assets (exactly like theme layout) -->
+    ' . $widgetCssLinks . '
+    
+    <!-- Preview Specific Styles -->
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        .widget-preview-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .preview-header {
+            background: #e9ecef;
+            padding: 10px 15px;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 12px;
+            color: #6c757d;
+        }
+        .widget-content {
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="widget-preview-container">
+        <div class="preview-header">
+            Preview: ' . $widget->name . ' (' . $widget->slug . ')
+        </div>
+        <div class="widget-content">
+            ' . $html . '
+        </div>
+    </div>
+    
+    <!-- Theme JavaScript (exactly like theme layout) -->
+    ' . $themeJsScripts . '
+    
+    <!-- Widget JavaScript Assets (exactly like theme layout) -->
+    ' . $widgetJsScripts . '
+</body>
+</html>';
+    }
+
+    /**
+     * Get theme assets for preview (using the same method as frontend rendering)
+     *
+     * @param \App\Models\Theme $theme
+     * @return array
+     */
+    protected function getThemeAssets(\App\Models\Theme $theme): array
+    {
+        // Use the theme's actual asset configuration
+        $cssAssets = [];
+        $jsAssets = [];
+        
+        // Get theme assets from the theme configuration
+        if (isset($theme->css) && is_array($theme->css)) {
+            foreach ($theme->css as $css) {
+                $cssAssets[] = $css;
+            }
+        }
+        
+        if (isset($theme->js) && is_array($theme->js)) {
+            foreach ($theme->js as $js) {
+                $jsAssets[] = $js;
+            }
+        }
+        
+        // If no theme assets are configured, try common paths
+        if (empty($cssAssets)) {
+            $themePublicPath = "/assets/themes/{$theme->slug}";
+            $possibleCss = [
+                "{$themePublicPath}/css/bootstrap.min.css",
+                "{$themePublicPath}/css/style.css",
+                "{$themePublicPath}/css/responsive.css",
+                "{$themePublicPath}/style.css"
+            ];
+            
+            foreach ($possibleCss as $css) {
+                if (file_exists(public_path($css))) {
+                    $cssAssets[] = $css;
+                }
+            }
+        }
+        
+        if (empty($jsAssets)) {
+            $themePublicPath = "/assets/themes/{$theme->slug}";
+            $possibleJs = [
+                "{$themePublicPath}/js/jquery.min.js",
+                "{$themePublicPath}/js/bootstrap.bundle.min.js",
+                "{$themePublicPath}/js/main.js"
+            ];
+            
+            foreach ($possibleJs as $js) {
+                if (file_exists(public_path($js))) {
+                    $jsAssets[] = $js;
+                }
+            }
+        }
+        
+        // Fallback to CDN if no local assets found
+        if (empty($cssAssets)) {
+            $cssAssets = [
+                'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css'
+            ];
+        }
+        
+        if (empty($jsAssets)) {
+            $jsAssets = [
+                'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js'
+            ];
+        }
+        
+        return [
+            'css' => $cssAssets,
+            'js' => $jsAssets
+        ];
+    }
+
+    /**
+     * Fallback widget rendering
+     *
+     * @param Widget $widget
+     * @param array $fieldValues
+     * @return Response
+     */
+    protected function renderWidgetFallback(Widget $widget, array $fieldValues): Response
+    {
+        $html = '<div class="widget-fallback">
+            <h3>' . $widget->name . '</h3>
+            <div class="field-values">
+                ' . collect($fieldValues)->map(function($value, $key) {
+                    return "<p><strong>{$key}:</strong> " . (is_array($value) ? json_encode($value) : $value) . "</p>";
+                })->implode('') . '
+            </div>
+        </div>';
+        
+        return response($this->wrapInPreviewStructure($html, $widget->theme, $widget));
+    }
+
+    /**
+     * Check if widget is showing only default values (no content data)
+     *
+     * @param array $fieldValues
+     * @param Widget $widget
+     * @return bool
+     */
+    protected function isShowingOnlyDefaults(array $fieldValues, Widget $widget): bool
+    {
+        // Get the default values for comparison
+        $widgetService = app(\App\Services\WidgetService::class);
+        $defaultValues = $widgetService->getWidgetFieldValues($widget, null);
+        
+        // If field values match defaults exactly, we're showing only defaults
+        return $fieldValues === $defaultValues;
+    }
+
+    /**
+     * Apply basic content mapping when no explicit mappings exist
+     *
+     * @param array $fieldValues
+     * @param int $contentItemId
+     * @param Widget $widget
+     * @return array
+     */
+    protected function applyBasicContentMapping(array $fieldValues, int $contentItemId, Widget $widget): array
+    {
+        try {
+            $contentItem = \App\Models\ContentItem::with('fieldValues.field')->find($contentItemId);
+            if (!$contentItem) {
+                return $fieldValues;
+            }
+
+            \Log::debug('Applying basic content mapping', [
+                'content_item_id' => $contentItemId,
+                'widget_slug' => $widget->slug,
+                'content_item_title' => $contentItem->title
+            ]);
+
+            // Basic mapping rules for common widget fields
+            $mappingRules = [
+                'title' => ['title', 'name', 'heading', 'subject'],
+                'description' => ['description', 'content', 'body', 'text', 'summary'],
+                'icon' => ['icon', 'image', 'picture', 'photo'],
+                'link' => ['link', 'url', 'href'],
+                'button_text' => ['button_text', 'cta_text', 'action_text'],
+            ];
+
+            // Always map the content item title to title field if widget has one
+            if (isset($fieldValues['title'])) {
+                $fieldValues['title'] = $contentItem->title;
+                \Log::debug('Mapped content item title', ['title' => $contentItem->title]);
+            }
+
+            // Apply field mappings based on content item fields
+            foreach ($contentItem->fieldValues as $fieldValue) {
+                if (!$fieldValue->field) continue;
+
+                $contentFieldSlug = $fieldValue->field->slug;
+                $contentFieldValue = $fieldValue->getFormattedValue();
+
+                // Try to map to widget fields using mapping rules
+                foreach ($mappingRules as $widgetField => $possibleContentFields) {
+                    if (isset($fieldValues[$widgetField]) && in_array($contentFieldSlug, $possibleContentFields)) {
+                        $fieldValues[$widgetField] = $contentFieldValue;
+                        \Log::debug('Applied basic mapping', [
+                            'widget_field' => $widgetField,
+                            'content_field' => $contentFieldSlug,
+                            'value' => $contentFieldValue
+                        ]);
+                        break;
+                    }
+                }
+
+                // Also try direct slug matching
+                if (isset($fieldValues[$contentFieldSlug])) {
+                    $fieldValues[$contentFieldSlug] = $contentFieldValue;
+                    \Log::debug('Applied direct slug mapping', [
+                        'field_slug' => $contentFieldSlug,
+                        'value' => $contentFieldValue
+                    ]);
+                }
+            }
+
+            return $fieldValues;
+
+        } catch (\Exception $e) {
+            \Log::error('Error applying basic content mapping', [
+                'content_item_id' => $contentItemId,
+                'widget_id' => $widget->id,
+                'error' => $e->getMessage()
+            ]);
+            return $fieldValues;
+        }
+    }
+
+    /**
      * Get available content items for widget preview
      *
      * @param Widget $widget
