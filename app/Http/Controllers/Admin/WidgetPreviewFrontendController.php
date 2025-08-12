@@ -31,6 +31,9 @@ class WidgetPreviewFrontendController extends Controller
                 $page = Page::whereHas('template', function($query) use ($widget) {
                     $query->where('theme_id', $widget->theme_id);
                 })->where('status', 'published')->first();
+                
+                // Get theme assets including widget-specific assets
+                $assets = $this->getThemeAssets($widget->theme, $widget);
             }
             
             if (!$page) {
@@ -570,9 +573,9 @@ class WidgetPreviewFrontendController extends Controller
      */
     protected function wrapInPreviewStructure(string $html, \App\Models\Theme $theme, Widget $widget): string
     {
-        // Get widget assets using the same method as TemplateRenderer
+        // Get widget assets using the same method as frontend render
         $widgetService = app(\App\Services\WidgetService::class);
-        $widgetAssets = $widgetService->collectPageWidgetAssets([]);
+        $widgetAssets = $widgetService->collectWidgetAssets($widget);
         
         // Build CSS links exactly like theme layout does
         $themeCssLinks = '';
@@ -667,12 +670,13 @@ class WidgetPreviewFrontendController extends Controller
     }
 
     /**
-     * Get theme assets for preview (using the same method as frontend rendering)
+     * Get theme assets (CSS and JS) including widget-specific assets
      *
-     * @param \App\Models\Theme $theme
+     * @param Theme $theme
+     * @param Widget|null $widget
      * @return array
      */
-    protected function getThemeAssets(\App\Models\Theme $theme): array
+    protected function getThemeAssets(Theme $theme, Widget $widget = null): array
     {
         // Use the theme's actual asset configuration
         $cssAssets = [];
@@ -736,10 +740,64 @@ class WidgetPreviewFrontendController extends Controller
             ];
         }
         
+        // Add widget-specific assets if widget is provided
+        if ($widget) {
+            $this->addWidgetSpecificAssets($cssAssets, $jsAssets, $widget, $theme);
+        }
+        
         return [
             'css' => $cssAssets,
             'js' => $jsAssets
         ];
+    }
+
+    /**
+     * Add widget-specific CSS and JS assets
+     *
+     * @param array &$cssAssets
+     * @param array &$jsAssets  
+     * @param Widget $widget
+     * @param Theme $theme
+     * @return void
+     */
+    protected function addWidgetSpecificAssets(array &$cssAssets, array &$jsAssets, Widget $widget, Theme $theme): void
+    {
+        $widgetPath = "/assets/themes/{$theme->slug}/widgets/{$widget->slug}";
+        
+        // Check for widget-specific CSS
+        $widgetCss = "{$widgetPath}/style.css";
+        if (file_exists(public_path($widgetCss))) {
+            $cssAssets[] = $widgetCss;
+        }
+        
+        // Check for widget-specific JS
+        $widgetJs = "{$widgetPath}/script.js";
+        if (file_exists(public_path($widgetJs))) {
+            $jsAssets[] = $widgetJs;
+        }
+        
+        // Also check for common widget asset names
+        $possibleWidgetCss = [
+            "{$widgetPath}/{$widget->slug}.css",
+            "{$widgetPath}/widget.css"
+        ];
+        
+        $possibleWidgetJs = [
+            "{$widgetPath}/{$widget->slug}.js", 
+            "{$widgetPath}/widget.js"
+        ];
+        
+        foreach ($possibleWidgetCss as $css) {
+            if (file_exists(public_path($css)) && !in_array($css, $cssAssets)) {
+                $cssAssets[] = $css;
+            }
+        }
+        
+        foreach ($possibleWidgetJs as $js) {
+            if (file_exists(public_path($js)) && !in_array($js, $jsAssets)) {
+                $jsAssets[] = $js;
+            }
+        }
     }
 
     /**
@@ -899,24 +957,18 @@ class WidgetPreviewFrontendController extends Controller
             }
             
             // If no specific content associations or no items found, get recent content items from all types
+           // If no content items found, return empty/null instead of fallback
             if (empty($contentItems)) {
-                $recentItems = \App\Models\ContentItem::where('status', 'published')
-                    ->with('contentType')
-                    ->select('id', 'title', 'slug', 'content_type_id', 'created_at')
-                    ->orderBy('created_at', 'desc')
-                    ->limit(20)
-                    ->get();
-                
-                foreach ($recentItems as $item) {
-                    $contentItems[] = [
-                        'id' => $item->id,
-                        'title' => $item->title,
-                        'slug' => $item->slug,
-                        'content_type' => $item->contentType->name ?? 'Unknown',
-                        'content_type_id' => $item->content_type_id,
-                        'created_at' => $item->created_at->format('M j, Y')
-                    ];
-                }
+                return response()->json([
+                    'success' => true,
+                    'content_items' => [], // or null if you prefer
+                    'widget' => [
+                        'id' => $widget->id,
+                        'name' => $widget->name,
+                        'slug' => $widget->slug
+                    ],
+                    'message' => 'No content types available'
+                ]);
             }
             
             return response()->json([

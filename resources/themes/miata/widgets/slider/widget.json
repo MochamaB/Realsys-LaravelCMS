@@ -11,8 +11,9 @@
       "position": 1,
       "is_required": true,
       "description": "Slide items for the slider",
+      "placeholder": "Add slides to create your image carousel",
       "settings": {
-        "min_items": 1,
+        "min_items": 3,
         "max_items": 10,
         "subfields": [
           {
@@ -20,42 +21,54 @@
             "slug": "image",
             "field_type": "image",
             "is_required": true,
-            "description": "Slide background image"
+            "description": "Slide background image",
+            "default": "/themes/miata/img/slider/1.jpg",
+            "placeholder": "Upload slide background image..."
           },
           {
             "name": "Layer 1 Title",
             "slug": "layer1_title",
             "field_type": "text",
             "is_required": false,
-            "description": "Top small title (e.g., 'HEY! WE ARE miata')"
+            "description": "Top small title (e.g., 'HEY! WE ARE REALSYS')",
+            "default": "WELCOME TO OUR PARTY",
+            "placeholder": "Enter small title..."
           },
           {
             "name": "Layer 2 Title Line 1",
             "slug": "layer2_line1",
             "field_type": "text",
             "is_required": false,
-            "description": "Main title first line (e.g., 'HONESTY IDEOLOGY TO')"
+            "description": "Main title first line (e.g., 'HONESTY IDEOLOGY TO')",
+            "default": "AMAZING CREATIVE",
+            "placeholder": "Enter main title first line..."
           },
           {
             "name": "Layer 2 Title Line 2",
             "slug": "layer2_line2",
             "field_type": "text",
             "is_required": false,
-            "description": "Main title second line (e.g., 'THE PEOPLE')"
+            "description": "Main title second line (e.g., 'THE PEOPLE')",
+            "default": "AGENCY",
+            "placeholder": "Enter main title second line..."
           },
           {
             "name": "Button Text",
             "slug": "button_text",
             "field_type": "text",
             "is_required": false,
-            "description": "Button text (e.g., 'Read more')"
+            "description": "Button text (e.g., 'Read more')",
+            "default": "Learn More",
+            "placeholder": "Enter button text..."
           },
           {
             "name": "Button URL",
             "slug": "button_url",
             "field_type": "url",
             "is_required": false,
-            "description": "URL for the button link"
+            "description": "URL for the button link",
+            "default": "#",
+            "placeholder": "Enter button URL..."
           }
         ]
       }

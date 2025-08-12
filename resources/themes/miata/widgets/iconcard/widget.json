@@ -12,13 +12,15 @@
       "is_required": true,
       "description": "Cards with icons to display",
       "settings": {
-        "min_items": 1,
+        "min_items": 3,
         "max_items": 12,
         "subfields": [
         {
           "name": "Icon",
           "slug": "icon",
           "field_type": "image",
+          "default": "fa fa-crosshairs",
+          "placeholder": "Upload icon image...",
           "is_required": true,
           "description": "Icon image for the card"
         },
@@ -26,6 +28,8 @@
           "name": "Heading",
           "slug": "heading",
           "field_type": "text",
+          "default": "Card Heading",
+          "placeholder": "Enter heading...",
           "is_required": true,
           "description": "Card heading"
         },
@@ -33,6 +37,8 @@
           "name": "Content",
           "slug": "content",
           "field_type": "textarea",
+          "default": " This is the area where you can add the card content. Edit this area to add your content.",
+          "placeholder": "Enter content...",
           "is_required": true,
           "description": "Card content text"
         },
@@ -40,6 +46,8 @@
           "name": "Link URL",
           "slug": "link_url",
           "field_type": "url",
+          "default": "#",
+          "placeholder": "Enter link URL...",
           "is_required": false,
           "description": "Optional URL for the icon to link to"
         }

@@ -11,8 +11,9 @@
       "position": 1,
       "is_required": true,
       "description": "Counters to display",
+      "placeholder": "Add counter statistics to showcase your achievements",
       "settings": {
-        "min_items": 1,
+        "min_items": 3,
         "max_items": 12,
         "subfields": [
           {
@@ -20,21 +21,27 @@
             "slug": "icon",
             "field_type": "image",
             "is_required": true,
-            "description": "Icon image for the counter"
+            "description": "Icon image for the counter",
+            "default": "/themes/miata/img/icon-img/1.png",
+            "placeholder": "Select an icon or upload an image..."
           },
           {
             "name": "Top Text",
             "slug": "top_text",
             "field_type": "text",
             "is_required": true,
-            "description": "Top text for the counter"
+            "description": "Top text for the counter",
+            "default": "Achievement",
+            "placeholder": "Enter counter label..."
           },
           {
             "name": "Counter Number",
             "slug": "counter_number",
             "field_type": "number",
             "is_required": true,
-            "description": "Counter number"
+            "description": "Counter number",
+            "default": 100,
+            "placeholder": "Enter number to count to..."
           }
         ]
       }

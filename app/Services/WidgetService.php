@@ -240,16 +240,89 @@ class WidgetService
             case 'integer':
                 return 0;
             case 'array':
-            case 'repeater':
-                return [];
             case 'json':
                 return [];
+            case 'repeater':
+                return $this->generateRepeaterDefaults($field);
             case 'text':
             case 'textarea':
             case 'rich_text':
             case 'url':
             case 'email':
             case 'phone':
+            default:
+                return '';
+        }
+    }
+    
+    /**
+     * Generate default items for repeater fields based on min_items and subfield defaults
+     *
+     * @param WidgetFieldDefinition $field
+     * @return array
+     */
+    protected function generateRepeaterDefaults(WidgetFieldDefinition $field): array
+    {
+        $settings = $field->settings ?? [];
+        $minItems = $settings['min_items'] ?? 0;
+        $subfields = $settings['subfields'] ?? [];
+        
+        // If no min_items or subfields, return empty array
+        if ($minItems <= 0 || empty($subfields)) {
+            return [];
+        }
+        
+        $defaultItems = [];
+        
+        // Generate the minimum required items
+        for ($i = 0; $i < $minItems; $i++) {
+            $item = [];
+            
+            // For each subfield, get its default value
+            foreach ($subfields as $subfield) {
+                $subfieldSlug = $subfield['slug'] ?? null;
+                if (!$subfieldSlug) continue;
+                
+                // Get subfield default value
+                if (isset($subfield['default'])) {
+                    $item[$subfieldSlug] = $subfield['default'];
+                } else {
+                    // Fallback based on subfield type
+                    $subfieldType = $subfield['field_type'] ?? 'text';
+                    $item[$subfieldSlug] = $this->getDefaultValueForType($subfieldType);
+                }
+            }
+            
+            $defaultItems[] = $item;
+        }
+        
+        \Log::debug('Generated repeater defaults', [
+            'field_slug' => $field->slug,
+            'min_items' => $minItems,
+            'generated_items' => count($defaultItems),
+            'default_items' => $defaultItems
+        ]);
+        
+        return $defaultItems;
+    }
+    
+    /**
+     * Get default value for a specific field type
+     *
+     * @param string $fieldType
+     * @return mixed
+     */
+    protected function getDefaultValueForType(string $fieldType)
+    {
+        switch ($fieldType) {
+            case 'boolean':
+                return false;
+            case 'number':
+            case 'integer':
+                return 0;
+            case 'array':
+            case 'json':
+                return [];
             default:
                 return '';
         }
@@ -1082,28 +1155,38 @@ class WidgetService
             ]);
             return $mediaUrl;
         }
-        
-        \Log::debug('No image found for field', [
-            'field_id' => $fieldId,
-            'collection_name' => $collectionName,
-            'value' => $value
-        ]);
-        
-        return null;
-    }
     
-    /**
-     * Format a field value based on its type
-     *
-     * @param mixed $value
-     * @param string $fieldType
-     * @return mixed
-     */
-    protected function formatFieldValue($value, string $fieldType)
-    {
-        switch ($fieldType) {
-            case 'boolean':
-                return (bool) $value;
+    \Log::debug('No image found for field', [
+        'field_id' => $fieldId,
+        'collection_name' => $collectionName,
+        'value' => $value
+    ]);
+    
+    return null;
+}
+
+/**
+ * Format a field value based on its type
+ *
+ * @param mixed $value
+ * @param string $fieldType
+ * @return mixed
+ */
+protected function formatFieldValue($value, string $fieldType)
+{
+    switch ($fieldType) {
+        case 'boolean':
+            return (bool) $value;
+        case 'number':
+        case 'integer':
+            return is_numeric($value) ? (int) $value : 0;
+        case 'image':
+            // Convert media ID to URL if it's numeric
+            if (is_numeric($value) && $value > 0) {
+                return $this->convertMediaIdToUrl($value);
+            }
+            // If it's already a URL or path, return as is
+            return $value;
             case 'number':
             case 'integer':
                 return is_numeric($value) ? (int) $value : 0;

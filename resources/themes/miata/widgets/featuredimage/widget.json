@@ -8,6 +8,8 @@
       "name": "Image",
       "slug": "image",
       "field_type": "image",
+      "default": "/themes/miata/img/bg-img/bg10.jpg",
+      "placeholder": "Upload featured image...",
       "is_required": true,
       "position": 1,
       "description": "The main featured image"
@@ -16,6 +18,8 @@
       "name": "Title",
       "slug": "title",
       "field_type": "text",
+      "default": "Page Title",
+      "placeholder": "Enter title...",
       "is_required": false,
       "position": 2,
       "description": "Optional title above the image"
@@ -24,6 +28,8 @@
       "name": "Caption",
       "slug": "caption",
       "field_type": "text",
+      "default": "Page Caption",
+      "placeholder": "Enter caption...",
       "is_required": false,
       "position": 3,
       "description": "Optional caption text below the image"
@@ -32,6 +38,8 @@
       "name": "Link URL",
       "slug": "link_url",
       "field_type": "url",
+      "default": "#",
+      "placeholder": "Enter link URL...",
       "is_required": false,
       "position": 4,
       "description": "Optional URL for the image to link to"

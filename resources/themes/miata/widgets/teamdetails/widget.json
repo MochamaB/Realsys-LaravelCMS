@@ -8,6 +8,8 @@
       "name": "Photo",
       "slug": "photo",
       "field_type": "image",
+      "default": "/themes/miata/img/banner/7.jpg",
+      "placeholder": "Upload team member photo...",
       "is_required": true,
       "description": "Team member photo"
     },
@@ -15,6 +17,8 @@
       "name": "Name",
       "slug": "name",
       "field_type": "text",
+      "default": "John Doe",
+      "placeholder": "Enter team member name...",
       "is_required": true,
       "description": "Team member name"
     },
@@ -22,6 +26,8 @@
       "name": "Position",
       "slug": "position",
       "field_type": "text",
+      "default": "Leader",
+      "placeholder": "Enter team member position...",
       "is_required": true,
       "description": "Team member job title or position"
     },
@@ -29,6 +35,8 @@
       "name": "Biography",
       "slug": "biography",
       "field_type": "rich_text",
+      "default": "This is the area where you can add the team member biography. Edit this area to add your biography.",
+      "placeholder": "Enter team member biography...",
       "is_required": true,
       "description": "Team member detailed biography"
     },
@@ -36,6 +44,8 @@
       "name": "Email",
       "slug": "email",
       "field_type": "email",
+      "default": "support@realsys .com",
+      "placeholder": "Enter team member email...",
       "is_required": false,
       "description": "Team member email address"
     },
@@ -43,6 +53,8 @@
       "name": "Phone",
       "slug": "phone",
       "field_type": "phone",
+      "default": "+0123 456 789",
+      "placeholder": "Enter team member phone...",
       "is_required": false,
       "description": "Team member phone number"
     },
@@ -50,6 +62,8 @@
       "name": "Facebook URL",
       "slug": "facebook",
       "field_type": "url",
+      "default": "#",
+      "placeholder": "Enter team member Facebook URL...",
       "is_required": false,
       "description": "Team member Facebook profile URL"
     },
@@ -57,6 +71,8 @@
       "name": "Twitter URL",
       "slug": "twitter",
       "field_type": "url",
+      "default": "#",
+      "placeholder": "Enter team member Twitter URL...",
       "is_required": false,
       "description": "Team member Twitter profile URL"
     },
@@ -64,6 +80,8 @@
       "name": "LinkedIn URL",
       "slug": "linkedin",
       "field_type": "url",
+      "default": "#",
+      "placeholder": "Enter team member LinkedIn URL...",
       "is_required": false,
       "description": "Team member LinkedIn profile URL"
     },
@@ -71,6 +89,8 @@
       "name": "Instagram URL",
       "slug": "instagram",
       "field_type": "url",
+      "default": "#",
+      "placeholder": "Enter team member Instagram URL...",
       "is_required": false,
       "description": "Team member Instagram profile URL"
     }
