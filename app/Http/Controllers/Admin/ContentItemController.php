@@ -206,7 +206,7 @@ class ContentItemController extends Controller
             'fieldValues.field',
         ]);
         
-        return view('admin.content_items.preview', compact('contentType', 'contentItem'));
+        return view('admin.content_items.preview_new', compact('contentType', 'contentItem'));
     }
 
     /**

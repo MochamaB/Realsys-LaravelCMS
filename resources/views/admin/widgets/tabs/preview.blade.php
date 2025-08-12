@@ -50,10 +50,11 @@
 
             <!-- Live Preview Content -->
             <div id="live-preview-content" class="preview-section" style="display: none;">
-                <!-- Content Selection (only visible in live mode) -->
-                <div id="content-selection" class="border-bottom p-3 bg-light" style="display: none;">
+                <!-- Combined Content Selection and Preview Controls -->
+                <div class="preview-controls border-bottom p-3 bg-light">
                     <div class="row g-3">
-                        <div class="col-md-6">
+                        <!-- Content Selection -->
+                        <div id="content-selection" class="col-md-4" style="display: none;">
                             <label class="form-label fw-semibold">
                                 <i class="bx bx-file-blank me-1"></i>Content Item
                             </label>
@@ -63,12 +64,7 @@
                             </select>
                             <small class="text-muted">Select content to preview with this widget</small>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Preview Controls -->
-                <div class="preview-controls border-bottom p-3 bg-light">
-                    <div class="row g-3">
                         <!-- Device Size Controls -->
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">
@@ -455,7 +451,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (mode === 'static') {
             loadStaticPreview();
         } else {
-            loadLivePreview();
+            // Load content options first, then load live preview
+            loadContentOptions().then(() => {
+                loadLivePreview();
+            });
         }
         
         setStatus('info', `Switched to ${mode} preview mode`);
@@ -541,10 +540,14 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const fieldOverrides = parseJsonSafely(fieldOverridesTextarea.value);
             
+            // Get selected content ID from dropdown
+            const contentSelect = document.getElementById('content-select');
+            const selectedContentId = contentSelect ? contentSelect.value : null;
+            
             // Build preview URL with parameters for full page preview
             const params = new URLSearchParams();
-            if (currentContentId) {
-                params.append('content_id', currentContentId);
+            if (selectedContentId) {
+                params.append('content_item_id', selectedContentId);
             }
             if (fieldOverrides && Object.keys(fieldOverrides).length > 0) {
                 params.append('field_overrides', JSON.stringify(fieldOverrides));
@@ -589,9 +592,70 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function loadContentOptions() {
         try {
-            await previewManager.getWidgetContentOptions(widgetId);
+            const response = await fetch(`/admin/api/widgets/${widgetId}/content-options`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            
+            if (data.success) {
+                populateContentSelect(data.content_items);
+            } else {
+                console.error('Failed to load content options:', data.error);
+            }
         } catch (error) {
             console.error('Error loading content options:', error);
+        }
+    }
+
+    function populateContentSelect(contentOptions) {
+        const contentSelect = document.getElementById('content-select');
+        
+        // Clear existing options except the first one
+        contentSelect.innerHTML = '<option value="">Select content item...</option>';
+        
+        // Group content by type for better organization
+        const groupedContent = {};
+        contentOptions.forEach(item => {
+            if (!groupedContent[item.content_type]) {
+                groupedContent[item.content_type] = [];
+            }
+            groupedContent[item.content_type].push(item);
+        });
+        
+        // Add options grouped by content type
+        Object.keys(groupedContent).forEach(contentType => {
+            const optgroup = document.createElement('optgroup');
+            optgroup.label = contentType;
+            
+            groupedContent[contentType].forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.id;
+                option.textContent = `${item.title} (${item.created_at})`;
+                option.dataset.contentType = item.content_type;
+                option.dataset.slug = item.slug;
+                optgroup.appendChild(option);
+            });
+            
+            contentSelect.appendChild(optgroup);
+        });
+    }
+
+    function handleContentChange() {
+        const contentSelect = document.getElementById('content-select');
+        const selectedContentId = contentSelect.value;
+        
+        if (selectedContentId && currentMode === 'live') {
+            // Reload live preview with selected content
+            loadLivePreview();
         }
     }
 

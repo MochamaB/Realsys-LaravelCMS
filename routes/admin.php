@@ -232,7 +232,7 @@ Route::middleware('admin.auth')->group(function () {
                 'update' => 'content-types.items.update',
                 'destroy' => 'content-types.items.destroy',
             ]);
-        Route::get('items/{item}/preview', [ContentItemController::class, 'preview'])->name('content-types.items.preview');
+        Route::get('items/{item}/preview', [App\Http\Controllers\Admin\WidgetPreviewFrontendController::class, 'showContentItemPreview'])->name('content-types.items.preview');
     });
 
     // User Management Routes
@@ -320,6 +320,9 @@ Route::prefix('api')->middleware('admin.auth')->group(function () {
     
     // Frontend Widget Preview (Uses existing pages + filtering)
     Route::get('/widgets/{widget}/frontend-page-preview', [App\Http\Controllers\Admin\WidgetPreviewFrontendController::class, 'showWidgetPreview'])->name('admin.widgets.frontend-page-preview');
+    
+    // Content Options for Widget Preview
+    Route::get('/widgets/{widget}/content-options', [App\Http\Controllers\Admin\WidgetPreviewFrontendController::class, 'getContentOptions'])->name('admin.widgets.content-options');
     
     // Widget Schema API for GrapesJS
     Route::get('/widgets/schemas', [App\Http\Controllers\Api\WidgetController::class, 'getWidgetSchemas'])->name('api.widgets.schemas');

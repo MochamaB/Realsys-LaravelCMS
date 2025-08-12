@@ -72,14 +72,11 @@
                                                 <td>{{ $contentItem->updated_at->format('M d, Y') }}</td>
                                                 <td>
                                                     <div class="btn-group">
-                                                        <a href="{{ route('admin.content-types.items.show', [$contentType, $contentItem]) }}" class="btn btn-sm btn-info">
+                                                        <a href="{{ route('admin.content-types.items.preview', [$contentType, $contentItem]) }}" class="btn btn-sm btn-info" title="View & Preview">
                                                             <i class="fas fa-eye"></i>
                                                         </a>
                                                         <a href="{{ route('admin.content-types.items.edit', [$contentType, $contentItem]) }}" class="btn btn-sm btn-primary">
                                                             <i class="fas fa-edit"></i>
-                                                        </a>
-                                                        <a href="{{ route('admin.content-types.items.preview', [$contentType, $contentItem]) }}" class="btn btn-sm btn-secondary">
-                                                            <i class="fas fa-desktop"></i> Preview
                                                         </a>
                                                         <form action="{{ route('admin.content-types.items.destroy', [$contentType, $contentItem]) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this item?');">
                                                             @csrf

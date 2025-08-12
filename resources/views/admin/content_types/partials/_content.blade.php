@@ -113,15 +113,15 @@
                                         </td>
                                         <td class="text-center">
                                             <div class="btn-group btn-group-sm">
+                                                <a href="{{ route('admin.content-types.items.preview', [$contentType, $item]) }}" 
+                                                   class="btn btn-info" 
+                                                   title="View & Preview">
+                                                    <i class="bx bx-show"></i>
+                                                </a>
                                                 <a href="{{ route('admin.content-types.items.edit', [$contentType, $item]) }}" 
                                                    class="btn btn-primary" 
                                                    title="Edit Item">
                                                     <i class="bx bx-edit"></i>
-                                                </a>
-                                                <a href="{{ route('admin.content-types.items.show', [$contentType, $item]) }}" 
-                                                   class="btn btn-info" 
-                                                   title="View Item">
-                                                    <i class="bx bx-show"></i>
                                                 </a>
                                                 <button type="button" 
                                                         class="btn btn-danger delete-item-btn" 
