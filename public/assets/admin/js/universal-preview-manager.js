@@ -1,56 +1,465 @@
 /**
  * Universal Preview Manager
- * Handles live preview functionality for both widgets and content items
- * Phase 4.2 - JavaScript Implementation
+ * Handles live preview functionality for widgets and content items
+ * Part of the Unified Live Preview System (Phase 4.1)
  */
 class UniversalPreviewManager {
     constructor(options = {}) {
         this.options = {
-            baseUrl: '/admin/api',
-            cacheTimeout: 300000, // 5 minutes
+            baseUrl: '/admin/api/preview',
+            csrfToken: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+            defaultTimeout: 10000,
             retryAttempts: 3,
-            retryDelay: 1000,
-            autoRefresh: false,
-            autoRefreshInterval: 30000,
             ...options
         };
-
+        
         this.cache = new Map();
         this.activeRequests = new Map();
-        this.autoRefreshTimer = null;
-        this.currentPreviewData = null;
         this.eventListeners = new Map();
-
+        
         this.init();
     }
-
+    
+    /**
+     * Initialize the preview manager
+     */
     init() {
-        // Initialize CSRF token for API requests
-        this.csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        // Set up global error handling
+        this.setupErrorHandling();
         
-        // Set up global error handler
-        this.setupErrorHandler();
+        // Initialize preview containers
+        this.initializePreviewContainers();
         
         console.log('UniversalPreviewManager initialized');
     }
-
-    setupErrorHandler() {
+    
+    /**
+     * Set up global error handling
+     */
+    setupErrorHandling() {
         window.addEventListener('unhandledrejection', (event) => {
             if (event.reason && event.reason.source === 'UniversalPreviewManager') {
-                console.error('UniversalPreviewManager Error:', event.reason);
-                this.showError('An unexpected error occurred during preview rendering.');
+                console.error('Preview Manager Error:', event.reason);
+                this.showError('Preview system error occurred');
+                event.preventDefault();
             }
         });
     }
-
-    // Event Management
+    
+    /**
+     * Initialize preview containers on the page
+     */
+    initializePreviewContainers() {
+        document.querySelectorAll('[data-preview-container]').forEach(container => {
+            this.setupPreviewContainer(container);
+        });
+    }
+    
+    /**
+     * Set up a preview container
+     */
+    setupPreviewContainer(container) {
+        const type = container.dataset.previewType;
+        const id = container.dataset.previewId;
+        
+        if (!type || !id) {
+            console.warn('Preview container missing required data attributes:', container);
+            return;
+        }
+        
+        // Add loading state
+        container.classList.add('preview-container');
+        
+        // Set up auto-refresh if specified
+        const autoRefresh = container.dataset.autoRefresh;
+        if (autoRefresh && parseInt(autoRefresh) > 0) {
+            this.setupAutoRefresh(container, parseInt(autoRefresh));
+        }
+    }
+    
+    /**
+     * Render widget preview
+     */
+    async renderWidget(widgetId, options = {}) {
+        const {
+            contentId = null,
+            fields = {},
+            settings = {},
+            container = null,
+            useCache = true
+        } = options;
+        
+        try {
+            const cacheKey = this.getCacheKey('widget', widgetId, { contentId, fields, settings });
+            
+            // Check cache first
+            if (useCache && this.cache.has(cacheKey)) {
+                const cached = this.cache.get(cacheKey);
+                if (Date.now() - cached.timestamp < 300000) { // 5 minutes
+                    return this.displayPreview(cached.data, container);
+                }
+            }
+            
+            // Cancel any existing request for this widget
+            this.cancelRequest(cacheKey);
+            
+            const url = contentId 
+                ? `${this.options.baseUrl}/widget/${widgetId}/content/${contentId}`
+                : `${this.options.baseUrl}/widget/${widgetId}`;
+            
+            const requestData = {
+                preview_data: {
+                    fields: fields,
+                    settings: settings
+                },
+                content_item_id: contentId,
+                preview_mode: true
+            };
+            
+            const response = await this.makeRequest(url, requestData, cacheKey);
+            
+            // Cache the response
+            if (useCache) {
+                this.cache.set(cacheKey, {
+                    data: response,
+                    timestamp: Date.now()
+                });
+            }
+            
+            return this.displayPreview(response, container);
+            
+        } catch (error) {
+            console.error('Widget preview error:', error);
+            throw this.createError('Failed to render widget preview', error);
+        }
+    }
+    
+    /**
+     * Render content item preview
+     */
+    async renderContent(contentId, options = {}) {
+        const {
+            widgetId = null,
+            fields = {},
+            container = null,
+            useCache = true
+        } = options;
+        
+        try {
+            const cacheKey = this.getCacheKey('content', contentId, { widgetId, fields });
+            
+            // Check cache first
+            if (useCache && this.cache.has(cacheKey)) {
+                const cached = this.cache.get(cacheKey);
+                if (Date.now() - cached.timestamp < 300000) { // 5 minutes
+                    return this.displayPreview(cached.data, container);
+                }
+            }
+            
+            // Cancel any existing request for this content
+            this.cancelRequest(cacheKey);
+            
+            const url = widgetId 
+                ? `${this.options.baseUrl}/content/${contentId}/widget/${widgetId}`
+                : `${this.options.baseUrl}/content/${contentId}`;
+            
+            const requestData = {
+                preview_data: {
+                    fields: fields
+                },
+                widget_id: widgetId,
+                preview_mode: true
+            };
+            
+            const response = await this.makeRequest(url, requestData, cacheKey);
+            
+            // Cache the response
+            if (useCache) {
+                this.cache.set(cacheKey, {
+                    data: response,
+                    timestamp: Date.now()
+                });
+            }
+            
+            return this.displayPreview(response, container);
+            
+        } catch (error) {
+            console.error('Content preview error:', error);
+            throw this.createError('Failed to render content preview', error);
+        }
+    }
+    
+    /**
+     * Get widget content options
+     */
+    async getWidgetContentOptions(widgetId) {
+        try {
+            const url = `${this.options.baseUrl}/widget/${widgetId}/content-options`;
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'X-CSRF-TOKEN': this.options.csrfToken,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            return await response.json();
+            
+        } catch (error) {
+            console.error('Get widget content options error:', error);
+            throw this.createError('Failed to get widget content options', error);
+        }
+    }
+    
+    /**
+     * Get content widget options
+     */
+    async getContentWidgetOptions(contentId) {
+        try {
+            const url = `${this.options.baseUrl}/content/${contentId}/widget-options`;
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'X-CSRF-TOKEN': this.options.csrfToken,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            return await response.json();
+            
+        } catch (error) {
+            console.error('Get content widget options error:', error);
+            throw this.createError('Failed to get content widget options', error);
+        }
+    }
+    
+    /**
+     * Make HTTP request with retry logic
+     */
+    async makeRequest(url, data, requestKey) {
+        const controller = new AbortController();
+        this.activeRequests.set(requestKey, controller);
+        
+        let lastError;
+        
+        for (let attempt = 1; attempt <= this.options.retryAttempts; attempt++) {
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': this.options.csrfToken,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data),
+                    signal: controller.signal,
+                    timeout: this.options.defaultTimeout
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                this.activeRequests.delete(requestKey);
+                return result;
+                
+            } catch (error) {
+                lastError = error;
+                
+                if (error.name === 'AbortError') {
+                    throw error; // Don't retry aborted requests
+                }
+                
+                if (attempt < this.options.retryAttempts) {
+                    await this.delay(1000 * attempt); // Exponential backoff
+                }
+            }
+        }
+        
+        this.activeRequests.delete(requestKey);
+        throw lastError;
+    }
+    
+    /**
+     * Display preview in container
+     */
+    displayPreview(response, container) {
+        if (!response.success) {
+            throw new Error(response.message || 'Preview rendering failed');
+        }
+        
+        if (container) {
+            // Update container content
+            container.innerHTML = response.html;
+            
+            // Load CSS assets
+            if (response.assets && response.assets.css) {
+                this.loadCssAssets(response.assets.css);
+            }
+            
+            // Load JS assets and initialize
+            if (response.assets && response.assets.js) {
+                this.loadJsAssets(response.assets.js).then(() => {
+                    this.initializeWidgetScripts(container, response.metadata);
+                });
+            }
+            
+            // Trigger preview updated event
+            this.triggerEvent('previewUpdated', {
+                container: container,
+                response: response
+            });
+        }
+        
+        return response;
+    }
+    
+    /**
+     * Load CSS assets dynamically
+     */
+    loadCssAssets(cssUrls) {
+        cssUrls.forEach(url => {
+            if (!document.querySelector(`link[href="${url}"]`)) {
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = url;
+                document.head.appendChild(link);
+            }
+        });
+    }
+    
+    /**
+     * Load JS assets dynamically
+     */
+    async loadJsAssets(jsUrls) {
+        const promises = jsUrls.map(url => {
+            return new Promise((resolve, reject) => {
+                if (document.querySelector(`script[src="${url}"]`)) {
+                    resolve();
+                    return;
+                }
+                
+                const script = document.createElement('script');
+                script.src = url;
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        });
+        
+        await Promise.all(promises);
+    }
+    
+    /**
+     * Initialize widget scripts after loading
+     */
+    initializeWidgetScripts(container, metadata) {
+        // Look for widget-specific initialization
+        const widgets = container.querySelectorAll('[data-widget-type]');
+        
+        widgets.forEach(widget => {
+            const widgetType = widget.dataset.widgetType;
+            const initFunction = window[`init${widgetType.charAt(0).toUpperCase() + widgetType.slice(1)}Widget`];
+            
+            if (typeof initFunction === 'function') {
+                try {
+                    initFunction(widget, metadata);
+                } catch (error) {
+                    console.warn(`Failed to initialize ${widgetType} widget:`, error);
+                }
+            }
+        });
+    }
+    
+    /**
+     * Set up auto-refresh for a container
+     */
+    setupAutoRefresh(container, interval) {
+        const refreshId = setInterval(() => {
+            const type = container.dataset.previewType;
+            const id = container.dataset.previewId;
+            
+            if (type === 'widget') {
+                this.renderWidget(id, { container: container, useCache: false });
+            } else if (type === 'content') {
+                this.renderContent(id, { container: container, useCache: false });
+            }
+        }, interval * 1000);
+        
+        // Store refresh ID for cleanup
+        container.dataset.refreshId = refreshId;
+    }
+    
+    /**
+     * Cancel active request
+     */
+    cancelRequest(requestKey) {
+        const controller = this.activeRequests.get(requestKey);
+        if (controller) {
+            controller.abort();
+            this.activeRequests.delete(requestKey);
+        }
+    }
+    
+    /**
+     * Generate cache key
+     */
+    getCacheKey(type, id, options = {}) {
+        const optionsStr = JSON.stringify(options);
+        return `${type}_${id}_${btoa(optionsStr)}`;
+    }
+    
+    /**
+     * Create standardized error
+     */
+    createError(message, originalError = null) {
+        const error = new Error(message);
+        error.source = 'UniversalPreviewManager';
+        error.originalError = originalError;
+        return error;
+    }
+    
+    /**
+     * Show error message to user
+     */
+    showError(message) {
+        // This can be customized based on your notification system
+        console.error('Preview Error:', message);
+        
+        // You can integrate with your existing notification system here
+        if (window.showNotification) {
+            window.showNotification(message, 'error');
+        }
+    }
+    
+    /**
+     * Utility delay function
+     */
+    delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+    
+    /**
+     * Event system
+     */
     on(event, callback) {
         if (!this.eventListeners.has(event)) {
             this.eventListeners.set(event, []);
         }
         this.eventListeners.get(event).push(callback);
     }
-
+    
     off(event, callback) {
         if (this.eventListeners.has(event)) {
             const listeners = this.eventListeners.get(event);
@@ -60,8 +469,8 @@ class UniversalPreviewManager {
             }
         }
     }
-
-    emit(event, data) {
+    
+    triggerEvent(event, data = {}) {
         if (this.eventListeners.has(event)) {
             this.eventListeners.get(event).forEach(callback => {
                 try {
@@ -72,401 +481,43 @@ class UniversalPreviewManager {
             });
         }
     }
-
-    // Cache Management
-    getCacheKey(type, id, params = {}) {
-        const paramString = Object.keys(params).sort().map(key => `${key}=${params[key]}`).join('&');
-        return `${type}_${id}_${paramString}`;
+    
+    /**
+     * Clear cache
+     */
+    clearCache() {
+        this.cache.clear();
     }
-
-    getFromCache(key) {
-        const cached = this.cache.get(key);
-        if (cached && Date.now() - cached.timestamp < this.options.cacheTimeout) {
-            return cached.data;
-        }
-        this.cache.delete(key);
-        return null;
-    }
-
-    setCache(key, data) {
-        this.cache.set(key, {
-            data,
-            timestamp: Date.now()
-        });
-    }
-
-    clearCache(pattern = null) {
-        if (pattern) {
-            for (const [key] of this.cache) {
-                if (key.includes(pattern)) {
-                    this.cache.delete(key);
-                }
-            }
-        } else {
-            this.cache.clear();
-        }
-        this.emit('cache-cleared', { pattern });
-    }
-
-    // API Request Methods
-    async makeRequest(url, options = {}) {
-        const requestKey = `${url}_${JSON.stringify(options)}`;
-        
-        // Check if request is already in progress
-        if (this.activeRequests.has(requestKey)) {
-            return this.activeRequests.get(requestKey);
-        }
-
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': this.csrfToken,
-                'X-Requested-With': 'XMLHttpRequest',
-                ...options.headers
-            },
-            ...options
-        };
-
-        const requestPromise = this.executeRequest(url, requestOptions);
-        this.activeRequests.set(requestKey, requestPromise);
-
-        try {
-            const result = await requestPromise;
-            return result;
-        } finally {
-            this.activeRequests.delete(requestKey);
-        }
-    }
-
-    async executeRequest(url, options, attempt = 1) {
-        try {
-            const response = await fetch(url, options);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-
-            const data = await response.json();
-            
-            if (!data.success && data.error) {
-                throw new Error(data.error);
-            }
-
-            return data;
-        } catch (error) {
-            if (attempt < this.options.retryAttempts) {
-                await this.delay(this.options.retryDelay * attempt);
-                return this.executeRequest(url, options, attempt + 1);
-            }
-            
-            error.source = 'UniversalPreviewManager';
-            throw error;
-        }
-    }
-
-    delay(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
-    // Widget Content Options API
-    async getWidgetContentOptions(widgetId, useCache = true) {
-        const cacheKey = this.getCacheKey('widget_content_options', widgetId);
-        
-        if (useCache) {
-            const cached = this.getFromCache(cacheKey);
-            if (cached) return cached;
-        }
-
-        try {
-            const url = `${this.options.baseUrl}/widgets/${widgetId}/content-options`;
-            const data = await this.makeRequest(url);
-            
-            if (useCache) {
-                this.setCache(cacheKey, data);
-            }
-            
-            this.emit('content-options-loaded', { widgetId, data });
-            return data;
-        } catch (error) {
-            this.emit('error', { type: 'content-options', widgetId, error });
-            throw error;
-        }
-    }
-
-    // Content Widget Options API
-    async getContentWidgetOptions(params = {}, useCache = true) {
-        const cacheKey = this.getCacheKey('content_widget_options', 'all', params);
-        
-        if (useCache) {
-            const cached = this.getFromCache(cacheKey);
-            if (cached) return cached;
-        }
-
-        try {
-            const queryString = new URLSearchParams(params).toString();
-            const url = `${this.options.baseUrl}/content/widget-options${queryString ? '?' + queryString : ''}`;
-            const data = await this.makeRequest(url);
-            
-            if (useCache) {
-                this.setCache(cacheKey, data);
-            }
-            
-            this.emit('widget-options-loaded', { params, data });
-            return data;
-        } catch (error) {
-            this.emit('error', { type: 'widget-options', params, error });
-            throw error;
-        }
-    }
-
-    // Widget with Content Rendering API
-    async renderWidgetWithContent(widgetId, params = {}) {
-        try {
-            this.emit('render-start', { type: 'widget-with-content', widgetId, params });
-            
-            const url = `${this.options.baseUrl}/widgets/${widgetId}/render-with-content`;
-            const data = await this.makeRequest(url, {
-                method: 'POST',
-                body: JSON.stringify(params)
-            });
-            
-            this.currentPreviewData = {
-                type: 'widget-with-content',
-                widgetId,
-                params,
-                data,
-                timestamp: Date.now()
-            };
-            
-            this.emit('render-complete', this.currentPreviewData);
-            return data;
-        } catch (error) {
-            this.emit('render-error', { type: 'widget-with-content', widgetId, params, error });
-            throw error;
-        }
-    }
-
-    // Content with Widget Rendering API
-    async renderContentWithWidget(params = {}) {
-        try {
-            this.emit('render-start', { type: 'content-with-widget', params });
-            
-            const url = `${this.options.baseUrl}/content/render-with-widget`;
-            const data = await this.makeRequest(url, {
-                method: 'POST',
-                body: JSON.stringify(params)
-            });
-            
-            this.currentPreviewData = {
-                type: 'content-with-widget',
-                params,
-                data,
-                timestamp: Date.now()
-            };
-            
-            this.emit('render-complete', this.currentPreviewData);
-            return data;
-        } catch (error) {
-            this.emit('render-error', { type: 'content-with-widget', params, error });
-            throw error;
-        }
-    }
-
-    // UI Helper Methods
-    updatePreviewContainer(containerId, html, assets = {}) {
-        const container = document.getElementById(containerId);
-        if (!container) {
-            console.warn(`Preview container ${containerId} not found`);
-            return;
-        }
-
-        // Update HTML content
-        container.innerHTML = html;
-
-        // Load CSS assets - handle both string and array formats
-        if (assets.css) {
-            this.loadCssAssets(assets.css);
-        }
-
-        // Load JS assets - handle both string and array formats
-        if (assets.js) {
-            this.loadJsAssets(assets.js);
-        }
-
-        this.emit('preview-updated', { containerId, html, assets });
-    }
-
-    loadCssAssets(cssData) {
-        // Handle both string (inline CSS) and array (URLs) formats
-        if (typeof cssData === 'string' && cssData.trim()) {
-            // Inline CSS - inject as style tag
-            const styleId = 'universal-preview-css-' + Date.now();
-            let existingStyle = document.getElementById(styleId);
-            
-            if (!existingStyle) {
-                existingStyle = document.createElement('style');
-                existingStyle.id = styleId;
-                existingStyle.type = 'text/css';
-                document.head.appendChild(existingStyle);
-            }
-            
-            existingStyle.textContent = cssData;
-        } else if (Array.isArray(cssData)) {
-            // Array of URLs - load as link tags
-            cssData.forEach(url => {
-                if (url && !document.querySelector(`link[href="${url}"]`)) {
-                    const link = document.createElement('link');
-                    link.rel = 'stylesheet';
-                    link.href = url;
-                    document.head.appendChild(link);
-                }
-            });
-        }
-    }
-
-    loadJsAssets(jsData) {
-        // Handle both string (inline JS) and array (URLs) formats
-        if (typeof jsData === 'string' && jsData.trim()) {
-            // Inline JS - inject as script tag
-            const scriptId = 'universal-preview-js-' + Date.now();
-            let existingScript = document.getElementById(scriptId);
-            
-            if (!existingScript) {
-                existingScript = document.createElement('script');
-                existingScript.id = scriptId;
-                existingScript.type = 'text/javascript';
-                document.head.appendChild(existingScript);
-            }
-            
-            existingScript.textContent = jsData;
-        } else if (Array.isArray(jsData)) {
-            // Array of URLs - load as script tags
-            jsData.forEach(url => {
-                if (url && !document.querySelector(`script[src="${url}"]`)) {
-                    const script = document.createElement('script');
-                    script.src = url;
-                    script.async = true;
-                    document.head.appendChild(script);
-                }
-            });
-        }
-    }
-
-    showLoading(containerId) {
-        const container = document.getElementById(containerId);
-        if (container) {
-            container.innerHTML = `
-                <div class="d-flex justify-content-center align-items-center" style="min-height: 200px;">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading preview...</span>
-                    </div>
-                    <span class="ms-3">Loading preview...</span>
-                </div>
-            `;
-        }
-    }
-
-    showError(message, containerId = null) {
-        const errorHtml = `
-            <div class="alert alert-danger d-flex align-items-center" role="alert">
-                <i class="bx bx-error-circle me-2"></i>
-                <div>
-                    <strong>Preview Error:</strong> ${message}
-                </div>
-            </div>
-        `;
-
-        if (containerId) {
-            const container = document.getElementById(containerId);
-            if (container) {
-                container.innerHTML = errorHtml;
-            }
-        } else {
-            // Show global error notification
-            this.showNotification(message, 'error');
-        }
-    }
-
-    showNotification(message, type = 'info') {
-        // Create notification element
-        const notification = document.createElement('div');
-        notification.className = `alert alert-${type === 'error' ? 'danger' : type === 'success' ? 'success' : 'info'} alert-dismissible fade show position-fixed`;
-        notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 400px;';
-        notification.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
-
-        document.body.appendChild(notification);
-
-        // Auto-remove after 5 seconds
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.remove();
-            }
-        }, 5000);
-    }
-
-    // Auto-refresh Management
-    startAutoRefresh(callback, interval = null) {
-        this.stopAutoRefresh();
-        
-        const refreshInterval = interval || this.options.autoRefreshInterval;
-        this.autoRefreshTimer = setInterval(() => {
-            if (typeof callback === 'function') {
-                callback();
-            }
-        }, refreshInterval);
-        
-        this.emit('auto-refresh-started', { interval: refreshInterval });
-    }
-
-    stopAutoRefresh() {
-        if (this.autoRefreshTimer) {
-            clearInterval(this.autoRefreshTimer);
-            this.autoRefreshTimer = null;
-            this.emit('auto-refresh-stopped');
-        }
-    }
-
-    // Utility Methods
-    getCurrentPreviewData() {
-        return this.currentPreviewData;
-    }
-
-    getStats() {
-        return {
-            cacheSize: this.cache.size,
-            activeRequests: this.activeRequests.size,
-            autoRefreshActive: !!this.autoRefreshTimer,
-            currentPreview: this.currentPreviewData ? this.currentPreviewData.type : null
-        };
-    }
-
+    
+    /**
+     * Cleanup method
+     */
     destroy() {
-        this.stopAutoRefresh();
-        this.clearCache();
+        // Cancel all active requests
+        this.activeRequests.forEach(controller => controller.abort());
         this.activeRequests.clear();
+        
+        // Clear cache
+        this.clearCache();
+        
+        // Clear event listeners
         this.eventListeners.clear();
-        this.currentPreviewData = null;
+        
+        // Clear auto-refresh intervals
+        document.querySelectorAll('[data-refresh-id]').forEach(container => {
+            const refreshId = container.dataset.refreshId;
+            if (refreshId) {
+                clearInterval(parseInt(refreshId));
+            }
+        });
         
         console.log('UniversalPreviewManager destroyed');
     }
 }
 
-// Global instance
-window.UniversalPreviewManager = UniversalPreviewManager;
-
-// Auto-initialize if DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        if (!window.universalPreviewManager) {
-            window.universalPreviewManager = new UniversalPreviewManager();
-        }
-    });
+// Export for use in modules or make globally available
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = UniversalPreviewManager;
 } else {
-    if (!window.universalPreviewManager) {
-        window.universalPreviewManager = new UniversalPreviewManager();
-    }
+    window.UniversalPreviewManager = UniversalPreviewManager;
 }
