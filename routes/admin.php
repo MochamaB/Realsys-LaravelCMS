@@ -27,6 +27,7 @@ use App\Http\Controllers\Admin\WidgetAssociationController;
 use App\Http\Controllers\Admin\PageSectionWidgetController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\UserViewSwitchController;
+use App\Http\Controllers\Admin\PreviewController;
 
 // Test route moved inside admin.auth middleware group
 // Guest routes for admin authentication (only for non-authenticated admin users)
@@ -83,6 +84,16 @@ Route::middleware('admin.auth')->group(function () {
     // Widget Code Editing
     Route::get('/widgets/{widget}/code', [WidgetController::class, 'editWidgetCode'])->name('widgets.edit_code');
     Route::post('/widgets/{widget}/code', [WidgetController::class, 'updateWidgetCode'])->name('widgets.update_code');
+
+    // Widget Live Preview API (Missing routes for JavaScript UI)
+    Route::prefix('preview')->name('preview.')->group(function () {
+        Route::post('/widget/{widget}', [PreviewController::class, 'renderWidget'])->name('widget');
+        Route::get('/widget/{widget}/content-options', [PreviewController::class, 'getWidgetContentOptions'])->name('widget.content-options');
+        
+        // Content Item Widget Preview API
+        Route::post('/content/{contentItem}/widget/{widget}', [PreviewController::class, 'renderContentWithWidget'])->name('content.widget');
+        Route::get('/content/{contentId}/widget-options', [PreviewController::class, 'getContentWidgetOptions'])->name('content.widget-options');
+    });
     
     // Widget Association routes
     Route::post('/widgets/{widget}/associations', [WidgetAssociationController::class, 'store'])->name('widgets.associations.create');
@@ -232,7 +243,7 @@ Route::middleware('admin.auth')->group(function () {
                 'update' => 'content-types.items.update',
                 'destroy' => 'content-types.items.destroy',
             ]);
-        Route::get('items/{item}/preview', [App\Http\Controllers\Admin\WidgetPreviewFrontendController::class, 'showContentItemPreview'])->name('content-types.items.preview');
+        Route::get('items/{item}/preview', [App\Http\Controllers\Admin\PreviewController::class, 'showContentItemPreview'])->name('content-types.items.preview');
     });
 
     // User Management Routes

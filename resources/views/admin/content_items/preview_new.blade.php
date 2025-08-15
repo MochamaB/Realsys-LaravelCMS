@@ -346,13 +346,20 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Wait for UniversalPreviewManager to be available
-    if (typeof window.universalPreviewManager === 'undefined') {
-        console.error('UniversalPreviewManager not available');
-        return;
-    }
+    // Wait for UniversalPreviewManager to be available with retry (same pattern as working widget preview)
+    function initializeContentPreview() {
+        if (typeof window.universalPreviewManager === 'undefined' || typeof window.UniversalPreviewManager === 'undefined') {
+            console.log('Waiting for UniversalPreviewManager...');
+            setTimeout(initializeContentPreview, 100);
+            return;
+        }
 
-    const previewManager = window.universalPreviewManager;
+        // Ensure we have an instance
+        if (!window.universalPreviewManager) {
+            window.universalPreviewManager = new window.UniversalPreviewManager();
+        }
+
+        const previewManager = window.universalPreviewManager;
     
     // Initialize content preview functionality
     const contentOnlyBtn = document.getElementById('content-only-btn');
@@ -503,12 +510,29 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!contentItemId) return;
         
         try {
-            await previewManager.getContentWidgetOptions({
-                content_item_id: contentItemId
-            });
+            const response = await previewManager.getContentWidgetOptions(contentItemId);
+            if (response.success && response.widgets) {
+                populateWidgetSelect(response.widgets);
+            }
         } catch (error) {
             console.error('Error loading widget options:', error);
         }
+    }
+
+    function populateWidgetSelect(widgets) {
+        if (!widgetSelect) return;
+        
+        // Clear existing options except the first one
+        widgetSelect.innerHTML = '<option value="">Select a widget...</option>';
+        
+        // Add widget options
+        widgets.forEach(widget => {
+            const option = document.createElement('option');
+            option.value = widget.id;
+            option.textContent = widget.name;
+            option.title = widget.description;
+            widgetSelect.appendChild(option);
+        });
     }
 
     async function loadWidgetPreview() {
@@ -583,6 +607,11 @@ document.addEventListener('DOMContentLoaded', function() {
             return {};
         }
     }
+    
+    } // End of initializeContentPreview function
+    
+    // Start the initialization
+    initializeContentPreview();
 });
 </script>
 

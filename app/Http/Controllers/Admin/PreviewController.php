@@ -81,9 +81,47 @@ class PreviewController extends Controller
      * @return JsonResponse
      */
     public function renderContent(Request $request, ContentItem $contentItem): JsonResponse
-    {
-        try {
-            // Find associated widget or use default
+{
+    try {
+        // Check if a specific widget is requested
+        $widgetId = $request->input('widget_id');
+        $previewData = $request->input('preview_data', []);
+        
+        if ($widgetId) {
+            // Scenario 1: Specific widget requested
+            $widget = Widget::find($widgetId);
+            
+            if (!$widget) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Widget not found'
+                ], 404);
+            }
+            
+            // Validate that the widget can work with this content type
+            $contentType = $contentItem->contentType;
+            $canUseWidget = $widget->contentTypeAssociations()
+                ->where('content_type_id', $contentType->id)
+                ->exists();
+            
+            if (!$canUseWidget) {
+                return response()->json([
+                    'success' => false,
+                    'error' => "Widget '{$widget->name}' is not associated with content type '{$contentType->name}'"
+                ], 400);
+            }
+            
+            // Prepare widget data for specific widget scenario
+            $widgetData = $this->prepareContentWidgetData(
+                $contentItem, 
+                $widget, 
+                ['preview_data' => $previewData]
+            );
+            
+            $previewMode = 'content_with_widget';
+            
+        } else {
+            // Scenario 2: Auto-select widget (existing logic)
             $widget = $this->findContentWidget($contentItem);
             
             if (!$widget) {
@@ -94,38 +132,54 @@ class PreviewController extends Controller
                 ]);
             }
             
-            // Prepare widget data with content item data
+            // Prepare widget data for auto-selected widget scenario
             $widgetData = $this->prepareContentPreviewData($widget, $contentItem);
             
-            // Render widget view with content data
-            $html = $this->renderWidgetView($widget, $widgetData);
+            // Apply any preview data overrides from request
+            if (!empty($previewData)) {
+                $widgetData = array_merge($widgetData, $previewData);
+            }
             
-            // Collect widget assets
-            $assets = $this->widgetService->collectWidgetAssets($widget);
-            
-            return response()->json([
-                'success' => true,
-                'html' => $html,
-                'assets' => $assets,
-                'widget_data' => $widgetData,
-                'preview_metadata' => [
-                    'content_item_id' => $contentItem->id,
-                    'content_type' => $contentItem->contentType->name,
-                    'widget_id' => $widget->id,
-                    'widget_slug' => $widget->slug,
-                    'widget_name' => $widget->name,
-                    'preview_mode' => 'content'
-                ]
-            ]);
-            
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'html' => '<div class="preview-error">Preview Error: ' . $e->getMessage() . '</div>'
-            ], 500);
+            $previewMode = 'content_auto_widget';
         }
+        
+        // Render widget view with content data
+        $html = $this->renderWidgetView($widget, $widgetData);
+        
+        // Collect widget assets
+        $assets = $this->widgetService->collectWidgetAssets($widget);
+        
+        return response()->json([
+            'success' => true,
+            'html' => $html,
+            'assets' => $assets,
+            'widget_data' => $widgetData,
+            'preview_metadata' => [
+                'content_item_id' => $contentItem->id,
+                'content_type' => $contentItem->contentType->name,
+                'widget_id' => $widget->id,
+                'widget_slug' => $widget->slug,
+                'widget_name' => $widget->name,
+                'preview_mode' => $previewMode,
+                'widget_specified' => !empty($widgetId)
+            ]
+        ]);
+        
+    } catch (\Exception $e) {
+        \Log::error('Content preview error', [
+            'content_item_id' => $contentItem->id,
+            'widget_id' => $request->input('widget_id'),
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage(),
+            'html' => '<div class="preview-error">Preview Error: ' . $e->getMessage() . '</div>'
+        ], 500);
     }
+}
 
     /**
      * Get content options for widget preview
@@ -174,47 +228,56 @@ class PreviewController extends Controller
     /**
      * Get widget options for content preview
      *
-     * @param ContentItem $contentItem
+     * @param int $contentId
      * @return JsonResponse
      */
-    public function getContentWidgetOptions(ContentItem $contentItem): JsonResponse
+    public function getContentWidgetOptions($contentId): JsonResponse
     {
         try {
-            // Get widgets associated with this content type
-            $associatedWidgets = $contentItem->contentType->widgets()
-                ->where('is_active', true)
-                ->get(['id', 'name', 'slug', 'description']);
+            // Find the content item by ID
+            $contentItem = ContentItem::with('contentType')->findOrFail($contentId);
+            $contentType = $contentItem->contentType;
             
-            // Get default content display widgets
-            $defaultWidgets = Widget::whereHas('contentTypeAssociations', function ($query) use ($contentItem) {
-                $query->where('content_type_id', $contentItem->content_type_id);
-            })
-            ->where('is_active', true)
-            ->get(['id', 'name', 'slug', 'description']);
+            // Get active theme
+            $activeTheme = \App\Models\Theme::where('is_active', true)->first();
             
-            $widgetOptions = [
-                'associated' => $associatedWidgets->map(function ($widget) {
-                    return [
-                        'id' => $widget->id,
-                        'name' => $widget->name,
-                        'slug' => $widget->slug,
-                        'description' => $widget->description
-                    ];
-                }),
-                'available' => $defaultWidgets->map(function ($widget) {
-                    return [
-                        'id' => $widget->id,
-                        'name' => $widget->name,
-                        'slug' => $widget->slug,
-                        'description' => $widget->description
-                    ];
+            if (!$activeTheme) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'No active theme found'
+                ], 400);
+            }
+
+            // Get widgets that are associated with this content type and belong to active theme
+            $widgets = Widget::where('theme_id', $activeTheme->id)
+                ->whereHas('contentTypeAssociations', function($query) use ($contentType) {
+                    $query->where('content_type_id', $contentType->id);
                 })
-            ];
-            
+                ->select('id', 'name', 'slug', 'description')
+                ->orderBy('name')
+                ->get();
+
+            $widgetOptions = $widgets->map(function($widget) {
+                return [
+                    'id' => $widget->id,
+                    'name' => $widget->name,
+                    'slug' => $widget->slug,
+                    'description' => $widget->description ?? 'No description available'
+                ];
+            });
+
             return response()->json([
                 'success' => true,
-                'widget_options' => $widgetOptions,
-                'recommended_widget' => $associatedWidgets->first() ?? $defaultWidgets->first()
+                'widgets' => $widgetOptions,
+                'content_item' => [
+                    'id' => $contentItem->id,
+                    'title' => $contentItem->title,
+                    'content_type' => $contentType->name
+                ],
+                'theme' => [
+                    'id' => $activeTheme->id,
+                    'name' => $activeTheme->name
+                ]
             ]);
             
         } catch (\Exception $e) {
@@ -346,20 +409,196 @@ class PreviewController extends Controller
         }
     }
         /**
-     * Test controller method for debugging
+     * Render content item with selected widget
      *
+     * @param Request $request
+     * @param ContentItem $contentItem
+     * @param Widget $widget
      * @return JsonResponse
      */
-    public function testController(): JsonResponse
+    public function renderContentWithWidget(Request $request, ContentItem $contentItem, Widget $widget): JsonResponse
     {
-        return response()->json([
-            'success' => true,
-            'message' => 'PreviewController is working',
-            'timestamp' => now()->toISOString(),
-            'services' => [
-                'widgetService' => class_basename($this->widgetService),
-                'templateRenderer' => class_basename($this->templateRenderer)
-            ]
-        ]);
+        try {
+            // Validate that the widget can work with this content type
+            $contentType = $contentItem->contentType;
+            $canUseWidget = $widget->contentTypeAssociations()
+                ->where('content_type_id', $contentType->id)
+                ->exists();
+            
+            if (!$canUseWidget) {
+                return response()->json([
+                    'success' => false,
+                    'error' => "Widget '{$widget->name}' is not associated with content type '{$contentType->name}'"
+                ], 400);
+            }
+
+            // Get preview data from request
+            $previewData = $request->input('preview_data', []);
+            $fieldMappingOverrides = $request->input('field_mapping_overrides', []);
+            $widgetSettingsOverrides = $request->input('widget_settings_overrides', []);
+            
+            // Prepare widget data with content item mapping
+            $widgetData = $this->prepareContentWidgetData($contentItem, $widget, [
+                'field_mapping_overrides' => $fieldMappingOverrides,
+                'widget_settings_overrides' => $widgetSettingsOverrides,
+                'preview_data' => $previewData
+            ]);
+
+            // Render the widget with content data
+            $html = $this->widgetService->renderWidget($widget, $widgetData);
+            
+            // Collect assets
+            $assets = $this->collectWidgetAssets($widget);
+            
+            return response()->json([
+                'success' => true,
+                'html' => $html,
+                'assets' => $assets,
+                'metadata' => [
+                    'widget_id' => $widget->id,
+                    'widget_name' => $widget->name,
+                    'content_item_id' => $contentItem->id,
+                    'content_item_title' => $contentItem->title,
+                    'content_type' => $contentType->name,
+                    'render_time' => microtime(true) - LARAVEL_START
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Content widget preview error', [
+                'content_item_id' => $contentItem->id,
+                'widget_id' => $widget->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to render content with widget: ' . $e->getMessage()
+            ], 500);
+        }
     }
+
+    /**
+     * Prepare widget data with content item mapping
+     *
+     * @param ContentItem $contentItem
+     * @param Widget $widget
+     * @param array $options
+     * @return array
+     */
+    protected function prepareContentWidgetData(ContentItem $contentItem, Widget $widget, array $options = []): array
+    {
+        $fieldMappingOverrides = $options['field_mapping_overrides'] ?? [];
+        $widgetSettingsOverrides = $options['widget_settings_overrides'] ?? [];
+        $previewData = $options['preview_data'] ?? [];
+
+        // Start with widget's default data
+        $widgetData = $this->prepareWidgetData($widget, []);
+
+        // Apply content item field mapping
+        $contentFields = $contentItem->fieldValues()->with('field')->get();
+        
+        foreach ($contentFields as $fieldValue) {
+            $fieldSlug = $fieldValue->field->slug;
+            $fieldType = $fieldValue->field->type;
+            $value = $fieldValue->value;
+
+            // Apply field mapping overrides if provided
+            if (isset($fieldMappingOverrides[$fieldSlug])) {
+                $targetField = $fieldMappingOverrides[$fieldSlug];
+                if (isset($widgetData[$targetField])) {
+                    $widgetData[$targetField] = $value;
+                }
+            } else {
+                // Use automatic field mapping based on common field names
+                $this->applyAutomaticFieldMapping($widgetData, $fieldSlug, $value, $fieldType);
+            }
+        }
+
+        // Apply basic content item properties
+        $widgetData['title'] = $widgetData['title'] ?? $contentItem->title;
+        $widgetData['content'] = $widgetData['content'] ?? $contentItem->content ?? '';
+        $widgetData['created_at'] = $contentItem->created_at->format('Y-m-d H:i:s');
+        $widgetData['updated_at'] = $contentItem->updated_at->format('Y-m-d H:i:s');
+
+        // Apply widget settings overrides
+        if (!empty($widgetSettingsOverrides)) {
+            $widgetData = array_merge($widgetData, $widgetSettingsOverrides);
+        }
+
+        // Apply preview data overrides
+        if (!empty($previewData)) {
+            $widgetData = array_merge($widgetData, $previewData);
+        }
+
+        return $widgetData;
+    }
+
+    /**
+     * Apply automatic field mapping based on common field names
+     *
+     * @param array &$widgetData
+     * @param string $fieldSlug
+     * @param mixed $value
+     * @param string $fieldType
+     * @return void
+     */
+    protected function applyAutomaticFieldMapping(array &$widgetData, string $fieldSlug, $value, string $fieldType): void
+    {
+        // Common field mappings
+        $mappings = [
+            'title' => ['title', 'heading', 'name'],
+            'description' => ['description', 'summary', 'excerpt'],
+            'content' => ['content', 'body', 'text'],
+            'image' => ['image', 'featured_image', 'thumbnail'],
+            'url' => ['url', 'link', 'href'],
+            'date' => ['date', 'published_at', 'created_at']
+        ];
+
+        foreach ($mappings as $widgetField => $contentFields) {
+            if (in_array($fieldSlug, $contentFields) && isset($widgetData[$widgetField])) {
+                $widgetData[$widgetField] = $value;
+                break;
+            }
+        }
+
+        // Direct field name matching as fallback
+        if (isset($widgetData[$fieldSlug])) {
+            $widgetData[$fieldSlug] = $value;
+        }
+    }
+
+/**
+ * Show content item preview page
+ *
+ * @param \App\Models\ContentType $contentType
+ * @param \App\Models\ContentItem $item
+ * @return \Illuminate\View\View
+ */
+public function showContentItemPreview(\App\Models\ContentType $contentType, \App\Models\ContentItem $item)
+{
+    // Load fields and their values
+    $item->load([
+        'contentType',
+        'fieldValues.field',
+    ]);
+    
+    // Use contentItem variable name for the view to maintain consistency
+    $contentItem = $item;
+    
+    return view('admin.content_items.preview', compact('contentType', 'contentItem'));
+}
+
+/**
+ * Test method for debugging
+ */
+public function test()
+{
+    return response()->json([
+        'success' => true,
+        'message' => 'PreviewController is working',
+        'timestamp' => now()
+    ]);
+}
 }

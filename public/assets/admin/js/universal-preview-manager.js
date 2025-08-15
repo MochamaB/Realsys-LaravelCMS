@@ -6,7 +6,7 @@
 class UniversalPreviewManager {
     constructor(options = {}) {
         this.options = {
-            baseUrl: '/admin/api/preview',
+            baseUrl: '/admin/preview',
             csrfToken: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
             defaultTimeout: 10000,
             retryAttempts: 3,
@@ -520,4 +520,18 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = UniversalPreviewManager;
 } else {
     window.UniversalPreviewManager = UniversalPreviewManager;
+    
+    // Create global instance when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!window.universalPreviewManager) {
+                window.universalPreviewManager = new UniversalPreviewManager();
+            }
+        });
+    } else {
+        // DOM is already ready
+        if (!window.universalPreviewManager) {
+            window.universalPreviewManager = new UniversalPreviewManager();
+        }
+    }
 }
