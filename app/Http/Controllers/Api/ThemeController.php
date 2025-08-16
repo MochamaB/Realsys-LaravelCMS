@@ -70,11 +70,12 @@ class ThemeController extends Controller
     }
 
     /**
-     * Get theme-specific CSS for canvas injection (Phase 3.1)
+     * Get theme-specific CSS for canvas injection with widget support
      *
+     * @param Request $request
      * @return JsonResponse
      */
-    public function getCanvasStyles(): JsonResponse
+    public function getCanvasStyles(Request $request): JsonResponse
     {
         try {
             $activeTheme = $this->themeManager->getActiveTheme();
@@ -107,6 +108,17 @@ class ThemeController extends Controller
                 }
             }
 
+            // Add widget-specific CSS if widget IDs are provided
+            $widgetIds = $request->get('widget_ids', []);
+            if (!empty($widgetIds)) {
+                $widgetAssets = $this->getWidgetAssets($activeTheme, $widgetIds);
+                if (!empty($widgetAssets['css'])) {
+                    $combinedCSS .= "\n/* Widget-Specific CSS */\n";
+                    $combinedCSS .= $widgetAssets['css'];
+                    $loadedFiles = array_merge($loadedFiles, $widgetAssets['css_files']);
+                }
+            }
+
             // Add canvas-specific CSS adjustments for Phase 3.1
             $canvasCSS = $this->getCanvasSpecificStyles();
             
@@ -125,9 +137,14 @@ class ThemeController extends Controller
                     'slug' => $activeTheme->slug
                 ],
                 'files_loaded' => $loadedFiles,
+                'widgets' => [
+                    'requested_ids' => $widgetIds,
+                    'processed_count' => !empty($widgetIds) ? count(array_intersect($widgetIds, \App\Models\Widget::where('theme_id', $activeTheme->id)->pluck('id')->toArray())) : 0
+                ],
                 'meta' => [
                     'total_size' => strlen($scopedCSS),
                     'files_count' => count($loadedFiles),
+                    'widget_assets_included' => !empty($widgetIds),
                     'generated_at' => now()->toISOString()
                 ]
             ]);
@@ -144,11 +161,12 @@ class ThemeController extends Controller
     }
 
     /**
-     * Get theme-specific JavaScript for canvas injection (Phase 3.1)
+     * Get theme-specific JavaScript for canvas injection with widget support
      *
+     * @param Request $request
      * @return JsonResponse
      */
-    public function getCanvasScripts(): JsonResponse
+    public function getCanvasScripts(Request $request): JsonResponse
     {
         try {
             $activeTheme = $this->themeManager->getActiveTheme();
@@ -181,6 +199,17 @@ class ThemeController extends Controller
                 }
             }
 
+            // Add widget-specific JavaScript if widget IDs are provided
+            $widgetIds = $request->get('widget_ids', []);
+            if (!empty($widgetIds)) {
+                $widgetAssets = $this->getWidgetAssets($activeTheme, $widgetIds);
+                if (!empty($widgetAssets['js'])) {
+                    $combinedJS .= "\n/* Widget-Specific JavaScript */\n";
+                    $combinedJS .= $widgetAssets['js'];
+                    $loadedFiles = array_merge($loadedFiles, $widgetAssets['js_files']);
+                }
+            }
+
             // Add canvas-specific JavaScript wrapper
             $canvasJS = $this->wrapJavaScriptForCanvas($combinedJS);
 
@@ -193,9 +222,14 @@ class ThemeController extends Controller
                     'slug' => $activeTheme->slug
                 ],
                 'files_loaded' => $loadedFiles,
+                'widgets' => [
+                    'requested_ids' => $widgetIds,
+                    'processed_count' => !empty($widgetIds) ? count(array_intersect($widgetIds, \App\Models\Widget::where('theme_id', $activeTheme->id)->pluck('id')->toArray())) : 0
+                ],
                 'meta' => [
                     'total_size' => strlen($canvasJS),
                     'files_count' => count($loadedFiles),
+                    'widget_assets_included' => !empty($widgetIds),
                     'generated_at' => now()->toISOString()
                 ]
             ]);
@@ -343,5 +377,107 @@ class ThemeController extends Controller
             
         })();
         ";
+    }
+
+    /**
+     * Get widget-specific assets for canvas injection
+     *
+     * @param Theme $theme
+     * @param array $widgetIds
+     * @return array
+     */
+    protected function getWidgetAssets(Theme $theme, array $widgetIds): array
+    {
+        $combinedCSS = '';
+        $combinedJS = '';
+        $cssFiles = [];
+        $jsFiles = [];
+
+        // Get widgets by IDs
+        $widgets = \App\Models\Widget::whereIn('id', $widgetIds)
+            ->where('theme_id', $theme->id)
+            ->get();
+
+        foreach ($widgets as $widget) {
+            // Add widget-specific CSS and JS assets using the same logic as WidgetPreviewFrontendController
+            $widgetAssets = $this->collectWidgetSpecificAssets($widget, $theme);
+            
+            if (!empty($widgetAssets['css'])) {
+                $combinedCSS .= "\n/* Widget: {$widget->name} ({$widget->slug}) */\n";
+                $combinedCSS .= $widgetAssets['css'] . "\n";
+                $cssFiles = array_merge($cssFiles, $widgetAssets['css_files']);
+            }
+            
+            if (!empty($widgetAssets['js'])) {
+                $combinedJS .= "\n/* Widget: {$widget->name} ({$widget->slug}) */\n";
+                $combinedJS .= $widgetAssets['js'] . "\n";
+                $jsFiles = array_merge($jsFiles, $widgetAssets['js_files']);
+            }
+        }
+
+        return [
+            'css' => $combinedCSS,
+            'js' => $combinedJS,
+            'css_files' => $cssFiles,
+            'js_files' => $jsFiles,
+            'widgets_processed' => $widgets->count()
+        ];
+    }
+
+    /**
+     * Collect widget-specific assets (reusing WidgetPreviewFrontendController logic)
+     *
+     * @param Widget $widget
+     * @param Theme $theme
+     * @return array
+     */
+    protected function collectWidgetSpecificAssets(\App\Models\Widget $widget, Theme $theme): array
+    {
+        $cssContent = '';
+        $jsContent = '';
+        $cssFiles = [];
+        $jsFiles = [];
+
+        // Widget asset paths to check (same as WidgetPreviewFrontendController)
+        $possibleWidgetCss = [
+            "/themes/{$theme->slug}/css/widgets/{$widget->slug}-custom.css",
+            "/themes/{$theme->slug}/widgets/{$widget->slug}/style.css",
+            "/themes/{$theme->slug}/widgets/{$widget->slug}/{$widget->slug}.css",
+            "/themes/{$theme->slug}/widgets/{$widget->slug}/widget.css"
+        ];
+
+        $possibleWidgetJs = [
+            "/themes/{$theme->slug}/js/widgets/{$widget->slug}-custom.js",
+            "/themes/{$theme->slug}/widgets/{$widget->slug}/script.js",
+            "/themes/{$theme->slug}/widgets/{$widget->slug}/{$widget->slug}.js",
+            "/themes/{$theme->slug}/widgets/{$widget->slug}/widget.js"
+        ];
+
+        // Load CSS files
+        foreach ($possibleWidgetCss as $cssPath) {
+            $fullPath = public_path($cssPath);
+            if (file_exists($fullPath)) {
+                $cssContent .= "/* File: {$cssPath} */\n";
+                $cssContent .= file_get_contents($fullPath) . "\n\n";
+                $cssFiles[] = $cssPath;
+            }
+        }
+
+        // Load JS files
+        foreach ($possibleWidgetJs as $jsPath) {
+            $fullPath = public_path($jsPath);
+            if (file_exists($fullPath)) {
+                $jsContent .= "/* File: {$jsPath} */\n";
+                $jsContent .= file_get_contents($fullPath) . "\n\n";
+                $jsFiles[] = $jsPath;
+            }
+        }
+
+        return [
+            'css' => $cssContent,
+            'js' => $jsContent,
+            'css_files' => $cssFiles,
+            'js_files' => $jsFiles
+        ];
     }
 } 

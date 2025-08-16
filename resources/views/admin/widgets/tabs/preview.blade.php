@@ -92,6 +92,9 @@
                                 <button type="button" class="btn btn-success flex-fill" id="refresh-btn">
                                     <i class="bx bx-refresh me-1"></i>Refresh
                                 </button>
+                                <button type="button" class="btn btn-outline-primary" id="edit-mode-btn" title="Toggle Edit Mode">
+                                    <i class="bx bx-edit"></i>
+                                </button>
                                 <button type="button" class="btn btn-outline-secondary" id="settings-btn" title="Settings">
                                     <i class="bx bx-cog"></i>
                                 </button>
@@ -400,6 +403,12 @@ document.addEventListener('DOMContentLoaded', function() {
     fullscreenBtn.addEventListener('click', toggleFullscreen);
     applyOverridesBtn.addEventListener('click', applyOverrides);
     resetOverridesBtn.addEventListener('click', resetOverrides);
+    
+    // Edit mode toggle
+    const editModeBtn = document.getElementById('edit-mode-btn');
+    let editingModeEnabled = false;
+    
+    editModeBtn.addEventListener('click', toggleEditMode);
 
     deviceBtns.forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -761,6 +770,48 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (e) {
             console.warn('Invalid JSON:', jsonString);
             return {};
+        }
+    }
+    
+    function toggleEditMode() {
+        editingModeEnabled = !editingModeEnabled;
+        
+        // Update button appearance
+        if (editingModeEnabled) {
+            editModeBtn.classList.remove('btn-outline-primary');
+            editModeBtn.classList.add('btn-primary');
+            editModeBtn.innerHTML = '<i class="bx bx-edit-alt"></i>';
+            editModeBtn.title = 'Exit Edit Mode';
+        } else {
+            editModeBtn.classList.remove('btn-primary');
+            editModeBtn.classList.add('btn-outline-primary');
+            editModeBtn.innerHTML = '<i class="bx bx-edit"></i>';
+            editModeBtn.title = 'Toggle Edit Mode';
+        }
+        
+        // Toggle widget editing mode in preview iframe
+        const iframe = previewContainer.querySelector('iframe');
+        if (iframe && iframe.contentWindow) {
+            try {
+                // Call the toggle function in the iframe
+                if (iframe.contentWindow.toggleWidgetEditMode) {
+                    iframe.contentWindow.toggleWidgetEditMode();
+                    console.log('Edit mode toggled in iframe:', editingModeEnabled);
+                } else {
+                    console.warn('toggleWidgetEditMode function not available in iframe');
+                }
+            } catch (error) {
+                console.error('Error toggling edit mode in iframe:', error);
+            }
+        }
+        
+        // Also try direct UniversalPreviewManager if available in parent window
+        if (window.UniversalPreviewManager) {
+            if (editingModeEnabled) {
+                window.UniversalPreviewManager.enableWidgetEditing(previewContainer);
+            } else {
+                window.UniversalPreviewManager.disableWidgetEditing(previewContainer);
+            }
         }
     }
     

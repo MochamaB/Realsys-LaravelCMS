@@ -24,6 +24,8 @@
     <link href="{{ asset('assets/admin/css/sortable-components.css') }}" rel="stylesheet" type="text/css" />
     <!-- Media Picker CSS -->
     <link href="{{ asset('assets/admin/css/media-picker.css') }}" rel="stylesheet" type="text/css" />
+    <!-- Widget Editing CSS -->
+    <link href="{{ asset('assets/admin/css/widget-editing.css') }}" rel="stylesheet" type="text/css" />
     
     <!-- Page Loader CSS -->
     <style>

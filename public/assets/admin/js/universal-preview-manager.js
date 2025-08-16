@@ -17,6 +17,11 @@ class UniversalPreviewManager {
         this.activeRequests = new Map();
         this.eventListeners = new Map();
         
+        // Widget editing state
+        this.editingMode = false;
+        this.selectedWidget = null;
+        this.widgetElements = new Map();
+        
         this.init();
     }
     
@@ -312,6 +317,9 @@ class UniversalPreviewManager {
             if (response.assets && response.assets.js) {
                 this.loadJsAssets(response.assets.js).then(() => {
                     this.initializeWidgetScripts(container, response.metadata);
+                    
+                    // Enable widget editing after content is loaded
+                    this.initializeWidgetEditing(container);
                 });
             }
             
@@ -490,18 +498,255 @@ class UniversalPreviewManager {
     }
     
     /**
-     * Cleanup method
+     * Enable widget editing mode
+     */
+    enableEditingMode(container = null) {
+        this.editingMode = true;
+        
+        // Add editing mode class to container or body
+        const target = container || document.body;
+        target.classList.add('widget-editing-mode');
+        
+        // Initialize widget detection
+        this.initializeWidgetEditing(target);
+        
+        console.log('Widget editing mode enabled');
+        this.emit('editing-mode-enabled', { container: target });
+    }
+    
+    /**
+     * Disable widget editing mode
+     */
+    disableEditingMode(container = null) {
+        this.editingMode = false;
+        this.selectedWidget = null;
+        
+        // Remove editing mode class
+        const target = container || document.body;
+        target.classList.remove('widget-editing-mode');
+        
+        // Clear widget selections
+        this.clearWidgetSelection();
+        
+        console.log('Widget editing mode disabled');
+        this.emit('editing-mode-disabled', { container: target });
+    }
+    
+    /**
+     * Initialize widget editing functionality
+     */
+    initializeWidgetEditing(container) {
+        // Find all widgets in the container
+        this.detectWidgets(container);
+        
+        // Set up event listeners for widget interaction
+        this.setupWidgetEventListeners(container);
+    }
+    
+    /**
+     * Detect widgets in the preview content
+     */
+    detectWidgets(container) {
+        // Look for common widget patterns
+        const widgetSelectors = [
+            '[data-widget-id]',
+            '[data-widget-name]',
+            '.widget',
+            '[class*="widget-"]'
+        ];
+        
+        widgetSelectors.forEach(selector => {
+            const widgets = container.querySelectorAll(selector);
+            widgets.forEach(widget => this.enhanceWidgetElement(widget));
+        });
+    }
+    
+    /**
+     * Enhance widget element for editing
+     */
+    enhanceWidgetElement(element) {
+        // Add editing classes and attributes
+        element.classList.add('widget-editable');
+        
+        // Get widget information
+        const widgetId = element.dataset.widgetId || this.generateWidgetId();
+        const widgetName = element.dataset.widgetName || this.extractWidgetName(element);
+        const widgetType = element.dataset.widgetType || this.detectWidgetType(element);
+        
+        // Store widget data
+        element.dataset.widgetId = widgetId;
+        element.dataset.widgetName = widgetName;
+        element.dataset.widgetType = widgetType;
+        
+        // Create and add widget label
+        const label = this.createWidgetLabel(widgetName, widgetType);
+        element.appendChild(label);
+        
+        // Store reference
+        this.widgetElements.set(widgetId, element);
+        
+        console.log(`Enhanced widget: ${widgetName} (${widgetId})`);
+    }
+    
+    /**
+     * Create widget label element
+     */
+    createWidgetLabel(name, type = 'content') {
+        const label = document.createElement('div');
+        label.className = 'widget-label';
+        label.dataset.widgetType = type;
+        
+        const icon = this.getWidgetTypeIcon(type);
+        label.innerHTML = `
+            <span class="widget-info-badge">
+                <i class="${icon}"></i>
+                ${name}
+            </span>
+        `;
+        
+        return label;
+    }
+    
+    /**
+     * Get icon for widget type
+     */
+    getWidgetTypeIcon(type) {
+        const icons = {
+            'content': 'bx bx-file-blank',
+            'layout': 'bx bx-layout',
+            'media': 'bx bx-image',
+            'form': 'bx bx-form',
+            'navigation': 'bx bx-menu',
+            'social': 'bx bx-share-alt'
+        };
+        
+        return icons[type] || 'bx bx-widget';
+    }
+    
+    /**
+     * Set up event listeners for widget interaction
+     */
+    setupWidgetEventListeners(container) {
+        // Click handler for widget selection
+        container.addEventListener('click', (e) => {
+            if (!this.editingMode) return;
+            
+            const widget = e.target.closest('.widget-editable');
+            if (widget) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.selectWidget(widget);
+            }
+        });
+        
+        // Prevent default link behavior in editing mode
+        container.addEventListener('click', (e) => {
+            if (this.editingMode && (e.target.tagName === 'A' || e.target.closest('a'))) {
+                e.preventDefault();
+            }
+        });
+    }
+    
+    /**
+     * Select a widget
+     */
+    selectWidget(element) {
+        // Clear previous selection
+        this.clearWidgetSelection();
+        
+        // Select new widget
+        element.classList.add('widget-selected');
+        this.selectedWidget = element;
+        
+        const widgetId = element.dataset.widgetId;
+        const widgetName = element.dataset.widgetName;
+        
+        console.log(`Selected widget: ${widgetName} (${widgetId})`);
+        this.emit('widget-selected', { 
+            element, 
+            widgetId, 
+            widgetName,
+            widgetType: element.dataset.widgetType
+        });
+    }
+    
+    /**
+     * Clear widget selection
+     */
+    clearWidgetSelection() {
+        if (this.selectedWidget) {
+            this.selectedWidget.classList.remove('widget-selected');
+            this.selectedWidget = null;
+        }
+        
+        // Remove selection from all widgets
+        document.querySelectorAll('.widget-selected').forEach(widget => {
+            widget.classList.remove('widget-selected');
+        });
+    }
+    
+    /**
+     * Generate unique widget ID
+     */
+    generateWidgetId() {
+        return 'widget-' + Math.random().toString(36).substr(2, 9);
+    }
+    
+    /**
+     * Extract widget name from element
+     */
+    extractWidgetName(element) {
+        // Try various methods to get widget name
+        if (element.dataset.widgetName) return element.dataset.widgetName;
+        if (element.title) return element.title;
+        
+        // Extract from class names
+        const classList = Array.from(element.classList);
+        const widgetClass = classList.find(cls => cls.startsWith('widget-'));
+        if (widgetClass) {
+            return widgetClass.replace('widget-', '').replace('-', ' ');
+        }
+        
+        return 'Unknown Widget';
+    }
+    
+    /**
+     * Detect widget type from element
+     */
+    detectWidgetType(element) {
+        const classList = Array.from(element.classList);
+        
+        // Check for specific widget type classes
+        if (classList.some(cls => cls.includes('content'))) return 'content';
+        if (classList.some(cls => cls.includes('layout'))) return 'layout';
+        if (classList.some(cls => cls.includes('media') || cls.includes('image'))) return 'media';
+        if (classList.some(cls => cls.includes('form'))) return 'form';
+        if (classList.some(cls => cls.includes('nav'))) return 'navigation';
+        
+        return 'content'; // Default type
+    }
+    
+    /**
+     * Destroy the preview manager
      */
     destroy() {
+        // Disable editing mode
+        this.disableEditingMode();
+        
         // Cancel all active requests
-        this.activeRequests.forEach(controller => controller.abort());
+        this.activeRequests.forEach((controller, key) => {
+            controller.abort();
+        });
         this.activeRequests.clear();
         
         // Clear cache
-        this.clearCache();
+        this.cache.clear();
         
         // Clear event listeners
         this.eventListeners.clear();
+        
+        // Clear widget references
+        this.widgetElements.clear();
         
         // Clear auto-refresh intervals
         document.querySelectorAll('[data-refresh-id]').forEach(container => {

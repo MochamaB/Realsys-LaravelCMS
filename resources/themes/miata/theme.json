@@ -11,5 +11,9 @@
     "primary_color": "#ff5c5c",
     "secondary_color": "#1e1e85",
     "font_family": "Poppins, sans-serif"
-  }
+  },
+  "js": [
+    "/themes/miata/js/jquery-1.12.4.min.js",
+    "/themes/miata/lib/js/jquery.nivo.slider.js"
+  ]
 }

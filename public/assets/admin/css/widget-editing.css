@@ -1,0 +1,141 @@
+/**
+ * Widget Visual Editing System
+ * Provides visual feedback and selection for widgets in preview mode
+ */
+
+/* Widget Editing Mode Container */
+.widget-editing-mode {
+    position: relative;
+}
+
+/* Widget Selection Styles */
+.widget-editable {
+    position: relative;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+/* Hover State - Dashed Border */
+.widget-editing-mode .widget-editable:hover {
+    outline: 2px dashed #007cba;
+    outline-offset: 2px;
+    z-index: 10;
+}
+
+/* Selected State - Solid Border */
+.widget-editing-mode .widget-editable.widget-selected {
+    outline: 3px solid #007cba;
+    outline-offset: 2px;
+    z-index: 20;
+}
+
+/* Widget Label */
+.widget-label {
+    position: absolute;
+    top: -32px;
+    left: -2px;
+    background: #007cba;
+    color: white;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 500;
+    border-radius: 3px;
+    z-index: 1000;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translateY(-5px);
+    transition: all 0.2s ease;
+    pointer-events: none;
+    box-shadow: 0 2px 8px rgba(0, 124, 186, 0.3);
+}
+
+/* Show label on hover or selection */
+.widget-editing-mode .widget-editable:hover .widget-label,
+.widget-editing-mode .widget-editable.widget-selected .widget-label {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Widget Label Arrow */
+.widget-label::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 8px;
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 4px solid #007cba;
+}
+
+/* Widget Info Badge */
+.widget-info-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+}
+
+.widget-info-badge i {
+    font-size: 12px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .widget-label {
+        font-size: 10px;
+        padding: 3px 6px;
+        top: -28px;
+    }
+    
+    .widget-editing-mode .widget-editable:hover,
+    .widget-editing-mode .widget-editable.widget-selected {
+        outline-width: 2px;
+        outline-offset: 1px;
+    }
+}
+
+/* Prevent text selection during editing */
+.widget-editing-mode {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* Widget Type Indicators */
+.widget-label[data-widget-type="content"] {
+    background: #28a745;
+}
+
+.widget-label[data-widget-type="layout"] {
+    background: #6f42c1;
+}
+
+.widget-label[data-widget-type="media"] {
+    background: #fd7e14;
+}
+
+.widget-label[data-widget-type="form"] {
+    background: #dc3545;
+}
+
+/* Animation for smooth transitions */
+.widget-editable {
+    transition: outline 0.2s ease, z-index 0.2s ease;
+}
+
+/* Ensure labels don't interfere with layout */
+.widget-editing-mode .widget-editable {
+    isolation: isolate;
+}
+
+/* Hide labels when not in editing mode */
+.widget-label {
+    display: none;
+}
+
+.widget-editing-mode .widget-label {
+    display: block;
+}

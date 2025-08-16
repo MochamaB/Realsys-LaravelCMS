@@ -201,6 +201,76 @@ class WidgetPreviewFrontendController extends Controller
             .preview-device-desktop {
                 max-width: 100%;
             }
+            
+            /* Widget Editing System Styles */
+            .widget-editing-mode .widget-editable {
+                position: relative;
+                transition: all 0.2s ease;
+            }
+            
+            .widget-editing-mode .widget-editable:hover {
+                outline: 2px solid #007bff;
+                outline-offset: 2px;
+                cursor: pointer;
+            }
+            
+            .widget-editing-mode .widget-editable.selected {
+                outline: 3px solid #0056b3;
+                outline-offset: 2px;
+                background-color: rgba(0, 123, 255, 0.05);
+            }
+            
+            .widget-editing-mode .widget-label {
+                position: absolute;
+                top: -25px;
+                left: 0;
+                background: #007bff;
+                color: white;
+                padding: 2px 8px;
+                border-radius: 3px;
+                font-size: 11px;
+                font-weight: 500;
+                z-index: 1000;
+                opacity: 0;
+                transition: opacity 0.2s ease;
+                pointer-events: none;
+            }
+            
+            .widget-editing-mode .widget-editable:hover .widget-label,
+            .widget-editing-mode .widget-editable.selected .widget-label {
+                opacity: 1;
+            }
+            
+            .widget-editing-mode .widget-edit-button {
+                position: absolute;
+                top: -15px;
+                right: -15px;
+                background: #28a745;
+                color: white;
+                border: none;
+                border-radius: 50%;
+                width: 30px;
+                height: 30px;
+                font-size: 12px;
+                cursor: pointer;
+                z-index: 1001;
+                opacity: 0;
+                transition: all 0.2s ease;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .widget-editing-mode .widget-editable:hover .widget-edit-button,
+            .widget-editing-mode .widget-editable.selected .widget-edit-button {
+                opacity: 1;
+                transform: scale(1.1);
+            }
+            
+            .widget-editing-mode .widget-edit-button:hover {
+                background: #218838;
+                transform: scale(1.2);
+            }
         </style>
         
         <script>
@@ -353,12 +423,32 @@ class WidgetPreviewFrontendController extends Controller
                     });
                 }
                 
+                // Initialize widget editing system if UniversalPreviewManager is available
+                if (window.UniversalPreviewManager) {
+                    // Enable widget editing for the preview container
+                    const previewContainer = document.body;
+                    window.UniversalPreviewManager.initializeWidgetEditing(previewContainer);
+                    
+                    // Add edit mode toggle capability
+                    window.toggleWidgetEditMode = function() {
+                        const isEditingEnabled = document.body.classList.contains("widget-editing-mode");
+                        if (isEditingEnabled) {
+                            window.UniversalPreviewManager.disableWidgetEditing(previewContainer);
+                        } else {
+                            window.UniversalPreviewManager.enableWidgetEditing(previewContainer);
+                        }
+                    };
+                    
+                    console.log("Widget editing system initialized for preview");
+                }
+                
                 // Send ready message to parent if in iframe
                 if (window.parent !== window) {
                     window.parent.postMessage({
                         type: "preview-ready",
                         widget_id: ' . $widget->id . ',
-                        widget_count: targetWidgets.length
+                        widget_count: targetWidgets.length,
+                        editing_enabled: !!window.UniversalPreviewManager
                     }, "*");
                 }
                 
@@ -366,7 +456,8 @@ class WidgetPreviewFrontendController extends Controller
                     widget_id: ' . $widget->id . ',
                     widget_slug: "' . $widget->slug . '",
                     device: device,
-                    widgets_found: targetWidgets.length
+                    widgets_found: targetWidgets.length,
+                    editing_system: !!window.UniversalPreviewManager
                 });
             });
         </script>
@@ -573,6 +664,13 @@ class WidgetPreviewFrontendController extends Controller
      */
     protected function wrapInPreviewStructure(string $html, \App\Models\Theme $theme, Widget $widget): string
     {
+        // Debug logging
+        \Log::info('wrapInPreviewStructure called', [
+            'widget_id' => $widget->id,
+            'widget_name' => $widget->name,
+            'html_length' => strlen($html)
+        ]);
+        
         // Get widget assets using the same method as frontend render
         $widgetService = app(\App\Services\WidgetService::class);
         $widgetAssets = $widgetService->collectWidgetAssets($widget);
@@ -646,9 +744,79 @@ class WidgetPreviewFrontendController extends Controller
             color: #6c757d;
         }
         .widget-content {
-            padding: 20px;
-        }
-    </style>
+        padding: 20px;
+    }
+    
+    /* Widget Editing System Styles */
+    .widget-editing-mode .widget-editable {
+        position: relative;
+        transition: all 0.2s ease;
+    }
+    
+    .widget-editing-mode .widget-editable:hover {
+        outline: 2px solid #007bff;
+        outline-offset: 2px;
+        cursor: pointer;
+    }
+    
+    .widget-editing-mode .widget-editable.selected {
+        outline: 3px solid #0056b3;
+        outline-offset: 2px;
+        background-color: rgba(0, 123, 255, 0.05);
+    }
+    
+    .widget-editing-mode .widget-label {
+        position: absolute;
+        top: -25px;
+        left: 0;
+        background: #007bff;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 3px;
+        font-size: 11px;
+        font-weight: 500;
+        z-index: 1000;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        pointer-events: none;
+    }
+    
+    .widget-editing-mode .widget-editable:hover .widget-label,
+    .widget-editing-mode .widget-editable.selected .widget-label {
+        opacity: 1;
+    }
+    
+    .widget-editing-mode .widget-edit-button {
+        position: absolute;
+        top: -15px;
+        right: -15px;
+        background: #28a745;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        font-size: 12px;
+        cursor: pointer;
+        z-index: 1001;
+        opacity: 0;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .widget-editing-mode .widget-editable:hover .widget-edit-button,
+    .widget-editing-mode .widget-editable.selected .widget-edit-button {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+    
+    .widget-editing-mode .widget-edit-button:hover {
+        background: #218838;
+        transform: scale(1.2);
+    }
+</style>
 </head>
 <body>
     <div class="widget-preview-container">
@@ -665,6 +833,217 @@ class WidgetPreviewFrontendController extends Controller
     
     <!-- Widget JavaScript Assets (exactly like theme layout) -->
     ' . $widgetJsScripts . '
+    
+    <!-- Widget Editing System JavaScript -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            console.log("Widget preview loaded - initializing editing system");
+            
+            // Inject CSS styles directly via JavaScript
+            const style = document.createElement("style");
+            style.textContent = `
+                .widget-editing-mode .widget-editable {
+                    position: relative;
+                    transition: all 0.2s ease;
+                }
+                
+                .widget-editing-mode .widget-editable:hover {
+                    outline: 2px solid #007bff !important;
+                    outline-offset: 2px;
+                    cursor: pointer;
+                }
+                
+                .widget-editing-mode .widget-editable.selected {
+                    outline: 3px solid #0056b3 !important;
+                    outline-offset: 2px;
+                    background-color: rgba(0, 123, 255, 0.05) !important;
+                }
+                
+                .widget-editing-mode .widget-label {
+                    position: absolute;
+                    top: -25px;
+                    left: 0;
+                    background: #007bff;
+                    color: white;
+                    padding: 2px 8px;
+                    border-radius: 3px;
+                    font-size: 11px;
+                    font-weight: 500;
+                    z-index: 1000;
+                    opacity: 0;
+                    transition: opacity 0.2s ease;
+                    pointer-events: none;
+                }
+                
+                .widget-editing-mode .widget-editable:hover .widget-label,
+                .widget-editing-mode .widget-editable.selected .widget-label {
+                    opacity: 1;
+                }
+                
+                .widget-editing-mode .widget-edit-button {
+                    position: absolute;
+                    top: -15px;
+                    right: -15px;
+                    background: #28a745;
+                    color: white;
+                    border: none;
+                    border-radius: 50%;
+                    width: 30px;
+                    height: 30px;
+                    font-size: 12px;
+                    cursor: pointer;
+                    z-index: 1001;
+                    opacity: 0;
+                    transition: all 0.2s ease;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                
+                .widget-editing-mode .widget-editable:hover .widget-edit-button,
+                .widget-editing-mode .widget-editable.selected .widget-edit-button {
+                    opacity: 1;
+                    transform: scale(1.1);
+                }
+                
+                .widget-editing-mode .widget-edit-button:hover {
+                    background: #218838;
+                    transform: scale(1.2);
+                }
+            `;
+            document.head.appendChild(style);
+            console.log("Widget editing CSS injected");
+            
+            // Add widget editing functionality
+            let editingEnabled = false;
+            let selectedWidget = null;
+            
+            // Global function to toggle edit mode (called from parent iframe)
+            window.toggleWidgetEditMode = function() {
+                editingEnabled = !editingEnabled;
+                
+                if (editingEnabled) {
+                    enableWidgetEditing();
+                } else {
+                    disableWidgetEditing();
+                }
+                
+                console.log("Widget editing mode:", editingEnabled ? "enabled" : "disabled");
+            };
+            
+            function enableWidgetEditing() {
+                document.body.classList.add("widget-editing-mode");
+                
+                // Find all widgets in the preview
+                const widgets = document.querySelectorAll(".widget, [data-widget-type], [class*=\"widget-\"]");
+                
+                widgets.forEach(widget => {
+                    enhanceWidgetForEditing(widget);
+                });
+                
+                console.log("Enhanced", widgets.length, "widgets for editing");
+            }
+            
+            function disableWidgetEditing() {
+                document.body.classList.remove("widget-editing-mode");
+                
+                // Remove editing enhancements
+                const editableWidgets = document.querySelectorAll(".widget-editable");
+                editableWidgets.forEach(widget => {
+                    widget.classList.remove("widget-editable", "selected");
+                    
+                    // Remove added elements
+                    const label = widget.querySelector(".widget-label");
+                    const button = widget.querySelector(".widget-edit-button");
+                    if (label) label.remove();
+                    if (button) button.remove();
+                });
+                
+                selectedWidget = null;
+            }
+            
+            function enhanceWidgetForEditing(widget) {
+                if (widget.classList.contains("widget-editable")) return;
+                
+                widget.classList.add("widget-editable");
+                
+                // Get widget type/name
+                const widgetType = widget.dataset.widgetType || 
+                                 widget.className.match(/widget-([a-zA-Z0-9-]+)/)?.[1] || 
+                                 "' . $widget->slug . '";
+                
+                // Add label
+                const label = document.createElement("div");
+                label.className = "widget-label";
+                label.textContent = widgetType;
+                widget.appendChild(label);
+                
+                // Add edit button
+                const editButton = document.createElement("button");
+                editButton.className = "widget-edit-button";
+                editButton.innerHTML = "✎";
+                editButton.title = "Edit Widget";
+                widget.appendChild(editButton);
+                
+                // Add click handlers
+                widget.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    selectWidget(widget);
+                });
+                
+                editButton.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    openWidgetEditor(widget, widgetType);
+                });
+            }
+            
+            function selectWidget(widget) {
+                // Remove previous selection
+                if (selectedWidget) {
+                    selectedWidget.classList.remove("selected");
+                }
+                
+                // Select new widget
+                selectedWidget = widget;
+                widget.classList.add("selected");
+                
+                console.log("Selected widget:", widget);
+            }
+            
+            function openWidgetEditor(widget, widgetType) {
+                console.log("Opening editor for widget:", widgetType);
+                
+                // Send message to parent window about widget editing
+                if (window.parent !== window) {
+                    window.parent.postMessage({
+                        type: "widget-edit-requested",
+                        widget_id: "' . $widget->id . '",
+                        widget_type: widgetType,
+                        widget_element: widget.outerHTML
+                    }, "*");
+                }
+                
+                // For now, just show an alert
+                alert("Widget Editor\\n\\nWidget: " + widgetType + "\\nID: ' . $widget->id . '\\n\\nModal editing will be implemented next!");
+            }
+            
+            // Auto-enhance widgets on load
+            const initialWidgets = document.querySelectorAll(".widget, [data-widget-type], [class*=\"widget-\"]");
+            console.log("Found", initialWidgets.length, "widgets in preview");
+            
+            // Send ready message to parent
+            if (window.parent !== window) {
+                window.parent.postMessage({
+                    type: "preview-ready",
+                    widget_id: "' . $widget->id . '",
+                    widgets_found: initialWidgets.length,
+                    editing_available: true
+                }, "*");
+            }
+        });
+    </script>
 </body>
 </html>';
     }
