@@ -66,13 +66,13 @@ class PageSectionController extends Controller
                         'column_span_override' => $section->column_span_override,
                         'column_offset_override' => $section->column_offset_override,
                         // Include template section data
-                        'template_section' => [
+                        'template_section' => $section->templateSection ? [
                             'id' => $section->templateSection->id,
                             'name' => $section->templateSection->name,
                             'section_type' => $section->templateSection->section_type,
                             'column_layout' => $section->templateSection->column_layout,
                             'description' => $section->templateSection->description
-                        ]
+                        ] : null
                     ];
                 });
 

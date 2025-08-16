@@ -59,34 +59,18 @@ window.WidgetLibrary = {
     },
 
     renderWidgetLibrary() {
-        const categories = {
-            content: [],
-            layout: [],
-            media: [],
-            form: []  // Changed from 'forms' to 'form' to match HTML container ID
-        };
+        // Use single container for all widgets (matches current DOM structure)
+        const container = document.getElementById('themeWidgetsGrid');
+        if (!container) {
+            console.warn('⚠️ Container not found: themeWidgetsGrid');
+            return;
+        }
         
+        // Clear container and add all widgets
+        container.innerHTML = '';
         this.widgets.forEach(widget => {
-            const cat = (widget.category || '').toLowerCase();
-            if (categories[cat]) {
-                categories[cat].push(widget);
-            } else {
-                categories.content.push(widget);
-            }
-        });
-        
-        Object.keys(categories).forEach(cat => {
-            const container = document.getElementById(`${cat}Widgets`);
-            if (!container) {
-                console.warn(`⚠️ Container not found: ${cat}Widgets`);
-                return;
-            }
-            
-            container.innerHTML = '';
-            categories[cat].forEach(widget => {
-                const el = this.createWidgetElement(widget);
-                container.appendChild(el);
-            });
+            const el = this.createWidgetElement(widget);
+            container.appendChild(el);
         });
         
         console.log('✅ Widget library rendered');

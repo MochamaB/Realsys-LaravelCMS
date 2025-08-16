@@ -142,79 +142,12 @@
                 </div>
             </div>
             
-            <!-- Code Tab -->
+            <!-- Code Tab - Temporarily Removed -->
             <div class="tab-pane fade" id="code" role="tabpanel">
                 <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="card-title mb-0">
-                            <i class="bx bx-code me-2"></i>Generated HTML Code
-                        </h5>
-                        <div class="btn-group btn-group-sm">
-                            <button type="button" class="btn btn-outline-primary" id="refreshCodeBtn" title="Refresh Code">
-                                <i class="bx bx-refresh"></i> Refresh
-                            </button>
-                            <button type="button" class="btn btn-outline-secondary" id="copyCodeBtn" title="Copy to Clipboard">
-                                <i class="bx bx-copy"></i> Copy
-                            </button>
-                            <button type="button" class="btn btn-outline-info" id="formatCodeBtn" title="Format Code">
-                                <i class="bx bx-code-curly"></i> Format
-                            </button>
-                        </div>
-                    </div>
-                    <div class="card-body p-0">
-                        <!-- Code Display Options -->
-                        <div class="code-options border-bottom p-3 bg-light">
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <label class="form-label fw-semibold">View Mode</label>
-                                    <select class="form-select form-select-sm" id="codeViewMode">
-                                        <option value="html">HTML Only</option>
-                                        <option value="complete">Complete Page</option>
-                                        <option value="inline">Inline Styles</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label fw-semibold">Format</label>
-                                    <select class="form-select form-select-sm" id="codeFormat">
-                                        <option value="formatted">Formatted</option>
-                                        <option value="minified">Minified</option>
-                                        <option value="raw">Raw</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label fw-semibold">Include</label>
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" id="includeStyles" checked>
-                                        <label class="form-check-label" for="includeStyles">CSS Styles</label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Code Editor Container -->
-                        <div class="code-editor-container" style="height: 600px; position: relative;">
-                            <div id="codeLoadingIndicator" class="d-flex align-items-center justify-content-center h-100">
-                                <div class="text-center">
-                                    <div class="spinner-border text-primary mb-3" role="status">
-                                        <span class="visually-hidden">Loading...</span>
-                                    </div>
-                                    <p class="text-muted">Loading HTML code...</p>
-                                </div>
-                            </div>
-                            
-                            <!-- Code Display Area -->
-                            <div id="codeDisplayArea" class="h-100" style="display: none;">
-                                <textarea id="htmlCodeEditor" class="form-control h-100 font-monospace" 
-                                         style="border: none; resize: none; font-size: 13px; line-height: 1.4;"
-                                         readonly placeholder="HTML code will appear here..."></textarea>
-                            </div>
-                            
-                            <!-- Code Statistics -->
-                            <div id="codeStats" class="position-absolute bottom-0 end-0 bg-dark text-white px-2 py-1 small" 
-                                 style="border-radius: 4px 0 0 0; font-size: 11px; display: none;">
-                                <span id="codeStatsText">0 lines, 0 chars</span>
-                            </div>
-                        </div>
+                    <div class="card-body">
+                        <h5 class="card-title">Generated Code</h5>
+                        <p class="text-muted">Code generation temporarily disabled for debugging.</p>
                     </div>
                 </div>
             </div>
@@ -236,6 +169,15 @@
 
 @push('scripts')
 <script>
+// Global variables for GridStack and API
+window.pageId = {{ $page->id }};
+window.csrfToken = '{{ csrf_token() }}';
+
+console.log('🔧 Global variables set:', {
+    pageId: window.pageId,
+    csrfToken: window.csrfToken ? 'Set' : 'Missing'
+});
+
 document.addEventListener('DOMContentLoaded', function () {
     const tabKey = 'activePageTab';
     
@@ -648,265 +590,9 @@ document.addEventListener('DOMContentLoaded', function () {
         appMenu.classList.remove('grapejs-mode');
     }
     
-    // Initialize Code Tab functionality
-    initializeCodeTab();
+    // Code Tab functionality temporarily removed for debugging
+    console.log('🔧 Code Tab functionality disabled for debugging');
 });
-
-// Code Tab Implementation
-function initializeCodeTab() {
-    console.log('🔧 Initializing Code Tab...');
-    
-    const codeTab = document.getElementById('code-tab');
-    const refreshCodeBtn = document.getElementById('refreshCodeBtn');
-    const copyCodeBtn = document.getElementById('copyCodeBtn');
-    const formatCodeBtn = document.getElementById('formatCodeBtn');
-    const codeViewMode = document.getElementById('codeViewMode');
-    const codeFormat = document.getElementById('codeFormat');
-    const includeStyles = document.getElementById('includeStyles');
-    const htmlCodeEditor = document.getElementById('htmlCodeEditor');
-    const codeLoadingIndicator = document.getElementById('codeLoadingIndicator');
-    const codeDisplayArea = document.getElementById('codeDisplayArea');
-    const codeStats = document.getElementById('codeStats');
-    const codeStatsText = document.getElementById('codeStatsText');
-    
-    // Listen for Code tab activation
-    if (codeTab) {
-        codeTab.addEventListener('shown.bs.tab', function() {
-            console.log('📝 Code tab activated - loading HTML code...');
-            setTimeout(() => {
-                loadHtmlCode();
-            }, 100);
-        });
-    }
-    
-    // Event listeners for controls
-    if (refreshCodeBtn) {
-        refreshCodeBtn.addEventListener('click', loadHtmlCode);
-    }
-    
-    if (copyCodeBtn) {
-        copyCodeBtn.addEventListener('click', copyCodeToClipboard);
-    }
-    
-    if (formatCodeBtn) {
-        formatCodeBtn.addEventListener('click', formatHtmlCode);
-    }
-    
-    // Auto-refresh when options change
-    [codeViewMode, codeFormat, includeStyles].forEach(element => {
-        if (element) {
-            element.addEventListener('change', loadHtmlCode);
-        }
-    });
-    
-    function loadHtmlCode() {
-        if (!htmlCodeEditor) return;
-        
-        showLoadingIndicator(true);
-        
-        try {
-            let htmlContent = '';
-            
-            // Check if GrapesJS editor is available
-            let editor = null;
-            
-            // Access the GrapesJS editor through the global GrapesJSDesigner instance
-            if (window.GrapesJSDesigner && window.GrapesJSDesigner.editor) {
-                editor = window.GrapesJSDesigner.editor;
-                console.log('📝 GrapesJS editor found via window.GrapesJSDesigner');
-            } else {
-                console.warn('📝 GrapesJS editor not available yet');
-            }
-            
-            if (editor && typeof editor.getHtml === 'function') {
-                const viewMode = codeViewMode?.value || 'html';
-                const format = codeFormat?.value || 'formatted';
-                const includeStylesValue = includeStyles?.checked !== false;
-                
-                console.log('📝 Extracting HTML content from GrapesJS editor...');
-                
-                // Get HTML content based on view mode
-                switch (viewMode) {
-                    case 'html':
-                        htmlContent = editor.getHtml();
-                        break;
-                    case 'complete':
-                        htmlContent = getCompletePageHtml(editor, includeStylesValue);
-                        break;
-                    case 'inline':
-                        htmlContent = getInlineStyledHtml(editor);
-                        break;
-                    default:
-                        htmlContent = editor.getHtml();
-                }
-                
-                // Format the HTML based on format option
-                if (format === 'formatted') {
-                    htmlContent = formatHtml(htmlContent);
-                } else if (format === 'minified') {
-                    htmlContent = minifyHtml(htmlContent);
-                }
-                
-                console.log('📝 HTML content extracted successfully:', htmlContent.length + ' characters');
-                
-            } else {
-                console.warn('📝 GrapesJS editor not ready or not initialized');
-                
-                // Check if we're in the Live Preview tab to provide better guidance
-                const livePreviewTab = document.querySelector('[data-bs-target="#preview"]');
-                const isLivePreviewActive = livePreviewTab && livePreviewTab.classList.contains('active');
-                
-                if (!isLivePreviewActive) {
-                    htmlContent = `<!-- GrapesJS Editor Not Initialized
-                    
-To view the generated HTML code:
-1. Click on the "Live Preview" tab first
-2. Wait for GrapesJS to fully load (you'll see the visual editor)
-3. Add some content to your page using the visual editor
-4. Then return to this "Code" tab to see the generated HTML
-
-The Code tab shows the HTML output from the GrapesJS visual editor.
--->`;
-                } else {
-                    htmlContent = `<!-- GrapesJS Editor Loading...
-                    
-The GrapesJS editor is initializing. Please wait a moment and try refreshing this code view.
-
-Status:
-- GrapesJSDesigner: ${window.GrapesJSDesigner ? 'Available' : 'Not found'}
-- Editor Instance: ${window.GrapesJSDesigner?.editor ? 'Available' : 'Not initialized'}
-
-If this message persists, try:
-1. Refreshing the page
-2. Switching to Layout Designer tab and back to Live Preview
-3. Adding some content to the page first
--->`;
-                }
-            }
-            
-            // Display the HTML code
-            htmlCodeEditor.value = htmlContent;
-            updateCodeStats(htmlContent);
-            showLoadingIndicator(false);
-            
-        } catch (error) {
-            console.error('Error loading HTML code:', error);
-            htmlCodeEditor.value = `<!-- Error loading HTML code: ${error.message} -->`;
-            showLoadingIndicator(false);
-        }
-    }
-    
-    function getCompletePageHtml(editor, includeStyles) {
-        const html = editor.getHtml();
-        const css = includeStyles ? editor.getCss() : '';
-        
-        return `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generated Page</title>
-    ${css ? `<style>\n${css}\n</style>` : ''}
-</head>
-<body>
-${html}
-</body>
-</html>`;
-    }
-    
-    function getInlineStyledHtml(editor) {
-        const html = editor.getHtml();
-        const css = editor.getCss();
-        
-        // Simple inline styling (basic implementation)
-        // In a real implementation, you'd want a proper CSS-to-inline converter
-        return html + (css ? `\n\n<!-- Styles -->\n<style>\n${css}\n</style>` : '');
-    }
-    
-    function formatHtml(html) {
-        // Simple HTML formatting
-        let formatted = html;
-        let indent = 0;
-        const tab = '  ';
-        
-        formatted = formatted.replace(/></g, '>\n<');
-        
-        const lines = formatted.split('\n');
-        const formattedLines = [];
-        
-        lines.forEach(line => {
-            const trimmed = line.trim();
-            if (!trimmed) return;
-            
-            if (trimmed.startsWith('</')) {
-                indent = Math.max(0, indent - 1);
-            }
-            
-            formattedLines.push(tab.repeat(indent) + trimmed);
-            
-            if (trimmed.startsWith('<') && !trimmed.startsWith('</') && !trimmed.endsWith('/>')) {
-                indent++;
-            }
-        });
-        
-        return formattedLines.join('\n');
-    }
-    
-    function minifyHtml(html) {
-        return html.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim();
-    }
-    
-    function copyCodeToClipboard() {
-        if (!htmlCodeEditor) return;
-        
-        htmlCodeEditor.select();
-        document.execCommand('copy');
-        
-        // Show success feedback
-        const originalText = copyCodeBtn.innerHTML;
-        copyCodeBtn.innerHTML = '<i class="bx bx-check"></i> Copied!';
-        copyCodeBtn.classList.remove('btn-outline-secondary');
-        copyCodeBtn.classList.add('btn-success');
-        
-        setTimeout(() => {
-            copyCodeBtn.innerHTML = originalText;
-            copyCodeBtn.classList.remove('btn-success');
-            copyCodeBtn.classList.add('btn-outline-secondary');
-        }, 2000);
-    }
-    
-    function formatHtmlCode() {
-        if (!htmlCodeEditor) return;
-        
-        const currentCode = htmlCodeEditor.value;
-        const formattedCode = formatHtml(currentCode);
-        htmlCodeEditor.value = formattedCode;
-        updateCodeStats(formattedCode);
-    }
-    
-    function updateCodeStats(content) {
-        if (!codeStatsText) return;
-        
-        const lines = content.split('\n').length;
-        const chars = content.length;
-        const words = content.split(/\s+/).filter(word => word.length > 0).length;
-        
-        codeStatsText.textContent = `${lines} lines, ${chars} chars, ${words} words`;
-        codeStats.style.display = 'block';
-    }
-    
-    function showLoadingIndicator(show) {
-        if (codeLoadingIndicator && codeDisplayArea) {
-            if (show) {
-                codeLoadingIndicator.style.display = 'flex';
-                codeDisplayArea.style.display = 'none';
-            } else {
-                codeLoadingIndicator.style.display = 'none';
-                codeDisplayArea.style.display = 'block';
-            }
-        }
-    }
-}
 </script>
 @endpush
 

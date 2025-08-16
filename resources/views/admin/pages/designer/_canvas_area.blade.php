@@ -17,6 +17,8 @@
             <span class="canvas-stats">
                 <span id="sectionCount">0</span> sections, 
                 <span id="widgetCount">0</span> widgets
+                <span id="loadingStatus" class="text-muted ms-2">• Loading...</span>
+                <span id="debugInfo" class="text-muted ms-2" style="font-size: 11px;"></span>
             </span>
         </div>
     </div>

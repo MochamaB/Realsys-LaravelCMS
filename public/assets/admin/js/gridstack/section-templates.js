@@ -17,9 +17,9 @@ class SectionTemplatesManager {
         console.log('🔧 Initializing Section Templates Manager...');
         
         // Find the section templates container
-        this.container = document.getElementById('sectionTemplates');
+        this.container = document.getElementById('sectionsGrid');
         if (!this.container) {
-            console.error('❌ Section templates container not found. Looking for #sectionTemplates');
+            console.error('❌ Section templates container not found. Looking for #sectionsGrid');
             return;
         }
         

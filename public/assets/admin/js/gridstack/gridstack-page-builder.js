@@ -13,8 +13,10 @@ window.GridStackPageBuilder = {
      */
     async init(config) {
         console.log('🚀 Initializing GridStack Page Builder...');
+        this.updateDebugInfo('Initializing GridStack...');
         
         this.config = config;
+        console.log('🔧 Config:', this.config);
         
         // Setup global drag events for loading indicator
         this.setupDragEvents();
@@ -48,13 +50,17 @@ window.GridStackPageBuilder = {
         
         // Fetch page content if available
         if (this.config && this.config.pageId) {
+            this.updateDebugInfo('Starting content load...');
             await this.loadPageContent();
+        } else {
+            this.updateDebugInfo('No page ID in config');
         }
         
         // Hide loader after content is loaded
         this.hidePageLoader();
         
         console.log('✅ GridStack Page Builder initialized');
+        this.updateDebugInfo('Initialization complete');
     },
 
     /**
@@ -215,42 +221,71 @@ window.GridStackPageBuilder = {
      * Load page content from backend
      */
     async loadPageContent() {
-        if (!this.config.pageId) return;
+        if (!this.config.pageId) {
+            this.updateDebugInfo('No page ID provided');
+            return;
+        }
         
         try {
             console.log(`🔄 Loading page content for page ID: ${this.config.pageId}...`);
+            this.updateDebugInfo(`Loading page ${this.config.pageId}...`);
             
             // Show page loader
             this.showPageLoader();
             
             // Fetch sections from the API
-            const response = await fetch(`${this.config.apiBaseUrl}/pages/${this.config.pageId}/sections`, {
+            const apiUrl = `${this.config.apiBaseUrl}/pages/${this.config.pageId}/sections`;
+            console.log(`📡 API URL: ${apiUrl}`);
+            console.log(`📡 CSRF Token: ${this.config.csrfToken ? 'Present' : 'Missing'}`);
+            this.updateDebugInfo(`API: ${apiUrl}`);
+            
+            const response = await fetch(apiUrl, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': this.config.csrfToken
+                    'X-CSRF-TOKEN': this.config.csrfToken,
+                    'Accept': 'application/json'
                 }
             });
             
+            console.log(`📡 API Response Status: ${response.status} ${response.statusText}`);
+            console.log(`📡 API Response Headers:`, Object.fromEntries(response.headers.entries()));
+            this.updateDebugInfo(`Response: ${response.status}`);
+            
             if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                const errorText = await response.text();
+                console.error(`📡 API Error Response:`, errorText);
+                throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
             }
             
             const data = await response.json();
+            console.log('📡 API Response Data:', data);
+            console.log(`📡 Sections count: ${data.data ? data.data.length : 'No data'}`);
+            
+            // Validate response structure
+            if (!data.hasOwnProperty('success')) {
+                console.warn('📡 API response missing success field');
+            }
+            if (!data.hasOwnProperty('data')) {
+                console.warn('📡 API response missing data field');
+            }
             
             // Hide page loader
             this.hidePageLoader();
             
             if (data.success && data.data && data.data.length > 0) {
                 console.log(`📦 Loaded ${data.data.length} sections from backend`);
+                this.updateDebugInfo(`Loaded ${data.data.length} sections`);
                 this.renderSections(data.data);
             } else {
                 console.log('📭 No sections found, showing default placeholder');
+                this.updateDebugInfo('No sections found');
                 this.showDefaultPlaceholder();
             }
             
         } catch (error) {
             console.error('❌ Error loading page content:', error);
+            this.updateDebugInfo(`Error: ${error.message}`);
             // Hide page loader and show default placeholder on error
             this.hidePageLoader();
             this.showDefaultPlaceholder();
@@ -734,6 +769,32 @@ window.GridStackPageBuilder = {
         if (counter) {
             counter.textContent = count;
         }
+        
+        // Update loading status
+        const loadingStatus = document.getElementById('loadingStatus');
+        if (loadingStatus) {
+            if (count > 0) {
+                loadingStatus.textContent = '• Loaded';
+                loadingStatus.className = 'text-success ms-2';
+            } else {
+                loadingStatus.textContent = '• Empty';
+                loadingStatus.className = 'text-warning ms-2';
+            }
+        }
+    },
+
+    /**
+     * Update debug info display
+     */
+    updateDebugInfo(message) {
+        const debugInfo = document.getElementById('debugInfo');
+        if (debugInfo) {
+            const timestamp = new Date().toLocaleTimeString();
+            debugInfo.textContent = `[${timestamp}] ${message}`;
+        } else {
+            console.warn('🔍 Debug info element not found in DOM');
+        }
+        console.log(`🔍 Debug: ${message}`);
     },
     
     /**
