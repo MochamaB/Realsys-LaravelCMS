@@ -860,11 +860,103 @@ class GrapesJSDesigner {
     }
 
     /**
-     * Load complete page content from API
+     * Load complete page content from API using hybrid frontend pipeline
      */
     async loadCompletePageContent() {
         try {
-            console.log('📄 Loading complete page content...');
+            console.log('📄 Loading complete page content with frontend pipeline...');
+            
+            // Use hybrid API with theme context for frontend-accurate rendering
+            const response = await fetch(`/admin/api/pages/${this.pageId}/sections?with_theme_context=true`, {
+                headers: {
+                    'X-CSRF-TOKEN': this.csrfToken,
+                    'Accept': 'application/json'
+                }
+            });
+            
+            console.log('📡 Hybrid API Response status:', response.status);
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log('📄 Hybrid API Response data keys:', Object.keys(data));
+                console.log('📄 Hybrid API metadata:', data.metadata);
+                
+                // Handle hybrid API response format
+                let htmlContent = null;
+                let assetsData = null;
+                let themeData = null;
+                
+                if (data.success && data.full_page_html) {
+                    // Hybrid API format: {success: true, full_page_html: "...", data: [...], assets: {...}, theme: {...}}
+                    htmlContent = data.full_page_html;
+                    assetsData = data.assets;
+                    themeData = data.theme;
+                    console.log('✅ Using frontend-rendered HTML from hybrid API');
+                } else if (data.full_page_html) {
+                    // Alternative format without success flag
+                    htmlContent = data.full_page_html;
+                    assetsData = data.assets;
+                    themeData = data.theme;
+                    console.log('✅ Using frontend-rendered HTML from hybrid API (alt format)');
+                } else {
+                    console.warn('⚠️ Hybrid API did not return full_page_html, falling back to old method');
+                    return this.loadCompletePageContentFallback();
+                }
+                
+                if (htmlContent) {
+                    // Process HTML content to fix common issues
+                    const processedHtml = this.processHtmlContent(htmlContent);
+                    
+                    console.log('📄 Setting frontend-rendered HTML content in GrapesJS:', {
+                        'original_length': htmlContent.length,
+                        'processed_length': processedHtml.length,
+                        'contains_breadcrumbs': processedHtml.includes('breadcrumbs-area'),
+                        'contains_counter': processedHtml.includes('counter-area'),
+                        'contains_featured_bg': processedHtml.includes('featured-bg-'),
+                        'has_header': processedHtml.includes('header') || processedHtml.includes('navbar'),
+                        'has_footer': processedHtml.includes('footer'),
+                        'hybrid_mode': data.metadata?.hybrid_mode,
+                        'frontend_pipeline_used': data.metadata?.frontend_pipeline_used
+                    });
+                    
+                    // Clear existing components first
+                    this.editor.setComponents('');
+                    
+                    // Inject theme assets from hybrid API (enhanced method)
+                    this.injectHybridAPIAssets(assetsData, themeData);
+                    
+                    // Set the processed HTML content in GrapesJS
+                    this.editor.setComponents(processedHtml);
+                    
+                    // Wait a bit for components to render, then inject additional functionality
+                    setTimeout(() => {
+                        this.injectHybridAPIJavaScript(assetsData);
+                        this.extractAndInjectWidgetConfigurations(processedHtml);
+                        this.initializeWidgetFunctionality();
+                    }, 1000);
+                    
+                    console.log('✅ Frontend-accurate page content loaded into GrapesJS with hybrid API');
+                } else {
+                    throw new Error('No HTML content found in hybrid API response');
+                }
+            } else {
+                console.warn('⚠️ Failed to load page content from hybrid API:', response.status, response.statusText);
+                console.log('🔄 Falling back to old rendering method...');
+                return this.loadCompletePageContentFallback();
+            }
+        } catch (error) {
+            console.error('❌ Error loading page content from hybrid API:', error);
+            console.log('🔄 Falling back to old rendering method...');
+            return this.loadCompletePageContentFallback();
+        }
+    }
+
+    /**
+     * Fallback method using old API for backwards compatibility
+     */
+    async loadCompletePageContentFallback() {
+        try {
+            console.log('📄 Loading page content using fallback method...');
             
             const response = await fetch(`/admin/api/pages/${this.pageId}/render`, {
                 headers: {
@@ -873,114 +965,194 @@ class GrapesJSDesigner {
                 }
             });
             
-            console.log('📡 API Response status:', response.status);
-            
             if (response.ok) {
                 const data = await response.json();
-                console.log('📄 API Response data keys:', Object.keys(data));
                 
-                // Handle different response formats
+                // Handle different response formats (old API)
                 let htmlContent = null;
                 
                 if (data.html) {
-                    // API format: {html: "...", page: {...}}
                     htmlContent = data.html;
                 } else if (data.success && data.html) {
-                    // Alternative format: {success: true, html: "..."}
                     htmlContent = data.html;
                 } else if (typeof data === 'string') {
-                    // String format: direct HTML
                     htmlContent = data;
                 } else {
-                    console.warn('⚠️ Unexpected response format:', data);
                     throw new Error('Unexpected response format - no HTML content found');
                 }
                 
                 if (htmlContent) {
-                    // Process HTML content to fix common issues
                     const processedHtml = this.processHtmlContent(htmlContent);
                     
-                    console.log('📄 Setting HTML content in GrapesJS:', {
+                    console.log('📄 Setting fallback HTML content in GrapesJS:', {
                         'original_length': htmlContent.length,
                         'processed_length': processedHtml.length,
-                        'contains_breadcrumbs': processedHtml.includes('breadcrumbs-area'),
-                        'contains_counter': processedHtml.includes('counter-area'),
-                        'contains_featured_bg': processedHtml.includes('featured-bg-')
+                        'fallback_mode': true
                     });
                     
-                    // Clear existing components first
                     this.editor.setComponents('');
                     
-                    // Add theme CSS to canvas if available
-                    if (this.themeAssets && this.themeAssets.css) {
-                        const canvas = this.editor.Canvas;
-                        const iframe = canvas.getFrameEl();
-                        
-                        if (iframe && iframe.contentDocument) {
-                            // Remove existing theme styles
-                            const existingStyles = iframe.contentDocument.querySelectorAll('style[data-gjs-theme]');
-                            existingStyles.forEach(style => style.remove());
-                            
-                            // Remove existing canvas-specific styles
-                            const existingCanvasStyles = iframe.contentDocument.querySelectorAll('style[data-gjs-canvas-fix]');
-                            existingCanvasStyles.forEach(style => style.remove());
-                            
-                            // Add new theme styles
-                            const styleEl = iframe.contentDocument.createElement('style');
-                            styleEl.setAttribute('data-gjs-theme', 'true');
-                            styleEl.textContent = this.themeAssets.css;
-                            iframe.contentDocument.head.appendChild(styleEl);
-                            
-                            // Add canvas-specific CSS fixes
-                            const canvasFixEl = iframe.contentDocument.createElement('style');
-                            canvasFixEl.setAttribute('data-gjs-canvas-fix', 'true');
-                            canvasFixEl.textContent = this.getCanvasSpecificCSS();
-                            iframe.contentDocument.head.appendChild(canvasFixEl);
-                            
-                            console.log('✅ Theme CSS and canvas fixes injected into canvas iframe');
-                        }
-                    } else {
-                        // If no theme CSS, still inject the canvas fixes
-                        const canvas = this.editor.Canvas;
-                        const iframe = canvas.getFrameEl();
-                        
-                        if (iframe && iframe.contentDocument) {
-                            // Remove existing canvas-specific styles
-                            const existingCanvasStyles = iframe.contentDocument.querySelectorAll('style[data-gjs-canvas-fix]');
-                            existingCanvasStyles.forEach(style => style.remove());
-                            
-                            // Add canvas-specific CSS fixes
-                            const canvasFixEl = iframe.contentDocument.createElement('style');
-                            canvasFixEl.setAttribute('data-gjs-canvas-fix', 'true');
-                            canvasFixEl.textContent = this.getCanvasSpecificCSS();
-                            iframe.contentDocument.head.appendChild(canvasFixEl);
-                            
-                            console.log('✅ Canvas positioning fixes injected into canvas iframe');
-                        }
-                    }
+                    // Use old theme asset injection method
+                    this.injectLegacyThemeAssets();
                     
-                    // Set the processed HTML content in GrapesJS
                     this.editor.setComponents(processedHtml);
                     
-                    // Wait a bit for components to render, then inject JS
                     setTimeout(() => {
                         this.injectThemeJavaScript();
+                        this.extractAndInjectWidgetConfigurations(processedHtml);
                         this.initializeWidgetFunctionality();
                     }, 1000);
                     
-                    console.log('✅ Complete page content loaded into GrapesJS');
+                    console.log('✅ Fallback page content loaded into GrapesJS');
                 } else {
-                    throw new Error('No HTML content found in response');
+                    throw new Error('No HTML content found in fallback response');
                 }
             } else {
-                console.warn('⚠️ Failed to load page content:', response.status, response.statusText);
-                const errorText = await response.text();
-                console.error('❌ Error response:', errorText);
-                this.editor.setComponents('<div style="padding: 20px; text-align: center; color: #666;">Error loading page content (HTTP ' + response.status + ')</div>');
+                throw new Error(`Fallback API failed: HTTP ${response.status}`);
             }
         } catch (error) {
-            console.error('❌ Error loading page content:', error);
+            console.error('❌ Error in fallback method:', error);
             this.editor.setComponents('<div style="padding: 20px; text-align: center; color: #666;">Error loading page content: ' + error.message + '</div>');
+        }
+    }
+
+    /**
+     * Inject theme assets from hybrid API response
+     */
+    injectHybridAPIAssets(assetsData, themeData) {
+        try {
+            console.log('🎨 Injecting theme assets from hybrid API...');
+            
+            const canvas = this.editor.Canvas;
+            const iframe = canvas.getFrameEl();
+            
+            if (iframe && iframe.contentDocument) {
+                // Remove existing styles
+                const existingStyles = iframe.contentDocument.querySelectorAll('style[data-gjs-theme], style[data-gjs-canvas-fix], style[data-gjs-hybrid]');
+                existingStyles.forEach(style => style.remove());
+                
+                // Inject CSS assets from hybrid API
+                if (assetsData && assetsData.css && Array.isArray(assetsData.css)) {
+                    assetsData.css.forEach((cssFile, index) => {
+                        const linkEl = iframe.contentDocument.createElement('link');
+                        linkEl.rel = 'stylesheet';
+                        linkEl.href = cssFile;
+                        linkEl.setAttribute('data-gjs-hybrid', 'css');
+                        iframe.contentDocument.head.appendChild(linkEl);
+                    });
+                    console.log(`✅ Injected ${assetsData.css.length} CSS files from hybrid API`);
+                }
+                
+                // Inject theme CSS if available
+                if (themeData && themeData.assets && themeData.assets.css) {
+                    if (Array.isArray(themeData.assets.css)) {
+                        themeData.assets.css.forEach((cssFile, index) => {
+                            const linkEl = iframe.contentDocument.createElement('link');
+                            linkEl.rel = 'stylesheet';
+                            linkEl.href = cssFile;
+                            linkEl.setAttribute('data-gjs-theme', 'css');
+                            iframe.contentDocument.head.appendChild(linkEl);
+                        });
+                        console.log(`✅ Injected ${themeData.assets.css.length} theme CSS files`);
+                    } else if (typeof themeData.assets.css === 'string') {
+                        // If theme CSS is a string, inject as style tag
+                        const styleEl = iframe.contentDocument.createElement('style');
+                        styleEl.setAttribute('data-gjs-theme', 'inline');
+                        styleEl.textContent = themeData.assets.css;
+                        iframe.contentDocument.head.appendChild(styleEl);
+                        console.log('✅ Injected inline theme CSS');
+                    }
+                }
+                
+                // Add canvas-specific CSS fixes
+                const canvasFixEl = iframe.contentDocument.createElement('style');
+                canvasFixEl.setAttribute('data-gjs-canvas-fix', 'true');
+                canvasFixEl.textContent = this.getCanvasSpecificCSS();
+                iframe.contentDocument.head.appendChild(canvasFixEl);
+                
+                console.log('✅ Hybrid API assets injected into canvas iframe');
+            } else {
+                console.warn('⚠️ Could not access iframe for asset injection');
+            }
+        } catch (error) {
+            console.error('❌ Error injecting hybrid API assets:', error);
+            // Fallback to legacy method
+            this.injectLegacyThemeAssets();
+        }
+    }
+
+    /**
+     * Inject JavaScript assets from hybrid API
+     */
+    injectHybridAPIJavaScript(assetsData) {
+        try {
+            const canvas = this.editor.Canvas;
+            const iframe = canvas.getFrameEl();
+            
+            if (iframe && iframe.contentDocument && assetsData && assetsData.js && Array.isArray(assetsData.js)) {
+                // Remove existing hybrid JS
+                const existingScripts = iframe.contentDocument.querySelectorAll('script[data-gjs-hybrid]');
+                existingScripts.forEach(script => script.remove());
+                
+                // Inject JS files from hybrid API
+                assetsData.js.forEach((jsFile, index) => {
+                    const scriptEl = iframe.contentDocument.createElement('script');
+                    scriptEl.src = jsFile;
+                    scriptEl.setAttribute('data-gjs-hybrid', 'js');
+                    iframe.contentDocument.body.appendChild(scriptEl);
+                });
+                
+                console.log(`✅ Injected ${assetsData.js.length} JS files from hybrid API`);
+            }
+        } catch (error) {
+            console.warn('⚠️ Could not inject hybrid API JavaScript:', error);
+        }
+    }
+
+    /**
+     * Legacy theme asset injection method (fallback)
+     */
+    injectLegacyThemeAssets() {
+        try {
+            if (this.themeAssets && this.themeAssets.css) {
+                const canvas = this.editor.Canvas;
+                const iframe = canvas.getFrameEl();
+                
+                if (iframe && iframe.contentDocument) {
+                    // Remove existing theme styles
+                    const existingStyles = iframe.contentDocument.querySelectorAll('style[data-gjs-theme]');
+                    existingStyles.forEach(style => style.remove());
+                    
+                    // Add new theme styles
+                    const styleEl = iframe.contentDocument.createElement('style');
+                    styleEl.setAttribute('data-gjs-theme', 'legacy');
+                    styleEl.textContent = this.themeAssets.css;
+                    iframe.contentDocument.head.appendChild(styleEl);
+                    
+                    // Add canvas-specific CSS fixes
+                    const canvasFixEl = iframe.contentDocument.createElement('style');
+                    canvasFixEl.setAttribute('data-gjs-canvas-fix', 'true');
+                    canvasFixEl.textContent = this.getCanvasSpecificCSS();
+                    iframe.contentDocument.head.appendChild(canvasFixEl);
+                    
+                    console.log('✅ Legacy theme assets injected');
+                }
+            } else {
+                // If no theme CSS, still inject the canvas fixes
+                const canvas = this.editor.Canvas;
+                const iframe = canvas.getFrameEl();
+                
+                if (iframe && iframe.contentDocument) {
+                    const canvasFixEl = iframe.contentDocument.createElement('style');
+                    canvasFixEl.setAttribute('data-gjs-canvas-fix', 'true');
+                    canvasFixEl.textContent = this.getCanvasSpecificCSS();
+                    iframe.contentDocument.head.appendChild(canvasFixEl);
+                    
+                    console.log('✅ Canvas positioning fixes injected (legacy mode)');
+                }
+            }
+        } catch (error) {
+            console.error('❌ Error in legacy theme asset injection:', error);
         }
     }
 
@@ -1024,6 +1196,9 @@ class GrapesJSDesigner {
                 // Initialize counter animations
                 this.initializeCounters(doc);
                 
+                // Initialize slider widgets
+                this.initializeSliders(doc);
+                
                 // Initialize any other widget-specific functionality
                 console.log('✅ Widget functionality initialized');
             }
@@ -1066,6 +1241,246 @@ class GrapesJSDesigner {
             console.log('✅ Counter widgets initialized:', counters.length);
         } catch (error) {
             console.warn('⚠️ Error initializing counters:', error);
+        }
+    }
+
+    /**
+     * Extract widget configurations from HTML and inject into iframe
+     */
+    extractAndInjectWidgetConfigurations(htmlContent) {
+        try {
+            const canvas = this.editor.Canvas;
+            const iframe = canvas.getFrameEl();
+            
+            if (!iframe || !iframe.contentDocument) {
+                console.warn('⚠️ Cannot access iframe for widget configuration injection');
+                return;
+            }
+            
+            // Extract slider configurations from the HTML
+            const sliderConfigMatches = htmlContent.match(/window\.sliderConfigs\s*=\s*{[\s\S]*?};/g);
+            
+            if (sliderConfigMatches) {
+                sliderConfigMatches.forEach(configMatch => {
+                    try {
+                        // Inject the configuration into the iframe
+                        const script = iframe.contentDocument.createElement('script');
+                        script.textContent = `
+                            if (!window.sliderConfigs) {
+                                window.sliderConfigs = {};
+                            }
+                            ${configMatch}
+                        `;
+                        iframe.contentDocument.head.appendChild(script);
+                        
+                        console.log('✅ Injected slider configuration into iframe');
+                    } catch (error) {
+                        console.warn('⚠️ Error injecting slider config:', error);
+                    }
+                });
+            }
+            
+            // Extract individual slider configurations
+            const individualConfigMatches = htmlContent.match(/window\.sliderConfigs\['[^']+'\]\s*=\s*{[\s\S]*?};/g);
+            
+            if (individualConfigMatches) {
+                // First ensure sliderConfigs object exists
+                const initScript = iframe.contentDocument.createElement('script');
+                initScript.textContent = `
+                    if (!window.sliderConfigs) {
+                        window.sliderConfigs = {};
+                    }
+                `;
+                iframe.contentDocument.head.appendChild(initScript);
+                
+                individualConfigMatches.forEach(configMatch => {
+                    try {
+                        const script = iframe.contentDocument.createElement('script');
+                        script.textContent = configMatch;
+                        iframe.contentDocument.head.appendChild(script);
+                        
+                        console.log('✅ Injected individual slider configuration into iframe');
+                    } catch (error) {
+                        console.warn('⚠️ Error injecting individual slider config:', error);
+                    }
+                });
+            }
+            
+            console.log('✅ Widget configurations extracted and injected');
+            
+        } catch (error) {
+            console.warn('⚠️ Error extracting widget configurations:', error);
+        }
+    }
+
+    /**
+     * Initialize slider widgets in GrapesJS iframe
+     */
+    initializeSliders(doc) {
+        try {
+            // First ensure jQuery is available
+            const jqueryCheck = () => {
+                return doc.defaultView && doc.defaultView.jQuery && typeof doc.defaultView.jQuery === 'function';
+            };
+            
+            // Check for nivo slider plugin
+            const nivoSliderCheck = () => {
+                return jqueryCheck() && doc.defaultView.jQuery.fn.nivoSlider;
+            };
+            
+            // Find all slider elements
+            const sliders = doc.querySelectorAll('.nivoSlider');
+            
+            if (sliders.length === 0) {
+                console.log('📄 No slider widgets found');
+                return;
+            }
+            
+            console.log(`🎠 Found ${sliders.length} slider widget(s), checking dependencies...`);
+            
+            // If jQuery isn't loaded, try to inject it
+            if (!jqueryCheck()) {
+                this.ensureJQueryInIframe(doc, () => {
+                    this.ensureNivoSliderInIframe(doc, () => {
+                        this.initializeSliderElements(doc, sliders);
+                    });
+                });
+            } else if (!nivoSliderCheck()) {
+                this.ensureNivoSliderInIframe(doc, () => {
+                    this.initializeSliderElements(doc, sliders);
+                });
+            } else {
+                // Both dependencies available, initialize immediately
+                this.initializeSliderElements(doc, sliders);
+            }
+            
+        } catch (error) {
+            console.warn('⚠️ Error initializing sliders:', error);
+        }
+    }
+
+    /**
+     * Ensure jQuery is available in iframe
+     */
+    ensureJQueryInIframe(doc, callback) {
+        try {
+            // Check if jQuery is already being loaded
+            const existingJQuery = doc.querySelector('script[src*="jquery"]');
+            if (existingJQuery) {
+                // Wait for it to load
+                existingJQuery.onload = callback;
+                return;
+            }
+            
+            // Load jQuery from theme assets or CDN
+            const script = doc.createElement('script');
+            script.src = '/themes/miata/lib/js/jquery.min.js'; // Adjust path as needed
+            script.onload = callback;
+            script.onerror = () => {
+                console.warn('⚠️ Failed to load jQuery, trying CDN...');
+                const cdnScript = doc.createElement('script');
+                cdnScript.src = 'https://code.jquery.com/jquery-3.6.0.min.js';
+                cdnScript.onload = callback;
+                cdnScript.onerror = () => {
+                    console.error('❌ Failed to load jQuery from CDN');
+                };
+                doc.head.appendChild(cdnScript);
+            };
+            doc.head.appendChild(script);
+            
+            console.log('📦 Loading jQuery for slider functionality...');
+        } catch (error) {
+            console.error('❌ Error loading jQuery:', error);
+        }
+    }
+
+    /**
+     * Ensure Nivo Slider plugin is available in iframe
+     */
+    ensureNivoSliderInIframe(doc, callback) {
+        try {
+            // Check if Nivo Slider is already being loaded
+            const existingNivo = doc.querySelector('script[src*="nivo.slider"]');
+            if (existingNivo) {
+                existingNivo.onload = callback;
+                return;
+            }
+            
+            // Load Nivo Slider plugin
+            const script = doc.createElement('script');
+            script.src = '/themes/miata/lib/js/jquery.nivo.slider.js';
+            script.onload = callback;
+            script.onerror = () => {
+                console.error('❌ Failed to load Nivo Slider plugin');
+            };
+            doc.head.appendChild(script);
+            
+            // Also load Nivo Slider CSS
+            const link = doc.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = '/themes/miata/lib/css/nivo-slider.css';
+            doc.head.appendChild(link);
+            
+            console.log('📦 Loading Nivo Slider plugin for slider functionality...');
+        } catch (error) {
+            console.error('❌ Error loading Nivo Slider:', error);
+        }
+    }
+
+    /**
+     * Initialize slider elements once dependencies are loaded
+     */
+    initializeSliderElements(doc, sliders) {
+        try {
+            const $ = doc.defaultView.jQuery;
+            
+            if (!$ || !$.fn.nivoSlider) {
+                console.error('❌ jQuery or Nivo Slider not available for initialization');
+                return;
+            }
+            
+            sliders.forEach((slider, index) => {
+                const sliderId = slider.id;
+                
+                if (!sliderId) {
+                    console.warn('⚠️ Slider missing ID, skipping...');
+                    return;
+                }
+                
+                // Get configuration from window.sliderConfigs or use default
+                const sliderConfigs = doc.defaultView.sliderConfigs || {};
+                const config = sliderConfigs[sliderId] || {};
+                
+                // Default configuration for sliders
+                const defaultConfig = {
+                    effect: 'random',
+                    slices: 15,
+                    boxCols: 8,
+                    boxRows: 4,
+                    animSpeed: 500,
+                    pauseTime: 5000,
+                    startSlide: 0,
+                    directionNav: true,
+                    controlNav: true,
+                    pauseOnHover: true,
+                    manualAdvance: false,
+                    prevText: 'Prev',
+                    nextText: 'Next'
+                };
+                
+                // Merge configurations
+                const finalConfig = { ...defaultConfig, ...config };
+                
+                // Initialize the slider
+                $(slider).nivoSlider(finalConfig);
+                
+                console.log(`✅ Initialized slider: ${sliderId}`);
+            });
+            
+            console.log(`✅ All ${sliders.length} slider widget(s) initialized`);
+            
+        } catch (error) {
+            console.error('❌ Error initializing slider elements:', error);
         }
     }
 
@@ -2174,11 +2589,53 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('🧪 Testing drop handlers setup...');
             window.GrapesJSDesigner.setupCanvasDropHandling();
         };
+        window.testGrapesJSHybridAPI = () => {
+            console.log('🧪 Testing hybrid API...');
+            window.GrapesJSDesigner.loadCompletePageContent();
+        };
+        window.testGrapesJSFallback = () => {
+            console.log('🧪 Testing fallback method...');
+            window.GrapesJSDesigner.loadCompletePageContentFallback();
+        };
+        window.testSliderInitialization = () => {
+            console.log('🧪 Testing slider initialization...');
+            const canvas = window.GrapesJSDesigner.editor?.Canvas;
+            const iframe = canvas?.getFrameEl();
+            if (iframe && iframe.contentDocument) {
+                window.GrapesJSDesigner.initializeSliders(iframe.contentDocument);
+            } else {
+                console.warn('⚠️ No iframe available for slider testing');
+            }
+        };
+        window.debugSliderElements = () => {
+            console.log('🧪 Debugging slider elements...');
+            const canvas = window.GrapesJSDesigner.editor?.Canvas;
+            const iframe = canvas?.getFrameEl();
+            if (iframe && iframe.contentDocument) {
+                const doc = iframe.contentDocument;
+                const sliders = doc.querySelectorAll('.nivoSlider');
+                console.log('Sliders found:', sliders.length);
+                console.log('jQuery available:', !!doc.defaultView.jQuery);
+                console.log('Nivo Slider available:', !!(doc.defaultView.jQuery && doc.defaultView.jQuery.fn.nivoSlider));
+                console.log('Slider configs:', doc.defaultView.sliderConfigs);
+                sliders.forEach((slider, i) => {
+                    console.log(`Slider ${i}:`, {
+                        id: slider.id,
+                        classes: slider.className,
+                        images: slider.querySelectorAll('img').length
+                    });
+                });
+            }
+        };
         
         console.log('🧪 Debug functions available:', {
             testGrapesJSModal: 'testGrapesJSModal()',
             debugDropHandlers: 'debugGrapesJSDropHandlers()',
-            testDropHandlers: 'testGrapesJSDropHandlers()'
+            testDropHandlers: 'testGrapesJSDropHandlers()',
+            testHybridAPI: 'testGrapesJSHybridAPI()',
+            testFallback: 'testGrapesJSFallback()',
+            testSliderInit: 'testSliderInitialization()',
+            debugSliders: 'debugSliderElements()'
         });
     }
 });

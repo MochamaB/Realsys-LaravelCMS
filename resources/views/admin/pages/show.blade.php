@@ -313,7 +313,8 @@ document.addEventListener('DOMContentLoaded', function () {
             window.GridStackPageBuilder.init({
                 pageId: window.pageId,
                 apiBaseUrl: '/admin/api',
-                csrfToken: window.csrfToken
+                csrfToken: window.csrfToken,
+                withThemeContext: true // Enable theme context for enhanced preview
             });
         } else {
             console.log('✅ GridStack Page Builder already initialized');
@@ -615,6 +616,139 @@ document.addEventListener('DOMContentLoaded', function () {
         top: 0;
         left: 0;
         right: 0;
+    }
+
+    /* Section Layout Styling */
+    .page-section {
+        margin-bottom: 20px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        background: #fff;
+        position: relative;
+    }
+
+    .section-content-wrapper {
+        padding: 15px;
+        width: 100%;
+    }
+
+    /* Section Grid Stack Container */
+    .section-grid-stack {
+        width: 100%;
+        min-height: 100px;
+        position: relative;
+    }
+
+    /* Full Width Section */
+    .page-section[data-section-type="full-width"] .section-grid-stack {
+        width: 100%;
+    }
+
+    .page-section[data-section-type="full-width"] .grid-stack-item {
+        width: 100% !important;
+    }
+
+    /* Multi Column Section */
+    .page-section[data-section-type="multi-column"] .section-grid-stack {
+        width: 100%;
+    }
+
+    .page-section[data-section-type="multi-column"] .col-md-4 .section-grid-stack {
+        width: 100%;
+    }
+
+    /* Sidebar Left Section */
+    .page-section[data-section-type="sidebar-left"] .col-md-3 .section-grid-stack,
+    .page-section[data-section-type="sidebar-left"] .col-md-9 .section-grid-stack {
+        width: 100%;
+    }
+
+    /* Widget Drop Zone */
+    .widget-drop-zone {
+        width: 100%;
+        min-height: 80px;
+        border: 2px dashed #ccc;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8f9fa;
+        transition: all 0.3s ease;
+    }
+
+    .widget-drop-zone:hover {
+        border-color: #007bff;
+        background: #e7f3ff;
+    }
+
+    .drop-zone-content {
+        text-align: center;
+        color: #6c757d;
+        font-size: 14px;
+    }
+
+    .drop-zone-content i {
+        font-size: 24px;
+        margin-bottom: 5px;
+        display: block;
+    }
+
+    /* GridStack Items in Sections */
+    .section-grid-stack .grid-stack-item {
+        width: 100% !important;
+    }
+
+    .section-grid-stack .grid-stack-item .grid-stack-item-content {
+        width: 100%;
+        height: 100%;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 10px;
+        overflow: hidden;
+    }
+
+    /* Widget Content Styling */
+    .widget-content {
+        width: 100%;
+        height: 100%;
+    }
+
+    .widget-content img {
+        width: 100%;
+        height: auto;
+        max-width: 100%;
+    }
+
+    .widget-content .widget-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+
+    .widget-content .widget-text {
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+    /* Section Actions */
+    .section-actions {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 10;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .page-section:hover .section-actions {
+        opacity: 1;
+    }
+
+    .section-action-btn {
+        margin-left: 5px;
+        padding: 4px 8px;
+        font-size: 12px;
     }
 </style>
 @endpush

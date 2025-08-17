@@ -64,6 +64,169 @@ window.GridStackPageBuilder = {
     },
 
     /**
+     * Load theme assets (CSS and JS files)
+     */
+    async loadThemeAssets(assets, theme) {
+        try {
+            console.log(`🎨 Loading theme assets for: ${theme.name}`);
+            
+            // Load CSS files
+            if (assets.css && Array.isArray(assets.css)) {
+                for (const cssFile of assets.css) {
+                    await this.loadCSSFile(cssFile);
+                }
+                console.log(`✅ Loaded ${assets.css.length} CSS files`);
+            }
+            
+            // Load JS files
+            if (assets.js && Array.isArray(assets.js)) {
+                for (const jsFile of assets.js) {
+                    await this.loadJSFile(jsFile);
+                }
+                console.log(`✅ Loaded ${assets.js.length} JS files`);
+            }
+            
+            console.log(`🎨 Theme assets loaded successfully`);
+            
+        } catch (error) {
+            console.error('❌ Error loading theme assets:', error);
+        }
+    },
+
+    /**
+     * Load a CSS file dynamically
+     */
+    async loadCSSFile(cssFile) {
+        return new Promise((resolve, reject) => {
+            // Check if CSS file is already loaded
+            const existingLink = document.querySelector(`link[href="${cssFile}"]`);
+            if (existingLink) {
+                resolve();
+                return;
+            }
+            
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.type = 'text/css';
+            link.href = cssFile;
+            link.onload = () => resolve();
+            link.onerror = () => reject(new Error(`Failed to load CSS: ${cssFile}`));
+            
+            document.head.appendChild(link);
+        });
+    },
+
+    /**
+     * Load a JS file dynamically
+     */
+    async loadJSFile(jsFile) {
+        return new Promise((resolve, reject) => {
+            // Check if JS file is already loaded
+            const existingScript = document.querySelector(`script[src="${jsFile}"]`);
+            if (existingScript) {
+                resolve();
+                return;
+            }
+            
+            const script = document.createElement('script');
+            script.type = 'text/javascript';
+            script.src = jsFile;
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error(`Failed to load JS: ${jsFile}`));
+            
+            document.head.appendChild(script);
+        });
+    },
+
+    /**
+     * Apply theme canvas wrapper using HTML from API
+     */
+    applyThemeCanvasWrapper(canvasWrapperHtml, theme) {
+        try {
+            console.log(`🎨 Applying theme canvas wrapper: ${theme.name}`);
+            
+            // Get the current canvas container
+            const canvasWrapper = document.querySelector('.canvas-wrapper');
+            const pageSectionsContainer = document.getElementById('pageSectionsContainer');
+            
+            if (!canvasWrapper || !pageSectionsContainer) {
+                console.warn('⚠️ Canvas wrapper or page sections container not found');
+                return;
+            }
+            
+            // Store the original content
+            const originalContent = pageSectionsContainer.innerHTML;
+            
+            // Create a theme-wrapped container
+            const themeWrapper = document.createElement('div');
+            themeWrapper.className = 'theme-canvas-wrapper';
+            themeWrapper.innerHTML = canvasWrapperHtml;
+            
+            // Find the content placeholder in the theme layout
+            const contentPlaceholder = themeWrapper.querySelector('[data-canvas-content]') || 
+                                     themeWrapper.querySelector('.page-content') ||
+                                     themeWrapper.querySelector('.container') ||
+                                     themeWrapper;
+            
+            // Create new page sections container within theme layout
+            const newPageSectionsContainer = document.createElement('div');
+            newPageSectionsContainer.className = 'page-sections-container theme-wrapped';
+            newPageSectionsContainer.id = 'pageSectionsContainer';
+            newPageSectionsContainer.setAttribute('data-page-id', pageSectionsContainer.getAttribute('data-page-id'));
+            newPageSectionsContainer.innerHTML = originalContent;
+            
+            // Insert the page sections container into the theme layout
+            if (contentPlaceholder === themeWrapper) {
+                contentPlaceholder.appendChild(newPageSectionsContainer);
+            } else {
+                contentPlaceholder.innerHTML = '';
+                contentPlaceholder.appendChild(newPageSectionsContainer);
+            }
+            
+            // Replace the canvas wrapper content
+            canvasWrapper.innerHTML = '';
+            canvasWrapper.appendChild(themeWrapper);
+            
+            // Update reference to the new container
+            this.pageSectionsContainer = newPageSectionsContainer;
+            
+            console.log('✅ Theme canvas wrapper applied successfully');
+            
+        } catch (error) {
+            console.error('❌ Error applying theme canvas wrapper:', error);
+            this.applyBasicThemeWrapper(theme);
+        }
+    },
+
+    /**
+     * Get default theme wrapper structure
+     */
+    getDefaultThemeWrapper() {
+        return `
+            <div class="theme-layout-wrapper">
+                <div class="theme-content-area">
+                    <div class="container-fluid" data-canvas-content>
+                        <!-- Page content will be inserted here -->
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    /**
+     * Apply basic theme wrapper as fallback
+     */
+    applyBasicThemeWrapper(theme) {
+        const pageSectionsContainer = document.getElementById('pageSectionsContainer');
+        if (pageSectionsContainer) {
+            pageSectionsContainer.classList.add('theme-wrapped', `theme-${theme.slug}`);
+            pageSectionsContainer.style.backgroundColor = theme.background_color || '#ffffff';
+            
+            console.log(`✅ Applied basic theme wrapper for: ${theme.name}`);
+        }
+    },
+
+    /**
      * Setup global drag events for loading indicator
      */
     setupDragEvents() {
@@ -233,8 +396,16 @@ window.GridStackPageBuilder = {
             // Show page loader
             this.showPageLoader();
             
-            // Fetch sections from the API
-            const apiUrl = `${this.config.apiBaseUrl}/pages/${this.config.pageId}/sections`;
+            // Check if theme context is requested
+            const withThemeContext = this.config.withThemeContext || false;
+            
+            // Fetch sections from the API with optional theme context
+            let apiUrl = `${this.config.apiBaseUrl}/pages/${this.config.pageId}/sections`;
+            if (withThemeContext) {
+                apiUrl += '?with_theme_context=true';
+                console.log(`🎨 Loading with theme context enabled`);
+            }
+            
             console.log(`📡 API URL: ${apiUrl}`);
             console.log(`📡 CSRF Token: ${this.config.csrfToken ? 'Present' : 'Missing'}`);
             this.updateDebugInfo(`API: ${apiUrl}`);
@@ -276,6 +447,27 @@ window.GridStackPageBuilder = {
             if (data.success && data.data && data.data.length > 0) {
                 console.log(`📦 Loaded ${data.data.length} sections from backend`);
                 this.updateDebugInfo(`Loaded ${data.data.length} sections`);
+                
+                // Handle enhanced theme context if present
+                if (withThemeContext && data.theme && data.assets) {
+                    console.log(`🎨 Processing theme context data:`, {
+                        theme: data.theme.name,
+                        css_files: data.assets.css?.length || 0,
+                        js_files: data.assets.js?.length || 0,
+                        has_canvas_wrapper: !!data.theme.canvas_wrapper
+                    });
+                    
+                    // Load theme assets first
+                    await this.loadThemeAssets(data.assets, data.theme);
+                    
+                    // Wrap canvas in theme layout using provided HTML
+                    if (data.theme.canvas_wrapper) {
+                        this.applyThemeCanvasWrapper(data.theme.canvas_wrapper, data.theme);
+                    } else {
+                        this.applyBasicThemeWrapper(data.theme);
+                    }
+                }
+                
                 this.renderSections(data.data);
             } else {
                 console.log('📭 No sections found, showing default placeholder');
@@ -560,8 +752,8 @@ window.GridStackPageBuilder = {
             gridContainers.forEach((container, index) => {
                 const gridId = container.getAttribute('data-section-grid');
                 
-                // Initialize GridStack for this container
-                const grid = GridStack.init({
+                // Configure GridStack based on section type
+                let gridConfig = {
                     column: 12,
                     cellHeight: 80,
                     margin: '10px',
@@ -572,7 +764,25 @@ window.GridStackPageBuilder = {
                     draggable: {
                         handle: '.widget-controls'
                     }
-                }, container);
+                };
+
+                // Adjust configuration based on section type
+                if (sectionType === 'full-width') {
+                    // Full width sections should have widgets that span the full width by default
+                    gridConfig.column = 1; // Single column for full width
+                    gridConfig.cellHeight = 120; // Taller cells for full width content
+                } else if (sectionType === 'multi-column') {
+                    // Multi-column sections can have more granular control
+                    gridConfig.column = 12;
+                    gridConfig.cellHeight = 80;
+                } else if (sectionType === 'sidebar-left') {
+                    // Sidebar sections should adapt to their container
+                    gridConfig.column = container.closest('.col-md-3') ? 1 : 12;
+                    gridConfig.cellHeight = 80;
+                }
+
+                // Initialize GridStack for this container
+                const grid = GridStack.init(gridConfig, container);
                 
                 // Store the GridStack instance
                 this.gridStacks[gridId] = grid;
@@ -580,7 +790,14 @@ window.GridStackPageBuilder = {
                 console.log(`✅ Initialized GridStack for ${gridId} (${sectionType})`);
                 
                 // Load existing widgets for this section
-                this.loadSectionWidgets(sectionId, grid);
+                // Check if section already has enhanced widget data
+                if (section.widgets && section.widgets.length > 0) {
+                    console.log(`📦 Using enhanced widget data for section ${sectionId}`);
+                    this.loadSectionWidgetsFromData(section.widgets, grid);
+                } else {
+                    console.log(`📦 Loading widgets via API for section ${sectionId}`);
+                    this.loadSectionWidgets(sectionId, grid);
+                }
             });
             
         } catch (error) {
@@ -631,60 +848,116 @@ window.GridStackPageBuilder = {
     },
 
     /**
+     * Load widgets from enhanced section data (theme context)
+     */
+    async loadSectionWidgetsFromData(widgets, grid) {
+        try {
+            console.log(`📦 Loading ${widgets.length} widgets from enhanced data`);
+            
+            // Load each widget
+            for (const widget of widgets) {
+                await this.loadWidgetIntoGrid(widget, grid);
+            }
+            
+            // Hide drop zone if widgets are loaded
+            if (widgets.length > 0) {
+                const dropZone = grid.el.querySelector('.widget-drop-zone');
+                if (dropZone) {
+                    dropZone.style.display = 'none';
+                }
+            }
+            
+        } catch (error) {
+            console.error(`❌ Error loading widgets from enhanced data:`, error);
+        }
+    },
+
+    /**
      * Load a single widget into the GridStack
      */
     async loadWidgetIntoGrid(widget, grid) {
         try {
             console.log(`🎨 Loading widget ${widget.id} into grid`, widget);
             
-            // Create widget HTML using WidgetManager
-            if (window.WidgetManager && window.WidgetManager.createWidgetHtml) {
-                const widgetHtml = await window.WidgetManager.createWidgetHtml(widget);
-                
-                console.log(`📄 Widget HTML for ${widget.id}:`, widgetHtml.substring(0, 200) + '...');
-                
-                // Convert resize_handles array to string for GridStack
-                let resizeHandles = 'se, sw'; // default
-                if (widget.resize_handles) {
-                    if (Array.isArray(widget.resize_handles)) {
-                        resizeHandles = widget.resize_handles.join(', ');
-                    } else if (typeof widget.resize_handles === 'string') {
-                        resizeHandles = widget.resize_handles;
-                    }
-                }
-                
-                console.log(`🔧 Resize handles for widget ${widget.id}:`, resizeHandles);
-                
-                // Add to GridStack with a simple placeholder first
-                const widgetElement = grid.addWidget({
-                    x: widget.grid_x || 0,
-                    y: widget.grid_y || 0,
-                    w: widget.grid_w || 6,
-                    h: widget.grid_h || 4,
-                    id: widget.grid_id || `widget_${widget.id}`,
-                    content: '<div class="widget-placeholder">Loading widget...</div>'
-                });
-                
-                // Set data attributes
-                widgetElement.setAttribute('data-page-section-widget-id', widget.id);
-                widgetElement.setAttribute('data-widget-id', widget.widget_id);
-                widgetElement.setAttribute('data-widget-type', widget.settings?.widget_type || 'widget');
-                
-                // Now replace the content with the actual widget HTML
-                const contentElement = widgetElement.querySelector('.grid-stack-item-content');
-                if (contentElement) {
-                    // Clear the placeholder and set the real HTML
-                    contentElement.innerHTML = widgetHtml;
-                    console.log(`✅ Widget ${widget.id} HTML content set successfully`);
-                } else {
-                    console.error(`❌ Could not find content element for widget ${widget.id}`);
-                }
-                
-                console.log(`✅ Widget ${widget.id} loaded into grid`);
-                
+            let widgetHtml;
+            
+            // Check if enhanced rendered HTML is available (from theme context)
+            if (widget.rendered_html) {
+                console.log(`🎨 Using pre-rendered HTML for widget ${widget.id} with theme context`);
+                widgetHtml = widget.rendered_html;
             } else {
-                console.error('❌ WidgetManager not available for loading widget');
+                // Fall back to WidgetManager for HTML generation
+                if (window.WidgetManager && window.WidgetManager.createWidgetHtml) {
+                    widgetHtml = await window.WidgetManager.createWidgetHtml(widget);
+                } else {
+                    console.warn(`⚠️ No rendered HTML or WidgetManager available for widget ${widget.id}`);
+                    widgetHtml = `<div class="widget-fallback">Widget ${widget.widget_name || widget.id}</div>`;
+                }
             }
+            
+            console.log(`📄 Widget HTML for ${widget.id}:`, widgetHtml.substring(0, 200) + '...');
+            
+            // Convert resize_handles array to string for GridStack
+            let resizeHandles = 'se, sw'; // default
+            if (widget.resize_handles) {
+                if (Array.isArray(widget.resize_handles)) {
+                    resizeHandles = widget.resize_handles.join(', ');
+                } else if (typeof widget.resize_handles === 'string') {
+                    resizeHandles = widget.resize_handles;
+                }
+            }
+            
+            console.log(`🔧 Resize handles for widget ${widget.id}:`, resizeHandles);
+            
+            // Determine section type from the grid container
+            const sectionElement = grid.el.closest('.page-section');
+            const sectionType = sectionElement ? sectionElement.getAttribute('data-section-type') : 'full-width';
+            
+            // Calculate widget width based on section type
+            let widgetWidth = widget.grid_w || 6; // default width
+            let widgetHeight = widget.grid_h || 4; // default height
+            
+            if (sectionType === 'full-width') {
+                // Full width sections: widgets should span the entire width
+                widgetWidth = 1; // Since we set column: 1 for full-width sections
+                widgetHeight = Math.max(widgetHeight, 3); // Minimum height for full-width widgets
+            } else if (sectionType === 'multi-column') {
+                // Multi-column sections: respect the saved width or use full column width
+                widgetWidth = widget.grid_w || 12; // Full width of the column
+            } else if (sectionType === 'sidebar-left') {
+                // Sidebar sections: adapt to container
+                const isInSidebar = grid.el.closest('.col-md-3');
+                widgetWidth = isInSidebar ? 1 : (widget.grid_w || 12);
+            }
+            
+            console.log(`🎨 Widget ${widget.id} dimensions for ${sectionType}: ${widgetWidth}x${widgetHeight}`);
+            
+            // Add to GridStack with a simple placeholder first
+            const widgetElement = grid.addWidget({
+                x: widget.grid_x || 0,
+                y: widget.grid_y || 0,
+                w: widgetWidth,
+                h: widgetHeight,
+                id: widget.grid_id || `widget_${widget.id}`,
+                content: '<div class="widget-placeholder">Loading widget...</div>'
+            });
+            
+            // Set data attributes
+            widgetElement.setAttribute('data-page-section-widget-id', widget.id);
+            widgetElement.setAttribute('data-widget-id', widget.widget_id);
+            widgetElement.setAttribute('data-widget-type', widget.settings?.widget_type || 'widget');
+            
+            // Now replace the content with the actual widget HTML
+            const contentElement = widgetElement.querySelector('.grid-stack-item-content');
+            if (contentElement) {
+                // Clear the placeholder and set the real HTML
+                contentElement.innerHTML = widgetHtml;
+                console.log(`✅ Widget ${widget.id} HTML content set successfully`);
+            } else {
+                console.error(`❌ Could not find content element for widget ${widget.id}`);
+            }
+            
+            console.log(`✅ Widget ${widget.id} loaded into grid`);
             
         } catch (error) {
             console.error(`❌ Error loading widget ${widget.id}:`, error);

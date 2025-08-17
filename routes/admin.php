@@ -244,6 +244,7 @@ Route::middleware('admin.auth')->group(function () {
                 'destroy' => 'content-types.items.destroy',
             ]);
         Route::get('items/{item}/preview', [App\Http\Controllers\Admin\PreviewController::class, 'showContentItemPreview'])->name('content-types.items.preview');
+        Route::get('items/{item}/theme-preview', [App\Http\Controllers\Admin\PreviewController::class, 'showContentItemWithThemePreview'])->name('content-types.items.theme-preview');
     });
 
     // User Management Routes
@@ -337,6 +338,14 @@ Route::prefix('api')->middleware('admin.auth')->group(function () {
     
     // Content Options for Widget Preview
     Route::get('/widgets/{widget}/content-options', [App\Http\Controllers\Admin\WidgetPreviewFrontendController::class, 'getContentOptions'])->name('admin.widgets.content-options');
+    
+    // Content Item Theme Preview API
+    Route::get('/content-types/{contentType}/items/{item}/theme-preview', [App\Http\Controllers\Admin\PreviewController::class, 'getContentItemThemePreview'])->name('api.content-types.items.theme-preview');
+    
+    // Theme Canvas Wrapper Test API
+    Route::get('/pages/{page}/theme-wrapper', [App\Http\Controllers\Api\PageSectionController::class, 'getThemeWrapperTest'])->name('api.pages.theme-wrapper');
+    Route::get('/pages/{page}/theme-wrapper-iframe', [App\Http\Controllers\Api\PageSectionController::class, 'showThemeWrapperIframe'])->name('api.pages.theme-wrapper-iframe');
+    Route::get('/pages/{page}/full-theme-preview-iframe', [App\Http\Controllers\Api\PageSectionController::class, 'showFullThemePreviewIframe'])->name('api.pages.full-theme-preview-iframe');
     
     // Widget Schema API for GrapesJS
     Route::get('/widgets/schemas', [App\Http\Controllers\Api\WidgetController::class, 'getWidgetSchemas'])->name('api.widgets.schemas');
