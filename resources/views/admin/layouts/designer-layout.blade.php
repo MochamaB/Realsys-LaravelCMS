@@ -26,43 +26,7 @@
     <link href="{{ asset('assets/admin/css/media-picker.css') }}" rel="stylesheet" type="text/css" />
     
     <!-- Page Loader CSS -->
-    <style>
-        .page-loader {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background-color: #f8f9fa;
-            z-index: 9999;
-            overflow: hidden;
-        }
-        
-        .page-loader .progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #28a745, #20c997, #17a2b8);
-            background-size: 200% 100%;
-            animation: loading 2s ease-in-out infinite;
-            border-radius: 0;
-            transition: width 0.3s ease;
-        }
-        
-        @keyframes loading {
-            0% {
-                background-position: 200% 0;
-            }
-            100% {
-                background-position: -200% 0;
-            }
-        }
-        
-        .page-loader.hidden {
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.5s ease, visibility 0.5s ease;
-        }
-    </style>
-    
+   
     @yield('css')
     @stack('styles')
 
@@ -253,10 +217,7 @@
 </head>
 
 <body>
-    <!-- Page Loader -->
-    <div class="page-loader" id="pageLoader">
-        <div class="progress-bar progress-bar-striped bg-success" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-    </div>
+   
     
     <!-- Begin page -->
     <div id="layout-wrapper">

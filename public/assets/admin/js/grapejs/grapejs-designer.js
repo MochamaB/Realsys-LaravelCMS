@@ -53,10 +53,11 @@ class GrapesJSDesigner {
             if (e.target.getAttribute('data-bs-target') === '#preview') {
                 console.log('🔄 Live Preview tab being activated...');
                 this.showTabLoadingIndicator(true);
-                this.collapseLeftSidebar();
+                // Initialize Live Preview sidebar with sections and widgets
+                this.initializeLivePreviewSidebar();
             } else {
-                // If switching away from preview, show left sidebar
-                this.expandLeftSidebar();
+                // If switching away from preview, reset sidebar
+                this.resetSidebarForOtherTabs();
             }
         });
         
@@ -195,6 +196,27 @@ class GrapesJSDesigner {
                     saveBtn.disabled = false;
                 }, 2000);
             }
+        }
+    }
+
+    /**
+     * Initialize Live Preview sidebar
+     */
+    initializeLivePreviewSidebar() {
+        if (window.LivePreviewSidebar) {
+            window.LivePreviewSidebar.init();
+        } else {
+            console.warn('⚠️ LivePreviewSidebar not available');
+        }
+    }
+
+    /**
+     * Reset sidebar for other tabs
+     */
+    resetSidebarForOtherTabs() {
+        if (window.LivePreviewSidebar) {
+            window.LivePreviewSidebar.expandSidebar();
+            window.LivePreviewSidebar.reset();
         }
     }
 

@@ -95,14 +95,31 @@
 /* GrapesJS Container Styling */
 
 
-/* Canvas Styling */
+/* Canvas Styling - Force Full Width */
 .gjs-cv-canvas {
     background: #f8f9fa;
     padding: 0 !important;
     border-left: 1px solid #e9ecef;
     height: 100% !important;
     min-height: calc(100vh - 60px) !important;
+    width: 100% !important;
+    right: 0 !important;
     --gjs-canvas-top: 0px !important;
+}
+
+/* Force GrapesJS editor to use full width when panels are external */
+.gjs-editor {
+    width: 100% !important;
+}
+
+/* Hide any default panel containers that might reserve space */
+.gjs-pn-panels {
+    display: none !important;
+}
+
+/* Ensure the main GrapesJS container uses full width */
+#gjs {
+    width: 100% !important;
 }
 
 .gjs-frame {

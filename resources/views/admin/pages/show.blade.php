@@ -39,6 +39,8 @@
 <!-- GrapesJS Component System -->
 <script src="{{ asset('assets/admin/js/grapejs/components/section-components.js') }}?v={{ time() }}"></script>
 <script src="{{ asset('assets/admin/js/grapejs/components/widget-components.js') }}?v={{ time() }}"></script>
+<!-- Live Preview Sidebar Manager -->
+<script src="{{ asset('assets/admin/js/grapejs/live-preview-sidebar.js') }}?v={{ time() }}"></script>
 <script src="{{ asset('assets/admin/js/grapejs/grapejs-designer.js') }}?v={{ time() }}"></script>
 @endsection
 
