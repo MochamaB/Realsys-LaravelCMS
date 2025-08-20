@@ -23,23 +23,7 @@
 }
 
 /* GrapesJS Toolbar Customization */
-.gjs-toolbar {
-    background: #fff;
-    border: 1px solid #e9ecef;
-    border-radius: 6px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    padding: 0.25rem;
-}
 
-.gjs-toolbar-item {
-    border-radius: 4px;
-    margin: 0 2px;
-    transition: all 0.2s ease;
-}
-
-.gjs-toolbar-item:hover {
-    background: #f8f9fa;
-}
 
 /* GrapesJS RTE (Rich Text Editor) Customization */
 .gjs-rte-toolbar {

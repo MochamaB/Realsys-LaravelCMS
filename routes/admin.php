@@ -386,6 +386,11 @@ Route::prefix('api')->middleware('admin.auth')->group(function () {
     Route::get('/live-designer/pages/{page}/iframe-preview', [App\Http\Controllers\Api\LiveDesignerController::class, 'getIframePreview'])->name('api.live-designer.pages.iframe-preview');
     Route::get('/live-designer/pages/{page}/assets', [App\Http\Controllers\Api\LiveDesignerController::class, 'getAssets'])->name('api.live-designer.pages.assets');
     
+    // Live Designer API - Component Library & Content Management
+    Route::get('/live-designer/pages/{page}/widgets', [App\Http\Controllers\Api\LiveDesignerController::class, 'getWidgets'])->name('api.live-designer.pages.widgets');
+    Route::get('/live-designer/pages/{page}/content-items', [App\Http\Controllers\Api\LiveDesignerController::class, 'getContentItems'])->name('api.live-designer.pages.content-items');
+    Route::post('/live-designer/pages/{page}/save', [App\Http\Controllers\Api\LiveDesignerController::class, 'savePageContent'])->name('api.live-designer.pages.save');
+    
     // Widget Schema API for GrapesJS
     Route::get('/widgets/schemas', [App\Http\Controllers\Api\WidgetController::class, 'getWidgetSchemas'])->name('api.widgets.schemas');
     Route::get('/widgets/{widget}/schema', [App\Http\Controllers\Api\WidgetController::class, 'getWidgetSchema'])->name('api.widgets.schema');

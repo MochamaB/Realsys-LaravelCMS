@@ -358,4 +358,268 @@ class LiveDesignerController extends Controller
         </body>
         </html>';
     }
+
+    /**
+     * Get available widgets for the component library
+     * 
+     * @param Page $page
+     * @return JsonResponse
+     */
+    public function getWidgets(Page $page): JsonResponse
+    {
+        try {
+            $theme = $page->template->theme ?? null;
+            
+            if (!$theme) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Page has no associated theme'
+                ], 400);
+            }
+
+            // Get all available widgets
+            $widgets = Widget::where('is_active', true)
+                ->orderBy('category')
+                ->orderBy('name')
+                ->get();
+
+            $widgetsByCategory = [];
+            
+            foreach ($widgets as $widget) {
+                $category = $widget->category ?: 'General';
+                
+                if (!isset($widgetsByCategory[$category])) {
+                    $widgetsByCategory[$category] = [];
+                }
+                
+                $widgetsByCategory[$category][] = [
+                    'id' => $widget->id,
+                    'name' => $widget->name,
+                    'slug' => $widget->slug,
+                    'description' => $widget->description,
+                    'icon' => $widget->icon,
+                    'category' => $widget->category,
+                    'preview_html' => $this->getWidgetPreviewHtml($widget, $theme),
+                    'settings_schema' => $widget->settings_schema,
+                    'content_types' => $widget->contentTypes->pluck('name', 'id')->toArray()
+                ];
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'widgets' => $widgetsByCategory,
+                    'total_count' => $widgets->count(),
+                    'categories' => array_keys($widgetsByCategory)
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error loading widgets for Live Designer: ' . $e->getMessage(), [
+                'page_id' => $page->id,
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to load widgets',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get content items for a specific content type
+     * 
+     * @param Request $request
+     * @param Page $page
+     * @return JsonResponse
+     */
+    public function getContentItems(Request $request, Page $page): JsonResponse
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'content_type_id' => 'required|integer|exists:content_types,id',
+                'search' => 'nullable|string|max:255',
+                'limit' => 'nullable|integer|min:1|max:100'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $contentTypeId = $request->input('content_type_id');
+            $search = $request->input('search');
+            $limit = $request->input('limit', 20);
+
+            $query = ContentItem::where('content_type_id', $contentTypeId)
+                ->where('is_published', true)
+                ->with(['contentType', 'fieldValues.contentField']);
+
+            if ($search) {
+                $query->where('title', 'like', '%' . $search . '%');
+            }
+
+            $contentItems = $query->orderBy('created_at', 'desc')
+                ->limit($limit)
+                ->get();
+
+            $items = [];
+            foreach ($contentItems as $item) {
+                $fields = [];
+                foreach ($item->fieldValues as $fieldValue) {
+                    $fields[$fieldValue->contentField->slug] = [
+                        'label' => $fieldValue->contentField->label,
+                        'type' => $fieldValue->contentField->field_type,
+                        'value' => $fieldValue->field_value
+                    ];
+                }
+
+                $items[] = [
+                    'id' => $item->id,
+                    'title' => $item->title,
+                    'slug' => $item->slug,
+                    'excerpt' => $item->excerpt,
+                    'featured_image' => $item->featured_image,
+                    'created_at' => $item->created_at->format('Y-m-d H:i:s'),
+                    'fields' => $fields
+                ];
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'items' => $items,
+                    'total_count' => $contentItems->count(),
+                    'content_type_id' => $contentTypeId
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error loading content items for Live Designer: ' . $e->getMessage(), [
+                'page_id' => $page->id,
+                'content_type_id' => $request->input('content_type_id'),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to load content items',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Save page content from GrapesJS editor
+     * 
+     * @param Request $request
+     * @param Page $page
+     * @return JsonResponse
+     */
+    public function savePageContent(Request $request, Page $page): JsonResponse
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'html' => 'required|string',
+                'css' => 'nullable|string',
+                'components' => 'nullable|array',
+                'styles' => 'nullable|array'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            // For now, we'll store the GrapesJS data in a JSON field
+            // This is a placeholder implementation - in production you'd want to 
+            // parse the components and create proper page sections and widgets
+            
+            $grapesData = [
+                'html' => $request->input('html'),
+                'css' => $request->input('css'),
+                'components' => $request->input('components', []),
+                'styles' => $request->input('styles', []),
+                'saved_at' => now()->toISOString()
+            ];
+
+            // Store in page metadata or create a dedicated field
+            $page->update([
+                'grapes_data' => json_encode($grapesData),
+                'updated_at' => now()
+            ]);
+
+            Log::info('Page content saved from Live Designer', [
+                'page_id' => $page->id,
+                'user_id' => auth()->id(),
+                'components_count' => count($grapesData['components']),
+                'has_css' => !empty($grapesData['css'])
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'page_id' => $page->id,
+                    'saved_at' => $grapesData['saved_at'],
+                    'message' => 'Page content saved successfully'
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error saving page content from Live Designer: ' . $e->getMessage(), [
+                'page_id' => $page->id,
+                'user_id' => auth()->id(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to save page content',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get widget preview HTML for component library
+     * 
+     * @param Widget $widget
+     * @param $theme
+     * @return string
+     */
+    protected function getWidgetPreviewHtml(Widget $widget, $theme): string
+    {
+        try {
+            // Generate a basic preview HTML for the widget
+            // This would ideally render the widget with sample data
+            
+            $previewHtml = '<div class="widget-preview widget-' . $widget->slug . '">';
+            $previewHtml .= '<div class="widget-preview-header">';
+            $previewHtml .= '<i class="' . ($widget->icon ?: 'ri-puzzle-line') . '"></i>';
+            $previewHtml .= '<span>' . $widget->name . '</span>';
+            $previewHtml .= '</div>';
+            $previewHtml .= '<div class="widget-preview-body">';
+            $previewHtml .= $widget->description ?: 'No description available';
+            $previewHtml .= '</div>';
+            $previewHtml .= '</div>';
+            
+            return $previewHtml;
+            
+        } catch (\Exception $e) {
+            Log::warning('Could not generate widget preview HTML: ' . $e->getMessage(), [
+                'widget_id' => $widget->id,
+                'widget_slug' => $widget->slug
+            ]);
+            
+            return '<div class="widget-preview-error">Preview not available</div>';
+        }
+    }
 }

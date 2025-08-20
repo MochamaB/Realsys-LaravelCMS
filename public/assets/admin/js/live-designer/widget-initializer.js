@@ -1,6 +1,7 @@
 /**
- * Universal Widget Initializer for Live Designer
+ * Enhanced Widget Initializer for Live Designer
  * Handles re-initialization of JavaScript widgets in GrapesJS iframe
+ * with proper asset loading and dependency management
  */
 class WidgetInitializer {
     constructor(editor) {
@@ -10,8 +11,10 @@ class WidgetInitializer {
         this.iframeWindow = null;
         this.initializationQueue = [];
         this.initialized = false;
+        this.loadedAssets = new Set();
+        this.widgetConfigurations = new Map();
         
-        console.log('🔧 WidgetInitializer created');
+        console.log('🔧 Enhanced WidgetInitializer created');
     }
     
     /**
@@ -38,7 +41,7 @@ class WidgetInitializer {
         }
         
         this.initialized = true;
-        console.log('🔧 WidgetInitializer initialized');
+        console.log('🔧 Enhanced WidgetInitializer initialized');
     }
     
     /**
@@ -131,29 +134,41 @@ class WidgetInitializer {
     }
     
     /**
-     * Initialize all widgets in the iframe
+     * Initialize all widgets in the iframe with proper dependency loading
      */
-    initializeAllWidgets() {
-        if (!this.iframeDocument || !this.iframeWindow) {
-            console.warn('⚠️ Iframe not ready for widget initialization');
+    async initializeAllWidgets() {
+        // Enhanced iframe readiness check
+        if (!await this.waitForIframeReady()) {
+            console.warn('⚠️ Iframe not ready for widget initialization after waiting');
             return;
         }
         
-        console.log('🚀 Starting widget initialization...');
+        console.log('🚀 Starting enhanced widget initialization...');
         
-        // Initialize counter widgets
-        this.initializeCounterWidgets();
-        
-        // Initialize slider widgets
-        this.initializeSliderWidgets();
-        
-        // Initialize any other custom widgets
-        this.initializeCustomWidgets();
-        
-        // Trigger custom initialization events
-        this.triggerCustomEvents();
-        
-        console.log('✅ Widget initialization complete');
+        try {
+            // Step 1: Extract widget configurations from HTML content
+            this.extractWidgetConfigurations();
+            
+            // Step 2: Load required assets with dependency chain
+            await this.loadRequiredAssets();
+            
+            // Step 3: Initialize counter widgets (no external dependencies)
+            this.initializeCounterWidgets();
+            
+            // Step 4: Initialize slider widgets (requires jQuery + Nivo Slider)
+            await this.initializeSliderWidgetsEnhanced();
+            
+            // Step 5: Initialize any other custom widgets
+            this.initializeCustomWidgets();
+            
+            // Step 6: Trigger custom initialization events
+            this.triggerCustomEvents();
+            
+            console.log('✅ Enhanced widget initialization complete');
+            
+        } catch (error) {
+            console.error('❌ Widget initialization failed:', error);
+        }
     }
     
     /**
@@ -200,28 +215,56 @@ class WidgetInitializer {
     }
     
     /**
-     * Initialize slider widgets
+     * Enhanced slider widget initialization with proper dependency loading
      */
-    initializeSliderWidgets() {
+    async initializeSliderWidgetsEnhanced() {
         try {
-            const sliders = this.iframeDocument.querySelectorAll('.widget-slider .nivoSlider');
+            const sliders = this.iframeDocument.querySelectorAll('.nivoSlider');
+            
+            if (sliders.length === 0) {
+                return;
+            }
+            
+            console.log(`🎠 Found ${sliders.length} slider widgets, ensuring dependencies...`);
+            
+            // Ensure jQuery is loaded
+            await this.ensureJQueryInIframe();
+            
+            // Ensure Nivo Slider plugin is loaded
+            await this.ensureNivoSliderInIframe();
+            
+            // Wait a bit for assets to be fully processed
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            const jQuery = this.iframeWindow.jQuery || this.iframeWindow.$;
+            
+            if (!jQuery || !jQuery.fn.nivoSlider) {
+                console.warn('⚠️ jQuery or Nivo Slider not available after loading attempts');
+                return;
+            }
             
             sliders.forEach(slider => {
                 const sliderId = slider.id;
                 
-                // Check if jQuery is available in iframe
-                const jQuery = this.iframeWindow.jQuery || this.iframeWindow.$;
+                if (!sliderId) {
+                    console.warn('⚠️ Slider missing ID, skipping:', slider);
+                    return;
+                }
                 
-                if (jQuery && jQuery.fn.nivoSlider) {
+                try {
                     // Destroy existing slider if it exists
-                    if (jQuery('#' + sliderId).data('nivoslider')) {
-                        jQuery('#' + sliderId).data('nivoslider').destroy();
+                    const existingSlider = jQuery('#' + sliderId).data('nivoslider');
+                    if (existingSlider) {
+                        existingSlider.destroy();
                     }
                     
-                    // Get configuration from window or use defaults
-                    const config = this.iframeWindow.sliderConfigs && this.iframeWindow.sliderConfigs[sliderId] 
-                        ? this.iframeWindow.sliderConfigs[sliderId] 
-                        : {};
+                    // Get configuration from injected configs or iframe window
+                    let config = this.widgetConfigurations.get(sliderId) || {};
+                    
+                    // Also check if it exists in iframe window (from @push('scripts'))
+                    if (this.iframeWindow.sliderConfigs && this.iframeWindow.sliderConfigs[sliderId]) {
+                        config = { ...config, ...this.iframeWindow.sliderConfigs[sliderId] };
+                    }
                     
                     const defaultConfig = {
                         effect: 'random',
@@ -243,15 +286,18 @@ class WidgetInitializer {
                     
                     // Initialize slider
                     jQuery('#' + sliderId).nivoSlider(finalConfig);
+                    
+                    console.log(`✅ Initialized slider: ${sliderId}`);
+                    
+                } catch (sliderError) {
+                    console.warn(`⚠️ Error initializing slider ${sliderId}:`, sliderError);
                 }
             });
             
-            if (sliders.length > 0) {
-                console.log(`🎠 Initialized ${sliders.length} slider widgets`);
-            }
+            console.log(`🎠 Completed slider widget initialization`);
             
         } catch (error) {
-            console.warn('⚠️ Error initializing slider widgets:', error);
+            console.warn('⚠️ Error in enhanced slider initialization:', error);
         }
     }
     
@@ -316,9 +362,16 @@ class WidgetInitializer {
     /**
      * Force reinitialize all widgets (public method)
      */
-    reinitializeWidgets() {
+    async reinitializeWidgets() {
         console.log('🔄 Force reinitializing widgets...');
-        this.initializeAllWidgets();
+        
+        // Use the enhanced iframe readiness check
+        if (!await this.waitForIframeReady()) {
+            console.warn('⚠️ Iframe not ready for reinitializing widgets after waiting');
+            return;
+        }
+        
+        await this.initializeAllWidgets();
     }
     
     /**
@@ -334,14 +387,327 @@ class WidgetInitializer {
     }
     
     /**
+     * Extract widget configurations from HTML content
+     */
+    extractWidgetConfigurations() {
+        try {
+            // Look for script tags with widget configurations
+            const scripts = this.iframeDocument.querySelectorAll('script');
+            
+            scripts.forEach(script => {
+                const content = script.textContent || script.innerHTML;
+                
+                // Look for sliderConfigs pattern
+                const sliderConfigMatch = content.match(/window\.sliderConfigs\s*=\s*window\.sliderConfigs\s*\|\|\s*\{\};([\s\S]*?)(?=<\/script>|$)/i);
+                if (sliderConfigMatch) {
+                    try {
+                        // Execute the configuration in iframe context
+                        this.iframeWindow.eval(content);
+                        console.log('✅ Injected slider configurations into iframe');
+                    } catch (evalError) {
+                        console.warn('⚠️ Error executing slider config script:', evalError);
+                    }
+                }
+            });
+            
+            // Store configurations locally as backup
+            if (this.iframeWindow.sliderConfigs) {
+                Object.entries(this.iframeWindow.sliderConfigs).forEach(([sliderId, config]) => {
+                    this.widgetConfigurations.set(sliderId, config);
+                });
+                console.log(`📋 Extracted ${Object.keys(this.iframeWindow.sliderConfigs).length} slider configurations`);
+            }
+            
+        } catch (error) {
+            console.warn('⚠️ Error extracting widget configurations:', error);
+        }
+    }
+    
+    /**
+     * Load required assets for widgets
+     */
+    async loadRequiredAssets() {
+        try {
+            console.log('📦 Loading required widget assets...');
+            
+            // Load theme-specific assets that widgets need
+            const requiredAssets = {
+                js: [
+                    '/themes/miata/js/jquery-1.12.4.min.js',
+                    '/themes/miata/lib/js/jquery.nivo.slider.js'
+                ],
+                css: [
+                    '/themes/miata/lib/css/nivo-slider.css',
+                    '/themes/miata/lib/css/default/default.css'
+                ]
+            };
+            
+            // Load CSS assets
+            for (const cssFile of requiredAssets.css) {
+                await this.loadCSSIntoIframe(cssFile);
+            }
+            
+            // Load JS assets in order
+            for (const jsFile of requiredAssets.js) {
+                await this.loadJSIntoIframe(jsFile);
+            }
+            
+            console.log('✅ Required widget assets loaded');
+            
+        } catch (error) {
+            console.warn('⚠️ Error loading required assets:', error);
+        }
+    }
+    
+    /**
+     * Ensure jQuery is loaded in iframe
+     */
+    async ensureJQueryInIframe() {
+        if (this.iframeWindow.jQuery || this.iframeWindow.$) {
+            console.log('✅ jQuery already available in iframe');
+            return;
+        }
+        
+        console.log('📦 Loading jQuery into iframe...');
+        await this.loadJSIntoIframe('/themes/miata/js/jquery-1.12.4.min.js');
+        
+        // Wait for jQuery to be available
+        await this.waitForCondition(() => !!(this.iframeWindow.jQuery || this.iframeWindow.$), 5000);
+    }
+    
+    /**
+     * Ensure Nivo Slider plugin is loaded in iframe
+     */
+    async ensureNivoSliderInIframe() {
+        const jQuery = this.iframeWindow.jQuery || this.iframeWindow.$;
+        
+        if (jQuery && jQuery.fn.nivoSlider) {
+            console.log('✅ Nivo Slider already available in iframe');
+            return;
+        }
+        
+        if (!jQuery) {
+            await this.ensureJQueryInIframe();
+        }
+        
+        console.log('📦 Loading Nivo Slider into iframe...');
+        await this.loadCSSIntoIframe('/themes/miata/lib/css/nivo-slider.css');
+        await this.loadCSSIntoIframe('/themes/miata/lib/css/default/default.css');
+        await this.loadJSIntoIframe('/themes/miata/lib/js/jquery.nivo.slider.js');
+        
+        // Wait for Nivo Slider to be available
+        await this.waitForCondition(() => !!(this.iframeWindow.jQuery && this.iframeWindow.jQuery.fn.nivoSlider), 5000);
+    }
+    
+    /**
+     * Load JavaScript file into iframe
+     */
+    async loadJSIntoIframe(jsPath) {
+        return new Promise((resolve, reject) => {
+            if (this.loadedAssets.has(jsPath)) {
+                resolve();
+                return;
+            }
+            
+            try {
+                const script = this.iframeDocument.createElement('script');
+                script.type = 'text/javascript';
+                script.src = jsPath;
+                
+                const timeout = setTimeout(() => {
+                    console.warn(`⚠️ Timeout loading JS into iframe: ${jsPath}`);
+                    this.loadedAssets.add(jsPath); // Mark as attempted
+                    resolve(); // Don't reject, continue with other assets
+                }, 10000); // 10 second timeout
+                
+                script.onload = () => {
+                    clearTimeout(timeout);
+                    console.log(`✅ Loaded JS into iframe: ${jsPath}`);
+                    this.loadedAssets.add(jsPath);
+                    resolve();
+                };
+                
+                script.onerror = (error) => {
+                    clearTimeout(timeout);
+                    console.warn(`⚠️ Failed to load JS into iframe: ${jsPath}`, error);
+                    this.loadedAssets.add(jsPath); // Mark as attempted
+                    resolve(); // Don't reject, continue with other assets
+                };
+                
+                this.iframeDocument.head.appendChild(script);
+                
+            } catch (error) {
+                console.warn(`⚠️ Error creating script element for: ${jsPath}`, error);
+                this.loadedAssets.add(jsPath); // Mark as attempted
+                resolve(); // Don't reject, continue with other assets
+            }
+        });
+    }
+    
+    /**
+     * Load CSS file into iframe
+     */
+    async loadCSSIntoIframe(cssPath) {
+        return new Promise((resolve) => {
+            if (this.loadedAssets.has(cssPath)) {
+                resolve();
+                return;
+            }
+            
+            try {
+                const link = this.iframeDocument.createElement('link');
+                link.rel = 'stylesheet';
+                link.type = 'text/css';
+                link.href = cssPath;
+                
+                const timeout = setTimeout(() => {
+                    console.warn(`⚠️ Timeout loading CSS into iframe: ${cssPath}`);
+                    this.loadedAssets.add(cssPath); // Mark as attempted
+                    resolve(); // Don't reject, continue with other assets
+                }, 10000); // 10 second timeout
+                
+                link.onload = () => {
+                    clearTimeout(timeout);
+                    console.log(`✅ Loaded CSS into iframe: ${cssPath}`);
+                    this.loadedAssets.add(cssPath);
+                    resolve();
+                };
+                
+                link.onerror = (error) => {
+                    clearTimeout(timeout);
+                    console.warn(`⚠️ Failed to load CSS into iframe: ${cssPath}`, error);
+                    this.loadedAssets.add(cssPath); // Mark as attempted
+                    resolve(); // Don't reject, continue with other assets
+                };
+                
+                this.iframeDocument.head.appendChild(link);
+                
+            } catch (error) {
+                console.warn(`⚠️ Error creating link element for: ${cssPath}`, error);
+                this.loadedAssets.add(cssPath); // Mark as attempted
+                resolve(); // Don't reject, continue with other assets
+            }
+        });
+    }
+    
+    /**
+     * Wait for iframe to be fully ready for widget initialization
+     */
+    async waitForIframeReady(timeout = 10000) {
+        return new Promise((resolve) => {
+            const startTime = Date.now();
+            
+            const checkIframeReady = async () => {
+                try {
+                    // First check basic iframe references
+                    if (!this.iframe || !this.iframeDocument || !this.iframeWindow) {
+                        this.setupIframeReferences();
+                    }
+                    
+                    // If still no references, continue checking
+                    if (!this.iframe || !this.iframeDocument || !this.iframeWindow) {
+                        if (Date.now() - startTime >= timeout) {
+                            console.warn('⚠️ Iframe references not established within timeout');
+                            resolve(false);
+                            return;
+                        }
+                        setTimeout(checkIframeReady, 100);
+                        return;
+                    }
+                    
+                    // Check if iframe content is loaded
+                    if (this.iframeDocument.readyState !== 'complete') {
+                        if (Date.now() - startTime >= timeout) {
+                            console.warn('⚠️ Iframe document not ready within timeout');
+                            resolve(false);
+                            return;
+                        }
+                        setTimeout(checkIframeReady, 100);
+                        return;
+                    }
+                    
+                    // Check if body exists and is accessible
+                    if (!this.iframeDocument.body) {
+                        if (Date.now() - startTime >= timeout) {
+                            console.warn('⚠️ Iframe body not available within timeout');
+                            resolve(false);
+                            return;
+                        }
+                        setTimeout(checkIframeReady, 100);
+                        return;
+                    }
+                    
+                    // Check if there's any content (indicating GrapesJS has loaded content)
+                    const hasContent = this.iframeDocument.body.children.length > 0 || 
+                                     this.iframeDocument.body.textContent.trim().length > 0;
+                    
+                    if (!hasContent) {
+                        if (Date.now() - startTime >= timeout) {
+                            console.warn('⚠️ Iframe has no content within timeout');
+                            resolve(false);
+                            return;
+                        }
+                        setTimeout(checkIframeReady, 100);
+                        return;
+                    }
+                    
+                    console.log('✅ Iframe is ready for widget initialization');
+                    resolve(true);
+                    
+                } catch (error) {
+                    if (Date.now() - startTime >= timeout) {
+                        console.warn('⚠️ Error checking iframe readiness:', error);
+                        resolve(false);
+                        return;
+                    }
+                    setTimeout(checkIframeReady, 100);
+                }
+            };
+            
+            checkIframeReady();
+        });
+    }
+
+    /**
+     * Wait for a condition with timeout
+     */
+    async waitForCondition(conditionFn, timeout = 5000) {
+        return new Promise((resolve, reject) => {
+            const startTime = Date.now();
+            
+            const checkCondition = () => {
+                try {
+                    if (conditionFn()) {
+                        resolve();
+                        return;
+                    }
+                } catch (error) {
+                    // Continue checking
+                }
+                
+                if (Date.now() - startTime >= timeout) {
+                    reject(new Error(`Condition not met within ${timeout}ms`));
+                    return;
+                }
+                
+                setTimeout(checkCondition, 50);
+            };
+            
+            checkCondition();
+        });
+    }
+    
+    /**
      * Destroy widget initializer
      */
     destroy() {
         clearTimeout(this.initializationTimeout);
         this.initialized = false;
-        console.log('🗑️ WidgetInitializer destroyed');
+        console.log('🗑️ Enhanced WidgetInitializer destroyed');
     }
 }
 
 // Export for use in other modules
 window.WidgetInitializer = WidgetInitializer;
+
+console.log('📦 Enhanced Widget Initializer module loaded');
