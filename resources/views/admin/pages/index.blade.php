@@ -53,10 +53,14 @@
                                         <td>{{ $page->created_at->format('M d, Y') }}</td>
                                         <td>
                                             <div class="d-flex gap-2">
-                                                <div class="view">
-                                                    <a href="{{ route('admin.pages.show', $page->id) }}" class="btn btn-sm btn-soft-info">
-                                                        <i class="ri-eye-fill align-bottom"></i>
-                                                    </a>
+                                                <div class="design">
+                                                    <button class="btn btn-sm btn-primary design-page-btn" 
+                                                            data-page-id="{{ $page->id }}" 
+                                                            data-page-title="{{ $page->title }}"
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#designerSelectionModal">
+                                                        <i class="ri-brush-line align-bottom"></i>
+                                                    </button>
                                                 </div>
                                                 <div class="edit">
                                                     <a href="{{ route('admin.pages.edit', $page->id) }}" class="btn btn-sm btn-soft-success">
@@ -86,18 +90,113 @@
             </div>
         </div>
     </div>
+
+<!-- Designer Selection Modal -->
+<div class="modal fade" id="designerSelectionModal" tabindex="-1" aria-labelledby="designerSelectionModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="designerSelectionModalLabel">Choose Page Designer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" tabindex="0"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-4">
+                    <h6 id="selectedPageTitle" class="text-muted">Select a designer for: <span class="text-primary"></span></h6>
+                </div>
+                <div class="row g-4" id="designerOptionsContainer">
+                    <!-- Designer cards will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
-@section('scripts')
+@section('js')
     <!-- Sweet Alerts js -->
     <script src="{{ asset('assets/admin/libs/sweetalert2/sweetalert2.min.js') }}"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            let currentPageId = null;
+            let currentPageTitle = null;
+
+            // Designer Selection Modal Logic
+            const selectedPageTitleSpan = document.querySelector('#selectedPageTitle span');
+            const designerOptionsContainer = document.getElementById('designerOptionsContainer');
+            
+            // Handle design button clicks
+            document.querySelectorAll('.design-page-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    currentPageId = this.getAttribute('data-page-id');
+                    currentPageTitle = this.getAttribute('data-page-title');
+                    selectedPageTitleSpan.textContent = currentPageTitle;
+                    
+                    // Generate designer option cards with proper links
+                    designerOptionsContainer.innerHTML = `
+                        <div class="col-md-6">
+                            <a href="/admin/pages/${currentPageId}/page-builder" class="text-decoration-none">
+                                <div class="card h-100" style="transition: all 0.3s ease;">
+                                    <div class="card-body text-center">
+                                        <div class="avatar-lg mx-auto mb-4">
+                                            <div class="avatar-title bg-primary-subtle text-primary rounded-circle fs-2">
+                                                <i class="ri-layout-grid-line"></i>
+                                            </div>
+                                        </div>
+                                        <h5 class="card-title text-dark">Page Builder</h5>
+                                        <p class="text-muted mb-3">Structure-based layout designer with sections and widgets</p>
+                                        <div class="features text-start">
+                                            <div class="mb-2"><i class="ri-check-line text-success me-2"></i>Drag & drop sections</div>
+                                            <div class="mb-2"><i class="ri-check-line text-success me-2"></i>Widget library</div>
+                                            <div class="mb-2"><i class="ri-check-line text-success me-2"></i>Responsive layouts</div>
+                                            <div class="mb-2"><i class="ri-check-line text-success me-2"></i>Template system</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="/admin/pages/${currentPageId}/live-designer" class="text-decoration-none">
+                                <div class="card h-100" style="transition: all 0.3s ease;">
+                                    <div class="card-body text-center">
+                                        <div class="avatar-lg mx-auto mb-4">
+                                            <div class="avatar-title bg-info-subtle text-info rounded-circle fs-2">
+                                                <i class="ri-brush-line"></i>
+                                            </div>
+                                        </div>
+                                        <h5 class="card-title text-dark">Live Designer</h5>
+                                        <p class="text-muted mb-3">Visual WYSIWYG editor for precise content design</p>
+                                        <div class="features text-start">
+                                            <div class="mb-2"><i class="ri-check-line text-success me-2"></i>Visual editing</div>
+                                            <div class="mb-2"><i class="ri-check-line text-success me-2"></i>Component styles</div>
+                                            <div class="mb-2"><i class="ri-check-line text-success me-2"></i>Live preview</div>
+                                            <div class="mb-2"><i class="ri-check-line text-success me-2"></i>Advanced widgets</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    `;
+                    
+                    // Add hover effects
+                    designerOptionsContainer.querySelectorAll('.card').forEach(card => {
+                        card.addEventListener('mouseenter', function() {
+                            this.style.transform = 'translateY(-5px)';
+                            this.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
+                        });
+                        card.addEventListener('mouseleave', function() {
+                            this.style.transform = 'translateY(0)';
+                            this.style.boxShadow = '';
+                        });
+                    });
+                });
+            });
+
             // Delete confirmation
             document.querySelectorAll('.remove-item-btn').forEach(button => {
                 button.addEventListener('click', function(e) {
                     e.preventDefault();
+                    e.stopPropagation(); // Prevent row click
                     const pageId = this.getAttribute('data-page-id');
 
                     Swal.fire({

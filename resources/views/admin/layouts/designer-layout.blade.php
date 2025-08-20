@@ -152,7 +152,11 @@
 
         /* Header adjustment */
         .navbar-header {
-            margin-left: 70px;
+            left: 70px;
+            transition: margin-left 0.3s ease;
+        }
+        .footer {
+            left: 70px !important;
             transition: margin-left 0.3s ease;
         }
 

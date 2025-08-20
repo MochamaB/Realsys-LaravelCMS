@@ -21,6 +21,9 @@
                         <span class="mdi mdi-magnify search-widget-icon"></span>
                         <span class="mdi mdi-close-circle search-widget-icon search-widget-icon-close d-none" id="search-close-options"></span>
                     </div>
+                    <div class="dropdown-menu dropdown-menu-lg" id="search-dropdown">
+                        <!-- Search results will be populated here -->
+                    </div>
                 </form>
             </div>
 

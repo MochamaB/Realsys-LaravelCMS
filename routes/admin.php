@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\MediaTagController;
 use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\MenuItemController;
 use App\Http\Controllers\Admin\PageController;
+use App\Http\Controllers\Admin\PageBuilderViewController;
 use App\Http\Controllers\Admin\PageSectionController;
 use App\Http\Controllers\Admin\PageWidgetController;
 use App\Http\Controllers\Admin\ProfileController;
@@ -65,6 +66,10 @@ Route::middleware('admin.auth')->group(function () {
     Route::resource('pages', PageController::class);
     Route::put('/pages/{page}/homepage', [PageController::class, 'toggleHomepage'])->name('admin.pages.homepage');
     Route::get('/pages/{page}/sections', [PageController::class, 'getSections'])->name('pages.sections');
+    
+    // Page Designers (Separated Systems)
+    Route::get('/pages/{page}/page-builder', [PageBuilderViewController::class, 'show'])
+        ->name('admin.pages.page-builder');
 
     // Widgets - Global routes
     Route::resource('widgets', WidgetController::class);
@@ -299,6 +304,33 @@ Route::middleware('admin.auth')->group(function () {
 
     // API routes for GrapeJS (using web middleware for sessions)
 Route::prefix('api')->middleware('admin.auth')->group(function () {
+
+    // =====================================================================
+    // GridStack Page Builder API - Dedicated endpoints for GridStack functionality
+    // =====================================================================
+    Route::prefix('page-builder')->group(function () {
+        // Section Management (GridStack Positioning)
+        Route::get('/pages/{page}/sections', [App\Http\Controllers\Api\PageBuilderController::class, 'getSections'])->name('api.page-builder.sections.index');
+        Route::post('/pages/{page}/sections', [App\Http\Controllers\Api\PageBuilderController::class, 'createSection'])->name('api.page-builder.sections.store');
+        Route::put('/sections/{section}', [App\Http\Controllers\Api\PageBuilderController::class, 'updateSection'])->name('api.page-builder.sections.update');
+        Route::delete('/sections/{section}', [App\Http\Controllers\Api\PageBuilderController::class, 'deleteSection'])->name('api.page-builder.sections.destroy');
+        Route::patch('/sections/{section}/position', [App\Http\Controllers\Api\PageBuilderController::class, 'updateSectionGridPosition'])->name('api.page-builder.sections.position');
+        
+        // Widget Management (GridStack Positioning)  
+        Route::get('/sections/{section}/widgets', [App\Http\Controllers\Api\PageBuilderController::class, 'getSectionWidgets'])->name('api.page-builder.widgets.index');
+        Route::post('/sections/{section}/widgets', [App\Http\Controllers\Api\PageBuilderController::class, 'createWidget'])->name('api.page-builder.widgets.store');
+        Route::put('/widgets/{widget}', [App\Http\Controllers\Api\PageBuilderController::class, 'updateWidget'])->name('api.page-builder.widgets.update');
+        Route::delete('/widgets/{widget}', [App\Http\Controllers\Api\PageBuilderController::class, 'deleteWidget'])->name('api.page-builder.widgets.destroy');
+        Route::patch('/widgets/{widget}/position', [App\Http\Controllers\Api\PageBuilderController::class, 'updateWidgetGridPosition'])->name('api.page-builder.widgets.position');
+        
+        // Sidebar Content (Drag & Drop)
+        Route::get('/widgets/available', [App\Http\Controllers\Api\PageBuilderController::class, 'getAvailableWidgets'])->name('api.page-builder.widgets.available');
+        Route::get('/templates/sections', [App\Http\Controllers\Api\PageBuilderController::class, 'getTemplateSections'])->name('api.page-builder.templates.sections');
+        
+        // Assets & Rendering (GridStack Canvas)
+        Route::post('/widgets/{widget}/render', [App\Http\Controllers\Api\PageBuilderController::class, 'renderWidget'])->name('api.page-builder.widgets.render');
+        Route::get('/theme/assets', [App\Http\Controllers\Api\PageBuilderController::class, 'getThemeAssets'])->name('api.page-builder.theme.assets');
+    });
     // Page Designer API
     Route::get('/pages/{page}/render', [PageController::class, 'renderPageContent'])->name('api.pages.render');
     Route::post('/pages/{page}/save-content', [PageController::class, 'savePageContent'])->name('api.pages.save-content');
