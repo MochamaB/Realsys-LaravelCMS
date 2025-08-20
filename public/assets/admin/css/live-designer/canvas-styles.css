@@ -1,0 +1,336 @@
+/* Canvas Styles for GrapesJS Live Designer */
+
+/* Canvas Container */
+.gjs-cv-canvas {
+    background: linear-gradient(45deg, #f8f9fa 25%, transparent 25%), 
+                linear-gradient(-45deg, #f8f9fa 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #f8f9fa 75%), 
+                linear-gradient(-45deg, transparent 75%, #f8f9fa 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+}
+
+/* Canvas Frame */
+.gjs-frame {
+    background: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    margin: 20px auto;
+    max-width: 100%;
+    transition: all 0.3s ease;
+}
+
+.gjs-frame:hover {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+/* Canvas Content */
+.gjs-frame-wrapper {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* Component Wrappers in Canvas */
+.gjs-comp-selected {
+    position: relative;
+}
+
+.gjs-comp-selected::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border: 2px solid #0d6efd;
+    border-radius: 4px;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+/* Component Badges */
+.gjs-comp-badge {
+    position: absolute;
+    top: -24px;
+    left: -2px;
+    background: #0d6efd;
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px 4px 0 0;
+    white-space: nowrap;
+    z-index: 1001;
+    pointer-events: none;
+}
+
+/* Drag and Drop Zones */
+.gjs-dz-over {
+    background: rgba(13, 110, 253, 0.1) !important;
+    border: 2px dashed #0d6efd !important;
+    border-radius: 4px;
+}
+
+.gjs-dropzone {
+    min-height: 40px;
+    border: 2px dashed transparent;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.gjs-dropzone:empty::before {
+    content: 'Drop components here';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #6c757d;
+    font-size: 0.875rem;
+    font-style: italic;
+    pointer-events: none;
+}
+
+.gjs-dropzone:hover {
+    border-color: #ced4da;
+    background: rgba(248, 249, 250, 0.5);
+}
+
+/* Widget Containers in Canvas */
+.widget-container {
+    position: relative;
+    min-height: 60px;
+    border: 1px dashed transparent;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.widget-container:hover {
+    border-color: #ced4da;
+    background: rgba(248, 249, 250, 0.3);
+}
+
+.widget-container.selected {
+    border-color: #0d6efd;
+    background: rgba(13, 110, 253, 0.05);
+}
+
+/* Section Containers in Canvas */
+.section-container {
+    position: relative;
+    min-height: 100px;
+    margin: 1rem 0;
+    border: 1px dashed transparent;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.section-container:hover {
+    border-color: #ced4da;
+    background: rgba(248, 249, 250, 0.2);
+}
+
+.section-container.selected {
+    border-color: #0d6efd;
+    background: rgba(13, 110, 253, 0.03);
+}
+
+/* Content Areas */
+.content-area {
+    position: relative;
+    padding: 1rem;
+    border: 1px dashed transparent;
+    border-radius: 4px;
+    min-height: 80px;
+    transition: all 0.2s ease;
+}
+
+.content-area:empty::before {
+    content: 'Add content here';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #6c757d;
+    font-size: 0.875rem;
+    font-style: italic;
+    pointer-events: none;
+}
+
+.content-area:hover {
+    border-color: #ced4da;
+    background: rgba(248, 249, 250, 0.5);
+}
+
+/* Grid Helpers */
+.gjs-grid-helper {
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 19px,
+        rgba(13, 110, 253, 0.1) 20px
+    ),
+    repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 19px,
+        rgba(13, 110, 253, 0.1) 20px
+    );
+}
+
+/* Responsive Indicators */
+.responsive-indicator {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    z-index: 1050;
+    pointer-events: none;
+}
+
+/* Canvas Rulers */
+.canvas-ruler-horizontal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 20px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    background-image: repeating-linear-gradient(
+        90deg,
+        #e9ecef 0px,
+        #e9ecef 1px,
+        transparent 1px,
+        transparent 10px
+    );
+}
+
+.canvas-ruler-vertical {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 20px;
+    background: #f8f9fa;
+    border-right: 1px solid #e9ecef;
+    background-image: repeating-linear-gradient(
+        0deg,
+        #e9ecef 0px,
+        #e9ecef 1px,
+        transparent 1px,
+        transparent 10px
+    );
+}
+
+/* Canvas Zoom Controls */
+.canvas-zoom-controls {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    background: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    z-index: 1000;
+}
+
+.canvas-zoom-btn {
+    background: none;
+    border: none;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.canvas-zoom-btn:hover {
+    background: #f8f9fa;
+}
+
+.canvas-zoom-level {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #495057;
+    min-width: 40px;
+    text-align: center;
+}
+
+/* Device Frame Simulation */
+.device-frame-desktop {
+    max-width: 1200px;
+    margin: 0 auto;
+    box-shadow: 0 0 0 8px #2c3e50, 0 8px 32px rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+}
+
+.device-frame-tablet {
+    max-width: 768px;
+    margin: 0 auto;
+    box-shadow: 0 0 0 16px #2c3e50, 0 8px 32px rgba(0, 0, 0, 0.2);
+    border-radius: 20px;
+}
+
+.device-frame-mobile {
+    max-width: 375px;
+    margin: 0 auto;
+    box-shadow: 0 0 0 12px #2c3e50, 0 8px 32px rgba(0, 0, 0, 0.2);
+    border-radius: 16px;
+}
+
+/* Canvas Performance Optimizations */
+.gjs-cv-canvas * {
+    box-sizing: border-box;
+}
+
+.gjs-cv-canvas img {
+    max-width: 100%;
+    height: auto;
+}
+
+.gjs-cv-canvas video {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Print Styles */
+@media print {
+    .gjs-cv-canvas {
+        background: none !important;
+    }
+    
+    .canvas-zoom-controls,
+    .responsive-indicator,
+    .canvas-ruler-horizontal,
+    .canvas-ruler-vertical {
+        display: none !important;
+    }
+    
+    .gjs-frame {
+        box-shadow: none !important;
+        border: none !important;
+    }
+}
+
+/* High DPI Display Support */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .gjs-frame {
+        border-width: 0.5px;
+    }
+    
+    .canvas-ruler-horizontal,
+    .canvas-ruler-vertical {
+        background-size: 5px 5px;
+    }
+}

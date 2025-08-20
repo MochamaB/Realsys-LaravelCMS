@@ -70,6 +70,8 @@ Route::middleware('admin.auth')->group(function () {
     // Page Designers (Separated Systems)
     Route::get('/pages/{page}/page-builder', [PageBuilderViewController::class, 'show'])
         ->name('admin.pages.page-builder');
+    Route::get('/pages/{page}/live-designer', [App\Http\Controllers\Admin\LiveDesignerViewController::class, 'show'])
+        ->name('admin.pages.live-designer');
 
     // Widgets - Global routes
     Route::resource('widgets', WidgetController::class);
@@ -378,6 +380,11 @@ Route::prefix('api')->middleware('admin.auth')->group(function () {
     Route::get('/pages/{page}/theme-wrapper', [App\Http\Controllers\Api\PageSectionController::class, 'getThemeWrapperTest'])->name('api.pages.theme-wrapper');
     Route::get('/pages/{page}/theme-wrapper-iframe', [App\Http\Controllers\Api\PageSectionController::class, 'showThemeWrapperIframe'])->name('api.pages.theme-wrapper-iframe');
     Route::get('/pages/{page}/full-theme-preview-iframe', [App\Http\Controllers\Api\PageSectionController::class, 'showFullThemePreviewIframe'])->name('api.pages.full-theme-preview-iframe');
+    
+    // Live Designer API - Preview Rendering
+    Route::get('/live-designer/pages/{page}/content', [App\Http\Controllers\Api\LiveDesignerController::class, 'getPageContent'])->name('api.live-designer.pages.content');
+    Route::get('/live-designer/pages/{page}/iframe-preview', [App\Http\Controllers\Api\LiveDesignerController::class, 'getIframePreview'])->name('api.live-designer.pages.iframe-preview');
+    Route::get('/live-designer/pages/{page}/assets', [App\Http\Controllers\Api\LiveDesignerController::class, 'getAssets'])->name('api.live-designer.pages.assets');
     
     // Widget Schema API for GrapesJS
     Route::get('/widgets/schemas', [App\Http\Controllers\Api\WidgetController::class, 'getWidgetSchemas'])->name('api.widgets.schemas');
