@@ -25,13 +25,13 @@
     <div class="flex-shrink-0">
         <ul class="nav nav-tabs nav-tabs-custom justify-content-center" id="component-tabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="widgets-tab" data-bs-toggle="tab" data-bs-target="#widgets-panel" type="button" role="tab" title="Widgets">
-                    <i class=" ri-t-box-line"></i>
+                <button class="nav-link active" id="components-tab" data-bs-toggle="tab" data-bs-target="#components-panel" type="button" role="tab" title="Components">
+                    <i class="ri-node-tree"></i>
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="sections-tab" data-bs-toggle="tab" data-bs-target="#sections-panel" type="button" role="tab" title="Sections">
-                    <i class="ri-layout-grid-line"></i>
+                <button class="nav-link" id="widgets-tab" data-bs-toggle="tab" data-bs-target="#widgets-panel" type="button" role="tab" title="Widgets">
+                    <i class=" ri-t-box-line"></i>
                 </button>
             </li>
             <li class="nav-item" role="presentation">
@@ -44,8 +44,15 @@
     
     <!-- Tab Content -->
     <div class="tab-content flex-grow-1 overflow-auto" id="component-tab-content">
+        <!-- Component Tree Panel (New) -->
+        <div class="tab-pane fade show active h-100" id="components-panel" role="tabpanel">
+            <div id="component-tree-container" class="h-100">
+                <!-- Component tree will be loaded here -->
+            </div>
+        </div>
+        
         <!-- Widgets Panel -->
-        <div class="tab-pane fade show active h-100" id="widgets-panel" role="tabpanel">
+        <div class="tab-pane fade h-100" id="widgets-panel" role="tabpanel">
             <div class="p-3">
                 <!-- Widget Search -->
                 <div class="mb-3">

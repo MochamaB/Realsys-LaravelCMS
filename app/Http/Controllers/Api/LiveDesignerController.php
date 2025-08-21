@@ -360,6 +360,172 @@ class LiveDesignerController extends Controller
     }
 
     /**
+     * Get structured component tree for GrapesJS editor
+     * 
+     * @param Page $page
+     * @return JsonResponse
+     */
+    public function getPageComponents(Page $page): JsonResponse
+    {
+        try {
+            // Load page with all necessary relationships
+            $page->load([
+                'template.theme',
+                'sections.templateSection',
+                'sections.pageSectionWidgets.widget.contentTypeAssociations.contentType'
+            ]);
+            
+            $theme = $page->template->theme ?? null;
+            
+            if (!$theme) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Page has no associated theme'
+                ], 400);
+            }
+
+            // Get services
+            $widgetService = app(\App\Services\WidgetService::class);
+            
+            $componentsData = [
+                'page_id' => $page->id,
+                'page_title' => $page->title,
+                'template_name' => $page->template->name,
+                'theme_name' => $theme->name,
+                'sections' => []
+            ];
+
+            foreach ($page->sections->sortBy('position') as $section) {
+                $sectionData = [
+                    'id' => $section->id,
+                    'name' => $section->templateSection->name ?? "Section {$section->id}",
+                    'slug' => $section->templateSection->slug ?? "section_{$section->id}",
+                    'type' => 'section',
+                    'template_section_id' => $section->template_section_id,
+                    'position' => $section->position,
+                    'grid_config' => $section->grid_config,
+                    'css_classes' => $section->css_classes,
+                    'background_color' => $section->background_color,
+                    'padding' => $section->padding,
+                    'margin' => $section->margin,
+                    'allows_widgets' => $section->allows_widgets,
+                    'widget_types' => $section->widget_types,
+                    'widgets' => []
+                ];
+
+                foreach ($section->pageSectionWidgets->sortBy('position') as $pageSectionWidget) {
+                    $widget = $pageSectionWidget->widget;
+                    
+                    if (!$widget) continue;
+
+                    // Get widget field values (combines settings, content, defaults)
+                    $fieldValues = $widgetService->getWidgetFieldValues($widget, $pageSectionWidget);
+                    
+                    // Get content items if widget has content query
+                    $contentItems = [];
+                    if (!empty($pageSectionWidget->content_query)) {
+                        $contentItems = $this->getWidgetContentItems($widget, $pageSectionWidget->content_query);
+                    }
+
+                    // Get field mappings for this widget-content type association
+                    $fieldMappings = [];
+                    if (!empty($pageSectionWidget->content_query['content_type_id'])) {
+                        $association = $widget->contentTypeAssociations()
+                            ->where('content_type_id', $pageSectionWidget->content_query['content_type_id'])
+                            ->where('is_active', true)
+                            ->first();
+                        $fieldMappings = $association->field_mappings ?? [];
+                    }
+
+                    $widgetData = [
+                        'id' => $pageSectionWidget->id,
+                        'widget_id' => $widget->id,
+                        'name' => $widget->name,
+                        'slug' => $widget->slug,
+                        'description' => $widget->description,
+                        'category' => $widget->category,
+                        'icon' => $widget->icon,
+                        'type' => 'widget',
+                        'position' => $pageSectionWidget->position,
+                        'grid_config' => [
+                            'x' => $pageSectionWidget->grid_x ?? 0,
+                            'y' => $pageSectionWidget->grid_y ?? 0,
+                            'w' => $pageSectionWidget->grid_w ?? 6,
+                            'h' => $pageSectionWidget->grid_h ?? 3,
+                            'id' => $pageSectionWidget->grid_id ?? "widget-{$pageSectionWidget->id}"
+                        ],
+                        'settings' => $pageSectionWidget->settings ?? [],
+                        'content_query' => $pageSectionWidget->content_query ?? [],
+                        'field_values' => $fieldValues,
+                        'content_items' => $contentItems,
+                        'field_mappings' => $fieldMappings,
+                        'css_classes' => $pageSectionWidget->css_classes,
+                        'padding' => $pageSectionWidget->padding,
+                        'margin' => $pageSectionWidget->margin,
+                        'min_width' => $pageSectionWidget->min_width,
+                        'max_width' => $pageSectionWidget->max_width,
+                        'min_height' => $pageSectionWidget->min_height,
+                        'max_height' => $pageSectionWidget->max_height,
+                        'locked_position' => $pageSectionWidget->locked_position ?? false,
+                        'resize_handles' => $pageSectionWidget->resize_handles ?? ['se', 'sw'],
+                        'available_content_types' => $widget->contentTypes->map(function($ct) {
+                            return [
+                                'id' => $ct->id,
+                                'name' => $ct->name,
+                                'slug' => $ct->slug
+                            ];
+                        })->toArray()
+                    ];
+
+                    $sectionData['widgets'][] = $widgetData;
+                }
+
+                $componentsData['sections'][] = $sectionData;
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $componentsData
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error loading page components for Live Designer: ' . $e->getMessage(), [
+                'page_id' => $page->id,
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to load page components',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get content items for a widget's content query
+     */
+    protected function getWidgetContentItems($widget, $contentQuery)
+    {
+        try {
+            if (empty($contentQuery['content_type_id'])) {
+                return [];
+            }
+
+            $widgetService = app(\App\Services\WidgetService::class);
+            $reflection = new \ReflectionClass($widgetService);
+            $method = $reflection->getMethod('getContentFromQuery');
+            $method->setAccessible(true);
+            
+            return $method->invoke($widgetService, $widget, $contentQuery);
+            
+        } catch (\Exception $e) {
+            Log::warning('Could not fetch widget content items: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
      * Get available widgets for the component library
      * 
      * @param Page $page
@@ -429,7 +595,67 @@ class LiveDesignerController extends Controller
     }
 
     /**
-     * Get content items for a specific content type
+     * Get all available content types for content selection
+     * 
+     * @param Page $page
+     * @return JsonResponse
+     */
+    public function getContentTypes(Page $page): JsonResponse
+    {
+        try {
+            $contentTypes = ContentType::where('is_active', true)
+                ->with(['fields' => function($query) {
+                    $query->orderBy('position');
+                }])
+                ->orderBy('name')
+                ->get();
+
+            $typesData = [];
+            foreach ($contentTypes as $contentType) {
+                $typesData[] = [
+                    'id' => $contentType->id,
+                    'name' => $contentType->name,
+                    'slug' => $contentType->slug,
+                    'description' => $contentType->description,
+                    'fields' => $contentType->fields->map(function($field) {
+                        return [
+                            'id' => $field->id,
+                            'name' => $field->name,
+                            'slug' => $field->slug,
+                            'field_type' => $field->field_type,
+                            'label' => $field->label,
+                            'is_required' => $field->is_required,
+                            'position' => $field->position
+                        ];
+                    })->toArray(),
+                    'content_count' => $contentType->contentItems()->where('is_published', true)->count()
+                ];
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'content_types' => $typesData,
+                    'total_count' => $contentTypes->count()
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error loading content types for Live Designer: ' . $e->getMessage(), [
+                'page_id' => $page->id,
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to load content types',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get content items for a specific content type (Enhanced for live designer)
      * 
      * @param Request $request
      * @param Page $page
@@ -441,7 +667,10 @@ class LiveDesignerController extends Controller
             $validator = Validator::make($request->all(), [
                 'content_type_id' => 'required|integer|exists:content_types,id',
                 'search' => 'nullable|string|max:255',
-                'limit' => 'nullable|integer|min:1|max:100'
+                'limit' => 'nullable|integer|min:1|max:100',
+                'page' => 'nullable|integer|min:1',
+                'widget_id' => 'nullable|integer|exists:widgets,id',
+                'show_field_mappings' => 'nullable|boolean'
             ]);
 
             if ($validator->fails()) {
@@ -455,48 +684,134 @@ class LiveDesignerController extends Controller
             $contentTypeId = $request->input('content_type_id');
             $search = $request->input('search');
             $limit = $request->input('limit', 20);
+            $currentPage = $request->input('page', 1);
+            $widgetId = $request->input('widget_id');
+            $showFieldMappings = $request->input('show_field_mappings', false);
 
             $query = ContentItem::where('content_type_id', $contentTypeId)
                 ->where('is_published', true)
                 ->with(['contentType', 'fieldValues.contentField']);
 
             if ($search) {
-                $query->where('title', 'like', '%' . $search . '%');
+                $query->where(function($q) use ($search) {
+                    $q->where('title', 'like', '%' . $search . '%')
+                      ->orWhere('excerpt', 'like', '%' . $search . '%');
+                });
             }
 
+            $totalCount = $query->count();
             $contentItems = $query->orderBy('created_at', 'desc')
-                ->limit($limit)
+                ->skip(($currentPage - 1) * $limit)
+                ->take($limit)
                 ->get();
+
+            // Get content type info
+            $contentType = \App\Models\ContentType::find($contentTypeId);
+
+            // Get field mappings if widget specified
+            $fieldMappings = [];
+            if ($widgetId && $showFieldMappings) {
+                $widget = \App\Models\Widget::find($widgetId);
+                if ($widget) {
+                    $association = $widget->contentTypeAssociations()
+                        ->where('content_type_id', $contentTypeId)
+                        ->where('is_active', true)
+                        ->first();
+                    $fieldMappings = $association->field_mappings ?? [];
+                }
+            }
 
             $items = [];
             foreach ($contentItems as $item) {
                 $fields = [];
                 foreach ($item->fieldValues as $fieldValue) {
-                    $fields[$fieldValue->contentField->slug] = [
+                    $fieldData = [
                         'label' => $fieldValue->contentField->label,
                         'type' => $fieldValue->contentField->field_type,
+                        'slug' => $fieldValue->contentField->slug,
                         'value' => $fieldValue->field_value
                     ];
+
+                    // Handle media fields
+                    if ($fieldValue->contentField->field_type === 'image' && is_numeric($fieldValue->field_value)) {
+                        try {
+                            $media = \App\Models\Media::find($fieldValue->field_value);
+                            if ($media) {
+                                $fieldData['media_url'] = $media->getUrl();
+                                $fieldData['media_info'] = [
+                                    'id' => $media->id,
+                                    'name' => $media->name,
+                                    'file_name' => $media->file_name,
+                                    'size' => $media->size,
+                                    'mime_type' => $media->mime_type
+                                ];
+                            }
+                        } catch (\Exception $e) {
+                            // Media not found, keep original value
+                        }
+                    }
+
+                    $fields[$fieldValue->contentField->slug] = $fieldData;
                 }
 
-                $items[] = [
+                // Handle repeater fields - parse JSON values
+                foreach ($item->fieldValues as $fieldValue) {
+                    if ($fieldValue->contentField->field_type === 'repeater') {
+                        try {
+                            $repeaterData = json_decode($fieldValue->field_value, true);
+                            if (is_array($repeaterData)) {
+                                $fields[$fieldValue->contentField->slug]['repeater_items'] = $repeaterData;
+                            }
+                        } catch (\Exception $e) {
+                            // Keep original value if JSON parsing fails
+                        }
+                    }
+                }
+
+                $itemData = [
                     'id' => $item->id,
                     'title' => $item->title,
                     'slug' => $item->slug,
                     'excerpt' => $item->excerpt,
                     'featured_image' => $item->featured_image,
+                    'status' => $item->status ?? 'published',
                     'created_at' => $item->created_at->format('Y-m-d H:i:s'),
+                    'updated_at' => $item->updated_at->format('Y-m-d H:i:s'),
                     'fields' => $fields
                 ];
+
+                // Add preview URL if available
+                if (method_exists($item, 'getPreviewUrl')) {
+                    $itemData['preview_url'] = $item->getPreviewUrl();
+                }
+
+                $items[] = $itemData;
+            }
+
+            $responseData = [
+                'items' => $items,
+                'pagination' => [
+                    'current_page' => $currentPage,
+                    'per_page' => $limit,
+                    'total' => $totalCount,
+                    'last_page' => ceil($totalCount / $limit),
+                    'has_more' => ($currentPage * $limit) < $totalCount
+                ],
+                'content_type' => [
+                    'id' => $contentType->id,
+                    'name' => $contentType->name,
+                    'slug' => $contentType->slug,
+                    'description' => $contentType->description
+                ]
+            ];
+
+            if ($showFieldMappings && !empty($fieldMappings)) {
+                $responseData['field_mappings'] = $fieldMappings;
             }
 
             return response()->json([
                 'success' => true,
-                'data' => [
-                    'items' => $items,
-                    'total_count' => $contentItems->count(),
-                    'content_type_id' => $contentTypeId
-                ]
+                'data' => $responseData
             ]);
 
         } catch (\Exception $e) {
@@ -585,6 +900,539 @@ class LiveDesignerController extends Controller
                 'error' => 'Failed to save page content',
                 'message' => $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Update component settings (widget settings or content query)
+     * 
+     * @param Request $request
+     * @param Page $page
+     * @return JsonResponse
+     */
+    public function updateComponent(Request $request, Page $page): JsonResponse
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'component_id' => 'required|integer',
+                'component_type' => 'required|string|in:section,widget',
+                'settings' => 'nullable|array',
+                'content_query' => 'nullable|array',
+                'css_classes' => 'nullable|string',
+                'padding' => 'nullable|string',
+                'margin' => 'nullable|string',
+                'grid_config' => 'nullable|array'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $componentId = $request->input('component_id');
+            $componentType = $request->input('component_type');
+
+            if ($componentType === 'widget') {
+                $component = \App\Models\PageSectionWidget::where('id', $componentId)
+                    ->whereHas('pageSection', function($query) use ($page) {
+                        $query->where('page_id', $page->id);
+                    })
+                    ->first();
+
+                if (!$component) {
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'Widget not found'
+                    ], 404);
+                }
+
+                // Update widget settings
+                $updateData = [];
+                if ($request->has('settings')) {
+                    $updateData['settings'] = $request->input('settings');
+                }
+                if ($request->has('content_query')) {
+                    $updateData['content_query'] = $request->input('content_query');
+                }
+                if ($request->has('css_classes')) {
+                    $updateData['css_classes'] = $request->input('css_classes');
+                }
+                if ($request->has('padding')) {
+                    $updateData['padding'] = $request->input('padding');
+                }
+                if ($request->has('margin')) {
+                    $updateData['margin'] = $request->input('margin');
+                }
+                if ($request->has('grid_config')) {
+                    $gridConfig = $request->input('grid_config');
+                    $updateData['grid_x'] = $gridConfig['x'] ?? $component->grid_x;
+                    $updateData['grid_y'] = $gridConfig['y'] ?? $component->grid_y;
+                    $updateData['grid_w'] = $gridConfig['w'] ?? $component->grid_w;
+                    $updateData['grid_h'] = $gridConfig['h'] ?? $component->grid_h;
+                    $updateData['grid_id'] = $gridConfig['id'] ?? $component->grid_id;
+                }
+
+                $component->update($updateData);
+
+            } elseif ($componentType === 'section') {
+                $component = \App\Models\PageSection::where('id', $componentId)
+                    ->where('page_id', $page->id)
+                    ->first();
+
+                if (!$component) {
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'Section not found'
+                    ], 404);
+                }
+
+                // Update section settings
+                $updateData = [];
+                if ($request->has('css_classes')) {
+                    $updateData['css_classes'] = $request->input('css_classes');
+                }
+                if ($request->has('padding')) {
+                    $updateData['padding'] = $request->input('padding');
+                }
+                if ($request->has('margin')) {
+                    $updateData['margin'] = $request->input('margin');
+                }
+                if ($request->has('grid_config')) {
+                    $gridConfig = $request->input('grid_config');
+                    $updateData['grid_x'] = $gridConfig['x'] ?? $component->grid_x;
+                    $updateData['grid_y'] = $gridConfig['y'] ?? $component->grid_y;
+                    $updateData['grid_w'] = $gridConfig['w'] ?? $component->grid_w;
+                    $updateData['grid_h'] = $gridConfig['h'] ?? $component->grid_h;
+                    $updateData['grid_id'] = $gridConfig['id'] ?? $component->grid_id;
+                }
+
+                $component->update($updateData);
+            }
+
+            Log::info('Component updated in Live Designer', [
+                'page_id' => $page->id,
+                'component_id' => $componentId,
+                'component_type' => $componentType,
+                'user_id' => auth()->id()
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'component_id' => $componentId,
+                    'component_type' => $componentType,
+                    'updated_at' => now()->toISOString(),
+                    'message' => 'Component updated successfully'
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error updating component in Live Designer: ' . $e->getMessage(), [
+                'page_id' => $page->id,
+                'component_id' => $request->input('component_id'),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to update component',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get component preview after updates
+     * 
+     * @param Request $request
+     * @param Page $page
+     * @return JsonResponse
+     */
+    public function getComponentPreview(Request $request, Page $page): JsonResponse
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'component_id' => 'required|integer',
+                'component_type' => 'required|string|in:section,widget'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $componentId = $request->input('component_id');
+            $componentType = $request->input('component_type');
+
+            if ($componentType === 'widget') {
+                $pageSectionWidget = \App\Models\PageSectionWidget::where('id', $componentId)
+                    ->with(['widget', 'pageSection'])
+                    ->whereHas('pageSection', function($query) use ($page) {
+                        $query->where('page_id', $page->id);
+                    })
+                    ->first();
+
+                if (!$pageSectionWidget) {
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'Widget not found'
+                    ], 404);
+                }
+
+                $widget = $pageSectionWidget->widget;
+                $widgetService = app(\App\Services\WidgetService::class);
+                $templateRenderer = app(\App\Services\TemplateRenderer::class);
+
+                // Ensure theme namespace is registered
+                $theme = $page->template->theme;
+                $templateRenderer->ensureThemeNamespaceIsRegistered($theme);
+
+                // Get updated field values
+                $fieldValues = $widgetService->getWidgetFieldValues($widget, $pageSectionWidget);
+
+                // Render widget HTML
+                $widgetHtml = $this->renderWidgetPreview($widget, $pageSectionWidget, $fieldValues, $theme);
+
+                // Get updated content items
+                $contentItems = [];
+                if (!empty($pageSectionWidget->content_query)) {
+                    $contentItems = $this->getWidgetContentItems($widget, $pageSectionWidget->content_query);
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'data' => [
+                        'component_id' => $componentId,
+                        'component_type' => $componentType,
+                        'rendered_html' => $widgetHtml,
+                        'field_values' => $fieldValues,
+                        'content_items' => $contentItems,
+                        'updated_at' => now()->toISOString()
+                    ]
+                ]);
+
+            } elseif ($componentType === 'section') {
+                $section = \App\Models\PageSection::where('id', $componentId)
+                    ->where('page_id', $page->id)
+                    ->with(['templateSection', 'pageSectionWidgets.widget'])
+                    ->first();
+
+                if (!$section) {
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'Section not found'
+                    ], 404);
+                }
+
+                // For section preview, we'd typically re-render the entire section
+                // This is a simplified version - in production you might want full section rendering
+                return response()->json([
+                    'success' => true,
+                    'data' => [
+                        'component_id' => $componentId,
+                        'component_type' => $componentType,
+                        'message' => 'Section updated successfully',
+                        'updated_at' => now()->toISOString()
+                    ]
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Error getting component preview in Live Designer: ' . $e->getMessage(), [
+                'page_id' => $page->id,
+                'component_id' => $request->input('component_id'),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to get component preview',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Render widget preview HTML
+     */
+    protected function renderWidgetPreview($widget, $pageSectionWidget, $fieldValues, $theme)
+    {
+        try {
+            $templateRenderer = app(\App\Services\TemplateRenderer::class);
+            
+            // Create a minimal view data context
+            $viewData = [
+                'widget' => $widget,
+                'field_values' => $fieldValues,
+                'settings' => $pageSectionWidget->settings ?? [],
+                'preview_mode' => true,
+                'live_designer_mode' => true
+            ];
+
+            // Render using theme widget view
+            $viewPath = "theme::widgets.{$widget->slug}.view";
+            
+            if (view()->exists($viewPath)) {
+                return view($viewPath, $viewData)->render();
+            } else {
+                // Fallback preview
+                return '<div class="widget-preview">' .
+                       '<h4>' . $widget->name . '</h4>' .
+                       '<p>Widget preview not available</p>' .
+                       '</div>';
+            }
+            
+        } catch (\Exception $e) {
+            Log::warning('Could not render widget preview: ' . $e->getMessage(), [
+                'widget_id' => $widget->id
+            ]);
+            
+            return '<div class="widget-preview-error">Preview rendering failed</div>';
+        }
+    }
+
+    /**
+     * Refresh page content after component changes
+     * 
+     * @param Request $request
+     * @param Page $page
+     * @return JsonResponse
+     */
+    public function refreshPageContent(Request $request, Page $page): JsonResponse
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'refresh_type' => 'required|string|in:full,section,widget',
+                'component_id' => 'nullable|integer',
+                'include_assets' => 'nullable|boolean'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $refreshType = $request->input('refresh_type');
+            $componentId = $request->input('component_id');
+            $includeAssets = $request->input('include_assets', false);
+
+            switch ($refreshType) {
+                case 'full':
+                    return $this->refreshFullPage($page, $includeAssets);
+                    
+                case 'section':
+                    return $this->refreshSection($page, $componentId);
+                    
+                case 'widget':
+                    return $this->refreshWidget($page, $componentId);
+                    
+                default:
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'Invalid refresh type'
+                    ], 400);
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Error refreshing page content in Live Designer: ' . $e->getMessage(), [
+                'page_id' => $page->id,
+                'refresh_type' => $request->input('refresh_type'),
+                'component_id' => $request->input('component_id'),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to refresh page content',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Refresh entire page content
+     */
+    protected function refreshFullPage(Page $page, bool $includeAssets = false): JsonResponse
+    {
+        try {
+            // Load page with all relationships
+            $page->load([
+                'template.theme',
+                'sections.templateSection',
+                'sections.pageSectionWidgets.widget'
+            ]);
+
+            $theme = $page->template->theme;
+            
+            // Get services
+            $templateRenderer = app(\App\Services\TemplateRenderer::class);
+            $widgetService = app(\App\Services\WidgetService::class);
+            $themeManager = app(\App\Services\ThemeManager::class);
+            $menuService = app(\App\Services\MenuService::class);
+            $universalStylingService = app(\App\Services\UniversalStylingService::class);
+            
+            // Ensure theme namespace is registered
+            $templateRenderer->ensureThemeNamespaceIsRegistered($theme);
+            
+            // Load theme assets
+            $themeManager->loadThemeAssets($theme);
+            
+            // Generate full page HTML
+            $fullPageHtml = $this->generateFullPageHtml($page, $templateRenderer, $menuService, $universalStylingService);
+
+            $responseData = [
+                'refresh_type' => 'full',
+                'page_id' => $page->id,
+                'html' => $fullPageHtml,
+                'refreshed_at' => now()->toISOString()
+            ];
+
+            if ($includeAssets) {
+                // Collect assets
+                $sections = [];
+                foreach ($page->sections as $section) {
+                    $widgets = $widgetService->getWidgetsForSection($section->id);
+                    $sections[$section->templateSection->slug ?? 'section_' . $section->id] = [
+                        'id' => $section->id,
+                        'widgets' => $widgets
+                    ];
+                }
+                
+                $allAssets = $widgetService->collectPageWidgetAssets($sections);
+                $themeAssets = $this->collectThemeAssets($theme);
+                
+                $responseData['assets'] = [
+                    'css' => array_unique(array_merge($themeAssets['css'], $allAssets['css'] ?? [])),
+                    'js' => array_unique(array_merge($themeAssets['js'], $allAssets['js'] ?? []))
+                ];
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $responseData
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error in refreshFullPage: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Refresh specific section
+     */
+    protected function refreshSection(Page $page, int $sectionId): JsonResponse
+    {
+        try {
+            $section = \App\Models\PageSection::where('id', $sectionId)
+                ->where('page_id', $page->id)
+                ->with(['templateSection', 'pageSectionWidgets.widget'])
+                ->first();
+
+            if (!$section) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Section not found'
+                ], 404);
+            }
+
+            // For now, return section data - in a full implementation you might render section HTML
+            $widgetService = app(\App\Services\WidgetService::class);
+            $widgets = [];
+
+            foreach ($section->pageSectionWidgets as $pageSectionWidget) {
+                $widget = $pageSectionWidget->widget;
+                if (!$widget) continue;
+
+                $fieldValues = $widgetService->getWidgetFieldValues($widget, $pageSectionWidget);
+                $widgetHtml = $this->renderWidgetPreview($widget, $pageSectionWidget, $fieldValues, $page->template->theme);
+
+                $widgets[] = [
+                    'id' => $pageSectionWidget->id,
+                    'widget_id' => $widget->id,
+                    'name' => $widget->name,
+                    'rendered_html' => $widgetHtml,
+                    'field_values' => $fieldValues
+                ];
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'refresh_type' => 'section',
+                    'section_id' => $sectionId,
+                    'section_name' => $section->templateSection->name ?? "Section {$sectionId}",
+                    'widgets' => $widgets,
+                    'refreshed_at' => now()->toISOString()
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error in refreshSection: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Refresh specific widget
+     */
+    protected function refreshWidget(Page $page, int $widgetId): JsonResponse
+    {
+        try {
+            $pageSectionWidget = \App\Models\PageSectionWidget::where('id', $widgetId)
+                ->with(['widget', 'pageSection'])
+                ->whereHas('pageSection', function($query) use ($page) {
+                    $query->where('page_id', $page->id);
+                })
+                ->first();
+
+            if (!$pageSectionWidget) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Widget not found'
+                ], 404);
+            }
+
+            $widget = $pageSectionWidget->widget;
+            $widgetService = app(\App\Services\WidgetService::class);
+
+            // Get fresh field values
+            $fieldValues = $widgetService->getWidgetFieldValues($widget, $pageSectionWidget);
+
+            // Render widget HTML
+            $widgetHtml = $this->renderWidgetPreview($widget, $pageSectionWidget, $fieldValues, $page->template->theme);
+
+            // Get content items if applicable
+            $contentItems = [];
+            if (!empty($pageSectionWidget->content_query)) {
+                $contentItems = $this->getWidgetContentItems($widget, $pageSectionWidget->content_query);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'refresh_type' => 'widget',
+                    'widget_id' => $widgetId,
+                    'widget_name' => $widget->name,
+                    'rendered_html' => $widgetHtml,
+                    'field_values' => $fieldValues,
+                    'content_items' => $contentItems,
+                    'refreshed_at' => now()->toISOString()
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error in refreshWidget: ' . $e->getMessage());
+            throw $e;
         }
     }
 

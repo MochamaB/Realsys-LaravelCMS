@@ -153,13 +153,20 @@
 <script src="{{ asset('assets/admin/js/live-designer/canvas-manager.js') }}?v={{ time() }}"></script>
 <script src="{{ asset('assets/admin/js/live-designer/sidebar-manager.js') }}?v={{ time() }}"></script>
 <script src="{{ asset('assets/admin/js/live-designer/enhanced-widgets.js') }}?v={{ time() }}"></script>
+
+<!-- New Component Management Scripts -->
+<script src="{{ asset('assets/admin/js/live-designer/components/component-tree.js') }}?v={{ time() }}"></script>
+<script src="{{ asset('assets/admin/js/live-designer/components/component-editor.js') }}?v={{ time() }}"></script>
+<script src="{{ asset('assets/admin/js/live-designer/components/content-browser.js') }}?v={{ time() }}"></script>
+<script src="{{ asset('assets/admin/js/live-designer/components/live-designer-components.js') }}?v={{ time() }}"></script>
+
 <script src="{{ asset('assets/admin/js/live-designer/live-designer-main.js') }}?v={{ time() }}"></script>
 @endsection
 
 @push('scripts')
 <script>
 // Initialize Live Designer
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     // Initialize Live Designer with page data
     const liveDesigner = new LiveDesignerMain({
         pageId: {{ $page->id }},
@@ -169,6 +176,25 @@ document.addEventListener('DOMContentLoaded', function() {
         canvasSelector: '#gjs-editor',
         loadingSelector: '#canvas-loading'
     });
+    
+    // Wait for main designer to initialize
+    await liveDesigner.init();
+    
+    // Initialize Component Management System
+    const componentContainers = {
+        componentTree: document.getElementById('component-tree-container'),
+        componentEditor: document.getElementById('component-editor-container')
+    };
+    
+    if (componentContainers.componentTree || componentContainers.componentEditor) {
+        const components = new LiveDesignerComponents(liveDesigner.api, componentContainers);
+        await components.initialize({{ $page->id }});
+        
+        // Make components globally available for debugging
+        window.liveDesignerComponents = components;
+        
+        console.log('✅ Live Designer with Component Management System initialized');
+    }
     
     // Mobile sidebar toggles
     const toggleLeftSidebar = document.getElementById('toggle-left-sidebar');

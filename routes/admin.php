@@ -386,9 +386,20 @@ Route::prefix('api')->middleware('admin.auth')->group(function () {
     Route::get('/live-designer/pages/{page}/iframe-preview', [App\Http\Controllers\Api\LiveDesignerController::class, 'getIframePreview'])->name('api.live-designer.pages.iframe-preview');
     Route::get('/live-designer/pages/{page}/assets', [App\Http\Controllers\Api\LiveDesignerController::class, 'getAssets'])->name('api.live-designer.pages.assets');
     
+    // Live Designer API - Component Tree & Structure
+    Route::get('/live-designer/pages/{page}/components', [App\Http\Controllers\Api\LiveDesignerController::class, 'getPageComponents'])->name('api.live-designer.pages.components');
+    
     // Live Designer API - Component Library & Content Management
     Route::get('/live-designer/pages/{page}/widgets', [App\Http\Controllers\Api\LiveDesignerController::class, 'getWidgets'])->name('api.live-designer.pages.widgets');
+    Route::get('/live-designer/pages/{page}/content-types', [App\Http\Controllers\Api\LiveDesignerController::class, 'getContentTypes'])->name('api.live-designer.pages.content-types');
     Route::get('/live-designer/pages/{page}/content-items', [App\Http\Controllers\Api\LiveDesignerController::class, 'getContentItems'])->name('api.live-designer.pages.content-items');
+    
+    // Live Designer API - Component Editing & Updates
+    Route::put('/live-designer/pages/{page}/components', [App\Http\Controllers\Api\LiveDesignerController::class, 'updateComponent'])->name('api.live-designer.pages.update-component');
+    Route::get('/live-designer/pages/{page}/components/preview', [App\Http\Controllers\Api\LiveDesignerController::class, 'getComponentPreview'])->name('api.live-designer.pages.component-preview');
+    Route::post('/live-designer/pages/{page}/refresh', [App\Http\Controllers\Api\LiveDesignerController::class, 'refreshPageContent'])->name('api.live-designer.pages.refresh');
+    
+    // Live Designer API - Page Saving
     Route::post('/live-designer/pages/{page}/save', [App\Http\Controllers\Api\LiveDesignerController::class, 'savePageContent'])->name('api.live-designer.pages.save');
     
     // Widget Schema API for GrapesJS

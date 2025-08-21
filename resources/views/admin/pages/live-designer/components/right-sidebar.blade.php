@@ -25,7 +25,13 @@
     <div class="flex-shrink-0">
         <ul class="nav nav-tabs nav-tabs-custom" id="properties-tabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="style-tab" data-bs-toggle="tab" data-bs-target="#style-panel" type="button" role="tab">
+                <button class="nav-link active" id="component-editor-tab" data-bs-toggle="tab" data-bs-target="#component-editor-panel" type="button" role="tab">
+                    <i class="ri-edit-line me-1"></i>
+                    Editor
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="style-tab" data-bs-toggle="tab" data-bs-target="#style-panel" type="button" role="tab">
                     <i class="ri-palette-line me-1"></i>
                     Style
                 </button>
@@ -47,8 +53,15 @@
     
     <!-- Tab Content -->
     <div class="tab-content flex-grow-1 overflow-auto" id="properties-tab-content">
+        <!-- Component Editor Panel (New) -->
+        <div class="tab-pane fade show active h-100" id="component-editor-panel" role="tabpanel">
+            <div id="component-editor-container" class="h-100">
+                <!-- Component editor will be loaded here -->
+            </div>
+        </div>
+        
         <!-- Style Panel -->
-        <div class="tab-pane fade show active h-100" id="style-panel" role="tabpanel">
+        <div class="tab-pane fade h-100" id="style-panel" role="tabpanel">
             <div class="p-3">
                 <!-- Selected Element Info -->
                 <div class="selected-element-info mb-3" id="selected-element-info" style="display: none;">
