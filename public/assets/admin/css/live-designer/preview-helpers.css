@@ -1,0 +1,281 @@
+/* Live Preview Helper Styles */
+
+/* Widget highlighting and selection */
+[data-widget-id] {
+    transition: outline 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+}
+
+[data-widget-id]:hover {
+    outline: 2px dashed #0d6efd;
+    outline-offset: 2px;
+    cursor: pointer;
+}
+
+[data-widget-id].preview-highlighted {
+    outline: 2px solid #0d6efd !important;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
+}
+
+[data-widget-id].preview-highlighted::after {
+    content: '✏️ Editing';
+    position: absolute;
+    top: -25px;
+    left: 0;
+    background: #0d6efd;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 500;
+    z-index: 1000;
+    white-space: nowrap;
+}
+
+/* Section highlighting */
+[data-section-id] {
+    position: relative;
+    transition: background-color 0.2s ease;
+}
+
+[data-section-id]:hover {
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+/* Preview mode indicators - removed the top label */
+body[data-preview-mode="true"] {
+    position: relative;
+}
+
+/* Empty section indicators */
+[data-section-id]:empty,
+[data-section-id]:not(:has([data-widget-id])) {
+    min-height: 100px;
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+[data-section-id]:empty::after,
+[data-section-id]:not(:has([data-widget-id]))::after {
+    content: 'Empty Section - Click to add widgets';
+    color: #6c757d;
+    font-size: 14px;
+    pointer-events: none;
+}
+
+/* Widget loading states */
+[data-widget-id].widget-loading {
+    opacity: 0.6;
+    position: relative;
+    pointer-events: none;
+}
+
+[data-widget-id].widget-loading::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 20px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #0d6efd;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    z-index: 1001;
+}
+
+@keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Update indicators */
+[data-widget-id].widget-updating {
+    box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.5);
+    animation: pulse-update 1.5s infinite;
+}
+
+@keyframes pulse-update {
+    0% { box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.5); }
+    50% { box-shadow: 0 0 0 4px rgba(255, 193, 7, 0.3); }
+    100% { box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.5); }
+}
+
+[data-widget-id].widget-updated {
+    box-shadow: 0 0 0 2px rgba(25, 135, 84, 0.5);
+    animation: flash-success 0.6s ease-out;
+}
+
+@keyframes flash-success {
+    0% { box-shadow: 0 0 0 2px rgba(25, 135, 84, 0.8); }
+    100% { box-shadow: 0 0 0 2px rgba(25, 135, 84, 0.5); }
+}
+
+/* Error states */
+[data-widget-id].widget-error {
+    outline: 2px solid #dc3545 !important;
+    outline-offset: 2px;
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+[data-widget-id].widget-error::after {
+    content: '⚠️ Error';
+    position: absolute;
+    top: -25px;
+    left: 0;
+    background: #dc3545;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 500;
+    z-index: 1000;
+}
+
+/* Responsive preview helpers */
+@media (max-width: 768px) {
+    [data-widget-id]::after {
+        font-size: 10px;
+        padding: 1px 6px;
+    }
+    
+    body[data-preview-mode="true"]::before {
+        font-size: 10px;
+        padding: 3px 6px;
+    }
+    
+    body[data-preview-mode="true"] {
+        padding-top: 20px;
+    }
+}
+
+/* Print styles - hide preview helpers */
+@media print {
+    [data-widget-id]:hover,
+    [data-widget-id].preview-highlighted,
+    [data-section-id]:hover,
+    body[data-preview-mode="true"]::before {
+        outline: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+    }
+    
+    body[data-preview-mode="true"] {
+        padding-top: 0 !important;
+    }
+    
+    [data-widget-id]::after,
+    [data-section-id]::after {
+        display: none !important;
+    }
+}
+
+/* Accessibility improvements */
+[data-widget-id]:focus {
+    outline: 3px solid #0d6efd;
+    outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    [data-widget-id]:hover {
+        outline-color: #000;
+        outline-width: 3px;
+    }
+    
+    [data-widget-id].preview-highlighted {
+        outline-color: #000 !important;
+        outline-width: 3px !important;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    [data-widget-id],
+    [data-section-id] {
+        transition: none;
+    }
+    
+    [data-widget-id].widget-updating {
+        animation: none;
+        box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.5);
+    }
+    
+    [data-widget-id].widget-loading::before {
+        animation: none;
+        border-top-color: #0d6efd;
+    }
+}
+
+/* Theme integration helpers */
+.theme-light [data-widget-id]:hover {
+    outline-color: #0d6efd;
+}
+
+.theme-dark [data-widget-id]:hover {
+    outline-color: #6ea8fe;
+}
+
+.theme-dark [data-widget-id].preview-highlighted {
+    outline-color: #6ea8fe !important;
+    box-shadow: 0 0 0 4px rgba(110, 168, 254, 0.1);
+}
+
+.theme-dark [data-widget-id].preview-highlighted::after {
+    background: #6ea8fe;
+    color: #000;
+}
+
+/* Custom scrollbars for better UX */
+.preview-container::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.preview-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.preview-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.preview-container::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Smooth scrolling for better navigation */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Widget resize handles (if needed for future features) */
+[data-widget-id].resizable {
+    position: relative;
+}
+
+[data-widget-id].resizable::before {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    right: -5px;
+    width: 10px;
+    height: 10px;
+    background: #0d6efd;
+    border-radius: 2px;
+    cursor: se-resize;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+[data-widget-id].resizable:hover::before {
+    opacity: 1;
+}

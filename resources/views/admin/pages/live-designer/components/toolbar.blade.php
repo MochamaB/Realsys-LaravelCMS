@@ -1,5 +1,5 @@
-<!-- GrapesJS Live Designer Toolbar -->
-<div class="live-designer-toolbar d-sm-flex align-items-center justify-content-between bg-galaxy-transparent mb-0 ms-0 p-3">
+<!-- Live Designer Toolbar -->
+<div class="toolbar d-sm-flex align-items-center justify-content-between bg-galaxy-transparent mb-0 ms-0 p-3">
     <div class="d-flex align-items-center">
         <!-- Toggle Left Sidebar -->
         <button class="btn btn-outline-secondary me-2" id="toggle-left-sidebar" title="Toggle Component Library">

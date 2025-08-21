@@ -40,7 +40,11 @@
                             </thead>
                             <tbody class="widget-list">
                                 @forelse($widgets as $index => $widget)
-                                    <tr data-widget-id="{{ $widget->id }}">
+                                <tr class="clickable-row" 
+                                        data-widget-id="{{ $widget->id }}"
+                                        data-href="{{ route('admin.widgets.show', $widget->id) }}"
+                                        style="cursor: pointer;">
+                                  
                                         <td>
                                             <div style="width: 70px; height: 50px;" class="d-flex justify-content-center align-items-center border rounded overflow-hidden">
                                                 @php

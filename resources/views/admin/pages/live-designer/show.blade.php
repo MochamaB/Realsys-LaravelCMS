@@ -3,70 +3,161 @@
 @section('title', 'Live Designer - ' . $page->title)
 
 @section('css')
-<!-- GrapesJS Core CSS -->
-<link rel="stylesheet" href="{{ asset('assets/admin/libs/grapesjs/dist/css/grapes.min.css') }}">
-
-<!-- Live Designer Custom CSS -->
-<link rel="stylesheet" href="{{ asset('assets/admin/css/live-designer/live-designer.css') }}">
-<link rel="stylesheet" href="{{ asset('assets/admin/css/live-designer/canvas-styles.css') }}">
+<!-- Simplified Live Designer CSS -->
+<link rel="stylesheet" href="{{ asset('assets/admin/css/live-designer/simple-live-designer.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/admin/css/live-designer/sidebar-layout.css') }}">
-<link rel="stylesheet" href="{{ asset('assets/admin/css/live-designer/enhanced-widgets.css') }}">
 
 <style>
-/* Live Designer Layout - Full Height */
-.live-designer-container {
+/* Simplified Live Designer Layout */
+.simple-live-designer {
     height: 100vh;
     overflow: hidden;
     display: flex;
     flex-direction: column;
 }
 
-.live-designer-header {
+.designer-toolbar {
     background: #fff;
     border-bottom: 1px solid #e9ecef;
     padding: 0.75rem 1rem;
     flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.live-designer-content {
+.device-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.device-btn {
+    padding: 0.375rem 0.75rem;
+    border: 1px solid #ced4da;
+    background: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.875rem;
+}
+
+.device-btn:hover {
+    background: #f8f9fa;
+}
+
+.device-btn.active {
+    background: #0d6efd;
+    color: #fff;
+    border-color: #0d6efd;
+}
+
+.designer-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.designer-content {
     flex: 1;
     display: flex;
     overflow: hidden;
 }
 
-.live-designer-left-sidebar {
-    width: 280px;
-    background: #f8f9fa;
-    border-right: 1px solid #e9ecef;
-    flex-shrink: 0;
-    overflow-y: auto;
-}
-
-.live-designer-canvas {
-    flex: 1;
-    background: #fff;
-    position: relative;
-    overflow: hidden;
-}
-
-.live-designer-right-sidebar {
+.designer-sidebar {
     width: 300px;
     background: #f8f9fa;
-    border-left: 1px solid #e9ecef;
     flex-shrink: 0;
     overflow-y: auto;
+    border-right: 1px solid #e9ecef;
 }
 
-/* GrapesJS Editor Container */
-#gjs-editor {
-    height: 100%;
+.designer-sidebar.right {
+    border-right: none;
+    border-left: 1px solid #e9ecef;
+}
+
+.designer-preview {
+    flex: 1;
+    background: #f5f5f5;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 20px;
+    overflow: auto;
+    position: relative;
+}
+
+.preview-container {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.preview-container.device-desktop {
     width: 100%;
+    max-width: none;
 }
 
-/* Mobile Responsive */
+.preview-container.device-tablet {
+    width: 768px;
+    max-width: 768px;
+}
+
+.preview-container.device-mobile {
+    width: 375px;
+    max-width: 375px;
+}
+
+#preview-iframe {
+    width: 100%;
+    border: none;
+    background: #fff;
+    min-height: 600px;
+    height: 100%;
+}
+
+/* Loading state */
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.loading-content {
+    text-align: center;
+    padding: 2rem;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #0d6efd;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Mobile responsive */
 @media (max-width: 991.98px) {
-    .live-designer-left-sidebar,
-    .live-designer-right-sidebar {
+    .designer-sidebar {
         position: fixed;
         top: 0;
         height: 100vh;
@@ -75,127 +166,136 @@
         transition: transform 0.3s ease;
     }
     
-    .live-designer-left-sidebar.show,
-    .live-designer-right-sidebar.show {
+    .designer-sidebar.show {
         transform: translateX(0);
     }
     
-    .live-designer-right-sidebar {
+    .designer-sidebar.right {
         right: 0;
         transform: translateX(100%);
     }
     
-    .live-designer-canvas {
+    .designer-sidebar.right.show {
+        transform: translateX(0);
+    }
+    
+    .preview-container.device-tablet,
+    .preview-container.device-mobile {
         width: 100%;
+        max-width: 100%;
     }
 }
 
-/* Loading State */
-.live-designer-loading {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-    z-index: 1000;
-}
-
-.live-designer-loading.hidden {
-    display: none;
+.hidden {
+    display: none !important;
 }
 </style>
 @endsection
 
 @section('content')
-
-<div class="live-designer-container">
-    <!-- Header Toolbar -->
-    <div class="row">
-        <div class="col-12 p-0">
-            @include('admin.pages.live-designer.components.toolbar')
-        </div>
-    </div>
+<div class="simple-live-designer">
+    <!-- Toolbar -->
+    @include('admin.pages.live-designer.components.toolbar')
     
     <!-- Main Content -->
-    <div class="live-designer-content">
-        <!-- Left Sidebar - Component Library -->
-        <div class="live-designer-left-sidebar" id="left-sidebar">
-            @include('admin.pages.live-designer.components.left-sidebar')
+    <div class="designer-content">
+        <!-- Left Sidebar -->
+        @include('admin.pages.live-designer.components.left-sidebar')
+        
+        <!-- Preview Area -->
+        <div class="designer-preview">
+            <div class="preview-container device-desktop" id="preview-container">
+                <iframe id="preview-iframe" src="{{ route('admin.api.live-preview.preview-iframe', $page) }}"></iframe>
+            </div>
+            
+            <!-- Loading overlay -->
+            <div class="loading-overlay hidden" id="preview-loading">
+                <div class="loading-content">
+                    <div class="loading-spinner"></div>
+                    <p>Updating preview...</p>
+                </div>
+            </div>
         </div>
         
-        <!-- Canvas Area -->
-        @include('admin.pages.live-designer.components.canvas')
-        
-        <!-- Right Sidebar - Properties Panel -->
-        <div class="live-designer-right-sidebar" id="right-sidebar">
-            @include('admin.pages.live-designer.components.right-sidebar')
-        </div>
+        <!-- Right Sidebar -->
+        @include('admin.pages.live-designer.components.right-sidebar')
     </div>
 </div>
 
 <!-- Mobile Overlay -->
 <div class="modal-backdrop fade" id="mobile-overlay" style="display: none;"></div>
 
-<!-- Modals -->
-@include('admin.pages.live-designer.modals.content-selection')
-@include('admin.pages.live-designer.modals.asset-manager')
-@include('admin.pages.live-designer.modals.responsive-preview')
+<!-- Widget Library Modal -->
+<div class="modal fade" id="widget-library-modal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Widget</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="widget-library-content">
+                    <div class="loading-content">
+                        <div class="loading-spinner"></div>
+                        <p>Loading widgets...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success/Error Messages -->
+<div id="message-container" style="position: fixed; top: 20px; right: 20px; z-index: 1060;"></div>
 @endsection
 
 @section('js')
-<!-- GrapesJS Core -->
-<script src="{{ asset('assets/admin/libs/grapesjs/dist/grapes.min.js') }}"></script>
-
 <!-- Live Designer JavaScript -->
-<script src="{{ asset('assets/admin/js/live-designer/api/live-designer-api.js') }}?v={{ time() }}"></script>
-<script src="{{ asset('assets/admin/js/live-designer/widget-initializer.js') }}?v={{ time() }}"></script>
-<script src="{{ asset('assets/admin/js/live-designer/component-manager.js') }}?v={{ time() }}"></script>
-<script src="{{ asset('assets/admin/js/live-designer/canvas-manager.js') }}?v={{ time() }}"></script>
-<script src="{{ asset('assets/admin/js/live-designer/sidebar-manager.js') }}?v={{ time() }}"></script>
-<script src="{{ asset('assets/admin/js/live-designer/enhanced-widgets.js') }}?v={{ time() }}"></script>
-
-<!-- New Component Management Scripts -->
-<script src="{{ asset('assets/admin/js/live-designer/components/component-tree.js') }}?v={{ time() }}"></script>
-<script src="{{ asset('assets/admin/js/live-designer/components/component-editor.js') }}?v={{ time() }}"></script>
-<script src="{{ asset('assets/admin/js/live-designer/components/content-browser.js') }}?v={{ time() }}"></script>
-<script src="{{ asset('assets/admin/js/live-designer/components/live-designer-components.js') }}?v={{ time() }}"></script>
-
-<script src="{{ asset('assets/admin/js/live-designer/live-designer-main.js') }}?v={{ time() }}"></script>
+<script src="{{ asset('assets/admin/js/live-designer/live-preview.js') }}?v={{ time() }}"></script>
+<script src="{{ asset('assets/admin/js/live-designer/widget-form-manager.js') }}?v={{ time() }}"></script>
+<script src="{{ asset('assets/admin/js/live-designer/device-preview.js') }}?v={{ time() }}"></script>
+<script src="{{ asset('assets/admin/js/live-designer/update-manager.js') }}?v={{ time() }}"></script>
 @endsection
 
 @push('scripts')
 <script>
-// Initialize Live Designer
+// Initialize Simplified Live Designer
 document.addEventListener('DOMContentLoaded', async function() {
-    // Initialize Live Designer with page data
-    const liveDesigner = new LiveDesignerMain({
+    // Initialize the live preview system
+    const livePreview = new LivePreview({
         pageId: {{ $page->id }},
-        apiBaseUrl: '{{ $apiBaseUrl }}',
+        apiUrl: '{{ $apiBaseUrl }}',
         csrfToken: '{{ csrf_token() }}',
-        pageData: @json($page),
-        canvasSelector: '#gjs-editor',
-        loadingSelector: '#canvas-loading'
+        previewIframe: document.getElementById('preview-iframe'),
+        pageStructureContainer: document.getElementById('page-structure-container'),
+        widgetEditorContainer: document.getElementById('widget-editor-container')
     });
-    
-    // Wait for main designer to initialize
-    await liveDesigner.init();
-    
-    // Initialize Component Management System
-    const componentContainers = {
-        componentTree: document.getElementById('component-tree-container'),
-        componentEditor: document.getElementById('component-editor-container')
-    };
-    
-    if (componentContainers.componentTree || componentContainers.componentEditor) {
-        const components = new LiveDesignerComponents(liveDesigner.api, componentContainers);
-        await components.initialize({{ $page->id }});
-        
-        // Make components globally available for debugging
-        window.liveDesignerComponents = components;
-        
-        console.log('✅ Live Designer with Component Management System initialized');
+
+    // Check if all required classes are available
+    if (typeof UpdateManager === 'undefined') {
+        console.error('UpdateManager class not found');
+        return;
     }
-    
+    if (typeof WidgetFormManager === 'undefined') {
+        console.error('WidgetFormManager class not found');
+        return;
+    }
+    if (typeof DevicePreview === 'undefined') {
+        console.error('DevicePreview class not found');
+        return;
+    }
+
+    // Initialize managers
+    const updateManager = new UpdateManager('{{ $apiBaseUrl }}', '{{ csrf_token() }}');
+    const widgetFormManager = new WidgetFormManager(livePreview, updateManager);
+    const devicePreview = new DevicePreview(document.getElementById('preview-container'));
+
+    // Global references for debugging
+    window.livePreview = livePreview;
+    window.updateManager = updateManager;
+    window.widgetFormManager = widgetFormManager;
+    window.devicePreview = devicePreview;
+
     // Mobile sidebar toggles
     const toggleLeftSidebar = document.getElementById('toggle-left-sidebar');
     const toggleRightSidebar = document.getElementById('toggle-right-sidebar');
@@ -203,20 +303,30 @@ document.addEventListener('DOMContentLoaded', async function() {
     const rightSidebar = document.getElementById('right-sidebar');
     const mobileOverlay = document.getElementById('mobile-overlay');
     
+    // Check if elements exist before adding event listeners
+    if (!toggleLeftSidebar || !toggleRightSidebar || !leftSidebar || !rightSidebar || !mobileOverlay) {
+        console.error('Missing required DOM elements for mobile sidebar toggles');
+    }
+    
+    if (window.innerWidth <= 991.98) {
+        if (toggleLeftSidebar) toggleLeftSidebar.style.display = 'block';
+        if (toggleRightSidebar) toggleRightSidebar.style.display = 'block';
+    }
+
     if (toggleLeftSidebar && leftSidebar && mobileOverlay) {
         toggleLeftSidebar.addEventListener('click', function() {
             leftSidebar.classList.toggle('show');
             mobileOverlay.style.display = leftSidebar.classList.contains('show') ? 'block' : 'none';
         });
     }
-    
+
     if (toggleRightSidebar && rightSidebar && mobileOverlay) {
         toggleRightSidebar.addEventListener('click', function() {
             rightSidebar.classList.toggle('show');
             mobileOverlay.style.display = rightSidebar.classList.contains('show') ? 'block' : 'none';
         });
     }
-    
+
     if (mobileOverlay && leftSidebar && rightSidebar) {
         mobileOverlay.addEventListener('click', function() {
             leftSidebar.classList.remove('show');
@@ -224,35 +334,86 @@ document.addEventListener('DOMContentLoaded', async function() {
             mobileOverlay.style.display = 'none';
         });
     }
-    
-    // Preview mode toggles
-    const previewModes = document.querySelectorAll('input[name="preview-mode"]');
-    previewModes.forEach(mode => {
-        mode.addEventListener('change', function() {
-            if (this.checked) {
-                liveDesigner.setPreviewMode(this.id.replace('-mode', ''));
-            }
+
+    // Device preview controls
+    document.querySelectorAll('.device-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const device = this.dataset.device;
+            devicePreview.setDevice(device);
+            
+            // Update active button
+            document.querySelectorAll('.device-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
         });
     });
-    
+
     // Action buttons
-    const previewButton = document.getElementById('preview-page');
-    const saveButton = document.getElementById('save-page');
+    const previewPageBtn = document.getElementById('preview-page');
+    if (previewPageBtn) {
+        previewPageBtn.addEventListener('click', function() {
+            const previewUrl = '{{ route("admin.pages.show", $page) }}';
+            window.open(previewUrl, '_blank');
+        });
+    }
+
+    const savePageBtn = document.getElementById('save-page');
+    if (savePageBtn) {
+        savePageBtn.addEventListener('click', function() {
+            livePreview.showMessage('Changes are saved automatically!', 'success');
+        });
+    }
+
+    // Sidebar collapse functionality
+    const collapseLeftBtn = document.getElementById('collapse-left-sidebar');
+    const collapseRightBtn = document.getElementById('collapse-right-sidebar');
+    const leftSidebarContainer = document.getElementById('left-sidebar-container');
+    const rightSidebarContainer = document.getElementById('right-sidebar-container');
     
-    if (previewButton) {
-        previewButton.addEventListener('click', function() {
-            liveDesigner.previewPage();
+    if (collapseLeftBtn && leftSidebarContainer) {
+        collapseLeftBtn.addEventListener('click', function() {
+            leftSidebarContainer.classList.toggle('collapsed');
         });
     }
     
-    if (saveButton) {
-        saveButton.addEventListener('click', function() {
-            liveDesigner.savePage();
+    if (collapseRightBtn && rightSidebarContainer) {
+        collapseRightBtn.addEventListener('click', function() {
+            rightSidebarContainer.classList.toggle('collapsed');
         });
     }
     
-    // Global reference for debugging
-    window.liveDesigner = liveDesigner;
+    // Dynamic iframe height
+    function adjustIframeHeight() {
+        const iframe = document.getElementById('preview-iframe');
+        if (iframe) {
+            iframe.addEventListener('load', function() {
+                try {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    const height = iframeDoc.body.scrollHeight;
+                    iframe.style.height = Math.max(height, 600) + 'px';
+                } catch (e) {
+                    // Cross-origin restrictions - use default height
+                    iframe.style.height = '800px';
+                }
+            });
+        }
+    }
+    
+    adjustIframeHeight();
+
+    console.log('✅ Live Designer initialized');
+});
+
+// Handle window resize for mobile toggles
+window.addEventListener('resize', function() {
+    const toggleButtons = document.querySelectorAll('#toggle-left-sidebar, #toggle-right-sidebar');
+    if (window.innerWidth <= 991.98) {
+        toggleButtons.forEach(btn => btn.style.display = 'block');
+    } else {
+        toggleButtons.forEach(btn => btn.style.display = 'none');
+        document.getElementById('left-sidebar').classList.remove('show');
+        document.getElementById('right-sidebar').classList.remove('show');
+        document.getElementById('mobile-overlay').style.display = 'none';
+    }
 });
 </script>
 @endpush

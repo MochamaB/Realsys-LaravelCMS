@@ -381,40 +381,15 @@ Route::prefix('api')->middleware('admin.auth')->group(function () {
     Route::get('/pages/{page}/theme-wrapper-iframe', [App\Http\Controllers\Api\PageSectionController::class, 'showThemeWrapperIframe'])->name('api.pages.theme-wrapper-iframe');
     Route::get('/pages/{page}/full-theme-preview-iframe', [App\Http\Controllers\Api\PageSectionController::class, 'showFullThemePreviewIframe'])->name('api.pages.full-theme-preview-iframe');
     
-    // Live Designer API - Preview Rendering
-    Route::get('/live-designer/pages/{page}/content', [App\Http\Controllers\Api\LiveDesignerController::class, 'getPageContent'])->name('api.live-designer.pages.content');
-    Route::get('/live-designer/pages/{page}/iframe-preview', [App\Http\Controllers\Api\LiveDesignerController::class, 'getIframePreview'])->name('api.live-designer.pages.iframe-preview');
-    Route::get('/live-designer/pages/{page}/assets', [App\Http\Controllers\Api\LiveDesignerController::class, 'getAssets'])->name('api.live-designer.pages.assets');
-    
-    // Live Designer API - Component Tree & Structure
-    Route::get('/live-designer/pages/{page}/components', [App\Http\Controllers\Api\LiveDesignerController::class, 'getPageComponents'])->name('api.live-designer.pages.components');
-    
-    // Live Designer API - Component Library & Content Management
-    Route::get('/live-designer/pages/{page}/widgets', [App\Http\Controllers\Api\LiveDesignerController::class, 'getWidgets'])->name('api.live-designer.pages.widgets');
-    Route::get('/live-designer/pages/{page}/content-types', [App\Http\Controllers\Api\LiveDesignerController::class, 'getContentTypes'])->name('api.live-designer.pages.content-types');
-    Route::get('/live-designer/pages/{page}/content-items', [App\Http\Controllers\Api\LiveDesignerController::class, 'getContentItems'])->name('api.live-designer.pages.content-items');
-    
-    // Live Designer API - Component Editing & Updates
-    Route::put('/live-designer/pages/{page}/components', [App\Http\Controllers\Api\LiveDesignerController::class, 'updateComponent'])->name('api.live-designer.pages.update-component');
-    Route::get('/live-designer/pages/{page}/components/preview', [App\Http\Controllers\Api\LiveDesignerController::class, 'getComponentPreview'])->name('api.live-designer.pages.component-preview');
-    Route::post('/live-designer/pages/{page}/refresh', [App\Http\Controllers\Api\LiveDesignerController::class, 'refreshPageContent'])->name('api.live-designer.pages.refresh');
-    
-    // Live Designer API - Page Saving
-    Route::post('/live-designer/pages/{page}/save', [App\Http\Controllers\Api\LiveDesignerController::class, 'savePageContent'])->name('api.live-designer.pages.save');
-    
-    // Widget Schema API for GrapesJS
-    Route::get('/widgets/schemas', [App\Http\Controllers\Api\WidgetController::class, 'getWidgetSchemas'])->name('api.widgets.schemas');
-    Route::get('/widgets/{widget}/schema', [App\Http\Controllers\Api\WidgetController::class, 'getWidgetSchema'])->name('api.widgets.schema');
-    Route::get('/widgets/{widget}/sample-data', [App\Http\Controllers\Api\WidgetController::class, 'getWidgetSampleData'])->name('api.widgets.sample-data');
-    
-    // Section Schema API for GrapesJS (Phase 1.3)
-    Route::get('/pages/{page}/sections/schemas', [App\Http\Controllers\Api\SectionSchemaController::class, 'getPageSectionSchemas'])->name('api.pages.sections.schemas');
-    Route::get('/sections/{section}/schema', [App\Http\Controllers\Api\SectionSchemaController::class, 'getSectionSchema'])->name('api.sections.schema');
-    Route::get('/sections/types', [App\Http\Controllers\Api\SectionSchemaController::class, 'getAvailableSectionTypes'])->name('api.sections.types');
-    Route::post('/sections/schema/create', [App\Http\Controllers\Api\SectionSchemaController::class, 'createNewSectionSchema'])->name('api.sections.schema.create');
-    Route::post('/sections/schema/validate', [App\Http\Controllers\Api\SectionSchemaController::class, 'validateSectionSchema'])->name('api.sections.schema.validate');
-    Route::post('/sections/schema/clear-cache', [App\Http\Controllers\Api\SectionSchemaController::class, 'clearCache'])->name('api.sections.schema.clear-cache');
-    Route::get('/pages/{page}/sections/stats', [App\Http\Controllers\Api\SectionSchemaController::class, 'getPageSectionStats'])->name('api.pages.sections.stats');
+    // Live Preview API Routes
+    Route::prefix('live-preview')->name('api.live-preview.')->group(function () {
+        Route::get('/pages/{page}/preview-iframe', [App\Http\Controllers\Api\LivePreviewController::class, 'getPreviewIframe'])->name('preview-iframe');
+        Route::get('/page-structure/{page}', [App\Http\Controllers\Api\LivePreviewController::class, 'getPageStructure'])->name('page-structure');
+        Route::get('/widget-editor/{widget}', [App\Http\Controllers\Api\LivePreviewController::class, 'getWidgetEditorForm'])->name('widget-editor');
+        Route::post('/widgets/{widget}/update', [App\Http\Controllers\Api\LivePreviewController::class, 'updateWidgetPreview'])->name('update-widget');
+        Route::post('/sections/{section}/add-widget', [App\Http\Controllers\Api\LivePreviewController::class, 'addWidget'])->name('add-widget');
+        Route::get('/widgets/available', [App\Http\Controllers\Api\LivePreviewController::class, 'getAvailableWidgets'])->name('available-widgets');
+    });
 
     Route::get('/sections/{section}/render', [App\Http\Controllers\Api\PageSectionController::class, 'renderSection'])->name('api.sections.render');
 
