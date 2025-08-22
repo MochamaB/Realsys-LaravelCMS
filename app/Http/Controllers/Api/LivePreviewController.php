@@ -112,16 +112,16 @@ class LivePreviewController extends Controller
     /**
      * Get widget editor form for a specific widget instance
      * 
-     * @param PageSectionWidget $widget
+     * @param PageSectionWidget $instance
      * @return JsonResponse
      */
-    public function getWidgetEditorForm(PageSectionWidget $widget): JsonResponse
+    public function getWidgetEditorForm(PageSectionWidget $instance): JsonResponse
     {
-        $widget->load(['widget', 'widget.contentTypes']);
+        $instance->load(['widget', 'widget.contentTypes']);
 
         // Get field values for the form - ensure all values are strings or safe for output
-        $settings = $widget->settings ?? [];
-        $contentQuery = $widget->content_query ?? [];
+        $settings = $instance->settings ?? [];
+        $contentQuery = $instance->content_query ?? [];
         
         // Flatten nested arrays to dot notation for form fields
         $flattenedSettings = [];
@@ -138,24 +138,24 @@ class LivePreviewController extends Controller
             $flattenedSettings,
             $flattenedContentQuery,
             [
-                'css_classes' => $widget->css_classes ?? '',
-                'padding' => $widget->padding ?? '',
-                'margin' => $widget->margin ?? '',
-                'background_color' => $widget->background_color ?? '#ffffff',
-                'min_width' => $widget->min_width ?? '',
-                'max_width' => $widget->max_width ?? '',
-                'min_height' => $widget->min_height ?? '',
-                'max_height' => $widget->max_height ?? '',
-                'locked_position' => $widget->locked_position ? '1' : '0'
+                'css_classes' => $instance->css_classes ?? '',
+                'padding' => $instance->padding ?? '',
+                'margin' => $instance->margin ?? '',
+                'background_color' => $instance->background_color ?? '#ffffff',
+                'min_width' => $instance->min_width ?? '',
+                'max_width' => $instance->max_width ?? '',
+                'min_height' => $instance->min_height ?? '',
+                'max_height' => $instance->max_height ?? '',
+                'locked_position' => $instance->locked_position ? '1' : '0'
             ]
         );
 
         // Get available content types for content widgets
-        $contentTypes = $widget->widget->contentTypes ?? collect();
+        $contentTypes = $instance->widget->contentTypes ?? collect();
 
         $formData = [
-            'widget' => $widget->widget,
-            'instance' => $widget,
+            'widget' => $instance->widget,
+            'instance' => $instance,
             'fieldValues' => $fieldValues,
             'contentTypes' => $contentTypes
         ];
@@ -165,9 +165,9 @@ class LivePreviewController extends Controller
         return response()->json([
             'success' => true,
             'data' => [
-                'widget_id' => $widget->id,
-                'widget_name' => $widget->widget->name,
-                'form_html' => $formHtml
+                'widget_id' => $instance->id,
+                'widget_name' => $instance->widget->name,
+                'html' => $formHtml
             ]
         ]);
     }
@@ -175,11 +175,11 @@ class LivePreviewController extends Controller
     /**
      * Update widget and return preview
      * 
-     * @param PageSectionWidget $widget
+     * @param PageSectionWidget $instance
      * @param Request $request
      * @return JsonResponse
      */
-    public function updateWidgetPreview(PageSectionWidget $widget, Request $request): JsonResponse
+    public function updateWidgetPreview(PageSectionWidget $instance, Request $request): JsonResponse
     {
         try {
             // Update widget data based on the form submission
@@ -192,12 +192,12 @@ class LivePreviewController extends Controller
 
             // Handle settings update
             if (isset($updateData['settings'])) {
-                $widget->settings = array_merge($widget->settings ?? [], $updateData['settings']);
+                $instance->settings = array_merge($instance->settings ?? [], $updateData['settings']);
             }
 
             // Handle content query update
             if (isset($updateData['content_query'])) {
-                $widget->content_query = array_merge($widget->content_query ?? [], $updateData['content_query']);
+                $instance->content_query = array_merge($instance->content_query ?? [], $updateData['content_query']);
             }
 
             // Handle style fields
@@ -206,20 +206,20 @@ class LivePreviewController extends Controller
             
             foreach ($styleFields as $field) {
                 if (isset($updateData[$field])) {
-                    $widget->$field = $updateData[$field];
+                    $instance->$field = $updateData[$field];
                 }
             }
 
             // Handle boolean fields
-            $widget->locked_position = $request->boolean('locked_position');
+            $instance->locked_position = $request->boolean('locked_position');
 
-            $widget->save();
+            $instance->save();
 
             return response()->json([
                 'success' => true,
                 'message' => 'Widget updated successfully',
                 'data' => [
-                    'widget_id' => $widget->id,
+                    'widget_id' => $instance->id,
                     'refresh_preview' => true
                 ]
             ]);
@@ -228,6 +228,83 @@ class LivePreviewController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update widget: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get section editor form for a specific page section
+     * 
+     * @param PageSection $section
+     * @return JsonResponse
+     */
+    public function getSectionEditorForm(PageSection $section): JsonResponse
+    {
+        try {
+            $section->load(['templateSection', 'page']);
+
+            $formData = [
+                'section' => $section,
+                'templateSection' => $section->templateSection,
+                'page' => $section->page
+            ];
+
+            $formHtml = view('admin.pages.live-designer.simple.section-editor-form', $formData)->render();
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'section_id' => $section->id,
+                    'section_name' => $section->templateSection->name ?? 'Section ' . $section->id,
+                    'html' => $formHtml
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to load section editor: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update section and return preview
+     * 
+     * @param PageSection $section
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function updateSectionPreview(PageSection $section, Request $request): JsonResponse
+    {
+        try {
+            // Update section data
+            $updateData = $request->only([
+                'css_classes', 'background_color', 'background_image',
+                'padding', 'margin', 'min_height', 'max_height'
+            ]);
+
+            foreach ($updateData as $field => $value) {
+                if ($value !== null) {
+                    $section->$field = $value;
+                }
+            }
+
+            $section->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Section updated successfully',
+                'data' => [
+                    'section_id' => $section->id,
+                    'refresh_preview' => true
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update section: ' . $e->getMessage()
             ], 500);
         }
     }

@@ -385,8 +385,10 @@ Route::prefix('api')->middleware('admin.auth')->group(function () {
     Route::prefix('live-preview')->name('api.live-preview.')->group(function () {
         Route::get('/pages/{page}/preview-iframe', [App\Http\Controllers\Api\LivePreviewController::class, 'getPreviewIframe'])->name('preview-iframe');
         Route::get('/page-structure/{page}', [App\Http\Controllers\Api\LivePreviewController::class, 'getPageStructure'])->name('page-structure');
-        Route::get('/widget-editor/{widget}', [App\Http\Controllers\Api\LivePreviewController::class, 'getWidgetEditorForm'])->name('widget-editor');
-        Route::post('/widgets/{widget}/update', [App\Http\Controllers\Api\LivePreviewController::class, 'updateWidgetPreview'])->name('update-widget');
+        Route::get('/widget-editor/{instance}', [App\Http\Controllers\Api\LivePreviewController::class, 'getWidgetEditorForm'])->name('widget-editor');
+        Route::get('/section-editor/{section}', [App\Http\Controllers\Api\LivePreviewController::class, 'getSectionEditorForm'])->name('section-editor');
+        Route::post('/widgets/{instance}/update', [App\Http\Controllers\Api\LivePreviewController::class, 'updateWidgetPreview'])->name('update-widget');
+        Route::post('/sections/{section}/update', [App\Http\Controllers\Api\LivePreviewController::class, 'updateSectionPreview'])->name('update-section');
         Route::post('/sections/{section}/add-widget', [App\Http\Controllers\Api\LivePreviewController::class, 'addWidget'])->name('add-widget');
         Route::get('/widgets/available', [App\Http\Controllers\Api\LivePreviewController::class, 'getAvailableWidgets'])->name('available-widgets');
     });

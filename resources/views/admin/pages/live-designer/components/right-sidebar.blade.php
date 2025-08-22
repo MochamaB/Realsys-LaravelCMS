@@ -2,32 +2,32 @@
 <div class="sidebar-container right" id="right-sidebar-container">
     <div class="designer-sidebar right" id="right-sidebar">
         <!-- Sidebar Header -->
-        <div class="sidebar-header p-3 border-bottom">
-            <h6 class="mb-0">
-                <i class="ri-settings-line me-2"></i>
-                <span class="sidebar-title">Properties</span>
-            </h6>
-            <button class="btn btn-sm btn-outline-secondary sidebar-collapse-btn" id="collapse-right-sidebar">
-                <i class="ri-sidebar-fold-line"></i>
+        <div class="sidebar-header p-3 border-bottom d-flex align-items-center justify-content-between">
+            <button class="btn btn-sm btn-outline-secondary sidebar-collapse-btn me-2" id="collapse-right-sidebar">
+                <i class="ri-arrow-right-line"></i>
             </button>
+            <h6 class="mb-0 d-flex align-items-center">
+                <i class="ri-settings-line me-2"></i>
+                <span class="sidebar-title">Widget Properties</span>
+            </h6>
         </div>
         
         <!-- Sidebar Content -->
-        <div class="sidebar-content" id="widget-editor-container">
-            <div class="no-selection text-center py-4">
+        <div class="sidebar-content p-3" id="widget-editor-container">
+            <div class="no-selection text-center py-5">
                 <div class="mb-3">
-                    <i class="ri-cursor-line" style="font-size: 2rem; color: #6c757d;"></i>
+                    <i class="ri-cursor-line" style="font-size: 3rem; color: #6c757d;"></i>
                 </div>
-                <h6>Select a Widget</h6>
-                <p class="text-muted mb-0">Click on a widget in the preview to edit its properties</p>
+                <h5 class="mb-3">Select a Widget</h5>
+                <p class="text-muted mb-0">Click on any widget in the preview to edit its properties and settings</p>
             </div>
         </div>
     </div>
     
     <!-- Collapsed state icons (shown when sidebar is collapsed) -->
     <div class="sidebar-collapsed-icons" style="display: none;">
-        <div class="collapsed-icon-item" title="Properties">
-            <i class="ri-settings-line"></i>
+        <div class="collapsed-icon-item" title="Widget Properties">
+            <i class="ri-arrow-left-line"></i>
         </div>
     </div>
 </div>

@@ -62,19 +62,6 @@
     overflow: hidden;
 }
 
-.designer-sidebar {
-    width: 300px;
-    background: #f8f9fa;
-    flex-shrink: 0;
-    overflow-y: auto;
-    border-right: 1px solid #e9ecef;
-}
-
-.designer-sidebar.right {
-    border-right: none;
-    border-left: 1px solid #e9ecef;
-}
-
 .designer-preview {
     flex: 1;
     background: #f5f5f5;
@@ -155,30 +142,8 @@
     100% { transform: rotate(360deg); }
 }
 
-/* Mobile responsive */
+/* Mobile responsive - Right sidebar only */
 @media (max-width: 991.98px) {
-    .designer-sidebar {
-        position: fixed;
-        top: 0;
-        height: 100vh;
-        z-index: 1050;
-        transform: translateX(-100%);
-        transition: transform 0.3s ease;
-    }
-    
-    .designer-sidebar.show {
-        transform: translateX(0);
-    }
-    
-    .designer-sidebar.right {
-        right: 0;
-        transform: translateX(100%);
-    }
-    
-    .designer-sidebar.right.show {
-        transform: translateX(0);
-    }
-    
     .preview-container.device-tablet,
     .preview-container.device-mobile {
         width: 100%;
@@ -199,9 +164,6 @@
     
     <!-- Main Content -->
     <div class="designer-content">
-        <!-- Left Sidebar -->
-        @include('admin.pages.live-designer.components.left-sidebar')
-        
         <!-- Preview Area -->
         <div class="designer-preview">
             <div class="preview-container device-desktop" id="preview-container">
@@ -267,7 +229,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         apiUrl: '{{ $apiBaseUrl }}',
         csrfToken: '{{ csrf_token() }}',
         previewIframe: document.getElementById('preview-iframe'),
-        pageStructureContainer: document.getElementById('page-structure-container'),
+        pageStructureContainer: null, // No longer using page structure sidebar
         widgetEditorContainer: document.getElementById('widget-editor-container')
     });
 
@@ -296,28 +258,14 @@ document.addEventListener('DOMContentLoaded', async function() {
     window.widgetFormManager = widgetFormManager;
     window.devicePreview = devicePreview;
 
-    // Mobile sidebar toggles
-    const toggleLeftSidebar = document.getElementById('toggle-left-sidebar');
+    // Mobile sidebar toggle (right sidebar only)
     const toggleRightSidebar = document.getElementById('toggle-right-sidebar');
-    const leftSidebar = document.getElementById('left-sidebar');
     const rightSidebar = document.getElementById('right-sidebar');
     const mobileOverlay = document.getElementById('mobile-overlay');
     
-    // Check if elements exist before adding event listeners
-    if (!toggleLeftSidebar || !toggleRightSidebar || !leftSidebar || !rightSidebar || !mobileOverlay) {
-        console.error('Missing required DOM elements for mobile sidebar toggles');
-    }
-    
+    // Show toggle on mobile screens
     if (window.innerWidth <= 991.98) {
-        if (toggleLeftSidebar) toggleLeftSidebar.style.display = 'block';
         if (toggleRightSidebar) toggleRightSidebar.style.display = 'block';
-    }
-
-    if (toggleLeftSidebar && leftSidebar && mobileOverlay) {
-        toggleLeftSidebar.addEventListener('click', function() {
-            leftSidebar.classList.toggle('show');
-            mobileOverlay.style.display = leftSidebar.classList.contains('show') ? 'block' : 'none';
-        });
     }
 
     if (toggleRightSidebar && rightSidebar && mobileOverlay) {
@@ -327,9 +275,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
     }
 
-    if (mobileOverlay && leftSidebar && rightSidebar) {
+    if (mobileOverlay && rightSidebar) {
         mobileOverlay.addEventListener('click', function() {
-            leftSidebar.classList.remove('show');
             rightSidebar.classList.remove('show');
             mobileOverlay.style.display = 'none';
         });
@@ -363,21 +310,21 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
     }
 
-    // Sidebar collapse functionality
-    const collapseLeftBtn = document.getElementById('collapse-left-sidebar');
+    // Sidebar collapse functionality (right sidebar only)
     const collapseRightBtn = document.getElementById('collapse-right-sidebar');
-    const leftSidebarContainer = document.getElementById('left-sidebar-container');
     const rightSidebarContainer = document.getElementById('right-sidebar-container');
-    
-    if (collapseLeftBtn && leftSidebarContainer) {
-        collapseLeftBtn.addEventListener('click', function() {
-            leftSidebarContainer.classList.toggle('collapsed');
-        });
-    }
     
     if (collapseRightBtn && rightSidebarContainer) {
         collapseRightBtn.addEventListener('click', function() {
             rightSidebarContainer.classList.toggle('collapsed');
+            
+            // Update collapse button icon
+            const icon = collapseRightBtn.querySelector('i');
+            if (rightSidebarContainer.classList.contains('collapsed')) {
+                icon.className = 'ri-sidebar-unfold-line';
+            } else {
+                icon.className = 'ri-sidebar-fold-line';
+            }
         });
     }
     
@@ -405,14 +352,16 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 // Handle window resize for mobile toggles
 window.addEventListener('resize', function() {
-    const toggleButtons = document.querySelectorAll('#toggle-left-sidebar, #toggle-right-sidebar');
+    const toggleRightSidebar = document.getElementById('toggle-right-sidebar');
+    const rightSidebar = document.getElementById('right-sidebar');
+    const mobileOverlay = document.getElementById('mobile-overlay');
+    
     if (window.innerWidth <= 991.98) {
-        toggleButtons.forEach(btn => btn.style.display = 'block');
+        if (toggleRightSidebar) toggleRightSidebar.style.display = 'block';
     } else {
-        toggleButtons.forEach(btn => btn.style.display = 'none');
-        document.getElementById('left-sidebar').classList.remove('show');
-        document.getElementById('right-sidebar').classList.remove('show');
-        document.getElementById('mobile-overlay').style.display = 'none';
+        if (toggleRightSidebar) toggleRightSidebar.style.display = 'none';
+        if (rightSidebar) rightSidebar.classList.remove('show');
+        if (mobileOverlay) mobileOverlay.style.display = 'none';
     }
 });
 </script>
