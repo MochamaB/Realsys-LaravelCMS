@@ -530,6 +530,29 @@ class LivePreviewController extends Controller
     <link rel="stylesheet" href="' . asset('assets/admin/css/live-designer/preview-helpers.css') . '">
     
     <!-- Preview Helper JS -->
-    <script src="' . asset('assets/admin/js/live-designer/preview-helpers.js') . '"></script>';
+    <script src="' . asset('assets/admin/js/live-designer/preview-helpers.js') . '"></script>
+    
+    <!-- Internal Preview Spacing -->
+    <style>
+        body {
+            padding: 15px !important;
+            margin: 0 !important;
+            min-height: calc(100vh - 30px) !important;
+        }
+        
+        /* Ensure proper spacing for section outlines */
+        section[data-section-id] {
+            margin: 8px 0;
+        }
+        
+        /* First and last section spacing */
+        section[data-section-id]:first-child {
+            margin-top: 0;
+        }
+        
+        section[data-section-id]:last-child {
+            margin-bottom: 0;
+        }
+    </style>';
     }
 }

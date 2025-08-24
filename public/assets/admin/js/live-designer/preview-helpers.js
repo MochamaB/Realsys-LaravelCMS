@@ -104,6 +104,7 @@
                 widget.setAttribute('data-widget-instance', instanceId);
                 widget.setAttribute('data-section-id', sectionId);
                 widget.setAttribute('data-widget-name', structureWidget.name);
+                widget.setAttribute('data-widget-icon', structureWidget.icon || 'ri-puzzle-line');
                 
                 console.log(`🎯 Enhanced widget "${structureWidget.name}" (instance: ${instanceId}, widget: ${widgetId})`);
             }
@@ -122,6 +123,14 @@
             
             // Click handler
             widget.addEventListener('click', function(e) {
+                // Check if click is on toolbar actions (in the future when we add real buttons)
+                if (e.target.closest('.preview-toolbar-action')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleToolbarAction(e.target, this);
+                    return;
+                }
+                
                 e.preventDefault();
                 e.stopPropagation();
                 selectWidget(
@@ -145,31 +154,27 @@
                 }
             });
             
-            // Hover effects
+            // Hover effects - using box-shadow now
             widget.addEventListener('mouseenter', function() {
                 if (!this.classList.contains('preview-highlighted')) {
-                    this.style.outline = '2px dashed #0d6efd';
-                    this.style.outlineOffset = '2px';
+                    this.style.boxShadow = '0 0 0 2px #0d6efd, 0 0 0 4px rgba(13, 110, 253, 0.2)';
                 }
             });
             
             widget.addEventListener('mouseleave', function() {
                 if (!this.classList.contains('preview-highlighted')) {
-                    this.style.outline = '';
-                    this.style.outlineOffset = '';
+                    this.style.boxShadow = '';
                 }
             });
             
-            // Focus effects
+            // Focus effects - using box-shadow
             widget.addEventListener('focus', function() {
-                this.style.outline = '3px solid #0d6efd';
-                this.style.outlineOffset = '2px';
+                this.style.boxShadow = '0 0 0 3px #0d6efd, 0 0 0 5px rgba(13, 110, 253, 0.3)';
             });
             
             widget.addEventListener('blur', function() {
                 if (!this.classList.contains('preview-highlighted')) {
-                    this.style.outline = '';
-                    this.style.outlineOffset = '';
+                    this.style.boxShadow = '';
                 }
             });
         });
@@ -331,16 +336,13 @@
             // Remove existing highlights
             document.querySelectorAll('.preview-highlighted').forEach(el => {
                 el.classList.remove('preview-highlighted');
-                el.style.outline = '';
-                el.style.outlineOffset = '';
+                el.style.boxShadow = '';
             });
             
             // Add highlight to selected widget
             widget.classList.add('preview-highlighted');
-            widget.style.outline = '3px solid #0d6efd';
-            widget.style.outlineOffset = '2px';
             
-            // Scroll into view
+            // Scroll into view with some top offset to account for toolbar
             widget.scrollIntoView({ 
                 behavior: 'smooth', 
                 block: 'center',
@@ -355,16 +357,13 @@
             // Remove existing highlights
             document.querySelectorAll('.preview-highlighted').forEach(el => {
                 el.classList.remove('preview-highlighted');
-                el.style.outline = '';
-                el.style.outlineOffset = '';
+                el.style.boxShadow = '';
             });
             
             // Add highlight to selected section
             section.classList.add('preview-highlighted');
-            section.style.outline = '3px solid #28a745';
-            section.style.outlineOffset = '2px';
             
-            // Scroll into view
+            // Scroll into view with some top offset to account for toolbar
             section.scrollIntoView({ 
                 behavior: 'smooth', 
                 block: 'center',
@@ -376,8 +375,7 @@
     function deselectAll() {
         document.querySelectorAll('.preview-highlighted').forEach(el => {
             el.classList.remove('preview-highlighted');
-            el.style.outline = '';
-            el.style.outlineOffset = '';
+            el.style.boxShadow = '';
         });
     }
     
@@ -528,5 +526,113 @@
             return null;
         }
     };
+    
+    // Toolbar Action Handlers
+    function handleToolbarAction(actionElement, targetElement) {
+        const action = actionElement.dataset.action;
+        const elementType = targetElement.dataset.previewWidget ? 'widget' : 'section';
+        const elementId = targetElement.dataset.previewWidget || targetElement.dataset.previewSection;
+        const elementName = targetElement.dataset.widgetName || targetElement.dataset.sectionName;
+        
+        console.log(`🔧 Toolbar action: ${action} on ${elementType} "${elementName}" (ID: ${elementId})`);
+        
+        switch (action) {
+            case 'edit':
+                if (elementType === 'widget') {
+                    // Trigger widget editor
+                    selectWidget(
+                        targetElement.dataset.previewWidget,
+                        targetElement.dataset.widgetId,
+                        targetElement.dataset.sectionId,
+                        targetElement.dataset.widgetName
+                    );
+                } else {
+                    // Trigger section editor
+                    selectSection(
+                        targetElement.dataset.previewSection,
+                        targetElement.dataset.sectionName
+                    );
+                }
+                break;
+                
+            case 'copy':
+                handleCopyElement(elementType, elementId, elementName);
+                break;
+                
+            case 'delete':
+                handleDeleteElement(elementType, elementId, elementName);
+                break;
+                
+            case 'move-up':
+            case 'move-down':
+                handleMoveElement(elementType, elementId, action);
+                break;
+                
+            case 'add-widget':
+                if (elementType === 'section') {
+                    handleAddWidget(elementId);
+                }
+                break;
+                
+            default:
+                console.warn(`Unknown toolbar action: ${action}`);
+        }
+    }
+    
+    function handleCopyElement(type, id, name) {
+        parent.postMessage({
+            type: 'toolbar-action',
+            data: { 
+                action: 'copy',
+                elementType: type,
+                elementId: id,
+                elementName: name
+            }
+        }, '*');
+        
+        console.log(`📋 Copy ${type}: ${name}`);
+    }
+    
+    function handleDeleteElement(type, id, name) {
+        if (confirm(`Are you sure you want to delete "${name}"?`)) {
+            parent.postMessage({
+                type: 'toolbar-action',
+                data: { 
+                    action: 'delete',
+                    elementType: type,
+                    elementId: id,
+                    elementName: name
+                }
+            }, '*');
+            
+            console.log(`🗑️ Delete ${type}: ${name}`);
+        }
+    }
+    
+    function handleMoveElement(type, id, direction) {
+        parent.postMessage({
+            type: 'toolbar-action',
+            data: { 
+                action: direction,
+                elementType: type,
+                elementId: id
+            }
+        }, '*');
+        
+        console.log(`📈 Move ${type} ${direction}: ${id}`);
+    }
+    
+    function handleAddWidget(sectionId) {
+        parent.postMessage({
+            type: 'toolbar-action',
+            data: { 
+                action: 'add-widget',
+                elementType: 'section',
+                elementId: sectionId
+            }
+        }, '*');
+        
+        console.log(`➕ Add widget to section: ${sectionId}`);
+    }
     
 })();

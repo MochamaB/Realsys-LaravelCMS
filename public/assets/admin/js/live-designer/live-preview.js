@@ -13,6 +13,7 @@ class LivePreview {
             previewIframe: null,
             pageStructureContainer: null,
             widgetEditorContainer: null,
+            skipPageStructure: false,
             ...options
         };
         
@@ -34,8 +35,12 @@ class LivePreview {
             // Setup iframe communication
             this.setupIframeCommunication();
             
-            // Load initial page structure
-            await this.loadPageStructure();
+            // Load initial page structure only if not skipped
+            if (!this.options.skipPageStructure && this.options.pageStructureContainer) {
+                await this.loadPageStructure();
+            } else {
+                console.log('📋 Skipping page structure loading (using direct preview interaction)');
+            }
             
             this.isInitialized = true;
             this.hideLoading();
@@ -232,19 +237,21 @@ class LivePreview {
             console.error('Failed to load page structure:', error);
             this.showMessage('Failed to load page structure', 'error');
             
-            // Show error in sidebar
-            this.options.pageStructureContainer.innerHTML = `
-                <div class="error-state text-center py-4">
-                    <div class="mb-3">
-                        <i class="ri-error-warning-line" style="font-size: 2rem; color: #dc3545;"></i>
+            // Show error in sidebar only if container exists
+            if (this.options.pageStructureContainer) {
+                this.options.pageStructureContainer.innerHTML = `
+                    <div class="error-state text-center py-4">
+                        <div class="mb-3">
+                            <i class="ri-error-warning-line" style="font-size: 2rem; color: #dc3545;"></i>
+                        </div>
+                        <h6>Failed to Load</h6>
+                        <p class="text-muted mb-2">Could not load page structure</p>
+                        <button class="btn btn-sm btn-outline-primary" onclick="livePreview.loadPageStructure()">
+                            Retry
+                        </button>
                     </div>
-                    <h6>Failed to Load</h6>
-                    <p class="text-muted mb-2">Could not load page structure</p>
-                    <button class="btn btn-sm btn-outline-primary" onclick="livePreview.loadPageStructure()">
-                        Retry
-                    </button>
-                </div>
-            `;
+                `;
+            }
         }
     }
     
@@ -252,7 +259,7 @@ class LivePreview {
      * Render page structure in sidebar
      */
     renderPageStructure() {
-        if (!this.pageStructure) return;
+        if (!this.pageStructure || !this.options.pageStructureContainer) return;
         
         let html = `
             <div class="page-structure">

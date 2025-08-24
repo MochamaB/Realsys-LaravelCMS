@@ -68,17 +68,18 @@
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    padding: 20px;
+    padding: 10px;
     overflow: auto;
     position: relative;
 }
 
 .preview-container {
     background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    overflow: visible;
     transition: all 0.3s ease;
+    position: relative;
 }
 
 .preview-container.device-desktop {
@@ -235,7 +236,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         csrfToken: '{{ csrf_token() }}',
         previewIframe: document.getElementById('preview-iframe'),
         pageStructureContainer: null, // No longer using page structure sidebar
-        widgetEditorContainer: document.getElementById('widget-editor-container')
+        widgetEditorContainer: document.getElementById('widget-editor-container'),
+        skipPageStructure: true // Skip loading page structure since we don't need it
     });
 
     // Check if all required classes are available
@@ -256,6 +258,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     const updateManager = new UpdateManager('{{ $apiBaseUrl }}', '{{ csrf_token() }}');
     const widgetFormManager = new WidgetFormManager(livePreview, updateManager);
     const devicePreview = new DevicePreview(document.getElementById('preview-container'));
+    
+    // Setup device preview keyboard shortcuts
+    devicePreview.setupKeyboardShortcuts();
 
     // Global references for debugging
     window.livePreview = livePreview;
@@ -288,14 +293,24 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 
     // Device preview controls
-    document.querySelectorAll('.device-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const device = this.dataset.device;
-            devicePreview.setDevice(device);
-            
-            // Update active button
-            document.querySelectorAll('.device-btn').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
+    document.querySelectorAll('input[name="preview-mode"]').forEach(input => {
+        input.addEventListener('change', function() {
+            if (this.checked) {
+                let device = 'desktop';
+                switch(this.id) {
+                    case 'desktop-mode':
+                        device = 'desktop';
+                        break;
+                    case 'tablet-mode':
+                        device = 'tablet';
+                        break;
+                    case 'mobile-mode':
+                        device = 'mobile';
+                        break;
+                }
+                devicePreview.setDevice(device);
+                console.log(`📱 Device switched to: ${device}`);
+            }
         });
     });
 

@@ -266,10 +266,20 @@ class DevicePreview {
         
         this.setDevice(nextDevice);
         
-        // Update UI buttons
-        document.querySelectorAll('.device-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.device === nextDevice);
-        });
+        // Update UI radio buttons
+        const deviceModeMap = {
+            'desktop': 'desktop-mode',
+            'tablet': 'tablet-mode', 
+            'mobile': 'mobile-mode'
+        };
+        
+        const radioId = deviceModeMap[nextDevice];
+        if (radioId) {
+            const radioButton = document.getElementById(radioId);
+            if (radioButton) {
+                radioButton.checked = true;
+            }
+        }
         
         return nextDevice;
     }
@@ -291,17 +301,17 @@ class DevicePreview {
                     case '1':
                         e.preventDefault();
                         this.setDevice('desktop');
-                        document.querySelector('[data-device="desktop"]')?.click();
+                        document.getElementById('desktop-mode').checked = true;
                         break;
                     case '2':
                         e.preventDefault();
                         this.setDevice('tablet');
-                        document.querySelector('[data-device="tablet"]')?.click();
+                        document.getElementById('tablet-mode').checked = true;
                         break;
                     case '3':
                         e.preventDefault();
                         this.setDevice('mobile');
-                        document.querySelector('[data-device="mobile"]')?.click();
+                        document.getElementById('mobile-mode').checked = true;
                         break;
                 }
             }
