@@ -31,7 +31,9 @@
                             </thead>
                             <tbody>
                                 @forelse($menus as $menu)
-                                <tr>
+                                <tr class="clickable-row" 
+                                    data-href="{{ route('admin.menus.show', $menu->id) }}"
+                                    style="cursor: pointer;">
                                     <td>{{ $menu->id }}</td>
                                     <td>{{ $menu->name }}</td>
                                     <td>{{ $menu->location }}</td>

@@ -144,6 +144,7 @@ class WidgetService
             $data['universal_classes'] = $universalStylingService->buildWidgetClasses($pageSectionWidget);
             $data['universal_styles'] = $universalStylingService->buildWidgetStyles($pageSectionWidget);
             $data['grid_attributes'] = $universalStylingService->buildWidgetGridAttributes($pageSectionWidget);
+            
         }
         
         // Add content data if this widget has content associations

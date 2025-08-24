@@ -123,15 +123,29 @@ class LivePreviewController extends Controller
         $settings = $instance->settings ?? [];
         $contentQuery = $instance->content_query ?? [];
         
-        // Flatten nested arrays to dot notation for form fields
+        // Safely flatten nested arrays for form fields
         $flattenedSettings = [];
         foreach ($settings as $key => $value) {
-            $flattenedSettings[$key] = is_array($value) ? json_encode($value) : (string)$value;
+            if (is_array($value)) {
+                // Handle repeater fields and complex structures
+                $flattenedSettings[$key] = json_encode($value);
+            } elseif (is_null($value)) {
+                $flattenedSettings[$key] = '';
+            } else {
+                $flattenedSettings[$key] = (string)$value;
+            }
         }
         
         $flattenedContentQuery = [];
         foreach ($contentQuery as $key => $value) {
-            $flattenedContentQuery[$key] = is_array($value) ? json_encode($value) : (string)$value;
+            if (is_array($value)) {
+                // Handle content query arrays
+                $flattenedContentQuery[$key] = json_encode($value);
+            } elseif (is_null($value)) {
+                $flattenedContentQuery[$key] = '';
+            } else {
+                $flattenedContentQuery[$key] = (string)$value;
+            }
         }
         
         $fieldValues = array_merge(
@@ -391,6 +405,9 @@ class LivePreviewController extends Controller
     {
         // Get the rendered page content using existing template system
         $pageContent = $this->templateRenderer->renderPage($page);
+        
+        // Inject preview data using the existing page structure data
+        $pageContent = $this->injectPreviewDataFromStructure($page, $pageContent);
 
         // Inject preview helper assets
         $previewAssets = $this->getPreviewAssets();
@@ -408,6 +425,9 @@ class LivePreviewController extends Controller
     
     <!-- Preview Helper Assets -->
     ' . $previewAssets . '
+    
+    <!-- Preview Structure Data -->
+    ' . $this->getPreviewStructureScript($page) . '
 </head>
 <body>
     ' . $pageContent . '
@@ -415,6 +435,57 @@ class LivePreviewController extends Controller
 </html>';
 
         return $html;
+    }
+
+    /**
+     * Inject preview data using simple approach that leverages existing page structure
+     * 
+     * @param Page $page
+     * @param string $html
+     * @return string
+     */
+    private function injectPreviewDataFromStructure(Page $page, string $html): string
+    {
+        // The universal components already generate the correct data attributes!
+        // We just need to add minimal preview-specific attributes for the JavaScript
+        
+        $patterns = [
+            // Add preview attributes to existing section elements
+            '/<section([^>]*data-section-id="[^"]*"[^>]*)>/i' => '<section$1 data-preview-type="section">',
+            
+            // Add preview attributes to existing widget elements  
+            '/<div([^>]*data-page-section-widget-id="[^"]*"[^>]*)>/i' => '<div$1 data-preview-type="widget" style="position: relative; cursor: pointer; outline: 1px dashed transparent;" onmouseover="this.style.outline=\'1px dashed #007bff\'" onmouseout="this.style.outline=\'1px dashed transparent\'">',
+        ];
+        
+        foreach ($patterns as $pattern => $replacement) {
+            $html = preg_replace($pattern, $replacement, $html);
+        }
+        
+        return $html;
+    }
+    
+    /**
+     * Generate JavaScript that contains page structure data for preview
+     * 
+     * @param Page $page
+     * @return string
+     */
+    private function getPreviewStructureScript(Page $page): string
+    {
+        // Use the existing page structure logic
+        $structureResponse = $this->getPageStructure($page);
+        $structureData = $structureResponse->getData(true);
+        
+        if ($structureData['success']) {
+            $pageStructure = $structureData['data'];
+            
+            return '<script>
+                window.previewPageStructure = ' . json_encode($pageStructure) . ';
+                console.log("🏗️ Preview page structure loaded:", window.previewPageStructure);
+            </script>';
+        }
+        
+        return '<script>window.previewPageStructure = null;</script>';
     }
 
     /**

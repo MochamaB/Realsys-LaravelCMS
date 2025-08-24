@@ -62,10 +62,10 @@ class LivePreview {
             
             switch (type) {
                 case 'widget-selected':
-                    this.onWidgetSelected(data.widgetId);
+                    this.onWidgetSelected(data);
                     break;
                 case 'section-selected':
-                    this.onSectionSelected(data.sectionId);
+                    this.onSectionSelected(data);
                     break;
             }
         });
@@ -366,22 +366,28 @@ class LivePreview {
     /**
      * Handle widget selection
      */
-    async onWidgetSelected(widgetId) {
+    async onWidgetSelected(widgetData) {
         try {
+            // Extract data from the new structure
+            const { instanceId, widgetId, sectionId, widgetName } = widgetData;
+            
+            console.log(`🎯 Widget selected: ${widgetName} (instance: ${instanceId}, widget: ${widgetId}, section: ${sectionId})`);
+            
             // Update UI selection
             document.querySelectorAll('.widget-item').forEach(item => {
                 item.classList.remove('selected');
             });
-            const widget = document.querySelector(`[data-widget-id="${widgetId}"]`);
+            const widget = document.querySelector(`[data-widget-id="${instanceId}"]`);
             if (widget) widget.classList.add('selected');
             
-            // Highlight in preview
-            this.highlightWidgetInPreview(widgetId);
+            // Highlight in preview using the instance ID
+            this.highlightWidgetInPreview(instanceId);
             
-            // Load widget editor form
-            await this.loadWidgetEditor(widgetId);
+            // Load widget editor form using the correct instance ID
+            await this.loadWidgetEditor(instanceId);
             
-            this.selectedWidget = widgetId;
+            // Store selected widget data for updates
+            this.selectedWidget = widgetData;
             
         } catch (error) {
             console.error('Error selecting widget:', error);

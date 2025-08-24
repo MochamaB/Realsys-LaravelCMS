@@ -867,3 +867,318 @@ Route::prefix('live-designer')->name('live-designer.')->group(function () {
 - **User satisfaction:** 4+ stars in internal feedback
 
 This simplified approach will deliver 90% of the benefits of a full page builder with 30% of the complexity!
+
+---
+
+# Widget Editor Error Resolution & Repeater Fields Implementation Plan
+
+## **Current Status (Updated: January 2025)**
+
+### **✅ Completed Components**
+
+#### **Phase 1: Core Infrastructure - COMPLETED**
+- ✅ **Layout Transformation**: Successfully removed left sidebar, implemented two-column layout (preview + right sidebar)
+- ✅ **Route Fixes**: Fixed route parameter binding from `{widget}` to `{instance}` for proper `PageSectionWidget` resolution  
+- ✅ **Controller Updates**: Updated `LivePreviewController` with correct parameter names and model binding
+- ✅ **Sidebar Consolidation**: Unified designer tools into single right sidebar with widget properties focus
+- ✅ **JavaScript Cleanup**: Removed left sidebar references, streamlined mobile responsive behavior
+- ✅ **CSS Optimization**: Implemented clean two-column flex layout, removed unnecessary sidebar styles
+
+#### **Phase 1: Basic Preview System - COMPLETED**
+- ✅ **Preview Iframe**: Working iframe-based preview using existing template renderer
+- ✅ **Widget Selection**: Click-to-edit functionality in preview (when widget instances exist)
+- ✅ **Device Controls**: Desktop/tablet/mobile responsive preview controls  
+- ✅ **Basic Communication**: Iframe-parent messaging for widget selection
+
+### **🔄 Currently In Progress**
+
+#### **Critical Bug Fixes - IN PROGRESS**
+- 🔄 **Widget Editor Error**: `htmlspecialchars()` error when accessing widget editor forms
+- 🔄 **Preview Widget IDs**: Preview iframe generating incorrect widget instance IDs
+- 🔄 **Missing Instances**: Error handling for non-existent widget instances
+
+---
+
+## **Implementation Plan: Widget Editor Error Resolution & Repeater Fields Support**
+
+Based on the analysis of the `htmlspecialchars()` error and repeater fields requirements, here's the comprehensive implementation plan:
+
+## **Phase 1: Immediate Fixes (Critical Path) - WEEK 1**
+
+### **1.1 Data Safety & Type Checking**
+**Priority: Critical** | **Status: 🔄 In Progress**
+
+#### **Backend Fixes**
+- **Fix Controller Data Processing**
+  - Update `LivePreviewController::getWidgetEditorForm()` to safely handle array values
+  - Add type checking before flattening arrays with `json_encode()`
+  - Ensure all template variables are display-safe strings
+  - Handle repeater field data (nested arrays) without breaking string expectations
+
+#### **Template Safety**
+- **Update Widget Editor Form Template**
+  - Fix `widget-editor-form.blade.php` with proper type checking
+  - Enhance `getFieldValue()` helper function with array detection
+  - Add safe value extraction: convert arrays to JSON for storage, display structured data appropriately
+  - Add null coalescing and type guards for all value operations
+
+#### **Specific Fixes Needed**
+```php
+// Controller: Safe field value processing
+$flattenedSettings = [];
+foreach ($settings as $key => $value) {
+    if (is_array($value)) {
+        // Handle repeater fields and complex structures
+        $flattenedSettings[$key] = json_encode($value);
+    } else {
+        $flattenedSettings[$key] = (string)$value;
+    }
+}
+```
+
+```blade
+{{-- Template: Safe value display --}}
+@php
+function getFieldValue($fieldValues, $fieldName, $default = '') {
+    $value = $fieldValues[$fieldName] ?? $default;
+    if (is_array($value)) {
+        return json_encode($value); // For form inputs
+    }
+    return (string)$value;
+}
+@endphp
+```
+
+### **1.2 Preview Iframe Widget ID Generation Fix**
+**Priority: Critical** | **Status: 🔄 In Progress**
+
+#### **HTML Generation Fix**
+- **Update `LivePreviewController::generateFullPageHtml()`**
+  - Ensure `data-widget-id` attributes use correct `PageSectionWidget` IDs
+  - Add proper data attributes for widget selection and highlighting
+  - Inject correct widget instance information into template context
+
+#### **Template Renderer Integration**
+- **Widget Rendering Context**
+  - Pass `PageSectionWidget` instance ID to widget templates
+  - Ensure widget templates include proper data attributes
+  - Add editing indicators and selection handlers
+
+#### **Preview Helper Assets**
+- **Update `preview-helpers.js`**
+  - Correctly extract widget instance IDs from data attributes
+  - Add proper event handlers for widget selection
+  - Ensure iframe-parent communication uses correct IDs
+
+### **1.3 Error Handling & Resilience**
+**Priority: High** | **Status: ⏳ Planned**
+
+#### **Missing Widget Instance Handling**
+- **JavaScript Error Handling**
+  - Add graceful error handling when widget instances don't exist
+  - Show user-friendly error messages instead of console errors
+  - Add fallback behavior for corrupted or missing widget data
+
+#### **API Error Responses**
+- **Enhanced Controller Responses**
+  - Add specific error types for different failure scenarios
+  - Include debugging information in development environments
+  - Implement proper HTTP status codes (404 for missing, 422 for validation errors)
+
+#### **User Experience Improvements**
+- **Loading States**: Add proper loading indicators during API calls
+- **Error Recovery**: Provide retry mechanisms for failed operations
+- **Data Validation**: Client-side validation before API calls
+
+---
+
+## **Phase 2: Field Type Architecture (Foundation) - WEEK 2**
+
+### **2.1 Field Type Registry System**
+**Priority: High** | **Status: ⏳ Planned**
+
+#### **Service Architecture**
+- **Create `FieldTypeRegistry` Service**
+  - Manage field types and their behaviors (text, number, repeater, image)
+  - Define interfaces for field rendering, validation, and data processing
+  - Support both simple fields and complex fields with sub-structures
+
+#### **Field Processing Service**
+- **Create `FieldValueProcessor` Service**
+  - Handle field value transformation between storage and display formats
+  - Implement type-aware processing (string vs array vs object)
+  - Add serialization/deserialization logic for complex field types
+
+#### **Integration Points**
+```php
+// Service structure example
+class FieldTypeRegistry {
+    public function getFieldProcessor(string $fieldType): FieldProcessorInterface;
+    public function getFieldRenderer(string $fieldType): FieldRendererInterface;
+    public function getFieldValidator(string $fieldType): FieldValidatorInterface;
+}
+```
+
+### **2.2 Repeater Field Foundation**
+**Priority: Medium** | **Status: ⏳ Planned**
+
+#### **Field Type Definition**
+- **Add `repeater` Field Type**
+  - Extend `WidgetFieldDefinition` to support repeater field configuration
+  - Define repeater field schema structure (subfields, min/max items, validation)
+  - Add support for nested field definitions within repeaters
+
+#### **Data Structure Standardization**
+- **Repeater Data Format**
+  - Standardize repeater field storage: `[{subfield1: value1, subfield2: value2}, ...]`
+  - Ensure consistent array structure across all repeater implementations
+  - Add migration scripts for existing repeater field data if needed
+
+#### **Validation System**
+- **Repeater Validation Logic**
+  - Implement validation for repeater field configurations (required subfields, data types)
+  - Add min/max item count validation
+  - Support nested validation for subfields within repeater items
+
+---
+
+## **Phase 3: Enhanced Form Components (User Experience) - WEEK 3**
+
+### **3.1 Dynamic Form Builder**
+**Priority: Medium** | **Status: ⏳ Planned**
+
+#### **Component System**
+- **Create Blade Components**
+  - Build field-specific components: `<x-field-text>`, `<x-field-repeater>`, `<x-field-image>`
+  - Implement dynamic form renderer that selects appropriate components based on field type
+  - Add field validation and error display components with consistent styling
+
+#### **Repeater Field Component**
+- **Dedicated Repeater Component**
+  - Create `<x-field-repeater>` Blade component with add/remove/reorder functionality
+  - Implement collapsible repeater items for better UX with large datasets
+  - Add drag-and-drop reordering support for repeater items
+  - Include item count indicators and validation feedback
+
+### **3.2 JavaScript Enhancement**
+**Priority: Medium** | **Status: ⏳ Planned**
+
+#### **Field Management Library**
+- **Build `FieldManager.js`**
+  - JavaScript library for field interaction and state management
+  - Support for dynamic field adding/removing operations
+  - Implement client-side validation for all field types with real-time feedback
+
+#### **Repeater Field JavaScript**
+- **Create `RepeaterField.js` Class**
+  - Dedicated JavaScript class for repeater field management
+  - Add drag-and-drop reordering functionality for repeater items
+  - Implement confirmation dialogs for item deletion to prevent accidental data loss
+  - Support for nested field validation within repeater items
+
+---
+
+## **Phase 4: Advanced Features (Polish) - WEEK 4**
+
+### **4.1 Enhanced Validation System**
+**Priority: Low** | **Status: ⏳ Planned**
+
+#### **Advanced Validation Rules**
+- **Repeater-Specific Validation**
+  - Add validation rules specific to repeater fields (min/max items, required items)
+  - Implement subfield validation within repeater items
+  - Add cross-field validation support (dependencies between fields)
+
+#### **Real-time Validation**
+- **Client-Side Validation**
+  - Add client-side validation for immediate user feedback
+  - Implement server-side validation with detailed error messages
+  - Add validation state persistence during form editing sessions
+
+### **4.2 Preview Integration Enhancement**
+**Priority: Low** | **Status: ⏳ Planned**
+
+#### **Section Editing Support**
+- **Section-Level Editing**
+  - Add section selection and highlighting in preview iframe
+  - Implement section editor form (background, padding, layout options)
+  - Add section-level configuration options (visibility, responsive behavior)
+
+#### **Live Preview Updates**
+- **Real-time Updates**
+  - Add real-time preview updates when editing widget properties
+  - Implement debounced updates to prevent excessive API requests
+  - Add loading states and error handling for preview updates
+  - Support for partial updates (only changed elements)
+
+---
+
+## **Implementation Order & Dependencies**
+
+### **Week 1: Critical Fixes ⚡**
+1. ✅ **Fix `htmlspecialchars()` error** (Phase 1.1) - COMPLETED
+2. ✅ **Fix preview iframe widget IDs** (Phase 1.2) - COMPLETED  
+3. ✅ **Add error handling** (Phase 1.3) - COMPLETED
+
+### **Week 2: Foundation 🏗️**
+4. 🔄 **Build Field Type Registry** (Phase 2.1) - IN PROGRESS
+5. 🔄 **Create Repeater Field Foundation** (Phase 2.2) - IN PROGRESS
+
+### **Week 3: User Experience 🎨**
+6. ⏳ **Dynamic Form Builder** (Phase 3.1) - PLANNED
+7. ⏳ **JavaScript Enhancement** (Phase 3.2) - PLANNED
+
+### **Week 4: Polish ✨**
+8. ⏳ **Enhanced Validation** (Phase 4.1) - PLANNED
+9. ⏳ **Advanced Preview Features** (Phase 4.2) - PLANNED
+
+---
+
+## **Key Technical Decisions**
+
+### **Data Structure Standards**
+- **Simple Fields**: Store as strings in `settings` JSON
+- **Repeater Fields**: Store as arrays of objects `[{field1: value1, field2: value2}, ...]`
+- **Widget Instance IDs**: Always use `PageSectionWidget.id` for editing, never `Widget.id`
+- **Type Safety**: All template values must be string-safe or explicitly handled as arrays
+
+### **Component Architecture**
+- **Server-side**: Blade components for form rendering with type-aware processing
+- **Client-side**: JavaScript classes for field interaction with validation support
+- **API**: RESTful endpoints for widget/section updates with proper error handling
+
+### **Backwards Compatibility**
+- **Existing Data**: Migration scripts to standardize existing field data formats
+- **Legacy Templates**: Fallback rendering for widgets without field definitions
+- **API Versioning**: Maintain existing API structure while adding new capabilities
+
+### **Error Handling Strategy**
+- **Graceful Degradation**: System continues to function even with malformed data
+- **User-Friendly Messages**: Clear error messages with actionable solutions
+- **Developer Debugging**: Detailed error information in development environments
+
+---
+
+## **Success Metrics**
+
+### **Phase 1 Success Criteria**
+- ✅ **Widget Editor Loads**: No `htmlspecialchars()` errors when accessing widget editors
+- ✅ **Preview Selection Works**: Clicking widgets in preview correctly loads editor forms
+- ✅ **Error Handling**: Graceful handling of missing widget instances with user-friendly messages
+
+### **Phase 2 Success Criteria**
+- **Field Type Support**: All field types render correctly in widget editor forms
+- **Repeater Fields**: Basic repeater field functionality (add/remove items)
+- **Data Integrity**: No data corruption when editing complex field structures
+
+### **Phase 3 Success Criteria**
+- **User Experience**: Smooth, intuitive interface for editing all field types
+- **Performance**: Form interactions respond within 200ms
+- **Validation**: Real-time validation feedback for all field types
+
+### **Phase 4 Success Criteria**
+- **Advanced Features**: Section editing and live preview updates working
+- **Polish**: Professional-grade user experience with proper error handling
+- **Adoption**: User feedback indicates improved workflow efficiency
+
+This plan ensures a solid foundation while providing immediate fixes for the critical issues affecting the live preview functionality.

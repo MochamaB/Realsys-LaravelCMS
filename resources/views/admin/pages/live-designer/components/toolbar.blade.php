@@ -1,5 +1,5 @@
 <!-- Live Designer Toolbar -->
-<div class="toolbar d-sm-flex align-items-center justify-content-between bg-galaxy-transparent mb-0 ms-0 p-3">
+<div class="page-title-box d-sm-flex align-items-center justify-content-between bg-galaxy-transparent mb-0 ms-0 p-3">
     <div class="d-flex align-items-center">
         <!-- Toggle Right Sidebar (Mobile Only) -->
         <button class="btn btn-outline-secondary me-3" id="toggle-right-sidebar" title="Toggle Properties Panel" style="display: none;">

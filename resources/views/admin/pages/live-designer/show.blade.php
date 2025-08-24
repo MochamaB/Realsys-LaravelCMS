@@ -158,10 +158,15 @@
 @endsection
 
 @section('content')
-<div class="simple-live-designer">
+<div class="container-fluid h-100 p-0">
+     <!-- Toolbar -->
+     <div class="row">
+        <div class="col-12 p-0">
+        @include('admin.pages.live-designer.components.toolbar')
+        </div>
+    </div>
     <!-- Toolbar -->
-    @include('admin.pages.live-designer.components.toolbar')
-    
+  
     <!-- Main Content -->
     <div class="designer-content">
         <!-- Preview Area -->
