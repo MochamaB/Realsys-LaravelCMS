@@ -557,6 +557,205 @@ class SectionManager {
             }
         }
     }
+
+    // =====================================================================
+    // HYBRID: RENDERED CONTENT METHODS (Live Preview Integration)
+    // =====================================================================
+
+    /**
+     * Render section using pre-rendered HTML (Hybrid Approach)
+     * This method works with rendered content from the API instead of building from scratch
+     */
+    renderSectionWithContent(section) {
+        try {
+            console.log('🎨 Rendering section with rendered content:', section.id, section.template_section?.name);
+            
+            // Store section data
+            this.sections.set(section.id, section);
+            
+            // Create wrapper element for GridStack compatibility
+            const sectionWrapper = this.createRenderedSectionWrapper(section);
+            this.sectionElements.set(section.id, sectionWrapper);
+            
+            // Add to GridStack if available
+            if (this.gridManager && this.gridManager.grid) {
+                this.addRenderedSectionToGrid(section, sectionWrapper);
+            } else {
+                this.addRenderedSectionToContainer(sectionWrapper);
+            }
+            
+            // Attach section events for editing
+            this.attachRenderedSectionEvents(sectionWrapper, section);
+            
+            console.log('✅ Section rendered with content:', section.id);
+            return sectionWrapper;
+            
+        } catch (error) {
+            console.error('❌ Error rendering section with content:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Create wrapper for rendered section content
+     */
+    createRenderedSectionWrapper(section) {
+        const sectionName = section.template_section?.name || `Section ${section.id}`;
+        const sectionType = section.template_section?.type || 'default';
+        
+        const wrapper = document.createElement('div');
+        wrapper.className = 'grid-section-wrapper';
+        wrapper.setAttribute('data-section-id', section.id);
+        wrapper.setAttribute('data-section-type', sectionType);
+        wrapper.id = `section-${section.id}`;
+        
+        wrapper.innerHTML = `
+            <div class="section-controls d-flex justify-content-between align-items-center p-2 bg-light border-bottom">
+                <div class="section-info">
+                    <span class="section-name fw-bold">${sectionName}</span>
+                    <span class="widget-count text-muted ms-2">${section.widgets?.length || 0} widgets</span>
+                </div>
+                <div class="section-actions">
+                    <button class="btn btn-sm btn-outline-primary me-1" onclick="pageBuilder.editSection(${section.id})" title="Edit Section">
+                        <i class="ri-edit-line"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary me-1" onclick="pageBuilder.addWidgetToSection(${section.id})" title="Add Widget">
+                        <i class="ri-add-line"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="pageBuilder.deleteSection(${section.id})" title="Delete Section">
+                        <i class="ri-delete-line"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="section-content">
+                ${section.rendered_html || '<div class="empty-section p-4 text-center text-muted">No content</div>'}
+            </div>
+        `;
+        
+        return wrapper;
+    }
+
+    /**
+     * Add rendered section to GridStack
+     */
+    addRenderedSectionToGrid(section, sectionWrapper) {
+        if (!this.gridManager || !this.gridManager.grid) {
+            console.warn('⚠️ GridStack not available for section:', section.id);
+            return;
+        }
+
+        const gridOptions = {
+            x: section.grid_position?.x || 0,
+            y: section.grid_position?.y || 0,
+            w: section.grid_position?.w || 12,
+            h: section.grid_position?.h || 4,
+            id: `section-${section.id}`,
+            content: sectionWrapper.outerHTML
+        };
+
+        try {
+            this.gridManager.grid.addWidget(gridOptions);
+            console.log('✅ Section added to GridStack:', section.id);
+        } catch (error) {
+            console.error('❌ Failed to add section to GridStack:', error);
+            this.addRenderedSectionToContainer(sectionWrapper);
+        }
+    }
+
+    /**
+     * Add rendered section to container (fallback)
+     */
+    addRenderedSectionToContainer(sectionWrapper) {
+        const container = document.getElementById('gridStackContainer') || 
+                         document.querySelector('.grid-stack') ||
+                         document.querySelector('#canvasArea');
+        
+        if (container) {
+            container.appendChild(sectionWrapper);
+            console.log('✅ Section added to container (fallback)');
+        } else {
+            console.error('❌ No container found for section');
+        }
+    }
+
+    /**
+     * Attach events to rendered section
+     */
+    attachRenderedSectionEvents(sectionWrapper, section) {
+        // Double-click to edit
+        sectionWrapper.addEventListener('dblclick', () => {
+            this.editSection(section.id);
+        });
+
+        // Context menu for advanced options
+        sectionWrapper.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            this.showSectionContextMenu(e, section.id);
+        });
+
+        // Hover effects
+        sectionWrapper.addEventListener('mouseenter', () => {
+            sectionWrapper.classList.add('section-hover');
+        });
+
+        sectionWrapper.addEventListener('mouseleave', () => {
+            sectionWrapper.classList.remove('section-hover');
+        });
+    }
+
+    /**
+     * Edit section (trigger modal or inline editing)
+     */
+    editSection(sectionId) {
+        console.log('✏️ Edit section:', sectionId);
+        
+        // Dispatch event for main controller to handle
+        document.dispatchEvent(new CustomEvent('pagebuilder:edit-section', {
+            detail: { sectionId }
+        }));
+    }
+
+    /**
+     * Show context menu for section
+     */
+    showSectionContextMenu(event, sectionId) {
+        console.log('📋 Show context menu for section:', sectionId);
+        // TODO: Implement context menu
+    }
+
+    /**
+     * Refresh rendered section content
+     */
+    async refreshSectionContent(sectionId) {
+        try {
+            console.log('🔄 Refreshing section content:', sectionId);
+            
+            const response = await this.api.getRenderedSection(sectionId);
+            
+            if (response.success && response.data) {
+                const updatedSection = response.data;
+                
+                // Update stored section
+                this.sections.set(sectionId, updatedSection);
+                
+                // Update DOM element
+                const sectionWrapper = this.sectionElements.get(sectionId);
+                if (sectionWrapper) {
+                    const contentDiv = sectionWrapper.querySelector('.section-content');
+                    if (contentDiv) {
+                        contentDiv.innerHTML = updatedSection.rendered_html || '<div class="empty-section p-4 text-center text-muted">No content</div>';
+                    }
+                }
+                
+                console.log('✅ Section content refreshed:', sectionId);
+                return updatedSection;
+            }
+            
+        } catch (error) {
+            console.error('❌ Error refreshing section content:', error);
+            throw error;
+        }
+    }
 }
 
 // Export for global use

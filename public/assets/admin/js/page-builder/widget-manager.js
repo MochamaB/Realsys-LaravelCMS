@@ -610,6 +610,238 @@ class WidgetManager {
     getAvailableWidget(widgetId) {
         return this.availableWidgets.get(widgetId);
     }
+
+    // =====================================================================
+    // HYBRID: WIDGET MANAGEMENT WITH RENDERED CONTENT (Live Preview Integration)
+    // =====================================================================
+
+    /**
+     * Add widget to section and refresh with rendered content
+     * This integrates with the hybrid approach using actual widget rendering
+     */
+    async addWidgetWithRenderedContent(sectionId, widgetId, options = {}) {
+        try {
+            console.log('🎨 Adding widget with rendered content:', { sectionId, widgetId, options });
+            
+            // Create the widget using existing API
+            const newWidget = await this.createWidget(sectionId, widgetId, options);
+            
+            if (newWidget) {
+                // Refresh the entire section with new rendered content
+                await this.refreshSectionWithRenderedContent(sectionId);
+                
+                console.log('✅ Widget added and section content refreshed');
+                return newWidget;
+            }
+            
+        } catch (error) {
+            console.error('❌ Error adding widget with rendered content:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Refresh section with rendered content after widget changes
+     */
+    async refreshSectionWithRenderedContent(sectionId) {
+        try {
+            console.log('🔄 Refreshing section with rendered content:', sectionId);
+            
+            // Use the section manager's refresh method
+            if (this.sectionManager && this.sectionManager.refreshSectionContent) {
+                const refreshedSection = await this.sectionManager.refreshSectionContent(sectionId);
+                
+                // Emit event to notify other components
+                document.dispatchEvent(new CustomEvent('pagebuilder:section-content-refreshed', {
+                    detail: { sectionId, section: refreshedSection }
+                }));
+                
+                return refreshedSection;
+            } else {
+                console.warn('⚠️ Section manager not available for content refresh');
+            }
+            
+        } catch (error) {
+            console.error('❌ Error refreshing section with rendered content:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Handle widget drop with hybrid rendering (like Live Preview)
+     */
+    async handleWidgetDropWithRendering(sectionId, widgetId, dropPosition = {}) {
+        try {
+            console.log('🎯 Widget drop with rendering:', { sectionId, widgetId, dropPosition });
+            
+            const availableWidget = this.availableWidgets.get(parseInt(widgetId));
+            if (!availableWidget) {
+                throw new Error('Widget not found in available widgets');
+            }
+            
+            // Create widget with rendered content refresh
+            await this.addWidgetWithRenderedContent(sectionId, widgetId, {
+                grid_x: dropPosition.x || 0,
+                grid_y: dropPosition.y || 0,
+                grid_w: dropPosition.w || 6,
+                grid_h: dropPosition.h || 3,
+                settings: availableWidget.default_settings || {}
+            });
+            
+            console.log('✅ Widget dropped and rendered successfully');
+            
+            // Show success notification
+            this.showWidgetAddedNotification(availableWidget.name);
+            
+        } catch (error) {
+            console.error('❌ Error handling widget drop with rendering:', error);
+            alert('Failed to add widget. Please try again.');
+        }
+    }
+
+    /**
+     * Edit widget and refresh content (connects to Live Preview editing)
+     */
+    async editWidgetWithRendering(widgetId) {
+        try {
+            console.log('✏️ Edit widget with rendering:', widgetId);
+            
+            const widget = this.getWidget(widgetId);
+            if (!widget) {
+                throw new Error('Widget not found');
+            }
+            
+            // Emit event for widget editor modal (similar to Live Preview)
+            document.dispatchEvent(new CustomEvent('pagebuilder:edit-widget', {
+                detail: { 
+                    widgetId: widgetId, 
+                    widget: widget,
+                    onSave: (updatedWidget) => {
+                        this.handleWidgetUpdated(updatedWidget);
+                    }
+                }
+            }));
+            
+        } catch (error) {
+            console.error('❌ Error editing widget:', error);
+            alert('Failed to open widget editor. Please try again.');
+        }
+    }
+
+    /**
+     * Handle widget updated and refresh section content
+     */
+    async handleWidgetUpdated(updatedWidget) {
+        try {
+            console.log('🔄 Widget updated, refreshing content:', updatedWidget);
+            
+            // Update stored widget
+            this.widgets.set(updatedWidget.id, updatedWidget);
+            
+            // Refresh section content
+            const sectionId = updatedWidget.page_section_id || updatedWidget.section_id;
+            if (sectionId) {
+                await this.refreshSectionWithRenderedContent(sectionId);
+            }
+            
+            // Show success notification
+            this.showWidgetUpdatedNotification(updatedWidget.widget_name || 'Widget');
+            
+        } catch (error) {
+            console.error('❌ Error handling widget update:', error);
+        }
+    }
+
+    /**
+     * Delete widget and refresh section content
+     */
+    async deleteWidgetWithRendering(widgetId) {
+        try {
+            console.log('🗑️ Deleting widget with rendering:', widgetId);
+            
+            const widget = this.getWidget(widgetId);
+            if (!widget) {
+                throw new Error('Widget not found');
+            }
+            
+            if (!confirm(`Are you sure you want to delete "${widget.widget_name || 'this widget'}"?`)) {
+                return;
+            }
+            
+            // Delete widget using existing API
+            await this.deleteWidget(widgetId);
+            
+            // Refresh section content
+            const sectionId = widget.page_section_id || widget.section_id;
+            if (sectionId) {
+                await this.refreshSectionWithRenderedContent(sectionId);
+            }
+            
+            console.log('✅ Widget deleted and section refreshed');
+            
+        } catch (error) {
+            console.error('❌ Error deleting widget:', error);
+            alert('Failed to delete widget. Please try again.');
+        }
+    }
+
+    /**
+     * Show widget added notification
+     */
+    showWidgetAddedNotification(widgetName) {
+        // TODO: Implement toast notification system
+        console.log(`✅ Widget "${widgetName}" added successfully`);
+    }
+
+    /**
+     * Show widget updated notification
+     */
+    showWidgetUpdatedNotification(widgetName) {
+        // TODO: Implement toast notification system
+        console.log(`✅ Widget "${widgetName}" updated successfully`);
+    }
+
+    /**
+     * Initialize drag and drop from widget library (enhanced for hybrid approach)
+     */
+    initializeDragAndDrop() {
+        console.log('🎯 Initializing enhanced drag and drop for widget library...');
+        
+        // This method will be called by the widget library to setup drag events
+        document.addEventListener('pagebuilder:widget-drag-start', (e) => {
+            this.handleWidgetDragStart(e.detail);
+        });
+        
+        document.addEventListener('pagebuilder:widget-drag-end', (e) => {
+            this.handleWidgetDragEnd(e.detail);
+        });
+        
+        console.log('✅ Enhanced widget drag and drop initialized');
+    }
+
+    /**
+     * Handle widget drag start
+     */
+    handleWidgetDragStart(dragData) {
+        console.log('🎯 Widget drag started:', dragData);
+        // TODO: Show drop zones, visual feedback
+    }
+
+    /**
+     * Handle widget drag end
+     */
+    handleWidgetDragEnd(dragData) {
+        console.log('🎯 Widget drag ended:', dragData);
+        
+        if (dragData.dropped && dragData.sectionId) {
+            // Use enhanced drop handler with rendering
+            this.handleWidgetDropWithRendering(
+                dragData.sectionId, 
+                dragData.widgetId, 
+                dragData.position
+            );
+        }
+    }
 }
 
 // Export for global use

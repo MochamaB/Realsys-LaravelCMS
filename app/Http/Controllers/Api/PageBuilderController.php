@@ -7,636 +7,449 @@ use App\Models\Page;
 use App\Models\PageSection;
 use App\Models\PageSectionWidget;
 use App\Models\Widget;
-use App\Models\TemplateSection;
-use App\Services\ThemeManager;
-use App\Services\SectionTemplateService;
-use App\Services\WidgetRenderingService;
+use App\Services\TemplateRenderer;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Log;
-use Exception;
 
 /**
- * GridStack Page Builder API Controller
+ * Page Builder API Controller
  * 
- * Focused controller for GridStack page builder functionality.
- * Contains only the essential 14 methods needed for core GridStack operations.
+ * Based on LivePreviewController pattern for consistent rendering.
+ * Handles JSON API responses for the page builder system.
  */
 class PageBuilderController extends Controller
 {
-    protected $themeManager;
-    protected $sectionTemplateService;
-    protected $widgetRenderingService;
+    protected $templateRenderer;
 
-    public function __construct(
-        ThemeManager $themeManager,
-        SectionTemplateService $sectionTemplateService,
-        WidgetRenderingService $widgetRenderingService
-    ) {
-        $this->themeManager = $themeManager;
-        $this->sectionTemplateService = $sectionTemplateService;
-        $this->widgetRenderingService = $widgetRenderingService;
-    }
-
-    // =====================================================================
-    // 1. PAGE SECTIONS (5 methods)
-    // =====================================================================
-
-    /**
-     * Get all sections for a page with GridStack positioning data
-     */
-    public function getSections(Page $page): JsonResponse
+    public function __construct(TemplateRenderer $templateRenderer)
     {
-        try {
-            $sections = $page->sections()
-                ->with('templateSection') // Load the template section relationship
-                ->orderBy('position')
-                ->get()
-                ->map(function ($section) {
-                    return [
-                        'id' => $section->id,
-                        'page_id' => $section->page_id,
-                        'template_section_id' => $section->template_section_id,
-                        'position' => $section->position,
-                        'grid_x' => $section->grid_x,
-                        'grid_y' => $section->grid_y,
-                        'grid_w' => $section->grid_w,
-                        'grid_h' => $section->grid_h,
-                        'grid_id' => $section->grid_id,
-                        'grid_config' => $section->grid_config,
-                        'allows_widgets' => $section->allows_widgets,
-                        'widget_types' => $section->widget_types,
-                        'css_classes' => $section->css_classes,
-                        'background_color' => $section->background_color,
-                        'padding' => $section->padding,
-                        'margin' => $section->margin,
-                        'locked_position' => $section->locked_position,
-                        'resize_handles' => $section->resize_handles,
-                        'column_span_override' => $section->column_span_override,
-                        'column_offset_override' => $section->column_offset_override,
-                        // Include template section data
-                        'template_section' => $section->templateSection ? [
-                            'id' => $section->templateSection->id,
-                            'name' => $section->templateSection->name,
-                            'section_type' => $section->templateSection->section_type,
-                            'column_layout' => $section->templateSection->column_layout,
-                            'description' => $section->templateSection->description
-                        ] : null
-                    ];
-                });
-
-            return response()->json([
-                'success' => true,
-                'data' => $sections
-            ]);
-
-        } catch (Exception $e) {
-            Log::error('Error loading page sections: ' . $e->getMessage(), [
-                'page_id' => $page->id,
-                'exception' => $e
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'error' => 'Failed to load page sections',
-                'message' => $e->getMessage()
-            ], 500);
-        }
+        $this->templateRenderer = $templateRenderer;
     }
 
     /**
-     * Create a new section for the page
+     * Get rendered page content for Page Builder (JSON response)
+     * 
+     * @param Page $page
+     * @return JsonResponse
      */
-    public function createSection(Page $page, Request $request): JsonResponse
+    public function getRenderedPage(Page $page): JsonResponse
     {
         try {
-            $validated = $request->validate([
-                'template_key' => 'required|string',
-                'name' => 'nullable|string|max:255',
-                'grid_x' => 'nullable|integer|min:0',
-                'grid_y' => 'nullable|integer|min:0',
-                'grid_w' => 'nullable|integer|min:1',
-                'grid_h' => 'nullable|integer|min:1',
-                'position' => 'nullable|integer'
+            // Load all necessary relationships for template rendering (same as LivePreview)
+            $page->load([
+                'template.theme',
+                'sections.templateSection',
+                'sections.pageSectionWidgets.widget'
             ]);
 
-            // Find template section
-            $templateSection = TemplateSection::where('template_id', $page->template_id)
-                ->where('key', $validated['template_key'])
-                ->first();
-
-            if (!$templateSection) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Template section not found'
-                ], 404);
-            }
-
-            // Set defaults
-            $validated['page_id'] = $page->id;
-            $validated['template_section_id'] = $templateSection->id;
-            $validated['name'] = $validated['name'] ?? $templateSection->name;
-            $validated['position'] = $validated['position'] ?? ($page->sections()->max('position') + 1);
-            $validated['grid_x'] = $validated['grid_x'] ?? 0;
-            $validated['grid_y'] = $validated['grid_y'] ?? 0;
-            $validated['grid_w'] = $validated['grid_w'] ?? 12;
-            $validated['grid_h'] = $validated['grid_h'] ?? 4;
-            $validated['grid_id'] = 'section_' . time() . '_' . uniqid();
-            $validated['allows_widgets'] = true;
-
-            $section = PageSection::create($validated);
-            $section->load('templateSection');
-
-            return response()->json([
-                'success' => true,
-                'data' => $section,
-                'message' => 'Section created successfully'
-            ]);
-
-        } catch (Exception $e) {
-            Log::error('Error creating section: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'error' => 'Failed to create section',
-                'message' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Update section properties
-     */
-    public function updateSection(PageSection $section, Request $request): JsonResponse
-    {
-        try {
-            $validated = $request->validate([
-                'name' => 'nullable|string|max:255',
-                'css_classes' => 'nullable|string|max:255',
-                'background_color' => 'nullable|string|max:50',
-                'padding' => 'nullable|array',
-                'margin' => 'nullable|array'
-            ]);
-
-            $section->update($validated);
-            $section->load('templateSection');
-
-            return response()->json([
-                'success' => true,
-                'data' => $section,
-                'message' => 'Section updated successfully'
-            ]);
-
-        } catch (Exception $e) {
-            Log::error('Error updating section: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'error' => 'Failed to update section',
-                'message' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Delete a section from the page
-     */
-    public function deleteSection(PageSection $section): JsonResponse
-    {
-        try {
-            // Delete associated widgets first
-            $section->pageSectionWidgets()->delete();
+            // Get page structure (same as getPageStructure method)
+            $structure = $this->getPageStructure($page);
+            $structureData = $structure->getData(true);
             
-            // Delete the section
-            $section->delete();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Section deleted successfully'
-            ]);
-
-        } catch (Exception $e) {
-            Log::error('Error deleting section: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'error' => 'Failed to delete section',
-                'message' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Update section GridStack position (x, y, w, h)
-     */
-    public function updateSectionGridPosition(PageSection $section, Request $request): JsonResponse
-    {
-        try {
-            $validated = $request->validate([
-                'grid_x' => 'required|integer|min:0',
-                'grid_y' => 'required|integer|min:0',
-                'grid_w' => 'required|integer|min:1',
-                'grid_h' => 'required|integer|min:1'
-            ]);
-
-            $section->update($validated);
+            if (!$structureData['success']) {
+                throw new \Exception('Failed to load page structure');
+            }
+            
+            $pageStructure = $structureData['data'];
+            
+            // Get theme assets for page (as array for JSON response)
+            $theme = $page->template->theme;
+            $themeAssets = [];
+            if ($theme) {
+                $themeAssets = [
+                    'css' => $theme->css_files ?? [],
+                    'js' => $theme->js_files ?? [],
+                    'base_path' => "/themes/{$theme->slug}"
+                ];
+            }
 
             return response()->json([
                 'success' => true,
                 'data' => [
-                    'grid_position' => [
-                        'x' => $section->grid_x,
-                        'y' => $section->grid_y,
-                        'w' => $section->grid_w,
-                        'h' => $section->grid_h
-                    ]
-                ],
-                'message' => 'Section position updated successfully'
-            ]);
-
-        } catch (Exception $e) {
-            Log::error('Error updating section position: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'error' => 'Failed to update section position',
-                'message' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    // =====================================================================
-    // 2. SECTION WIDGETS (4 methods)
-    // =====================================================================
-
-    /**
-     * Get all widgets in a section with GridStack positioning
-     */
-    public function getSectionWidgets(PageSection $section): JsonResponse
-    {
-        try {
-            $widgets = $section->pageSectionWidgets()
-                ->with('widget')
-                ->orderBy('position')
-                ->get()
-                ->map(function ($widget) {
-                    return [
-                        'id' => $widget->id,
-                        'widget_id' => $widget->widget_id,
-                        'widget_name' => $widget->widget->name ?? 'Unknown Widget',
-                        'widget_slug' => $widget->widget->slug ?? 'unknown',
-                        'grid_position' => [
-                            'x' => $widget->grid_x ?? 0,
-                            'y' => $widget->grid_y ?? 0,
-                            'w' => $widget->grid_w ?? 6,
-                            'h' => $widget->grid_h ?? 3,
-                            'grid_id' => $widget->grid_id ?? "widget-{$widget->id}"
-                        ],
-                        'position' => $widget->position,
-                        'settings' => $widget->settings ?? [],
-                        'content_query' => $widget->content_query ?? [],
-                        'css_classes' => $widget->css_classes,
-                        'widget' => $widget->widget
-                    ];
-                });
-
-            return response()->json([
-                'success' => true,
-                'data' => $widgets
-            ]);
-
-        } catch (Exception $e) {
-            Log::error('Error loading section widgets: ' . $e->getMessage(), [
-                'section_id' => $section->id
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'error' => 'Failed to load section widgets',
-                'message' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Create a new widget in a section
-     */
-    public function createWidget(PageSection $section, Request $request): JsonResponse
-    {
-        try {
-            $validated = $request->validate([
-                'widget_id' => 'required|integer|exists:widgets,id',
-                'grid_x' => 'nullable|integer|min:0',
-                'grid_y' => 'nullable|integer|min:0',
-                'grid_w' => 'nullable|integer|min:1',
-                'grid_h' => 'nullable|integer|min:1',
-                'position' => 'nullable|integer',
-                'settings' => 'nullable|array',
-                'content_query' => 'nullable|array',
-                'css_classes' => 'nullable|string'
-            ]);
-
-            // Set defaults
-            $validated['page_section_id'] = $section->id;
-            $validated['position'] = $validated['position'] ?? ($section->pageSectionWidgets()->max('position') + 1);
-            $validated['grid_x'] = $validated['grid_x'] ?? 0;
-            $validated['grid_y'] = $validated['grid_y'] ?? 0;
-            $validated['grid_w'] = $validated['grid_w'] ?? 6;
-            $validated['grid_h'] = $validated['grid_h'] ?? 3;
-            $validated['grid_id'] = 'widget_' . time() . '_' . uniqid();
-
-            $pageSectionWidget = PageSectionWidget::create($validated);
-            $pageSectionWidget->load(['widget', 'pageSection']);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Widget added to section successfully',
-                'data' => $pageSectionWidget
-            ], 201);
-
-        } catch (Exception $e) {
-            Log::error('Error creating widget: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to create widget',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Update widget properties
-     */
-    public function updateWidget(PageSectionWidget $widget, Request $request): JsonResponse
-    {
-        try {
-            $validated = $request->validate([
-                'settings' => 'nullable|array',
-                'content_query' => 'nullable|array',
-                'css_classes' => 'nullable|string',
-                'position' => 'nullable|integer'
-            ]);
-
-            $widget->update($validated);
-            $widget->load(['widget', 'pageSection']);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Widget updated successfully',
-                'data' => $widget
-            ]);
-
-        } catch (Exception $e) {
-            Log::error('Error updating widget: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to update widget',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Delete a widget from a section
-     */
-    public function deleteWidget(PageSectionWidget $widget): JsonResponse
-    {
-        try {
-            $widget->delete();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Widget deleted successfully'
-            ]);
-
-        } catch (Exception $e) {
-            Log::error('Error deleting widget: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to delete widget',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Update widget GridStack position (x, y, w, h) - NEW METHOD
-     */
-    public function updateWidgetGridPosition(PageSectionWidget $widget, Request $request): JsonResponse
-    {
-        try {
-            $validated = $request->validate([
-                'grid_x' => 'required|integer|min:0',
-                'grid_y' => 'required|integer|min:0',
-                'grid_w' => 'required|integer|min:1',
-                'grid_h' => 'required|integer|min:1'
-            ]);
-
-            $widget->update($validated);
-
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'grid_position' => [
-                        'x' => $widget->grid_x,
-                        'y' => $widget->grid_y,
-                        'w' => $widget->grid_w,
-                        'h' => $widget->grid_h
-                    ]
-                ],
-                'message' => 'Widget position updated successfully'
-            ]);
-
-        } catch (Exception $e) {
-            Log::error('Error updating widget position: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'error' => 'Failed to update widget position',
-                'message' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    // =====================================================================
-    // 3. SIDEBAR CONTENT (2 methods)
-    // =====================================================================
-
-    /**
-     * Get available widgets for drag & drop from sidebar
-     */
-    public function getAvailableWidgets(): JsonResponse
-    {
-        try {
-            $widgets = Widget::where('is_active', true)
-                ->select('id', 'name', 'slug', 'description', 'icon', 'category', 'schema')
-                ->orderBy('category')
-                ->orderBy('name')
-                ->get()
-                ->groupBy('category')
-                ->map(function ($categoryWidgets) {
-                    return $categoryWidgets->map(function ($widget) {
-                        return [
-                            'id' => $widget->id,
-                            'name' => $widget->name,
-                            'slug' => $widget->slug,
-                            'description' => $widget->description,
-                            'icon' => $widget->icon ?? 'ri-apps-line',
-                            'category' => $widget->category ?? 'General',
-                            'default_settings' => $widget->schema['default_settings'] ?? []
-                        ];
-                    });
-                });
-
-            return response()->json([
-                'success' => true,
-                'data' => $widgets
-            ]);
-
-        } catch (Exception $e) {
-            Log::error('Error loading available widgets: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'error' => 'Failed to load widgets',
-                'message' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Get available section templates for sidebar - NEW METHOD
-     */
-    public function getTemplateSections(): JsonResponse
-    {
-        try {
-            // Get active theme template sections
-            $activeTheme = $this->themeManager->getActiveTheme();
-            if (!$activeTheme) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'No active theme found'
-                ], 404);
-            }
-
-            $templateSections = TemplateSection::where('template_id', $activeTheme->id)
-                ->select('id', 'key', 'name', 'section_type', 'column_layout', 'description', 'icon')
-                ->orderBy('name')
-                ->get()
-                ->groupBy('section_type')
-                ->map(function ($sections) {
-                    return $sections->map(function ($section) {
-                        return [
-                            'id' => $section->id,
-                            'key' => $section->key,
-                            'name' => $section->name,
-                            'section_type' => $section->section_type,
-                            'column_layout' => $section->column_layout,
-                            'description' => $section->description,
-                            'icon' => $section->icon ?? 'ri-layout-grid-line'
-                        ];
-                    });
-                });
-
-            return response()->json([
-                'success' => true,
-                'data' => $templateSections
-            ]);
-
-        } catch (Exception $e) {
-            Log::error('Error loading template sections: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'error' => 'Failed to load template sections',
-                'message' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    // =====================================================================
-    // 4. RENDERING & ASSETS (2 methods)
-    // =====================================================================
-
-    /**
-     * Render widget for preview in canvas
-     */
-    public function renderWidget(Widget $widget, Request $request): JsonResponse
-    {
-        try {
-            // Get page section widget ID if provided
-            $pageSectionWidgetId = $request->input('page_section_widget_id');
-            $pageSectionWidget = null;
-
-            if ($pageSectionWidgetId) {
-                $pageSectionWidget = PageSectionWidget::with(['widget'])
-                    ->find($pageSectionWidgetId);
-            }
-
-            // Use the widget rendering service to render the widget
-            $html = $this->widgetRenderingService->renderWidget($widget, $pageSectionWidget);
-
-            return response()->json([
-                'success' => true,
-                'html' => $html,
-                'widget' => [
-                    'id' => $widget->id,
-                    'name' => $widget->name,
-                    'slug' => $widget->slug
+                    'page' => $pageStructure['page'],
+                    'sections' => $pageStructure['sections'],
+                    'theme_assets' => $themeAssets,
+                    'rendered_html' => $this->generateFullPageHtml($page)  // Also include full HTML for iframe
                 ]
             ]);
 
-        } catch (Exception $e) {
-            Log::error('Error rendering widget: ' . $e->getMessage(), [
-                'widget_id' => $widget->id,
-                'page_section_widget_id' => $request->input('page_section_widget_id')
-            ]);
-
+        } catch (\Exception $e) {
+            \Log::error('Failed to render page: ' . $e->getMessage());
+            
             return response()->json([
                 'success' => false,
-                'error' => 'Failed to render widget',
-                'message' => $e->getMessage(),
-                'html' => '<div class="widget-error">Error rendering widget: ' . $widget->name . '</div>'
+                'error' => 'Failed to render page: ' . $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Get theme CSS/JS assets for GridStack canvas
+     * Get rendered page iframe content for Page Builder
+     * Based on LivePreviewController::getPreviewIframe
+     * 
+     * @param Page $page
+     * @return \Illuminate\Http\Response
+     */
+    public function getRenderedPageIframe(Page $page)
+    {
+        // Load all necessary relationships for template rendering
+        $page->load([
+            'template.theme',
+            'sections.templateSection',
+            'sections.pageSectionWidgets.widget'
+        ]);
+
+        // Generate the complete HTML using existing template renderer
+        $html = $this->generateFullPageHtml($page);
+
+        return response($html)
+            ->header('Content-Type', 'text/html')
+            ->header('X-Frame-Options', 'SAMEORIGIN');
+    }
+
+    /**
+     * Get page structure for Page Builder sidebar
+     * Based on LivePreviewController::getPageStructure
+     * 
+     * @param Page $page
+     * @return JsonResponse
+     */
+    public function getPageStructure(Page $page): JsonResponse
+    {
+        try {
+            $page->load([
+                'template',
+                'sections.templateSection',
+                'sections.pageSectionWidgets.widget'
+            ]);
+
+            $structure = [
+                'page' => [
+                    'id' => $page->id,
+                    'title' => $page->title,
+                    'template' => $page->template->name ?? 'Unknown Template'
+                ],
+                'sections' => $page->sections->map(function ($section) {
+                    return [
+                        'id' => $section->id,
+                        'name' => $section->templateSection->name ?? 'Section ' . $section->id,
+                        'widgets' => $section->pageSectionWidgets->map(function ($psw) {
+                            return [
+                                'id' => $psw->id,
+                                'widget_id' => $psw->widget_id,
+                                'name' => $psw->widget->name ?? 'Unknown Widget',
+                                'icon' => $psw->widget->icon ?? 'ri-puzzle-line',
+                                'position' => $psw->position
+                            ];
+                        })->sortBy('position')->values()
+                    ];
+                })->values()
+            ];
+
+            return response()->json([
+                'success' => true,
+                'data' => $structure
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Failed to load page structure: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to load page structure: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get available widgets for the widget library
+     * Exact copy from LivePreviewController::getAvailableWidgets
+     * 
+     * @return JsonResponse
+     */
+    public function getAvailableWidgets(): JsonResponse
+    {
+        $widgets = Widget::where('status', 'active')
+            ->orderBy('category')
+            ->orderBy('name')
+            ->get(['id', 'name', 'description', 'icon', 'category']);
+
+        $groupedWidgets = $widgets->groupBy('category');
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'widgets' => $groupedWidgets
+            ]
+        ]);
+    }
+
+    /**
+     * Add new widget to a section
+     * Exact copy from LivePreviewController::addWidget
+     * 
+     * @param PageSection $section
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function addWidget(PageSection $section, Request $request): JsonResponse
+    {
+        $request->validate([
+            'widget_id' => 'required|exists:widgets,id'
+        ]);
+
+        try {
+            $widget = Widget::findOrFail($request->widget_id);
+
+            // Get next position in section
+            $nextPosition = $section->pageSectionWidgets()->max('position') + 1;
+
+            // Create new widget instance
+            $widgetInstance = PageSectionWidget::create([
+                'page_section_id' => $section->id,
+                'widget_id' => $widget->id,
+                'position' => $nextPosition,
+                'settings' => $widget->default_settings ?? [],
+                'content_query' => []
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Widget added successfully',
+                'data' => [
+                    'widget_instance_id' => $widgetInstance->id,
+                    'widget_name' => $widget->name,
+                    'refresh_preview' => true,
+                    'refresh_structure' => true
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to add widget: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get theme assets for API endpoint
+     * 
+     * @return JsonResponse
      */
     public function getThemeAssets(): JsonResponse
     {
         try {
-            $activeTheme = $this->themeManager->getActiveTheme();
+            // Get the active theme from a sample page to determine current theme
+            $samplePage = \App\Models\Page::with('template.theme')->first();
             
-            if (!$activeTheme) {
+            if ($samplePage && $samplePage->template && $samplePage->template->theme) {
+                $theme = $samplePage->template->theme;
+                
                 return response()->json([
-                    'success' => false,
-                    'error' => 'No active theme found'
-                ], 404);
+                    'success' => true,
+                    'data' => [
+                        'name' => $theme->name,
+                        'slug' => $theme->slug,
+                        'base_path' => "/themes/{$theme->slug}",
+                        'css' => $theme->css_files ?? [],
+                        'js' => $theme->js_files ?? []
+                    ]
+                ]);
             }
-
-            // Get theme CSS files
-            $cssFiles = $activeTheme->css ?? [];
             
-            // Get theme JS files  
-            $jsFiles = $activeTheme->js ?? [];
-
-            // Add base theme path for relative URLs
-            $themeBasePath = "/themes/{$activeTheme->slug}";
-
+            // Fallback to defaults
             return response()->json([
                 'success' => true,
-                'theme' => [
-                    'name' => $activeTheme->name,
-                    'slug' => $activeTheme->slug,
-                    'base_path' => $themeBasePath,
-                    'css' => $cssFiles,
-                    'js' => $jsFiles
+                'data' => [
+                    'name' => 'Default Theme',
+                    'slug' => 'default',
+                    'base_path' => '/themes/default',
+                    'css' => [],
+                    'js' => []
                 ]
             ]);
-
-        } catch (Exception $e) {
-            Log::error('Error getting theme assets: ' . $e->getMessage());
+            
+        } catch (\Exception $e) {
+            \Log::error('Error loading theme assets: ' . $e->getMessage());
             
             return response()->json([
-                'success' => false,
-                'error' => 'Failed to load theme assets',
-                'message' => $e->getMessage()
-            ], 500);
+                'success' => true,
+                'data' => [
+                    'name' => 'Default Theme',
+                    'slug' => 'default',
+                    'base_path' => '/themes/default',
+                    'css' => [],
+                    'js' => []
+                ]
+            ]);
         }
     }
+
+    /**
+     * Generate full page HTML for Page Builder
+     * Based on LivePreviewController::generateFullPageHtml
+     * 
+     * @param Page $page
+     * @return string
+     */
+    private function generateFullPageHtml(Page $page): string
+    {
+        // Get the rendered page content using existing template system
+        $pageContent = $this->templateRenderer->renderPage($page);
+        
+        // Inject preview data using the existing page structure data
+        $pageContent = $this->injectPreviewDataFromStructure($page, $pageContent);
+
+        // Inject preview helper assets
+        $previewAssets = $this->getPreviewAssets();
+
+        // Build complete HTML with preview helpers
+        $html = '<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Builder - ' . e($page->title) . '</title>
+    
+    <!-- Theme Assets -->
+    ' . $this->getThemeAssetsHtml($page) . '
+    
+    <!-- Preview Helper Assets -->
+    ' . $previewAssets . '
+    
+    <!-- Preview Structure Data -->
+    ' . $this->getPreviewStructureScript($page) . '
+</head>
+<body>
+    ' . $pageContent . '
+</body>
+</html>';
+
+        return $html;
+    }
+
+    /**
+     * Inject preview data using simple approach that leverages existing page structure
+     * Exact copy from LivePreviewController::injectPreviewDataFromStructure
+     * 
+     * @param Page $page
+     * @param string $html
+     * @return string
+     */
+    private function injectPreviewDataFromStructure(Page $page, string $html): string
+    {
+        // The universal components already generate the correct data attributes!
+        // We just need to add minimal preview-specific attributes for the JavaScript
+        
+        $patterns = [
+            // Add preview attributes to existing section elements
+            '/<section([^>]*data-section-id="[^"]*"[^>]*)>/i' => '<section$1 data-preview-type="section">',
+            
+            // Add preview attributes to existing widget elements  
+            '/<div([^>]*data-page-section-widget-id="[^"]*"[^>]*)>/i' => '<div$1 data-preview-type="widget" style="position: relative; cursor: pointer; outline: 1px dashed transparent;" onmouseover="this.style.outline=\'1px dashed #007bff\'" onmouseout="this.style.outline=\'1px dashed transparent\'">',
+        ];
+        
+        foreach ($patterns as $pattern => $replacement) {
+            $html = preg_replace($pattern, $replacement, $html);
+        }
+        
+        return $html;
+    }
+    
+    /**
+     * Generate JavaScript that contains page structure data for preview
+     * Exact copy from LivePreviewController::getPreviewStructureScript
+     * 
+     * @param Page $page
+     * @return string
+     */
+    private function getPreviewStructureScript(Page $page): string
+    {
+        // Use the existing page structure logic
+        $structureResponse = $this->getPageStructure($page);
+        $structureData = $structureResponse->getData(true);
+        
+        if ($structureData['success']) {
+            $pageStructure = $structureData['data'];
+            
+            return '<script>
+                window.previewPageStructure = ' . json_encode($pageStructure) . ';
+                console.log("🏗️ Page Builder page structure loaded:", window.previewPageStructure);
+            </script>';
+        }
+        
+        return '<script>window.previewPageStructure = null;</script>';
+    }
+
+    /**
+     * Get theme assets for the page
+     * Exact copy from LivePreviewController::getThemeAssets
+     * 
+     * @param Page $page
+     * @return string
+     */
+    private function getThemeAssetsHtml(Page $page): string
+    {
+        $theme = $page->template->theme;
+        $assets = '';
+
+        if ($theme) {
+            // Add theme CSS
+            if ($theme->css_files) {
+                foreach ($theme->css_files as $cssFile) {
+                    $assets .= '<link rel="stylesheet" href="' . asset($cssFile) . '">' . "\n    ";
+                }
+            }
+
+            // Add theme JS
+            if ($theme->js_files) {
+                foreach ($theme->js_files as $jsFile) {
+                    $assets .= '<script src="' . asset($jsFile) . '"></script>' . "\n    ";
+                }
+            }
+        }
+
+        return $assets;
+    }
+
+    /**
+     * Get preview helper assets
+     * Exact copy from LivePreviewController::getPreviewAssets
+     * 
+     * @return string
+     */
+    private function getPreviewAssets(): string
+    {
+        return '
+    <!-- Preview Helper CSS -->
+    <link rel="stylesheet" href="' . asset('assets/admin/css/live-designer/preview-helpers.css') . '">
+    
+    <!-- Preview Helper JS -->
+    <script src="' . asset('assets/admin/js/live-designer/preview-helpers.js') . '"></script>
+    
+    <!-- Internal Preview Spacing -->
+    <style>
+        body {
+            padding: 15px !important;
+            margin: 0 !important;
+            min-height: calc(100vh - 30px) !important;
+        }
+        
+        /* Ensure proper spacing for section outlines */
+        section[data-section-id] {
+            margin: 8px 0;
+        }
+        
+        /* First and last section spacing */
+        section[data-section-id]:first-child {
+            margin-top: 0;
+        }
+        
+        section[data-section-id]:last-child {
+            margin-bottom: 0;
+        }
+    </style>';
+    }
+
 }

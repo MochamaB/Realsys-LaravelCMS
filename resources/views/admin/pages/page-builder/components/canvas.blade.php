@@ -1,33 +1,25 @@
-<!-- GridStack Page Builder Canvas -->
-<div class="page-builder-canvas" id="canvasArea">
-    <div class="canvas-header border-bottom p-3">
-        <div class="d-flex justify-content-between align-items-center">
-            <div class="canvas-info">
-                <span class="canvas-stats text-muted">
-                    <span id="sectionCount">0</span> sections, 
-                    <span id="widgetCount">0</span> widgets
-                    <span id="loadingStatus" class="ms-2">• Ready</span>
-                </span>
+
+
+            <!-- Loader -->
+            <div id="iframeLoader" style="display: flex; align-items: center; justify-content: center; height: 200px;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
             </div>
-            
-            <div class="canvas-controls">
-                <button class="btn btn-sm btn-outline-secondary me-2" id="toggleGridBtn" title="Toggle Grid">
-                    <i class="ri-layout-grid-line"></i>
-                </button>
-                <button class="btn btn-sm btn-outline-secondary me-2" id="clearCanvasBtn" title="Clear All">
-                    <i class="ri-delete-bin-line"></i>
-                </button>
-                <button class="btn btn-sm btn-outline-secondary" id="canvasSettingsBtn" title="Canvas Settings">
-                    <i class="ri-settings-line"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-    
-    <div class="canvas-wrapper p-3" style="background: #f8f9fa; min-height: calc(100vh - 160px);">
-        <!-- GridStack Container -->
-        <div class="grid-stack" id="gridStackContainer" data-page-id="{{ $page->id ?? '' }}">
-            <!-- GridStack items will be added here dynamically -->
+        
+        <!-- Page Preview Iframe (Main Preview) -->
+        
+            <iframe 
+                id="pagePreviewIframe" 
+                src="/admin/api/page-builder/pages/{{ $page->id }}/rendered/iframe"
+                style="width: 100%; height: auto; border: none; border-radius: 0px;padding: 10px;"
+                frameborder="0">
+            </iframe>
+        
+        
+        <!-- GridStack Container (for future GridStack implementation) -->
+        <div class="grid-stack theme-preview-container" id="gridStackContainer" data-page-id="{{ $page->id ?? '' }}" style="display: none;">
+            <!-- Real rendered sections will be added here with GridStack positioning -->
         </div>
         
         <!-- Empty State (when no sections) - Initially hidden -->
@@ -41,8 +33,37 @@
                 <i class="ri-add-line me-2"></i>Add Your First Section
             </button>
         </div>
-    </div>
-</div>
+    
+
 
 <!-- GridStack Drop Zone Helper -->
 <div id="gridstack-drop-preview" style="display: none; position: absolute; background: rgba(0,123,255,0.1); border: 2px dashed #007bff; z-index: 1000;"></div>
+@push('scripts')
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const iframe = document.getElementById("pagePreviewIframe");
+    const loader = document.getElementById("iframeLoader");
+
+    iframe.addEventListener("load", function () {
+        // Hide loader, show iframe
+        loader.style.display = "none";
+        iframe.style.display = "block";
+
+        try {
+            // Access iframe document
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+
+            // Remove iframe internal scrollbars
+            iframe.style.overflow = "hidden";
+            iframeDoc.body.style.overflow = "hidden";
+
+            // Adjust height to fit content
+            iframe.style.height = iframeDoc.body.scrollHeight + "px";
+
+        } catch (e) {
+            console.warn("Cross-origin restriction: can't access iframe content");
+        }
+    });
+});
+</script>
+@endpush

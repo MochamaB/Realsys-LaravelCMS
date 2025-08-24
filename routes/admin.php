@@ -308,30 +308,18 @@ Route::middleware('admin.auth')->group(function () {
 Route::prefix('api')->middleware('admin.auth')->group(function () {
 
     // =====================================================================
-    // GridStack Page Builder API - Dedicated endpoints for GridStack functionality
+    // Page Builder API - Simplified endpoints following LivePreview pattern
     // =====================================================================
     Route::prefix('page-builder')->group(function () {
-        // Section Management (GridStack Positioning)
-        Route::get('/pages/{page}/sections', [App\Http\Controllers\Api\PageBuilderController::class, 'getSections'])->name('api.page-builder.sections.index');
-        Route::post('/pages/{page}/sections', [App\Http\Controllers\Api\PageBuilderController::class, 'createSection'])->name('api.page-builder.sections.store');
-        Route::put('/sections/{section}', [App\Http\Controllers\Api\PageBuilderController::class, 'updateSection'])->name('api.page-builder.sections.update');
-        Route::delete('/sections/{section}', [App\Http\Controllers\Api\PageBuilderController::class, 'deleteSection'])->name('api.page-builder.sections.destroy');
-        Route::patch('/sections/{section}/position', [App\Http\Controllers\Api\PageBuilderController::class, 'updateSectionGridPosition'])->name('api.page-builder.sections.position');
-        
-        // Widget Management (GridStack Positioning)  
-        Route::get('/sections/{section}/widgets', [App\Http\Controllers\Api\PageBuilderController::class, 'getSectionWidgets'])->name('api.page-builder.widgets.index');
-        Route::post('/sections/{section}/widgets', [App\Http\Controllers\Api\PageBuilderController::class, 'createWidget'])->name('api.page-builder.widgets.store');
-        Route::put('/widgets/{widget}', [App\Http\Controllers\Api\PageBuilderController::class, 'updateWidget'])->name('api.page-builder.widgets.update');
-        Route::delete('/widgets/{widget}', [App\Http\Controllers\Api\PageBuilderController::class, 'deleteWidget'])->name('api.page-builder.widgets.destroy');
-        Route::patch('/widgets/{widget}/position', [App\Http\Controllers\Api\PageBuilderController::class, 'updateWidgetGridPosition'])->name('api.page-builder.widgets.position');
-        
-        // Sidebar Content (Drag & Drop)
+        // Core Page Builder endpoints (based on LivePreviewController)
+        Route::get('/pages/{page}/rendered', [App\Http\Controllers\Api\PageBuilderController::class, 'getRenderedPage'])->name('api.page-builder.pages.rendered');
+        Route::get('/pages/{page}/rendered/iframe', [App\Http\Controllers\Api\PageBuilderController::class, 'getRenderedPageIframe'])->name('api.page-builder.pages.rendered.iframe');
+        Route::get('/pages/{page}/structure', [App\Http\Controllers\Api\PageBuilderController::class, 'getPageStructure'])->name('api.page-builder.pages.structure');
         Route::get('/widgets/available', [App\Http\Controllers\Api\PageBuilderController::class, 'getAvailableWidgets'])->name('api.page-builder.widgets.available');
-        Route::get('/templates/sections', [App\Http\Controllers\Api\PageBuilderController::class, 'getTemplateSections'])->name('api.page-builder.templates.sections');
-        
-        // Assets & Rendering (GridStack Canvas)
-        Route::post('/widgets/{widget}/render', [App\Http\Controllers\Api\PageBuilderController::class, 'renderWidget'])->name('api.page-builder.widgets.render');
         Route::get('/theme/assets', [App\Http\Controllers\Api\PageBuilderController::class, 'getThemeAssets'])->name('api.page-builder.theme.assets');
+        
+        // Widget Operations (based on LivePreviewController)
+        Route::post('/sections/{section}/add-widget', [App\Http\Controllers\Api\PageBuilderController::class, 'addWidget'])->name('api.page-builder.sections.add-widget');
     });
     // Page Designer API
     Route::get('/pages/{page}/render', [PageController::class, 'renderPageContent'])->name('api.pages.render');

@@ -176,38 +176,40 @@ class PageBuilderMain {
         }
 
         try {
-            console.log('🔄 Loading initial page content for page ID:', this.options.pageId);
+            console.log('🔄 Loading initial page content with rendered HTML for page ID:', this.options.pageId);
             
-            // Load page sections
-            console.log('📋 Loading sections...');
-            const sections = await this.sectionManager.loadSections();
+            // Load complete rendered page (sections + widgets + theme assets)
+            console.log('🎨 Loading rendered page content...');
+            const renderedPageData = await this.api.getRenderedPage();
+            
+            if (!renderedPageData.success) {
+                throw new Error(renderedPageData.error || 'Failed to load rendered page');
+            }
+            
+            const { page, sections, theme_assets } = renderedPageData.data;
             this.currentSections = sections;
-            console.log(`📋 Loaded ${sections.length} sections:`, sections);
+            
+            console.log(`🎨 Loaded rendered page:`, page);
+            console.log(`📋 Found ${sections.length} rendered sections:`, sections);
+            console.log(`🎯 Theme assets:`, theme_assets);
             
             if (sections.length === 0) {
                 console.log('📭 No sections found, showing empty state');
                 this.showEmptyPageState();
                 return;
             }
-            
-            // Render sections in GridStack
-            console.log('🎨 Rendering sections in GridStack...');
+
+            // Load theme assets first (like Live Preview)
+            await this.loadThemeAssets(theme_assets);
+
+            // Render sections with real HTML content to GridStack
+            console.log('🎨 Rendering sections with real content to GridStack...');
             sections.forEach(section => {
-                console.log('🎨 Rendering section:', section.id, section);
-                this.sectionManager.renderSection(section);
+                console.log('🎨 Adding rendered section to grid:', section.id, section.template_section?.name);
+                this.addRenderedSectionToGrid(section);
             });
             
-            // Load widgets for each section
-            console.log('🧩 Loading widgets for sections...');
-            for (const section of sections) {
-                console.log(`🧩 Loading widgets for section ${section.id}...`);
-                await this.widgetManager.loadSectionWidgets(section.id);
-            }
-            
-            // Skip grid operations for simple approach
-            // this.gridManager.resizeGrid();
-            
-            console.log(`✅ Loaded ${sections.length} sections with widgets`);
+            console.log(`✅ Loaded ${sections.length} sections with real rendered content`);
             
         } catch (error) {
             console.error('❌ Error loading initial content:', error);
@@ -594,6 +596,169 @@ class PageBuilderMain {
      */
     isReady() {
         return this.initialized && !this.isLoading;
+    }
+
+    // =====================================================================
+    // HYBRID: RENDERED CONTENT METHODS (Live Preview Integration)
+    // =====================================================================
+
+    /**
+     * Load theme assets for proper styling (like Live Preview)
+     */
+    async loadThemeAssets(themeAssets) {
+        if (!themeAssets || (!themeAssets.css && !themeAssets.js)) {
+            console.log('🎯 No theme assets to load');
+            return;
+        }
+
+        console.log('🎯 Loading theme assets:', themeAssets);
+        
+        const assetsContainer = document.getElementById('themeAssetsContainer');
+        if (!assetsContainer) {
+            console.warn('⚠️ Theme assets container not found');
+            return;
+        }
+
+        let assetsHTML = '';
+
+        // Load CSS assets
+        if (themeAssets.css && themeAssets.css.length > 0) {
+            themeAssets.css.forEach(cssFile => {
+                const cssUrl = cssFile.startsWith('http') ? cssFile : `${themeAssets.base_path}/${cssFile}`;
+                assetsHTML += `<link rel="stylesheet" href="${cssUrl}" data-theme-asset="css">\n`;
+            });
+        }
+
+        // Load JS assets
+        if (themeAssets.js && themeAssets.js.length > 0) {
+            themeAssets.js.forEach(jsFile => {
+                const jsUrl = jsFile.startsWith('http') ? jsFile : `${themeAssets.base_path}/${jsFile}`;
+                assetsHTML += `<script src="${jsUrl}" data-theme-asset="js"></script>\n`;
+            });
+        }
+
+        assetsContainer.innerHTML = assetsHTML;
+        console.log('✅ Theme assets loaded');
+    }
+
+    /**
+     * Add rendered section to GridStack with real HTML content
+     */
+    addRenderedSectionToGrid(section) {
+        if (!this.gridManager || !this.gridManager.grid) {
+            console.warn('⚠️ GridStack not available, using fallback rendering');
+            this.fallbackRenderSection(section);
+            return;
+        }
+
+        console.log('🎨 Adding rendered section to grid:', section.id);
+
+        // Create GridStack widget with real HTML content
+        const gridWidget = {
+            x: section.grid_position.x,
+            y: section.grid_position.y,
+            w: section.grid_position.w,
+            h: section.grid_position.h,
+            id: `section-${section.id}`,
+            content: this.wrapSectionForGrid(section)
+        };
+
+        try {
+            this.gridManager.grid.addWidget(gridWidget);
+            console.log('✅ Section added to GridStack:', section.id);
+        } catch (error) {
+            console.error('❌ Failed to add section to GridStack:', error);
+            this.fallbackRenderSection(section);
+        }
+    }
+
+    /**
+     * Wrap rendered section HTML for GridStack compatibility
+     */
+    wrapSectionForGrid(section) {
+        const sectionName = section.template_section?.name || `Section ${section.id}`;
+        const sectionType = section.template_section?.type || 'default';
+        
+        return `
+            <div class="grid-section-wrapper" data-section-id="${section.id}" data-section-type="${sectionType}">
+                <div class="section-controls">
+                    <div class="section-info">
+                        <span class="section-name">${sectionName}</span>
+                        <span class="widget-count">${section.widgets?.length || 0} widgets</span>
+                    </div>
+                    <div class="section-actions">
+                        <button class="btn btn-sm btn-outline-primary" onclick="pageBuilder.editSection(${section.id})" title="Edit Section">
+                            <i class="ri-edit-line"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="pageBuilder.deleteSection(${section.id})" title="Delete Section">
+                            <i class="ri-delete-line"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="section-content">
+                    ${section.rendered_html || '<div class="empty-section">No content</div>'}
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * Fallback rendering when GridStack is not available
+     */
+    fallbackRenderSection(section) {
+        console.log('🔧 Using fallback rendering for section:', section.id);
+        
+        const container = document.getElementById(this.options.containerId);
+        if (!container) {
+            console.error('❌ Container not found for fallback rendering');
+            return;
+        }
+
+        const sectionElement = document.createElement('div');
+        sectionElement.className = 'fallback-section';
+        sectionElement.innerHTML = this.wrapSectionForGrid(section);
+        
+        container.appendChild(sectionElement);
+    }
+
+    /**
+     * Edit section (will be connected to modal)
+     */
+    editSection(sectionId) {
+        console.log('✏️ Edit section:', sectionId);
+        // This will be connected to the section config modal
+        document.dispatchEvent(new CustomEvent('pagebuilder:edit-section', {
+            detail: { sectionId }
+        }));
+    }
+
+    /**
+     * Delete section
+     */
+    async deleteSection(sectionId) {
+        if (!confirm('Are you sure you want to delete this section?')) {
+            return;
+        }
+
+        console.log('🗑️ Delete section:', sectionId);
+        
+        try {
+            await this.sectionManager.deleteSection(sectionId);
+            
+            // Remove from current sections
+            this.currentSections = this.currentSections.filter(s => s.id !== sectionId);
+            
+            // Remove from grid
+            if (this.gridManager?.grid) {
+                this.gridManager.grid.removeWidget(`#section-${sectionId}`);
+            }
+            
+            console.log('✅ Section deleted successfully');
+            
+        } catch (error) {
+            console.error('❌ Failed to delete section:', error);
+            alert('Failed to delete section. Please try again.');
+        }
     }
 }
 

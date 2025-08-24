@@ -9,12 +9,6 @@
 
 <style>
 /* Simplified Live Designer Layout */
-.simple-live-designer {
-    height: 100vh;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-}
 
 .designer-toolbar {
     background: #fff;
@@ -62,22 +56,12 @@
     overflow: hidden;
 }
 
-.designer-preview {
-    flex: 1;
-    background: #f5f5f5;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    padding: 10px;
-    overflow: auto;
-    position: relative;
-}
+
 
 .preview-container {
-    background: #fff;
-    border-radius: 4px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    overflow: visible;
+    background: #f1f4f7;
+    border-radius: 0px;
+    padding: 10px;
     transition: all 0.3s ease;
     position: relative;
 }
@@ -171,7 +155,7 @@
     <!-- Main Content -->
     <div class="designer-content">
         <!-- Preview Area -->
-        <div class="designer-preview">
+        
             <div class="preview-container device-desktop" id="preview-container">
                 <iframe id="preview-iframe" src="{{ route('admin.api.live-preview.preview-iframe', $page) }}"></iframe>
             </div>
@@ -183,7 +167,6 @@
                     <p>Updating preview...</p>
                 </div>
             </div>
-        </div>
         
         <!-- Right Sidebar -->
         @include('admin.pages.live-designer.components.right-sidebar')

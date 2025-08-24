@@ -139,6 +139,24 @@ class PageBuilderAPI {
     }
 
     // =====================================================================
+    // HYBRID: RENDERED CONTENT API METHODS (Live Preview Integration)
+    // =====================================================================
+
+    /**
+     * Get page with fully rendered sections and widgets (Hybrid Approach)
+     */
+    async getRenderedPage() {
+        return await this.makeRequest('GET', `/pages/${this.pageId}/rendered`);
+    }
+
+    /**
+     * Get rendered section with its widgets
+     */
+    async getRenderedSection(sectionId) {
+        return await this.makeRequest('GET', `/sections/${sectionId}/rendered`);
+    }
+
+    // =====================================================================
     // CORE HTTP METHODS
     // =====================================================================
 
