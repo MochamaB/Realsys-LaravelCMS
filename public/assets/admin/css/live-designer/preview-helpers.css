@@ -95,10 +95,10 @@ section[data-section-id].preview-highlighted::after {
     box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Section toolbar content */
+/* Section toolbar content - make clickable */
 [data-preview-section].preview-highlighted::before,
 section[data-section-id].preview-highlighted::before {
-    content: attr(data-section-name) '  ⚙️ Edit  ➕ Add Widget  🗑️ Delete';
+    content: attr(data-section-name);
     position: absolute;
     top: -38px;
     left: 12px;
@@ -108,6 +108,59 @@ section[data-section-id].preview-highlighted::before {
     z-index: 10001 !important;
     white-space: nowrap;
     pointer-events: none;
+}
+
+/* Clickable toolbar buttons for sections */
+[data-preview-section].preview-highlighted .section-toolbar-buttons,
+section[data-section-id].preview-highlighted .section-toolbar-buttons {
+    position: absolute;
+    top: -45px;
+    right: 12px;
+    display: flex;
+    gap: 8px;
+    z-index: 10002 !important;
+}
+
+.section-toolbar-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 0px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    pointer-events: auto;
+}
+
+.section-toolbar-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.section-toolbar-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.section-toolbar-btn i {
+    font-size: 12px;
+}
+
+/* Primary add widget button */
+.section-toolbar-btn.btn-primary {
+    background: rgba(13, 110, 253, 0.8);
+    border-color: rgba(13, 110, 253, 0.9);
+}
+
+.section-toolbar-btn.btn-primary:hover {
+    background: rgba(13, 110, 253, 1);
+    border-color: rgba(13, 110, 253, 1);
 }
 
 /* Preview mode indicators - removed the top label */

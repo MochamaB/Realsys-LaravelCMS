@@ -7,6 +7,7 @@ use App\Models\Page;
 use App\Models\PageSection;
 use App\Models\PageSectionWidget;
 use App\Models\Widget;
+use App\Models\ContentType;
 use App\Services\TemplateRenderer;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -163,25 +164,449 @@ class PageBuilderController extends Controller
 
     /**
      * Get available widgets for the widget library
-     * Exact copy from LivePreviewController::getAvailableWidgets
+     * Updated to fix SQL error and filter by active theme only
      * 
      * @return JsonResponse
      */
     public function getAvailableWidgets(): JsonResponse
     {
-        $widgets = Widget::where('status', 'active')
-            ->orderBy('category')
-            ->orderBy('name')
-            ->get(['id', 'name', 'description', 'icon', 'category']);
+        try {
+            // Get active theme
+            $activeTheme = \App\Models\Theme::where('is_active', true)->first();
+            
+            if (!$activeTheme) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'No active theme found'
+                ], 404);
+            }
 
-        $groupedWidgets = $widgets->groupBy('category');
+            // Get widgets for active theme only (removed non-existent 'status' and 'category' columns)
+            $widgets = Widget::where('theme_id', $activeTheme->id)
+                ->with(['contentTypes', 'fieldDefinitions'])
+                ->orderBy('name')
+                ->get(['id', 'name', 'description', 'icon', 'theme_id', 'slug', 'view_path']);
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'widgets' => $groupedWidgets
-            ]
-        ]);
+            // Group widgets by functionality instead of category
+            $groupedWidgets = $this->groupWidgetsByFunctionality($widgets, $activeTheme);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'theme' => [
+                        'name' => $activeTheme->name,
+                        'slug' => $activeTheme->slug
+                    ],
+                    'widgets' => $groupedWidgets
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error loading available widgets: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to load widgets: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Group widgets by functionality based on name and content types
+     * 
+     * @param \Illuminate\Database\Eloquent\Collection $widgets
+     * @param \App\Models\Theme $theme
+     * @return array
+     */
+    private function groupWidgetsByFunctionality($widgets, $theme)
+    {
+        $grouped = [
+            'content' => [],
+            'layout' => [],
+            'media' => [],
+            'utility' => []
+        ];
+
+        foreach ($widgets as $widget) {
+            // Determine widget category based on name and content types
+            $category = $this->determineWidgetCategory($widget);
+            
+            // Add preview image path
+            $previewImage = $this->getWidgetPreviewImage($widget, $theme);
+            
+            $widgetData = [
+                'id' => $widget->id,
+                'name' => $widget->name,
+                'description' => $widget->description,
+                'icon' => $widget->icon ?? 'ri-puzzle-line',
+                'preview_image' => $previewImage,
+                'supports_content' => $widget->contentTypes->count() > 0,
+                'content_types' => $widget->contentTypes->pluck('name')->toArray(),
+                'field_count' => $widget->fieldDefinitions->count(),
+                'slug' => $widget->slug
+            ];
+
+            $grouped[$category][] = $widgetData;
+        }
+
+        return $grouped;
+    }
+
+    /**
+     * Determine widget category based on name and content types
+     * 
+     * @param \App\Models\Widget $widget
+     * @return string
+     */
+    private function determineWidgetCategory($widget)
+    {
+        $name = strtolower($widget->name);
+        $hasContent = $widget->contentTypes->count() > 0;
+
+        // Content widgets (have content types)
+        if ($hasContent) {
+            return 'content';
+        }
+
+        // Media widgets (images, videos, galleries)
+        if (str_contains($name, 'image') || 
+            str_contains($name, 'video') || 
+            str_contains($name, 'gallery') || 
+            str_contains($name, 'media')) {
+            return 'media';
+        }
+
+        // Layout widgets (containers, grids, spacers)
+        if (str_contains($name, 'container') || 
+            str_contains($name, 'grid') || 
+            str_contains($name, 'column') || 
+            str_contains($name, 'row') || 
+            str_contains($name, 'spacer')) {
+            return 'layout';
+        }
+
+        // Default to utility
+        return 'utility';
+    }
+
+    /**
+     * Get widget preview image path
+     * 
+     * @param \App\Models\Widget $widget
+     * @param \App\Models\Theme $theme
+     * @return string
+     */
+    private function getWidgetPreviewImage($widget, $theme)
+    {
+        $previewPath = "themes/{$theme->slug}/widgets/{$widget->slug}/preview.png";
+        
+        if (file_exists(public_path($previewPath))) {
+            return asset($previewPath);
+        }
+        
+        return asset('assets/admin/images/widget-placeholder.png');
+    }
+
+    /**
+     * Get content types available for a specific widget
+     * 
+     * @param Widget $widget
+     * @return JsonResponse
+     */
+    public function getWidgetContentTypes(Widget $widget): JsonResponse
+    {
+        try {
+            // Load widget with content types
+            $widget->load(['contentTypes' => function($query) {
+                $query->with(['fields' => function($fieldQuery) {
+                    $fieldQuery->orderBy('position');
+                }]);
+            }]);
+
+            $contentTypes = $widget->contentTypes->map(function($contentType) {
+                return [
+                    'id' => $contentType->id,
+                    'name' => $contentType->name,
+                    'description' => $contentType->description,
+                    'icon' => $contentType->icon ?? 'ri-file-list-line',
+                    'field_count' => $contentType->fields->count(),
+                    'items_count' => $contentType->contentItems()->count(),
+                    'slug' => $contentType->slug
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'widget' => [
+                        'id' => $widget->id,
+                        'name' => $widget->name,
+                        'supports_content' => $contentTypes->count() > 0
+                    ],
+                    'content_types' => $contentTypes
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to load widget content types: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to load content types: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get content items for a specific content type
+     * 
+     * @param \App\Models\ContentType $contentType
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function getContentTypeItems(\App\Models\ContentType $contentType, Request $request): JsonResponse
+    {
+        try {
+            $query = $contentType->contentItems()
+                ->with(['fieldValues.field'])
+                ->orderBy('created_at', 'desc');
+
+            // Apply search filter
+            if ($request->search) {
+                $query->where('title', 'like', '%' . $request->search . '%');
+            }
+
+            // Apply status filter
+            if ($request->status) {
+                $query->where('status', $request->status);
+            }
+
+            $items = $query->paginate($request->get('per_page', 20));
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'content_type' => [
+                        'id' => $contentType->id,
+                        'name' => $contentType->name,
+                        'slug' => $contentType->slug
+                    ],
+                    'items' => collect($items->items())->map(function($item) {
+                        return [
+                            'id' => $item->id,
+                            'title' => $item->title,
+                            'excerpt' => \Str::limit($item->content ?? $item->description ?? '', 100),
+                            'status' => $item->status ?? 'published',
+                            'created_at' => $item->created_at?->format('M j, Y'),
+                            'thumbnail' => $this->getItemThumbnail($item),
+                            'field_values' => $item->fieldValues ? $item->fieldValues->mapWithKeys(function($fv) {
+                                return [$fv->field->slug => $fv->value];
+                            }) : []
+                        ];
+                    }),
+                    'pagination' => [
+                        'current_page' => $items->currentPage(),
+                        'total_pages' => $items->lastPage(),
+                        'total_items' => $items->total(),
+                        'per_page' => $items->perPage(),
+                        'from' => $items->firstItem(),
+                        'to' => $items->lastItem()
+                    ]
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to load content type items: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to load content items: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Query content items using filters and sorting
+     * 
+     * @param \App\Models\ContentType $contentType
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function queryContentItems(\App\Models\ContentType $contentType, Request $request): JsonResponse
+    {
+        try {
+            $query = $contentType->contentItems()->with(['fieldValues.field']);
+
+            // Apply filters
+            $filters = $request->get('filters', []);
+            
+            if (isset($filters['status']) && $filters['status']) {
+                $query->where('status', $filters['status']);
+            }
+            
+            if (isset($filters['date_from']) && $filters['date_from']) {
+                $query->where('created_at', '>=', $filters['date_from']);
+            }
+            
+            if (isset($filters['date_to']) && $filters['date_to']) {
+                $query->where('created_at', '<=', $filters['date_to']);
+            }
+            
+            if (isset($filters['search']) && $filters['search']) {
+                $query->where(function($q) use ($filters) {
+                    $q->where('title', 'like', '%' . $filters['search'] . '%')
+                      ->orWhere('content', 'like', '%' . $filters['search'] . '%')
+                      ->orWhere('description', 'like', '%' . $filters['search'] . '%');
+                });
+            }
+
+            // Apply sorting
+            $sortBy = $request->get('sort_by', 'created_at');
+            $sortDirection = $request->get('sort_direction', 'desc');
+            $query->orderBy($sortBy, $sortDirection);
+
+            // Apply limit
+            $limit = min($request->get('limit', 10), 50); // Max 50 items
+            $items = $query->limit($limit)->get();
+
+            // Preview items (first 5 for display)
+            $previewItems = $items->take(5)->map(function($item) {
+                return [
+                    'id' => $item->id,
+                    'title' => $item->title,
+                    'excerpt' => \Str::limit($item->content ?? $item->description ?? '', 60),
+                    'status' => $item->status ?? 'published',
+                    'created_at' => $item->created_at?->format('M j, Y')
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'query_preview' => $previewItems,
+                    'total_matches' => $items->count(),
+                    'query_settings' => [
+                        'filters' => $filters,
+                        'sort_by' => $sortBy,
+                        'sort_direction' => $sortDirection,
+                        'limit' => $limit
+                    ]
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to query content items: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to query content items: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get thumbnail for content item
+     * 
+     * @param mixed $item
+     * @return string|null
+     */
+    private function getItemThumbnail($item): ?string
+    {
+        // Check if fieldValues relationship exists and is loaded
+        if (!$item->fieldValues || $item->fieldValues->isEmpty()) {
+            return null;
+        }
+
+        // Try to find an image field value
+        $imageField = $item->fieldValues->first(function($fv) {
+            return $fv->field && 
+                   in_array($fv->field->field_type ?? '', ['image', 'file']) && 
+                   $fv->value &&
+                   str_contains($fv->value, 'image');
+        });
+        
+        if ($imageField && $imageField->value) {
+            return asset($imageField->value);
+        }
+        
+        return null;
+    }
+
+    /**
+     * Get widget field definitions for configuration
+     * 
+     * @param Widget $widget
+     * @return JsonResponse
+     */
+    public function getWidgetFieldDefinitions(Widget $widget): JsonResponse
+    {
+        try {
+            // Load widget with field definitions
+            $widget->load(['fieldDefinitions' => function($query) {
+                $query->orderBy('position')->orderBy('id');
+            }]);
+
+            $fieldDefinitions = $widget->fieldDefinitions->map(function($field) {
+                return [
+                    'id' => $field->id,
+                    'name' => $field->name,
+                    'slug' => $field->slug,
+                    'field_type' => $field->field_type,
+                    'is_required' => $field->is_required,
+                    'description' => $field->description,
+                    'default_value' => $field->default_value,
+                    'validation_rules' => is_string($field->validation_rules) 
+                        ? json_decode($field->validation_rules, true) 
+                        : ($field->validation_rules ?? []),
+                    'settings' => is_string($field->settings) 
+                        ? json_decode($field->settings, true) 
+                        : ($field->settings ?? []),
+                    'position' => $field->position
+                ];
+            });
+
+            // Get default widget settings from the widget definition
+            $defaultSettings = [
+                'layout' => [
+                    'width' => 12, // Full width by default
+                    'height' => 'auto',
+                    'alignment' => 'left'
+                ],
+                'styling' => [
+                    'padding' => ['top' => 0, 'right' => 0, 'bottom' => 0, 'left' => 0],
+                    'margin' => ['top' => 0, 'right' => 0, 'bottom' => 0, 'left' => 0],
+                    'background_color' => '',
+                    'border_radius' => 0,
+                    'custom_css_class' => ''
+                ],
+                'advanced' => [
+                    'animation' => 'none',
+                    'responsive_visibility' => ['xs' => true, 'sm' => true, 'md' => true, 'lg' => true, 'xl' => true]
+                ]
+            ];
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'widget' => [
+                        'id' => $widget->id,
+                        'name' => $widget->name,
+                        'slug' => $widget->slug,
+                        'description' => $widget->description
+                    ],
+                    'field_definitions' => $fieldDefinitions,
+                    'default_settings' => $defaultSettings
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to load widget field definitions: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to load widget configuration: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -192,42 +617,216 @@ class PageBuilderController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
+    /**
+     * Generate widget preview for review step
+     * 
+     * @param Widget $widget
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function previewWidget(Widget $widget, Request $request): JsonResponse
+    {
+        try {
+            $widgetConfig = $request->widget_config ?? [];
+            $selectedItems = $request->selected_items ?? [];
+            $contentQuery = $request->content_query ?? null;
+            $contentTypeId = $request->content_type_id;
+
+            // Create a temporary widget configuration for preview
+            $previewSettings = array_merge(
+                $widget->default_settings ?? [],
+                [
+                    'widget_fields' => $widgetConfig['widget_fields'] ?? [],
+                    'layout' => $widgetConfig['layout'] ?? [],
+                    'styling' => $widgetConfig['styling'] ?? [],
+                    'advanced' => $widgetConfig['advanced'] ?? []
+                ]
+            );
+
+            // Generate preview HTML (simplified for now)
+            $previewHtml = $this->generateWidgetPreviewHtml($widget, $previewSettings, $selectedItems, $contentQuery, $contentTypeId);
+
+            // Create widget summary
+            $widgetSummary = [
+                'name' => $widget->name,
+                'content_type' => $contentTypeId ? ContentType::find($contentTypeId)?->name ?? 'Unknown' : 'None',
+                'items_count' => count($selectedItems) ?: ($contentQuery ? ($contentQuery['limit'] ?? 10) : 0),
+                'settings_count' => count($widgetConfig['widget_fields'] ?? [])
+            ];
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'preview_html' => $previewHtml,
+                    'widget_summary' => $widgetSummary
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error generating widget preview: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to generate preview: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Generate widget preview HTML
+     */
+    private function generateWidgetPreviewHtml($widget, $settings, $selectedItems, $contentQuery, $contentTypeId)
+    {
+        // For now, create a basic preview showing widget info
+        $itemCount = count($selectedItems) ?: ($contentQuery ? ($contentQuery['limit'] ?? 10) : 0);
+        
+        $previewHtml = '<div class="widget-preview-demo border rounded p-3">';
+        $previewHtml .= '<div class="d-flex align-items-center mb-2">';
+        $previewHtml .= '<i class="' . ($widget->icon ?? 'ri-puzzle-line') . ' me-2 text-primary fs-4"></i>';
+        $previewHtml .= '<div>';
+        $previewHtml .= '<h6 class="mb-0">' . htmlspecialchars($widget->name) . '</h6>';
+        $previewHtml .= '<small class="text-muted">Widget Preview</small>';
+        $previewHtml .= '</div>';
+        $previewHtml .= '</div>';
+
+        if ($itemCount > 0) {
+            $previewHtml .= '<div class="alert alert-info small mb-2">';
+            $previewHtml .= '<i class="ri-database-line me-1"></i>';
+            $previewHtml .= 'This widget will display ' . $itemCount . ' content item(s)';
+            $previewHtml .= '</div>';
+        }
+
+        // Show widget field settings if any
+        $widgetFields = $settings['widget_fields'] ?? [];
+        if (!empty($widgetFields)) {
+            $previewHtml .= '<div class="widget-settings-preview small">';
+            $previewHtml .= '<strong class="d-block mb-1">Settings:</strong>';
+            foreach ($widgetFields as $key => $value) {
+                if ($value !== '' && $value !== null) {
+                    $displayValue = is_bool($value) ? ($value ? 'Yes' : 'No') : htmlspecialchars((string)$value);
+                    $previewHtml .= '<div><span class="text-muted">' . htmlspecialchars($key) . ':</span> ' . $displayValue . '</div>';
+                }
+            }
+            $previewHtml .= '</div>';
+        }
+
+        // Show layout info
+        $layout = $settings['layout'] ?? [];
+        if (!empty($layout)) {
+            $previewHtml .= '<div class="layout-preview-info small mt-2 text-muted">';
+            $previewHtml .= '<i class="ri-layout-grid-line me-1"></i>';
+            $previewHtml .= ($layout['width'] ?? 12) . ' columns, ' . ($layout['height'] ?? 'auto') . ' height';
+            $previewHtml .= '</div>';
+        }
+
+        $previewHtml .= '</div>';
+
+        return $previewHtml;
+    }
+
     public function addWidget(PageSection $section, Request $request): JsonResponse
     {
-        $request->validate([
-            'widget_id' => 'required|exists:widgets,id'
+        \Log::info('Widget submission received:', [
+            'request_data' => $request->all(),
+            'section_id' => $section->id
         ]);
 
         try {
-            $widget = Widget::findOrFail($request->widget_id);
+            $request->validate([
+                'widget_id' => 'required|exists:widgets,id',
+                'widget_config' => 'sometimes|array',
+                'selected_items' => 'sometimes|array',
+                'content_query' => 'sometimes|nullable' // Allow object/array/null
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Widget validation failed:', [
+                'errors' => $e->errors(),
+                'request_data' => $request->all()
+            ]);
+            throw $e;
+        }
 
+        try {
+            $widget = Widget::findOrFail($request->widget_id);
+            $widgetConfig = $request->widget_config ?? [];
+            
             // Get next position in section
             $nextPosition = $section->pageSectionWidgets()->max('position') + 1;
 
-            // Create new widget instance
+            // Prepare settings from widget configuration
+            $settings = array_merge(
+                $widget->default_settings ?? [],
+                [
+                    'widget_fields' => $widgetConfig['widget_fields'] ?? [],
+                    'layout' => $widgetConfig['layout'] ?? [],
+                    'styling' => $widgetConfig['styling'] ?? [],
+                    'advanced' => $widgetConfig['advanced'] ?? []
+                ]
+            );
+
+            // Prepare content query - handle different scenarios
+            $contentQuery = [];
+            
+            // If content_query is already provided by frontend (structured correctly), use it
+            if (!empty($request->content_query) && is_array($request->content_query)) {
+                $contentQuery = $request->content_query;
+            } 
+            // Fallback: build from selected_items (legacy support)
+            elseif (!empty($request->selected_items) && $request->content_type_id) {
+                $contentQuery = [
+                    'limit' => count($request->selected_items),
+                    'filters' => [],
+                    'sort_by' => 'created_at',
+                    'query_type' => 'multiple', 
+                    'sort_order' => 'desc',
+                    'content_type_id' => (int) $request->content_type_id,
+                    'content_item_ids' => array_map('intval', $request->selected_items)
+                ];
+            }
+            // Widget that doesn't use content or no content selected
+            else {
+                $contentQuery = [];
+            }
+
+            // Create new widget instance with full configuration
             $widgetInstance = PageSectionWidget::create([
                 'page_section_id' => $section->id,
                 'widget_id' => $widget->id,
                 'position' => $nextPosition,
-                'settings' => $widget->default_settings ?? [],
-                'content_query' => []
+                // GridStack positioning (using database defaults where available)
+                'grid_x' => 0,      // Default: 0
+                'grid_y' => 0,      // Default: 0  
+                'grid_w' => 12,     // Default: 12 (full width)
+                'grid_h' => 4,      // Default: 4 (as per schema)
+                'grid_id' => 'widget_temp_' . uniqid(), // Required field, no default
+                // Widget configuration
+                'settings' => $settings,
+                'content_query' => $contentQuery
+            ]);
+
+            // Generate proper grid ID after creation (widget_1, widget_2, etc.)
+            $widgetInstance->update([
+                'grid_id' => 'widget_' . $widgetInstance->id
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Widget added successfully',
+                'message' => 'Widget added successfully to ' . $section->templateSection->name ?? 'section',
                 'data' => [
                     'widget_instance_id' => $widgetInstance->id,
                     'widget_name' => $widget->name,
+                    'section_name' => $section->templateSection->name ?? 'Section',
                     'refresh_preview' => true,
                     'refresh_structure' => true
                 ]
             ]);
 
         } catch (\Exception $e) {
+            \Log::error('Error adding widget: ' . $e->getMessage());
+            
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to add widget: ' . $e->getMessage()
+                'error' => 'Failed to add widget: ' . $e->getMessage()
             ], 500);
         }
     }

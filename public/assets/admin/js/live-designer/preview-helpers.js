@@ -358,10 +358,18 @@
             document.querySelectorAll('.preview-highlighted').forEach(el => {
                 el.classList.remove('preview-highlighted');
                 el.style.boxShadow = '';
+                // Remove existing toolbar buttons
+                const existingButtons = el.querySelector('.section-toolbar-buttons');
+                if (existingButtons) {
+                    existingButtons.remove();
+                }
             });
             
             // Add highlight to selected section
             section.classList.add('preview-highlighted');
+            
+            // Create toolbar buttons
+            createSectionToolbarButtons(section, sectionId);
             
             // Scroll into view with some top offset to account for toolbar
             section.scrollIntoView({ 
@@ -372,10 +380,69 @@
         }
     }
     
+    function createSectionToolbarButtons(section, sectionId) {
+        // Create toolbar buttons container
+        const toolbarButtons = document.createElement('div');
+        toolbarButtons.className = 'section-toolbar-buttons';
+        
+        // Add Widget Button (Primary action)
+        const addWidgetBtn = document.createElement('button');
+        addWidgetBtn.className = 'section-toolbar-btn btn-primary';
+        addWidgetBtn.innerHTML = '<i class="ri-add-line"></i> Add Widget';
+        addWidgetBtn.setAttribute('data-action', 'add-widget');
+        addWidgetBtn.title = 'Add Widget to Section';
+        
+        // Edit Button
+        const editBtn = document.createElement('button');
+        editBtn.className = 'section-toolbar-btn';
+        editBtn.innerHTML = '<i class="ri-settings-line"></i> Edit';
+        editBtn.setAttribute('data-action', 'edit');
+        editBtn.title = 'Edit Section Settings';
+        
+        // Delete Button
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'section-toolbar-btn';
+        deleteBtn.innerHTML = '<i class="ri-delete-bin-line"></i> Delete';
+        deleteBtn.setAttribute('data-action', 'delete');
+        deleteBtn.title = 'Delete Section';
+        
+        // Add buttons to container
+        toolbarButtons.appendChild(addWidgetBtn);
+        toolbarButtons.appendChild(editBtn);
+        toolbarButtons.appendChild(deleteBtn);
+        
+        // Add click handlers
+        toolbarButtons.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const button = e.target.closest('.section-toolbar-btn');
+            if (button) {
+                const action = button.getAttribute('data-action');
+                const sectionName = section.getAttribute('data-section-name') || 'Section';
+                
+                console.log(`🔧 Section toolbar action: ${action} on section "${sectionName}" (ID: ${sectionId})`);
+                
+                // Call the existing toolbar action handler
+                handleToolbarAction(button, section);
+            }
+        });
+        
+        // Append to section
+        section.appendChild(toolbarButtons);
+        
+        console.log(`✅ Created toolbar buttons for section ${sectionId}`);
+    }
+    
     function deselectAll() {
         document.querySelectorAll('.preview-highlighted').forEach(el => {
             el.classList.remove('preview-highlighted');
             el.style.boxShadow = '';
+            // Remove toolbar buttons when deselecting
+            const existingButtons = el.querySelector('.section-toolbar-buttons');
+            if (existingButtons) {
+                existingButtons.remove();
+            }
         });
     }
     

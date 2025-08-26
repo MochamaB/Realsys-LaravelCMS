@@ -1,39 +1,6 @@
 /* GridStack Designer Layout Styles */
 
-/* Section Selection Toolbar */
-.section-toolbar {
-    position: fixed;
-    top: 80px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #fff;
-    border: 1px solid #007bff;
-    border-radius: 8px;
-    padding: 8px 16px;
-    box-shadow: 0 4px 16px rgba(0, 123, 255, 0.2);
-    z-index: 1050;
-    min-width: 400px;
-}
-
-.toolbar-content {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.toolbar-info {
-    display: flex;
-    align-items: center;
-    font-weight: 500;
-    color: #495057;
-}
-
-.toolbar-actions {
-    display: flex;
-    gap: 8px;
-}
-
-/* Section Selection Styles */
+/* Section Selection Styles (simplified since toolbar is now in iframe) */
 .section-selected {
     outline: 2px solid #007bff !important;
     outline-offset: 2px;

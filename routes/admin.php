@@ -316,6 +316,11 @@ Route::prefix('api')->middleware('admin.auth')->group(function () {
         Route::get('/pages/{page}/rendered/iframe', [App\Http\Controllers\Api\PageBuilderController::class, 'getRenderedPageIframe'])->name('api.page-builder.pages.rendered.iframe');
         Route::get('/pages/{page}/structure', [App\Http\Controllers\Api\PageBuilderController::class, 'getPageStructure'])->name('api.page-builder.pages.structure');
         Route::get('/widgets/available', [App\Http\Controllers\Api\PageBuilderController::class, 'getAvailableWidgets'])->name('api.page-builder.widgets.available');
+        Route::get('/widgets/{widget}/content-types', [App\Http\Controllers\Api\PageBuilderController::class, 'getWidgetContentTypes'])->name('api.page-builder.widgets.content-types');
+        Route::get('/widgets/{widget}/field-definitions', [App\Http\Controllers\Api\PageBuilderController::class, 'getWidgetFieldDefinitions'])->name('api.page-builder.widgets.field-definitions');
+        Route::post('/widgets/{widget}/preview', [App\Http\Controllers\Api\PageBuilderController::class, 'previewWidget'])->name('api.page-builder.widgets.preview');
+        Route::get('/content-types/{contentType}/items', [App\Http\Controllers\Api\PageBuilderController::class, 'getContentTypeItems'])->name('api.page-builder.content-types.items');
+        Route::post('/content-types/{contentType}/items/query', [App\Http\Controllers\Api\PageBuilderController::class, 'queryContentItems'])->name('api.page-builder.content-types.items.query');
         Route::get('/theme/assets', [App\Http\Controllers\Api\PageBuilderController::class, 'getThemeAssets'])->name('api.page-builder.theme.assets');
         
         // Widget Operations (based on LivePreviewController)

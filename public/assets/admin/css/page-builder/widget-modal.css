@@ -1,0 +1,721 @@
+/* Multi-Step Widget Modal Styles */
+
+/* Step Indicators */
+.widget-modal-steps {
+    padding: 0 2rem;
+}
+
+.step-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 60px;
+}
+
+.step-indicator:hover {
+    transform: translateY(-1px);
+}
+
+.step-number {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #e9ecef;
+    color: #6c757d;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    margin-bottom: 0.25rem;
+}
+
+.step-indicator.active .step-number {
+    background: #007bff;
+    color: white;
+}
+
+.step-indicator.completed .step-number {
+    background: #28a745;
+    color: white;
+}
+
+.step-indicator.completed .step-number::before {
+    content: "✓";
+    font-size: 14px;
+}
+
+.step-label {
+    font-size: 0.75rem;
+    color: #6c757d;
+    font-weight: 500;
+    text-align: center;
+}
+
+.step-indicator.active .step-label {
+    color: #007bff;
+    font-weight: 600;
+}
+
+.step-indicator.completed .step-label {
+    color: #28a745;
+    font-weight: 600;
+}
+
+/* Step Connectors */
+.step-connector {
+    flex: 1;
+    height: 2px;
+    background: #e9ecef;
+    margin: 0 0.5rem;
+    margin-top: 18px;
+    transition: all 0.3s ease;
+}
+
+.step-indicator.completed + .step-connector {
+    background: #28a745;
+}
+
+/* Modal Steps Content */
+.widget-modal-content {
+    min-height: 400px;
+}
+
+.modal-step {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.step-header {
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 1rem;
+}
+
+.step-title {
+    color: #495057;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.step-description {
+    font-size: 0.9rem;
+    margin-bottom: 0;
+}
+
+/* Widget Library Styles */
+.widget-library-container {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.widget-category {
+    margin-bottom: 2rem;
+}
+
+.widget-category:last-child {
+    margin-bottom: 0;
+}
+
+.widget-category-title {
+    color: #495057;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.widget-library-item {
+    transition: all 0.2s ease;
+    position: relative;
+    border: 2px solid #e9ecef !important;
+}
+
+.widget-library-item:hover {
+    border-color: #007bff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,123,255,0.2);
+}
+
+.widget-library-item.selected {
+    border-color: #28a745 !important;
+    background-color: rgba(40,167,69,0.05);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(40,167,69,0.3);
+}
+
+.widget-library-item .widget-meta {
+    margin-top: auto;
+}
+
+.widget-library-item .badge {
+    font-size: 0.7rem;
+}
+
+/* Widget Preview Panel */
+.widget-preview-panel {
+    position: sticky;
+    top: 1rem;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.widget-preview-image {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 0.375rem;
+}
+
+/* Widget Controls */
+.widget-controls .input-group {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.widget-controls .form-select {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Navigation Buttons */
+.modal-footer .btn {
+    min-width: 100px;
+}
+
+.modal-footer .btn i {
+    transition: transform 0.2s ease;
+}
+
+.modal-footer .btn:hover i {
+    transform: scale(1.1);
+}
+
+/* Loading States */
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .widget-modal-steps {
+        padding: 0 1rem;
+    }
+    
+    .step-indicator {
+        min-width: 50px;
+    }
+    
+    .step-number {
+        width: 30px;
+        height: 30px;
+        font-size: 0.8rem;
+    }
+    
+    .step-label {
+        font-size: 0.7rem;
+    }
+    
+    .widget-library-container {
+        max-height: 350px;
+    }
+}
+
+/* Accessibility */
+.step-indicator[aria-disabled="true"] {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.widget-library-item:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+/* Content Type Selection Styles */
+.content-type-card {
+    transition: all 0.2s ease;
+    position: relative;
+    border: 2px solid #e9ecef !important;
+}
+
+.content-type-card:hover {
+    border-color: #007bff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,123,255,0.2);
+}
+
+.content-type-card.selected {
+    border-color: #28a745 !important;
+    background-color: rgba(40,167,69,0.05);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(40,167,69,0.3);
+}
+
+.content-type-card .content-type-meta {
+    margin-top: auto;
+}
+
+.content-type-card .badge {
+    font-size: 0.7rem;
+}
+
+.content-type-card:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+#contentTypeSelection {
+    min-height: 300px;
+}
+
+#selectedContentTypeInfo {
+    border-radius: 0.5rem;
+}
+
+#selectedContentTypeInfo .alert {
+    border: none;
+    background: linear-gradient(135deg, rgba(13, 110, 253, 0.1), rgba(13, 110, 253, 0.05));
+}
+
+/* Phase 3: Content Item Selection Styles */
+.content-selection-modes .nav-pills .nav-link {
+    border-radius: 0.5rem;
+    font-weight: 500;
+}
+
+.content-selection-modes .nav-pills .nav-link.active {
+    background-color: #007bff;
+}
+
+.content-item-card {
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.content-item-card:hover {
+    border-color: #007bff !important;
+    background-color: rgba(0,123,255,0.02);
+}
+
+.content-item-card .form-check-input:checked {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.content-item-card .item-thumbnail img {
+    border: 1px solid #e9ecef;
+}
+
+.content-controls .input-group,
+.content-controls .form-select {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Query Builder Styles */
+.query-config {
+    background: #f8f9fa;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+}
+
+.query-config .filter-section,
+.query-config .sort-section,
+.query-config .limit-section {
+    background: white;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    border: 1px solid #e9ecef;
+}
+
+.query-preview-panel {
+    background: #f8f9fa;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.query-preview-item {
+    transition: background-color 0.2s ease;
+}
+
+.query-preview-item:hover {
+    background-color: rgba(0,123,255,0.05);
+}
+
+.query-preview-item:last-child {
+    border-bottom: none !important;
+}
+
+#querySummary .card {
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* Selected Items Summary */
+#selectedItemsSummary .alert {
+    border: none;
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(40, 167, 69, 0.05));
+}
+
+/* Pagination */
+.pagination .page-link {
+    color: #007bff;
+    border-color: #dee2e6;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.pagination .page-link:hover {
+    color: #0056b3;
+    background-color: #e9ecef;
+}
+
+/* Content Items Container Scrollbar */
+.content-items-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.content-items-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.content-items-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.content-items-container::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Phase 4: Widget Configuration Styles */
+.configuration-sections {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.configuration-section {
+    background: #f8f9fa;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    border: 1px solid #e9ecef;
+    transition: all 0.2s ease;
+}
+
+.configuration-section:hover {
+    border-color: #007bff;
+}
+
+.section-header .section-title {
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+    color: #495057;
+}
+
+.section-header .section-description {
+    color: #6c757d;
+}
+
+/* Widget Fields */
+.widget-fields-container {
+    background: white;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    border: 1px solid #dee2e6;
+}
+
+.widget-field {
+    position: relative;
+}
+
+.widget-field .form-label.fw-bold {
+    color: #495057;
+    font-size: 0.875rem;
+}
+
+.widget-field .text-danger {
+    font-size: 0.75rem;
+}
+
+/* Styling Tabs */
+.styling-tabs .nav-pills.nav-sm .nav-link {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    border-radius: 0.375rem;
+}
+
+.styling-tabs .nav-pills .nav-link.active {
+    background-color: #ffc107;
+    color: #000;
+}
+
+.styling-tabs .tab-content {
+    background: white;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    border: 1px solid #dee2e6;
+}
+
+/* Spacing Controls */
+.spacing-controls .form-control-sm {
+    text-align: center;
+    font-size: 0.75rem;
+}
+
+.spacing-controls .row {
+    --bs-gutter-x: 0.25rem;
+}
+
+/* Color Controls */
+.form-control-color {
+    width: 3rem;
+    height: 38px;
+    border-radius: 0.375rem 0 0 0.375rem;
+}
+
+.input-group .form-control-color + .form-control {
+    border-left: none;
+}
+
+/* Range Sliders */
+.form-range {
+    margin: 0.5rem 0;
+}
+
+.form-range::-webkit-slider-thumb {
+    background-color: #007bff;
+}
+
+.form-range::-webkit-slider-track {
+    background-color: #e9ecef;
+}
+
+/* Responsive Controls */
+.responsive-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.responsive-controls .form-check-inline {
+    margin-right: 0;
+}
+
+.responsive-controls .form-check-label {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.responsive-controls .form-check-input:checked + .form-check-label {
+    background: #e3f2fd;
+    border-color: #2196f3;
+    color: #1976d2;
+}
+
+.responsive-controls .form-check-input {
+    display: none;
+}
+
+/* Configuration Summary */
+#configurationSummary .alert {
+    border: 1px solid #007bff;
+    background: linear-gradient(135deg, rgba(13, 110, 253, 0.1), rgba(13, 110, 253, 0.05));
+}
+
+/* Field Type Specific Styles */
+.widget-field[data-field-slug] input[type="color"] + input[type="text"] {
+    font-family: monospace;
+    font-size: 0.875rem;
+}
+
+.widget-field .form-check {
+    padding: 0.5rem;
+    background: #f8f9fa;
+    border-radius: 0.375rem;
+    border: 1px solid #e9ecef;
+}
+
+.widget-field .form-check:hover {
+    background: #e3f2fd;
+    border-color: #2196f3;
+}
+
+.widget-field input[type="file"] {
+    padding: 0.375rem;
+}
+
+/* Loading and Empty States */
+#configurationLoading,
+#noConfigurationFields {
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Configuration Sections Scrollbar */
+.configuration-sections::-webkit-scrollbar {
+    width: 6px;
+}
+
+.configuration-sections::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.configuration-sections::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.configuration-sections::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .configuration-section {
+        padding: 1rem;
+    }
+    
+    .spacing-controls .col-3 {
+        flex: 0 0 50%;
+        max-width: 50%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .responsive-controls .form-check-inline {
+        margin-bottom: 0.25rem;
+    }
+}
+
+/* Phase 5: Review & Confirmation Styles */
+.widget-preview-container {
+    min-height: 200px;
+    background: #f8f9fa !important;
+    border-radius: 0.5rem;
+}
+
+.widget-preview-demo {
+    background: white;
+    border: 2px dashed #dee2e6 !important;
+    position: relative;
+}
+
+.widget-preview-demo:before {
+    content: "Preview";
+    position: absolute;
+    top: -1px;
+    right: -1px;
+    background: #007bff;
+    color: white;
+    padding: 2px 8px;
+    font-size: 0.7rem;
+    border-radius: 0 0.5rem 0 0.25rem;
+}
+
+.summary-section {
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 0.75rem;
+}
+
+.summary-section:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.summary-section .form-label {
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.7rem;
+    margin-bottom: 0.25rem;
+}
+
+.widget-settings-preview {
+    background: #f8f9fa;
+    padding: 0.75rem;
+    border-radius: 0.375rem;
+    border-left: 3px solid #007bff;
+}
+
+.layout-preview-info {
+    background: #e3f2fd;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.25rem;
+    display: inline-block;
+}
+
+.ready-confirmation {
+    background: linear-gradient(135deg, rgba(13, 110, 253, 0.1), rgba(13, 110, 253, 0.05));
+    border: 1px solid rgba(13, 110, 253, 0.2);
+    border-radius: 0.5rem;
+}
+
+.ready-confirmation .alert {
+    margin-bottom: 0;
+    background: transparent !important;
+    border: none !important;
+}
+
+/* Loading states for final submission */
+.modal-footer .btn[disabled] {
+    opacity: 0.7;
+}
+
+.modal-footer .btn .ri-loader-4-line {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Custom scrollbar for webkit browsers */
+.widget-library-container::-webkit-scrollbar,
+.widget-preview-panel::-webkit-scrollbar {
+    width: 6px;
+}
+
+.widget-library-container::-webkit-scrollbar-track,
+.widget-preview-panel::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.widget-library-container::-webkit-scrollbar-thumb,
+.widget-preview-panel::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.widget-library-container::-webkit-scrollbar-thumb:hover,
+.widget-preview-panel::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
