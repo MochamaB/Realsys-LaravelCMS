@@ -1,10 +1,7 @@
 <!-- GridStack Page Builder Toolbar -->
-<div class="page-title-box d-sm-flex align-items-center justify-content-between bg-galaxy-transparent mb-0 ms-0 p-3">
+<div class="page-title-box d-sm-flex align-items-center justify-content-between bg-galaxy-transparent mb-0 ms-0 p-3 border-bottom: 1px solid #e9ecef;">
     <div class="d-flex align-items-center">
-        <!-- Toggle sidebar button -->
-        <button class="btn btn-outline-secondary me-2" id="toggleLeftSidebarBtn" title="Toggle Widget Library">
-            <i class="ri-apps-line"></i>
-        </button>
+        
         
         <h4 class="page-title mb-0">
             <i class="ri-layout-grid-line me-2"></i>
@@ -14,15 +11,46 @@
     
     <!-- Device Preview Controls (for responsive testing) -->
     <div class="page-title-middle">
-        <div class="btn-group" role="group">
-            <button class="btn btn-sm btn-outline-secondary active" data-device="desktop" title="Desktop">
+                <!-- Device Preview Controls -->
+        <div class="btn-group" role="group" aria-label="Device Preview">
+            <!-- Desktop Mode -->
+            <input type="radio" class="btn-check" name="device-mode" id="desktop-mode" value="desktop" checked>
+            <label class="btn btn-outline-primary" for="desktop-mode" title="Desktop Preview (Ctrl+1)">
                 <i class="ri-computer-line"></i>
-            </button>
-            <button class="btn btn-sm btn-outline-secondary" data-device="tablet" title="Tablet">
+                <span class="d-none d-md-inline ms-1">Desktop</span>
+                <span class="zoom-indicator d-none d-lg-inline ms-1" id="zoom-level">100%</span>
+            </label>
+            
+            <!-- Tablet Mode -->
+            <input type="radio" class="btn-check" name="device-mode" id="tablet-mode" value="tablet">
+            <label class="btn btn-outline-primary" for="tablet-mode" title="Tablet Preview (Ctrl+2)">
                 <i class="ri-tablet-line"></i>
-            </button>
-            <button class="btn btn-sm btn-outline-secondary" data-device="mobile" title="Mobile">
+                <span class="d-none d-md-inline ms-1">Tablet</span>
+            </label>
+            
+            <!-- Mobile Mode -->
+            <input type="radio" class="btn-check" name="device-mode" id="mobile-mode" value="mobile">
+            <label class="btn btn-outline-primary" for="mobile-mode" title="Mobile Preview (Ctrl+3)">
                 <i class="ri-smartphone-line"></i>
+                <span class="d-none d-md-inline ms-1">Mobile</span>
+            </label>
+        </div>
+        <!-- Optional: Zoom Controls for Desktop -->
+        <div class="btn-group ms-2" role="group" aria-label="Zoom Controls" id="zoom-controls">
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-action="zoom-out" title="Zoom Out">
+                <i class="ri-zoom-out-line"></i>
+            </button>
+            
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-action="zoom-fit" title="Zoom to Fit">
+                <i class="ri-focus-3-line"></i>
+            </button>
+            
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-action="zoom-100" title="100% Zoom">
+                <span style="font-size: 0.8em;">100%</span>
+            </button>
+            
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-action="zoom-in" title="Zoom In">
+                <i class="ri-zoom-in-line"></i>
             </button>
         </div>
     </div>

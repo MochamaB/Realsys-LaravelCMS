@@ -61,7 +61,9 @@
                                 </thead>
                                 <tbody>
                                     @foreach($contentTypes as $contentType)
-                                        <tr>
+                                    <tr class="clickable-row" 
+                                            data-href="{{ route('admin.content-types.show', $contentType->id) }}"
+                                            style="cursor: pointer;">
                                             <td>{{ $loop->iteration }}</td>
                                             <td><i class="bx bx-{{ $contentType->icon }}"></i></td>
                                             <td>{{ $contentType->name }}</td>

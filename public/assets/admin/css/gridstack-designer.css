@@ -1189,6 +1189,7 @@
     display: flex !important;
     flex-wrap: nowrap !important;
     width: 100% !important;
+    margin: 0 !important;
 }
 
 /* Sidebar Container */
@@ -1678,3 +1679,185 @@
 .modal-footer .btn i {
     font-size: 16px;
 } 
+/* Enhanced Device Preview Styles */
+/* Add this to your gridstack-designer.css or similar file */
+
+.preview-container {
+    position: relative;
+    overflow-x: auto;
+    overflow-y: hidden;
+    height: 100%;
+    padding: 0px;
+    background: #f3f3f9;
+}
+
+/* Desktop Preview Enhancements */
+.preview-container.device-desktop {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 0px;
+}
+
+.preview-container.device-desktop iframe {
+    background: #ffffff;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    min-height: 600px;
+}
+
+/* Tablet Preview */
+.preview-container.device-tablet {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 20px;
+}
+
+/* Mobile Preview */
+.preview-container.device-mobile {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 20px;
+}
+
+/* Zoom Indicator Styles */
+.zoom-indicator {
+    display: inline-block;
+    padding: 2px 6px;
+    background: rgba(0, 123, 255, 0.1);
+    border-radius: 4px;
+    font-size: 0.8em;
+    color: #007bff;
+    font-weight: 500;
+}
+
+.zoom-indicator.zoomed-out {
+    background: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+}
+
+/* Device Frame Enhancements */
+.device-frame {
+    position: relative;
+    margin: 20px auto;
+    border-radius: 20px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    background: linear-gradient(145deg, #2a2a2a 0%, #1a1a1a 100%);
+}
+
+.device-frame-tablet {
+    padding: 40px 20px;
+    border-radius: 25px;
+    max-width: 808px; /* 768px + padding */
+}
+
+.device-frame-tablet::before {
+    content: '';
+    position: absolute;
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 4px;
+    background: #444;
+    border-radius: 2px;
+}
+
+.device-frame-mobile {
+    padding: 60px 15px;
+    border-radius: 30px;
+    max-width: 405px; /* 375px + padding */
+}
+
+.device-frame-mobile::before {
+    content: '';
+    position: absolute;
+    top: 25px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 4px;
+    background: #444;
+    border-radius: 2px;
+}
+
+.device-frame-mobile::after {
+    content: '';
+    position: absolute;
+    bottom: 25px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 40px;
+    border: 2px solid #444;
+    border-radius: 50%;
+}
+
+/* Iframe adjustments for frames */
+.device-frame iframe {
+    border-radius: 8px;
+    overflow: hidden;
+    background: white;
+}
+
+.device-frame-tablet iframe {
+    border-radius: 12px;
+}
+
+.device-frame-mobile iframe {
+    border-radius: 20px;
+}
+
+/* Smooth transitions for device switching */
+.preview-container {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.preview-container iframe {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 991.98px) {
+    .device-frame-tablet,
+    .device-frame-mobile {
+        margin: 10px;
+        padding: 20px 10px;
+    }
+    
+    .device-frame-tablet::before,
+    .device-frame-mobile::before {
+        top: 8px;
+    }
+    
+    .device-frame-mobile::after {
+        bottom: 8px;
+    }
+    
+    .preview-container {
+        padding: 10px;
+    }
+}
+
+/* Loading states */
+.preview-container.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #007bff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}

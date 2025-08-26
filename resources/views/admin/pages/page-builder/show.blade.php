@@ -26,6 +26,7 @@
 <script src="{{ asset('assets/admin/js/page-builder/template-manager.js') }}?v={{ time() }}"></script>
 <script src="{{ asset('assets/admin/js/page-builder/theme-manager.js') }}?v={{ time() }}"></script>
 <script src="{{ asset('assets/admin/js/page-builder/page-builder-main.js') }}?v={{ time() }}"></script>
+<script src="{{ asset('assets/admin/js/page-builder/device-preview.js') }}?v={{ time() }}"></script>
 
 <!-- Multi-Step Widget Modal Manager -->
 <script src="{{ asset('assets/admin/js/page-builder/widget-modal-manager.js') }}?v={{ time() }}"></script>
@@ -98,6 +99,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Setup iframe message listener
                 setupIframeMessageListener();
+                                // Initialize sidebar toggle functionality
+                                initSidebarToggle();
+
             }).catch(error => {
                 console.error('❌ Page Builder initialization failed:', error);
             });
@@ -109,6 +113,52 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Legacy Widget Modal Handlers - Replaced by WidgetModalManager
 // These functions are kept for backward compatibility but are no longer used
+// Sidebar toggle functionality
+function initSidebarToggle() {
+    const sidebarContainer = document.getElementById('leftSidebarContainer');
+    const toggleBtn = document.getElementById('sidebarToggleBtn');
+    const sidebar = document.getElementById('leftSidebar');
+    
+    if (!toggleBtn || !sidebarContainer) return;
+    
+    // Set sidebar collapsed by default on first load
+    const isCollapsed = localStorage.getItem('sidebarCollapsed');
+    if (isCollapsed === null) {
+        // First time load - set to collapsed
+        sidebarContainer.classList.add('collapsed');
+        toggleBtn.querySelector('i').classList.remove('ri-arrow-left-line');
+        toggleBtn.querySelector('i').classList.add('ri-arrow-right-line');
+        localStorage.setItem('sidebarCollapsed', 'true');
+    } else if (isCollapsed === 'true') {
+        sidebarContainer.classList.add('collapsed');
+        toggleBtn.querySelector('i').classList.remove('ri-arrow-left-line');
+        toggleBtn.querySelector('i').classList.add('ri-arrow-right-line');
+    }
+    
+    toggleBtn.addEventListener('click', function() {
+        sidebarContainer.classList.toggle('collapsed');
+        
+        // Update icon
+        const icon = toggleBtn.querySelector('i');
+        if (sidebarContainer.classList.contains('collapsed')) {
+            icon.classList.remove('ri-arrow-left-line');
+            icon.classList.add('ri-arrow-right-line');
+            localStorage.setItem('sidebarCollapsed', 'true');
+        } else {
+            icon.classList.remove('ri-arrow-right-line');
+            icon.classList.add('ri-arrow-left-line');
+            localStorage.setItem('sidebarCollapsed', 'false');
+        }
+        
+        // Refresh device preview after sidebar transition
+        setTimeout(() => {
+            if (window.devicePreview && window.devicePreview.refresh) {
+                window.devicePreview.refresh();
+            }
+        }, 300); // Wait for CSS transition to complete
+    });
+}
+
 
 // Iframe Message Listener
 function setupIframeMessageListener() {

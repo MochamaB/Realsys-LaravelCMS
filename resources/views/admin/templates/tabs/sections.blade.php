@@ -5,8 +5,7 @@
         <h5>Template Designer: {{ $template->name }}</h5>
         <div class="control-buttons">
             <button class="btn btn-primary" id="add-section-btn">Add Section</button>
-            <button class="btn btn-primary" id="save-layout-btn">Save Layout</button>
-            <button class="btn btn-info" id="preview-btn" data-template-id="{{ $template->id }}">Preview</button>
+          
         </div>
     </div>
     <!-- Main Layout Area (Full Width) -->

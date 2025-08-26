@@ -1,11 +1,13 @@
 <!-- GridStack Page Builder - Left Sidebar -->
-<div class="designer-left-sidebar bg-white border-end" id="leftSidebar" style="height: calc(100vh - 100px); overflow-y: auto;">
+<div class="designer-left-sidebar bg-white border-end" id="leftSidebar" style="height: calc(100vh - 100px); overflow-y: auto;border-radius: 0px;">
     <!-- Sidebar Header -->
-    <div class="sidebar-header p-3 border-bottom">
+    <div class="sidebar-header p-3 border-bottom d-flex align-items-center justify-content-between" style="background-color: #099885;">
         <h6 class="mb-0">
-            <i class="ri-layout-grid-line me-2"></i>
-            Components Library
+            <span class="sidebar-title" style="color: white;">Components Library</span>
         </h6>
+        <button class="btn btn-outline-success border-0" id="sidebarToggleBtn" title="Collapse Sidebar">
+            <i class="ri-arrow-left-line" style="color: white; font-size: 18px;"></i>
+        </button>
     </div>
     
     <!-- Sidebar Content -->
@@ -18,7 +20,7 @@
                    data-bs-toggle="collapse" 
                    href="#sectionsCollapse" 
                    role="button" 
-                   aria-expanded="true" 
+                   aria-expanded="false" 
                    aria-controls="sectionsCollapse">
                     <i class="ri-layout-grid-line nav-icon me-2"></i>
                     <span class="nav-text">Page Sections</span>
@@ -117,9 +119,41 @@
     position: relative;
 }
 
+/* Bootstrap grid override for collapsed sidebar */
+#leftSidebarContainer.collapsed {
+    flex: 0 0 70px !important;
+    max-width: 70px !important;
+}
+
+/* Canvas container expansion when sidebar collapsed */
+#leftSidebarContainer.collapsed ~ #canvasContainer {
+    flex: 1 1 calc(100% - 70px) !important;
+    max-width: calc(100% - 70px) !important;
+}
+
+/* Smooth transition for canvas container */
+#canvasContainer {
+    transition: all 0.3s ease;
+}
+
 /* Collapsed state - handled by main CSS */
 #leftSidebarContainer.collapsed .designer-left-sidebar {
     width: 70px;
+    background-color: #099885 !important;
+}
+
+#leftSidebarContainer.collapsed .sidebar-header {
+    background-color: #099885;
+    color: white;
+}
+
+#leftSidebarContainer.collapsed .sidebar-header h6,
+#leftSidebarContainer.collapsed .sidebar-header i {
+    color: white !important;
+}
+
+#leftSidebarContainer.collapsed .sidebar-title {
+    display: none;
 }
 
 #leftSidebarContainer.collapsed .sidebar-content {
@@ -129,6 +163,12 @@
 #leftSidebarContainer.collapsed .sidebar-collapsed-icons {
     display: flex !important;
     padding: 10px 0;
+}
+
+#leftSidebarContainer.collapsed #sidebarToggleBtn {
+    background-color: transparent !important;
+    border: none !important;
+    color: white !important;
 }
 
 /* Navigation styling */
@@ -188,18 +228,19 @@
     justify-content: center;
     border-radius: 8px;
     background: transparent;
-    color: #6c757d;
+    color: white;
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
 .collapsed-icon-item:hover {
-    background-color: #f8f9fa;
-    color: #495057;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
 }
 
 .collapsed-icon-item i {
     font-size: 22px;
+    color: white;
 }
 
 /* Component grid styling */
