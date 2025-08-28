@@ -609,6 +609,264 @@ class PageBuilderController extends Controller
         }
     }
 
+    // =====================================================================
+    // SECTION CONFIGURATION API METHODS
+    // =====================================================================
+
+    /**
+     * Get section configuration
+     * 
+     * @param PageSection $section
+     * @return JsonResponse
+     */
+    public function getSectionConfiguration(PageSection $section): JsonResponse
+    {
+        try {
+            $section->load('templateSection');
+            
+            // Get configuration from the section's config column or provide defaults
+            $config = $section->config ? json_decode($section->config, true) : [];
+            
+            // Ensure we have default values
+            $defaultConfig = [
+                'name' => $section->templateSection->name ?? 'Section',
+                'section_type' => $section->templateSection->section_type ?? 'content',
+                'description' => '',
+                'column_layout' => 'full-width',
+                'container_type' => 'container',
+                'padding_top' => '3',
+                'padding_bottom' => '3',
+                'margin_bottom' => '4',
+                'background_type' => 'none',
+                'background_color' => '#ffffff',
+                'text_color' => '#000000',
+                'border_style' => 'none',
+                'custom_css_classes' => '',
+                'section_html_id' => '',
+                'visible_desktop' => true,
+                'visible_tablet' => true,
+                'visible_mobile' => true,
+                'custom_attributes' => ''
+            ];
+            
+            $config = array_merge($defaultConfig, $config);
+            
+            return response()->json([
+                'success' => true,
+                'data' => $config
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error getting section configuration: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to get section configuration: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update section configuration
+     * 
+     * @param PageSection $section
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function updateSectionConfiguration(PageSection $section, Request $request): JsonResponse
+    {
+        try {
+            // Validate the incoming data
+            $validated = $request->validate([
+                'name' => 'sometimes|string|max:255',
+                'section_type' => 'sometimes|string|in:header,content,footer,sidebar',
+                'description' => 'sometimes|string|max:500',
+                'column_layout' => 'sometimes|string',
+                'container_type' => 'sometimes|string|in:container,container-fluid,none',
+                'padding_top' => 'sometimes|string|in:0,1,3,5',
+                'padding_bottom' => 'sometimes|string|in:0,1,3,5',
+                'margin_bottom' => 'sometimes|string|in:0,2,4,5',
+                'background_type' => 'sometimes|string|in:none,color,gradient,image',
+                'background_color' => 'sometimes|string|regex:/^#[0-9A-Fa-f]{6}$/',
+                'text_color' => 'sometimes|string|regex:/^#[0-9A-Fa-f]{6}$/',
+                'border_style' => 'sometimes|string|in:none,solid,dashed,dotted',
+                'custom_css_classes' => 'sometimes|string|max:500',
+                'section_html_id' => 'sometimes|string|max:100',
+                'visible_desktop' => 'sometimes|boolean',
+                'visible_tablet' => 'sometimes|boolean',
+                'visible_mobile' => 'sometimes|boolean',
+                'custom_attributes' => 'sometimes|string|max:1000'
+            ]);
+
+            // Get current config
+            $currentConfig = $section->config ? json_decode($section->config, true) : [];
+            
+            // Merge with new data
+            $newConfig = array_merge($currentConfig, $validated);
+            
+            // Update the section
+            $section->update([
+                'config' => json_encode($newConfig)
+            ]);
+            
+            // If name was provided, also update the template section name
+            if (isset($validated['name']) && $section->templateSection) {
+                $section->templateSection->update(['name' => $validated['name']]);
+            }
+            
+            // Load fresh data for response
+            $section->load('templateSection');
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Section configuration updated successfully',
+                'data' => [
+                    'section_id' => $section->id,
+                    'config' => $newConfig,
+                    'updated_at' => $section->updated_at->toISOString()
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error updating section configuration: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update section configuration: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete a section
+     * 
+     * @param PageSection $section
+     * @return JsonResponse
+     */
+    public function deleteSection(PageSection $section): JsonResponse
+    {
+        try {
+            $sectionName = $section->templateSection->name ?? 'Section';
+            $sectionId = $section->id;
+            
+            // Delete all widgets in this section first
+            $section->pageSectionWidgets()->delete();
+            
+            // Delete the section
+            $section->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => "Section '{$sectionName}' deleted successfully",
+                'data' => [
+                    'deleted_section_id' => $sectionId
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error deleting section: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete section: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Create a new section
+     * 
+     * @param Page $page
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function createSection(Page $page, Request $request): JsonResponse
+    {
+        try {
+            // Validate the incoming data
+            $validated = $request->validate([
+                'template_key' => 'required|string',
+                'name' => 'sometimes|string|max:255',
+                'grid_x' => 'sometimes|integer|min:0',
+                'grid_y' => 'sometimes|integer|min:0',
+                'grid_w' => 'sometimes|integer|min:1|max:12',
+                'grid_h' => 'sometimes|integer|min:1'
+            ]);
+
+            // Create the section
+            $section = PageSection::create([
+                'page_id' => $page->id,
+                'template_section_id' => 1, // This would need to be determined by template_key
+                'position' => PageSection::where('page_id', $page->id)->max('position') + 1,
+                'grid_x' => $validated['grid_x'] ?? 0,
+                'grid_y' => $validated['grid_y'] ?? 0,
+                'grid_w' => $validated['grid_w'] ?? 12,
+                'grid_h' => $validated['grid_h'] ?? 4,
+                'config' => json_encode([
+                    'name' => $validated['name'] ?? 'New Section',
+                    'section_type' => 'content'
+                ])
+            ]);
+            
+            $section->load('templateSection');
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Section created successfully',
+                'data' => $section
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error creating section: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create section: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update section position (for GridStack)
+     * 
+     * @param PageSection $section
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function updateSectionPosition(PageSection $section, Request $request): JsonResponse
+    {
+        try {
+            $validated = $request->validate([
+                'grid_x' => 'required|integer|min:0',
+                'grid_y' => 'required|integer|min:0',
+                'grid_w' => 'required|integer|min:1|max:12',
+                'grid_h' => 'required|integer|min:1'
+            ]);
+
+            $section->update($validated);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Section position updated successfully',
+                'data' => [
+                    'section_id' => $section->id,
+                    'grid_x' => $section->grid_x,
+                    'grid_y' => $section->grid_y,
+                    'grid_w' => $section->grid_w,
+                    'grid_h' => $section->grid_h
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error updating section position: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update section position: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     /**
      * Add new widget to a section
      * Exact copy from LivePreviewController::addWidget
@@ -1049,6 +1307,170 @@ class PageBuilderController extends Controller
             margin-bottom: 0;
         }
     </style>';
+    }
+
+    /**
+     * Create a new content item with default field values
+     * 
+     * @param ContentType $contentType
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function createDefaultContentItem(ContentType $contentType, Request $request): JsonResponse
+    {
+        try {
+            // Validate basic input
+            $validated = $request->validate([
+                'title' => 'required|string|max:255',
+                'slug' => 'nullable|string|max:255',
+                'status' => 'nullable|string|in:draft,published,archived',
+                'field_values' => 'nullable|array'
+            ]);
+
+            // Set defaults
+            $title = $validated['title'];
+            $slug = $validated['slug'] ?? \Illuminate\Support\Str::slug($title);
+            $status = $validated['status'] ?? 'draft';
+            
+            // Ensure unique slug
+            $originalSlug = $slug;
+            $counter = 1;
+            while (\App\Models\ContentItem::where('slug', $slug)->exists()) {
+                $slug = $originalSlug . '-' . $counter++;
+            }
+
+            // Create the content item
+            $contentItem = \App\Models\ContentItem::create([
+                'title' => $title,
+                'slug' => $slug,
+                'status' => $status,
+                'content_type_id' => $contentType->id,
+                'created_by' => auth()->id(),
+                'updated_by' => auth()->id()
+            ]);
+
+            // Load content type fields to create default field values
+            $contentType->load(['fields' => function($query) {
+                $query->orderBy('position')->orderBy('id');
+            }]);
+
+            // Create default field values for each field
+            foreach ($contentType->fields as $field) {
+                $defaultValue = $this->getDefaultFieldValue($field);
+                
+                if ($defaultValue !== null) {
+                    \App\Models\ContentFieldValue::create([
+                        'content_item_id' => $contentItem->id,
+                        'content_type_field_id' => $field->id,
+                        'value' => $defaultValue
+                    ]);
+                }
+            }
+
+            // Load the created item with its values for response
+            $contentItem->load(['fieldValues.field', 'contentType']);
+
+            // Format for response (same format as getContentTypeItems)
+            $formattedItem = [
+                'id' => $contentItem->id,
+                'title' => $contentItem->title,
+                'slug' => $contentItem->slug,
+                'status' => $contentItem->status,
+                'excerpt' => \Illuminate\Support\Str::limit($contentItem->title, 100),
+                'created_at' => $contentItem->created_at->format('Y-m-d H:i'),
+                'updated_at' => $contentItem->updated_at->format('Y-m-d H:i'),
+                'thumbnail' => $this->getItemThumbnail($contentItem)
+            ];
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Content item created successfully',
+                'data' => $formattedItem
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error creating default content item: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to create content item: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get default value for a field based on its type
+     * 
+     * @param mixed $field
+     * @return mixed
+     */
+    private function getDefaultFieldValue($field)
+    {
+        // Use field's default value if set
+        if ($field->default_value !== null && $field->default_value !== '') {
+            return $field->default_value;
+        }
+
+        // Generate default based on field type
+        switch ($field->field_type) {
+            case 'text':
+                return "Default " . $field->name;
+                
+            case 'textarea':
+                return "Default content for " . $field->name;
+                
+            case 'rich_text':
+                return "<p>Default rich text content for " . $field->name . "</p>";
+                
+            case 'number':
+                return 0;
+                
+            case 'date':
+                return date('Y-m-d');
+                
+            case 'datetime':
+                return date('Y-m-d H:i:s');
+                
+            case 'boolean':
+                return false;
+                
+            case 'select':
+            case 'radio':
+                // Try to use first option if available
+                $settings = is_string($field->settings) ? json_decode($field->settings, true) : $field->settings;
+                if (isset($settings['options']) && is_array($settings['options']) && !empty($settings['options'])) {
+                    return $settings['options'][0]['value'] ?? '';
+                }
+                return '';
+                
+            case 'multiselect':
+            case 'checkbox':
+                return json_encode([]);
+                
+            case 'email':
+                return 'example@' . strtolower($field->name) . '.com';
+                
+            case 'url':
+                return 'https://example.com/' . strtolower($field->slug);
+                
+            case 'phone':
+                return '+1234567890';
+                
+            case 'color':
+                return '#007bff';
+                
+            case 'json':
+                return json_encode([$field->slug => 'Default ' . $field->name]);
+                
+            case 'image':
+            case 'gallery':
+            case 'file':
+            case 'relation':
+                return null; // These need to be set manually
+                
+            default:
+                return "Default " . $field->name;
+        }
     }
 
 }

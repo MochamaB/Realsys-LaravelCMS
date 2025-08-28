@@ -1,18 +1,25 @@
 
 
-            <!-- Loader -->
-            <div id="iframeLoader" style="display: flex; align-items: center; justify-content: center; height: 200px;">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-            </div>
+<div id="iframeLoader"
+         style="position: absolute; 
+                top: 0; left: 0; 
+                width: 100%; height: 100%; 
+                background: rgba(255, 255, 255, 0.8); 
+                display: flex; 
+                align-items: top; 
+                justify-content: center; 
+                z-index: 9999;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
         
         <!-- Page Preview Iframe (Main Preview) -->
         
             <iframe 
                 id="pagePreviewIframe" 
                 src="/admin/api/page-builder/pages/{{ $page->id }}/rendered/iframe"
-                style="width: 100%; height: auto; border: none; border-radius: 0px;padding: 10px;"
+                style="width: 100%; height: auto; border: none; border-radius: 0px;margin: 0px !important;"
                 frameborder="0">
             </iframe>
         

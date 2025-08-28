@@ -36,26 +36,27 @@
             </label>
         </div>
         <!-- Optional: Zoom Controls for Desktop -->
-        <div class="btn-group ms-2" role="group" aria-label="Zoom Controls" id="zoom-controls">
-            <button type="button" class="btn btn-outline-secondary btn-sm" data-action="zoom-out" title="Zoom Out">
-                <i class="ri-zoom-out-line"></i>
-            </button>
-            
-            <button type="button" class="btn btn-outline-secondary btn-sm" data-action="zoom-fit" title="Zoom to Fit">
-                <i class="ri-focus-3-line"></i>
-            </button>
-            
-            <button type="button" class="btn btn-outline-secondary btn-sm" data-action="zoom-100" title="100% Zoom">
-                <span style="font-size: 0.8em;">100%</span>
-            </button>
-            
-            <button type="button" class="btn btn-outline-secondary btn-sm" data-action="zoom-in" title="Zoom In">
-                <i class="ri-zoom-in-line"></i>
-            </button>
-        </div>
+        
     </div>
     
     <div class="page-title-right">
+    <div class="btn-group ms-2" role="group" aria-label="Zoom Controls" id="zoom-controls">
+            <button type="button" class="btn btn-outline-secondary " data-action="zoom-out" title="Zoom Out">
+                <i class="ri-zoom-out-line"></i>
+            </button>
+            
+            <button type="button" class="btn btn-outline-secondary " data-action="zoom-fit" title="Zoom to Fit">
+                <i class="ri-focus-3-line"></i>
+            </button>
+            
+            <button type="button" class="btn btn-outline-secondary " data-action="zoom-100" title="100% Zoom">
+                <span style="font-size: 0.8em;">100%</span>
+            </button>
+            
+            <button type="button" class="btn btn-outline-secondary " data-action="zoom-in" title="Zoom In">
+                <i class="ri-zoom-in-line"></i>
+            </button>
+        </div>
         <!-- Add Section Button -->
         <button class="btn btn-success me-2" id="addSectionBtn" data-bs-toggle="modal" data-bs-target="#sectionTemplatesModal">
             <i class="ri-add-line"></i> Add Section

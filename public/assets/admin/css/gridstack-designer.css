@@ -1696,13 +1696,13 @@
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    padding: 0px;
+    padding: 20px 0px !important;
 }
 
 .preview-container.device-desktop iframe {
     background: #ffffff;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
+    border-radius: 0px;
     border: 1px solid #e0e0e0;
     min-height: 600px;
 }

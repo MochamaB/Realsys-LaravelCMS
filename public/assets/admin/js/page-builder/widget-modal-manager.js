@@ -7,7 +7,7 @@ class WidgetModalManager {
         this.apiBaseUrl = apiBaseUrl;
         this.csrfToken = csrfToken;
         this.currentStep = 1;
-        this.totalSteps = 5;
+        this.totalSteps = 3;
         this.modalData = {
             selectedWidget: null,
             selectedContentType: null,
@@ -181,18 +181,17 @@ class WidgetModalManager {
                 if (this.modalData.selectedWidget?.supports_content) {
                     this.loadContentTypes();
                 } else {
-                    // For non-content widgets, show message and allow navigation to step 4
+                    // For non-content widgets, show message and allow navigation to step 3
                     this.showNoContentTypes();
                 }
                 break;
             case 3:
-                this.loadContentItems();
-                break;
-            case 4:
-                this.loadWidgetConfiguration();
-                break;
-            case 5:
-                this.loadReviewStep();
+                if (this.modalData.selectedWidget?.supports_content) {
+                    this.loadContentItems();
+                } else {
+                    // For non-content widgets, go directly to final submission
+                    this.loadReviewStep();
+                }
                 break;
         }
     }
@@ -427,10 +426,14 @@ class WidgetModalManager {
                 }
                 return this.modalData.selectedContentType !== null;
             case 3:
-                // Step 3 is valid if either manual items are selected OR a content query is configured
-                return this.modalData.selectedItems.length > 0 || this.modalData.contentQuery !== null;
-            case 4:
-                return true; // Configuration is optional
+                // Step 3 is the final step - ready to submit
+                if (this.modalData.selectedWidget?.supports_content) {
+                    // Content widgets need items selected OR query configured
+                    return this.modalData.selectedItems.length > 0 || this.modalData.contentQuery !== null;
+                } else {
+                    // Non-content widgets are always ready
+                    return true;
+                }
             default:
                 return false;
         }
@@ -748,6 +751,10 @@ class WidgetModalManager {
         // Clear existing content
         container.innerHTML = '';
         
+        // Add "Create New Content Item" button
+        const createNewButton = this.createNewContentItemButton();
+        container.appendChild(createNewButton);
+        
         // Create content item cards
         items.forEach(item => {
             const card = this.createContentItemCard(item);
@@ -756,6 +763,77 @@ class WidgetModalManager {
 
         // Setup selection handlers
         this.setupContentItemSelectionHandlers();
+    }
+
+    createNewContentItemButton() {
+        const buttonDiv = document.createElement('div');
+        buttonDiv.className = 'create-new-item-button mb-3';
+        
+        buttonDiv.innerHTML = `
+            <div class="border border-dashed rounded p-4 text-center" style="border-color: #007bff !important; cursor: pointer; transition: all 0.2s;">
+                <div class="create-new-content">
+                    <i class="ri-add-circle-line fs-1 text-primary mb-2"></i>
+                    <h6 class="text-primary mb-1">Create New Content Item</h6>
+                    <p class="text-muted small mb-0">Add a new ${this.modalData.selectedContentType?.name || 'content'} item with default field values</p>
+                </div>
+            </div>
+        `;
+        
+        // Add hover effects
+        const createDiv = buttonDiv.querySelector('div');
+        createDiv.addEventListener('mouseenter', () => {
+            createDiv.style.backgroundColor = 'rgba(0, 123, 255, 0.05)';
+            createDiv.style.transform = 'translateY(-2px)';
+            createDiv.style.boxShadow = '0 4px 8px rgba(0,123,255,0.2)';
+        });
+        
+        createDiv.addEventListener('mouseleave', () => {
+            createDiv.style.backgroundColor = '';
+            createDiv.style.transform = '';
+            createDiv.style.boxShadow = '';
+        });
+        
+        // Add click handler
+        createDiv.addEventListener('click', () => {
+            this.handleCreateNewContentItem();
+        });
+        
+        return buttonDiv;
+    }
+
+    async handleCreateNewContentItem() {
+        console.log('Creating new content item for content type:', this.modalData.selectedContentType);
+        
+        try {
+            // Use the Field Type Defaults Service
+            if (!window.fieldTypeDefaultsService) {
+                console.error('Field Type Defaults Service not initialized');
+                this.showError('Field type defaults service is not available. Please refresh the page.');
+                return;
+            }
+            
+            const contentTypeId = this.modalData.selectedContentType.id;
+            const newItem = await window.fieldTypeDefaultsService.createContentItemWithDefaults(contentTypeId);
+            
+            if (newItem) {
+                // Reload the content items list to include the new item
+                await this.loadManualSelection();
+                
+                // Auto-select the newly created item
+                setTimeout(() => {
+                    const newItemCheckbox = document.querySelector(`input[value="${newItem.id}"]`);
+                    if (newItemCheckbox) {
+                        newItemCheckbox.checked = true;
+                        newItemCheckbox.dispatchEvent(new Event('change'));
+                    }
+                }, 100);
+                
+                this.showSuccess(`New ${this.modalData.selectedContentType.name} item created successfully!`);
+            }
+        } catch (error) {
+            console.error('Error creating new content item:', error);
+            this.showError('Failed to create new content item: ' + error.message);
+        }
     }
 
     createContentItemCard(item) {
@@ -1479,12 +1557,11 @@ class WidgetModalManager {
     }
 
     async loadReviewStep() {
-        console.log('Loading review step');
+        console.log('Loading review step for simplified 3-step flow');
         
         try {
-            // Generate preview and populate review summary
-            await this.generateWidgetPreview();
-            this.renderReviewSummary();
+            // For simplified flow, show content selection summary
+            this.renderContentSelectionSummary();
             
             // Update navigation buttons for final step
             this.updateNavigationButtons();
@@ -1493,6 +1570,67 @@ class WidgetModalManager {
             console.error('Error loading review step:', error);
             this.showError('Failed to load review step: ' + error.message);
         }
+    }
+
+    renderContentSelectionSummary() {
+        const reviewContainer = document.getElementById('widgetReview');
+        if (!reviewContainer) return;
+
+        const widget = this.modalData.selectedWidget;
+        const contentType = this.modalData.selectedContentType;
+        
+        let contentSummary = '';
+        if (widget.supports_content) {
+            if (this.modalData.selectedItems.length > 0) {
+                contentSummary = `${this.modalData.selectedItems.length} content item(s) manually selected`;
+            } else if (this.modalData.contentQuery) {
+                contentSummary = `Content will be loaded via query (max ${this.modalData.contentQuery.limit || 10} items)`;
+            } else {
+                contentSummary = 'No content selected';
+            }
+        } else {
+            contentSummary = 'Static widget (no content required)';
+        }
+
+        reviewContainer.innerHTML = `
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="ri-check-line me-2"></i>Content Selection Complete
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="${widget.icon} me-3 fs-4 text-primary"></i>
+                        <div>
+                            <h6 class="mb-0">${widget.name}</h6>
+                            <small class="text-muted">${widget.description || 'No description'}</small>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label small text-muted fw-bold mb-1">CONTENT SELECTION</label>
+                        <p class="mb-0">${contentSummary}</p>
+                        ${contentType ? `<small class="text-muted">Content Type: ${contentType.name}</small>` : ''}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label small text-muted fw-bold mb-1">TARGET SECTION</label>
+                        <p class="mb-0">${this.modalData.sectionName}</p>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <div class="d-flex align-items-center">
+                            <i class="ri-information-line me-3 fs-4"></i>
+                            <div>
+                                <h6 class="mb-1">Ready to Add Widget</h6>
+                                <p class="mb-0">The widget will be added with default configuration. You can customize it later.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
     async generateWidgetPreview() {
@@ -1743,13 +1881,35 @@ class WidgetModalManager {
                 };
             }
 
+            // Auto-apply default widget configuration
+            const defaultWidgetConfig = {
+                widget_fields: {},
+                layout: {
+                    width: 12, // Full width
+                    height: 'auto',
+                    alignment: 'left'
+                },
+                styling: {
+                    padding: { top: 0, right: 0, bottom: 0, left: 0 },
+                    margin: { top: 0, right: 0, bottom: 0, left: 0 },
+                    background_color: '',
+                    background_opacity: 100,
+                    border_radius: 0,
+                    custom_css_class: ''
+                },
+                advanced: {
+                    animation: 'none',
+                    responsive_visibility: { xs: true, sm: true, md: true, lg: true, xl: true }
+                }
+            };
+
             // Debug logging
             console.log('Submission data:', {
                 widget_id: this.modalData.selectedWidget?.id,
                 content_type_id: this.modalData.selectedContentType?.id || null,
                 selected_items: this.modalData.selectedItems?.map(item => item.id) || [],
                 content_query: contentQuery,
-                widget_config: this.modalData.widgetConfig,
+                widget_config: defaultWidgetConfig,
                 section_id: this.modalData.sectionId
             });
 
@@ -1759,7 +1919,7 @@ class WidgetModalManager {
                 content_type_id: this.modalData.selectedContentType?.id || null,
                 selected_items: this.modalData.selectedItems?.map(item => item.id) || [],
                 content_query: contentQuery,
-                widget_config: this.modalData.widgetConfig
+                widget_config: defaultWidgetConfig
             };
 
             const response = await fetch(`${this.apiBaseUrl}/sections/${this.modalData.sectionId}/add-widget`, {

@@ -246,4 +246,23 @@
             });
         });
     </script>
+    <script>
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".clickable-row").forEach(function(row) {
+        row.addEventListener("click", function () {
+            // Get data attributes
+            const pageId = this.dataset.pageId;
+            const pageTitle = this.dataset.pageTitle;
+
+            // Pass them to modal hidden inputs or title if needed
+            document.querySelector("#designerSelectionModal input[name='page_id']").value = pageId;
+            document.querySelector("#designerSelectionModal .modal-title").innerText = pageTitle;
+
+            // Show modal programmatically
+            var modal = new bootstrap.Modal(document.getElementById('designerSelectionModal'));
+            modal.show();
+        });
+    });
+});
+</script>
 @endsection

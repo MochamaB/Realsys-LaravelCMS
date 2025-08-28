@@ -1,0 +1,345 @@
+/**
+ * Section Configuration Modal Styles
+ * 
+ * Custom styles for the section configuration modal to provide
+ * a professional, user-friendly interface for editing sections.
+ */
+
+/* Modal Base Styles */
+.section-config-modal .modal-dialog {
+    max-width: 900px;
+}
+
+.section-config-modal .modal-content {
+    border-radius: 10px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+}
+
+.section-config-modal .modal-header {
+    border-bottom: none;
+    border-radius: 10px 10px 0 0;
+    padding: 1.5rem 2rem;
+}
+
+.section-config-modal .modal-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+/* Tab Navigation Styles */
+.section-config-container .nav-tabs {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.section-config-container .nav-tabs .nav-link {
+    color: #6c757d;
+    border: none;
+    border-radius: 0;
+    padding: 1rem 1.5rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.section-config-container .nav-tabs .nav-link:hover {
+    color: #495057;
+    background-color: #e9ecef;
+    border-color: transparent;
+}
+
+.section-config-container .nav-tabs .nav-link.active {
+    color: #0d6efd;
+    background-color: #fff;
+    border-color: transparent;
+    border-bottom: 2px solid #0d6efd;
+    font-weight: 600;
+}
+
+/* Tab Content Styles */
+.section-config-container .tab-content {
+    min-height: 400px;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.section-config-container .tab-pane {
+    padding: 0;
+}
+
+/* Form Element Styles */
+.section-config-container .form-label {
+    color: #495057;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.section-config-container .form-control,
+.section-config-container .form-select {
+    border-radius: 6px;
+    border: 1px solid #ced4da;
+    padding: 0.75rem;
+    font-size: 0.9rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.section-config-container .form-control:focus,
+.section-config-container .form-select:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.section-config-container .form-control-color {
+    height: 45px;
+    width: 100%;
+    border-radius: 6px;
+    border: 1px solid #ced4da;
+}
+
+/* Checkbox Styles */
+.section-config-container .form-check-group {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.section-config-container .form-check {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: #f8f9fa;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+    min-width: 120px;
+}
+
+.section-config-container .form-check:hover {
+    background-color: #e9ecef;
+    border-color: #dee2e6;
+}
+
+.section-config-container .form-check-input:checked + .form-check-label {
+    color: #0d6efd;
+    font-weight: 500;
+}
+
+.section-config-container .form-check-label {
+    margin-bottom: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+/* Alert Styles */
+.section-config-container .config-alert {
+    margin: 0 0 1rem 0;
+    border-radius: 6px;
+    border: none;
+    padding: 1rem 1.5rem;
+    font-size: 0.9rem;
+}
+
+.section-config-container .config-alert.alert-success {
+    background-color: #d1e7dd;
+    color: #0a3622;
+    border-left: 4px solid #0d6efd;
+}
+
+.section-config-container .config-alert.alert-danger {
+    background-color: #f8d7da;
+    color: #58151c;
+    border-left: 4px solid #dc3545;
+}
+
+/* Loading State */
+.section-config-container .spinner-border-sm {
+    width: 0.875rem;
+    height: 0.875rem;
+}
+
+/* Footer Styles */
+.section-config-modal .modal-footer {
+    border-top: 1px solid #dee2e6;
+    border-radius: 0 0 10px 10px;
+    padding: 1.5rem 2rem;
+}
+
+.section-config-modal .modal-footer .btn {
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.section-config-modal .modal-footer .btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.section-config-modal .modal-footer .btn-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+    transform: translateY(-1px);
+}
+
+.section-config-modal .modal-footer .btn-outline-danger {
+    color: #dc3545;
+    border-color: #dc3545;
+}
+
+.section-config-modal .modal-footer .btn-outline-danger:hover {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .section-config-modal .modal-dialog {
+        max-width: 95%;
+        margin: 0.5rem auto;
+    }
+    
+    .section-config-modal .modal-header,
+    .section-config-modal .modal-footer {
+        padding: 1rem 1.5rem;
+    }
+    
+    .section-config-container .tab-content {
+        padding: 1.5rem;
+        max-height: 400px;
+    }
+    
+    .section-config-container .nav-tabs .nav-link {
+        padding: 0.75rem 1rem;
+        font-size: 0.85rem;
+    }
+    
+    .section-config-container .form-check-group {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .section-config-modal .modal-footer .d-flex {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .section-config-modal .modal-footer .btn {
+        width: 100%;
+    }
+}
+
+/* Animation for modal appearance */
+.section-config-modal.fade .modal-dialog {
+    transform: translateY(-50px);
+    transition: transform 0.3s ease-out;
+}
+
+.section-config-modal.show .modal-dialog {
+    transform: translateY(0);
+}
+
+/* Color picker enhancements */
+.section-config-container .form-control-color::-webkit-color-swatch-wrapper {
+    padding: 0;
+    border-radius: 4px;
+}
+
+.section-config-container .form-control-color::-webkit-color-swatch {
+    border: none;
+    border-radius: 4px;
+}
+
+/* Custom scrollbar for tab content */
+.section-config-container .tab-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.section-config-container .tab-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.section-config-container .tab-content::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.section-config-container .tab-content::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Focus states for accessibility */
+.section-config-container .nav-tabs .nav-link:focus {
+    outline: 2px solid #86b7fe;
+    outline-offset: 2px;
+}
+
+.section-config-container .form-control:focus,
+.section-config-container .form-select:focus {
+    outline: none;
+}
+
+.section-config-modal .modal-footer .btn:focus {
+    outline: 2px solid rgba(13, 110, 253, 0.5);
+    outline-offset: 2px;
+}
+
+/* Disabled state styles */
+.section-config-modal .modal-footer .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Icon styles */
+.section-config-container .form-check-label i {
+    font-size: 1rem;
+    color: #6c757d;
+}
+
+.section-config-container .form-check-input:checked + .form-check-label i {
+    color: #0d6efd;
+}
+
+/* Spacing improvements */
+.section-config-container .row.g-3 > .col-12,
+.section-config-container .row.g-3 > .col-md-4,
+.section-config-container .row.g-3 > .col-md-6 {
+    margin-bottom: 1rem;
+}
+
+/* Form text helper styles */
+.section-config-container .form-text {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-top: 0.25rem;
+}
+
+/* Success state for inputs */
+.section-config-container .form-control.is-valid,
+.section-config-container .form-select.is-valid {
+    border-color: #198754;
+}
+
+.section-config-container .form-control.is-valid:focus,
+.section-config-container .form-select.is-valid:focus {
+    border-color: #198754;
+    box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25);
+}
+
+/* Error state for inputs */
+.section-config-container .form-control.is-invalid,
+.section-config-container .form-select.is-invalid {
+    border-color: #dc3545;
+}
+
+.section-config-container .form-control.is-invalid:focus,
+.section-config-container .form-select.is-invalid:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}

@@ -46,7 +46,7 @@ class PageBuilderAPI {
      * Update section properties
      */
     async updateSection(sectionId, sectionData) {
-        return await this.makeRequest('PUT', `/sections/${sectionId}`, sectionData);
+        return await this.makeRequest('PUT', `/sections/${sectionId}/configuration`, sectionData);
     }
 
     /**
@@ -61,6 +61,13 @@ class PageBuilderAPI {
      */
     async updateSectionPosition(sectionId, positionData) {
         return await this.makeRequest('PATCH', `/sections/${sectionId}/position`, positionData);
+    }
+
+    /**
+     * Get section configuration
+     */
+    async getSectionConfiguration(sectionId) {
+        return await this.makeRequest('GET', `/sections/${sectionId}/configuration`);
     }
 
     // =====================================================================

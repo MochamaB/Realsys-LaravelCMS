@@ -321,10 +321,18 @@ Route::prefix('api')->middleware('admin.auth')->group(function () {
         Route::post('/widgets/{widget}/preview', [App\Http\Controllers\Api\PageBuilderController::class, 'previewWidget'])->name('api.page-builder.widgets.preview');
         Route::get('/content-types/{contentType}/items', [App\Http\Controllers\Api\PageBuilderController::class, 'getContentTypeItems'])->name('api.page-builder.content-types.items');
         Route::post('/content-types/{contentType}/items/query', [App\Http\Controllers\Api\PageBuilderController::class, 'queryContentItems'])->name('api.page-builder.content-types.items.query');
+        Route::post('/content-types/{contentType}/create-default-item', [App\Http\Controllers\Api\PageBuilderController::class, 'createDefaultContentItem'])->name('api.page-builder.content-types.create-default-item');
         Route::get('/theme/assets', [App\Http\Controllers\Api\PageBuilderController::class, 'getThemeAssets'])->name('api.page-builder.theme.assets');
         
         // Widget Operations (based on LivePreviewController)
         Route::post('/sections/{section}/add-widget', [App\Http\Controllers\Api\PageBuilderController::class, 'addWidget'])->name('api.page-builder.sections.add-widget');
+        
+        // Section Configuration Management
+        Route::get('/sections/{section}/configuration', [App\Http\Controllers\Api\PageBuilderController::class, 'getSectionConfiguration'])->name('api.page-builder.sections.configuration');
+        Route::put('/sections/{section}/configuration', [App\Http\Controllers\Api\PageBuilderController::class, 'updateSectionConfiguration'])->name('api.page-builder.sections.configuration.update');
+        Route::delete('/sections/{section}', [App\Http\Controllers\Api\PageBuilderController::class, 'deleteSection'])->name('api.page-builder.sections.delete');
+        Route::post('/pages/{page}/sections', [App\Http\Controllers\Api\PageBuilderController::class, 'createSection'])->name('api.page-builder.sections.create');
+        Route::patch('/sections/{section}/position', [App\Http\Controllers\Api\PageBuilderController::class, 'updateSectionPosition'])->name('api.page-builder.sections.position');
     });
     // Page Designer API
     Route::get('/pages/{page}/render', [PageController::class, 'renderPageContent'])->name('api.pages.render');

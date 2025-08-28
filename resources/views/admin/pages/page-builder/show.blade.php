@@ -10,6 +10,9 @@
 
 <!-- Multi-Step Widget Modal CSS -->
 <link href="{{ asset('assets/admin/css/page-builder/widget-modal.css') }}" rel="stylesheet" />
+
+<!-- Section Configuration Modal CSS -->
+<link href="{{ asset('assets/admin/css/page-builder/section-config-modal.css') }}" rel="stylesheet" />
 @endsection
 
 @section('js')
@@ -27,6 +30,9 @@
 <script src="{{ asset('assets/admin/js/page-builder/theme-manager.js') }}?v={{ time() }}"></script>
 <script src="{{ asset('assets/admin/js/page-builder/page-builder-main.js') }}?v={{ time() }}"></script>
 <script src="{{ asset('assets/admin/js/page-builder/device-preview.js') }}?v={{ time() }}"></script>
+
+<!-- Field Type Defaults Service -->
+<script src="{{ asset('assets/admin/js/page-builder/field-type-defaults-service.js') }}?v={{ time() }}"></script>
 
 <!-- Multi-Step Widget Modal Manager -->
 <script src="{{ asset('assets/admin/js/page-builder/widget-modal-manager.js') }}?v={{ time() }}"></script>
@@ -90,6 +96,12 @@ document.addEventListener('DOMContentLoaded', function() {
             // Initialize the page builder
             window.pageBuilder.init().then(() => {
                 console.log('✅ Page Builder initialized successfully');
+                
+                // Initialize Field Type Defaults Service
+                window.fieldTypeDefaultsService = new FieldTypeDefaultsService(
+                    '/admin/api/page-builder',
+                    window.csrfToken
+                );
                 
                 // Initialize Widget Modal Manager
                 window.widgetModalManager = new WidgetModalManager(

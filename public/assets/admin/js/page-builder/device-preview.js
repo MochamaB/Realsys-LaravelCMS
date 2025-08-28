@@ -10,10 +10,10 @@ class PageBuilderDevicePreview {
         this.currentDevice = 'desktop';
         this.devices = {
             desktop: { 
-                width: 1480,
+                width: 1520,
                 height: 'auto',
                 name: 'Desktop',
-                viewportWidth: 1480,
+                viewportWidth: 1520,
                 icon: 'ri-computer-line',
                 zoom: 1
             },
