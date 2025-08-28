@@ -53,16 +53,25 @@ class WidgetLibrary {
             
             const response = await this.api.getAvailableWidgets();
             
-            if (response.success && response.data) {
+            if (response.success && response.data && response.data.widgets) {
                 // Clear existing widgets
                 this.widgets.clear();
                 
-                // Store widgets by category
-                Object.keys(response.data).forEach(category => {
-                    this.widgets.set(category, response.data[category]);
+                // Flatten all widgets from all categories into a single array
+                const allWidgets = [];
+                Object.keys(response.data.widgets).forEach(category => {
+                    response.data.widgets[category].forEach(widget => {
+                        allWidgets.push({
+                            ...widget,
+                            category: category
+                        });
+                    });
                 });
                 
-                console.log(`✅ Loaded widgets for ${this.widgets.size} categories:`, response.data);
+                // Store all widgets in a single 'all' category for unified display
+                this.widgets.set('all', allWidgets);
+                
+                console.log(`✅ Loaded ${allWidgets.length} widgets from all categories:`, allWidgets);
             } else {
                 throw new Error('No widgets data received from API');
             }
@@ -81,67 +90,65 @@ class WidgetLibrary {
     loadFallbackWidgets() {
         console.log('📦 Loading fallback widget data...');
         
-        const fallbackWidgets = {
-            'Content': [
-                {
-                    id: 1,
-                    name: 'Text Block',
-                    slug: 'text-block',
-                    description: 'Rich text content block',
-                    icon: 'ri-text',
-                    default_settings: {}
-                },
-                {
-                    id: 2,
-                    name: 'Heading',
-                    slug: 'heading',
-                    description: 'Title and subtitle text',
-                    icon: 'ri-heading',
-                    default_settings: {}
-                }
-            ],
-            'Media': [
-                {
-                    id: 3,
-                    name: 'Image',
-                    slug: 'image',
-                    description: 'Single image display',
-                    icon: 'ri-image-line',
-                    default_settings: {}
-                },
-                {
-                    id: 4,
-                    name: 'Gallery',
-                    slug: 'gallery',
-                    description: 'Image gallery grid',
-                    icon: 'ri-gallery-line',
-                    default_settings: {}
-                }
-            ],
-            'Layout': [
-                {
-                    id: 5,
-                    name: 'Spacer',
-                    slug: 'spacer',
-                    description: 'Empty space divider',
-                    icon: 'ri-separator',
-                    default_settings: {}
-                },
-                {
-                    id: 6,
-                    name: 'Divider',
-                    slug: 'divider',
-                    description: 'Visual separator line',
-                    icon: 'ri-subtract-line',
-                    default_settings: {}
-                }
-            ]
-        };
+        const fallbackWidgets = [
+            {
+                id: 1,
+                name: 'Text Block',
+                slug: 'text-block',
+                description: 'Rich text content block',
+                icon: 'ri-text',
+                category: 'content',
+                default_settings: {}
+            },
+            {
+                id: 2,
+                name: 'Heading',
+                slug: 'heading',
+                description: 'Title and subtitle text',
+                icon: 'ri-heading',
+                category: 'content',
+                default_settings: {}
+            },
+            {
+                id: 3,
+                name: 'Image',
+                slug: 'image',
+                description: 'Single image display',
+                icon: 'ri-image-line',
+                category: 'media',
+                default_settings: {}
+            },
+            {
+                id: 4,
+                name: 'Gallery',
+                slug: 'gallery',
+                description: 'Image gallery grid',
+                icon: 'ri-gallery-line',
+                category: 'media',
+                default_settings: {}
+            },
+            {
+                id: 5,
+                name: 'Spacer',
+                slug: 'spacer',
+                description: 'Empty space divider',
+                icon: 'ri-separator',
+                category: 'layout',
+                default_settings: {}
+            },
+            {
+                id: 6,
+                name: 'Divider',
+                slug: 'divider',
+                description: 'Visual separator line',
+                icon: 'ri-subtract-line',
+                category: 'layout',
+                default_settings: {}
+            }
+        ];
 
-        // Store fallback widgets
-        Object.keys(fallbackWidgets).forEach(category => {
-            this.widgets.set(category, fallbackWidgets[category]);
-        });
+        // Store all fallback widgets in single 'all' category
+        this.widgets.set('all', fallbackWidgets);
     }
 
     /**
@@ -160,16 +167,22 @@ class WidgetLibrary {
 
             let widgetsHtml = '';
             
-            // Render all widgets from all categories in a flat grid
-            this.widgets.forEach((categoryWidgets, category) => {
-                categoryWidgets.forEach(widget => {
-                    widgetsHtml += this.createWidgetHTML(widget, category);
-                });
+            // Get all widgets from the unified 'all' category
+            const allWidgets = this.widgets.get('all') || [];
+            
+            if (allWidgets.length === 0) {
+                this.showEmptyState();
+                return;
+            }
+            
+            // Render all widgets in a flat list without category separation
+            allWidgets.forEach(widget => {
+                widgetsHtml += this.createWidgetHTML(widget);
             });
 
             this.container.innerHTML = widgetsHtml;
             
-            console.log('✅ Widgets rendered successfully');
+            console.log(`✅ Rendered ${allWidgets.length} widgets successfully`);
             
         } catch (error) {
             console.error('❌ Error rendering widgets:', error);
@@ -178,18 +191,38 @@ class WidgetLibrary {
     }
 
     /**
-     * Create HTML for a single widget item
+     * Create HTML for a single widget item with full-width template-item styling
      */
-    createWidgetHTML(widget, category) {
+    createWidgetHTML(widget) {
+        // Determine preview image or fallback to icon
+        const hasPreviewImage = widget.preview_image && !widget.preview_image.includes('widget-placeholder.png');
+        
         return `
-            <div class="component-item widget-item" 
+            <div class="template-item widget-item w-100 mb-2" 
                  data-widget-id="${widget.id}" 
                  data-widget-slug="${widget.slug}"
-                 data-widget-category="${category}"
+                 data-widget-category="${widget.category}"
+                 data-widget-type="theme"
                  draggable="true"
                  title="${widget.description || widget.name}">
-                <i class="${widget.icon || 'ri-apps-line'}"></i>
-                <div class="label">${widget.name}</div>
+                <div class="d-flex align-items-center justify-content-between w-100">
+                    <!-- Preview Image or Icon + Name aligned left -->
+                    <div class="d-flex align-items-center">
+                        <div class="template-icon me-2" style="width: 40px; height: 30px; display: flex; align-items: center; justify-content: center;">
+                            ${hasPreviewImage ? 
+                                `<img src="${widget.preview_image}" alt="${widget.name}" class="img-fluid rounded" style="max-width: 40px; max-height: 30px; object-fit: cover;">` :
+                                `<i class="${widget.icon || 'ri-apps-line'}"></i>`
+                            }
+                        </div>
+                        <div class="template-name" style="font-size: 0.875rem; line-height: 1.2;">
+                            ${widget.name}
+                        </div>
+                    </div>
+                    <!-- Drag handle aligned right -->
+                    <div class="drag-handle" title="Drag to add widget">
+                        <i class="ri-drag-move-line"></i>
+                    </div>
+                </div>
             </div>
         `;
     }

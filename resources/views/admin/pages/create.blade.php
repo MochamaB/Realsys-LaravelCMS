@@ -72,7 +72,7 @@
 
                                         <div class="mb-3">
                                             <label class="form-label" for="published_at">Publish Date</label>
-                                            <input type="datetime-local" class="form-control @error('published_at') is-invalid @enderror" id="published_at" name="published_at" value="{{ old('published_at', $page->published_at ? date('Y-m-d\TH:i', strtotime($page->published_at)) : '') }}">
+                                            <input type="datetime-local" class="form-control @error('published_at') is-invalid @enderror" id="published_at" name="published_at" value="{{ old('published_at', isset($page) && $page->published_at ? date('Y-m-d\TH:i', strtotime($page->published_at)) : '') }}">
                                             @error('published_at')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -80,7 +80,7 @@
 
                                         <div class="mb-3">
                                             <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" id="is_homepage" name="is_homepage" value="1" {{ old('is_homepage', $page->is_homepage ?? false) ? 'checked' : '' }}>
+                                                <input class="form-check-input" type="checkbox" id="is_homepage" name="is_homepage" value="1" {{ old('is_homepage', isset($page) ? $page->is_homepage : false) ? 'checked' : '' }}>
                                                 <label class="form-check-label" for="is_homepage">Set as homepage</label>
                                             </div>
                                             @error('is_homepage')

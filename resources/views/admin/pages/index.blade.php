@@ -264,5 +264,21 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 });
+
+// Auto-trigger modal for newly created pages
+@if(session('show_builder_modal') && session('created_page_id'))
+document.addEventListener('DOMContentLoaded', function() {
+    const pageId = {{ session('created_page_id') }};
+    const pageTitle = 'Select Page Builder';
+    
+    // Set modal data
+    document.querySelector("#designerSelectionModal input[name='page_id']").value = pageId;
+    document.querySelector("#designerSelectionModal .modal-title").innerText = pageTitle;
+    
+    // Show modal automatically
+    const modal = new bootstrap.Modal(document.getElementById('designerSelectionModal'));
+    modal.show();
+});
+@endif
 </script>
 @endsection

@@ -224,8 +224,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Setup iframe message listener
                 setupIframeMessageListener();
-                                // Initialize sidebar toggle functionality
-                                initSidebarToggle();
+                // Initialize sidebar toggle functionality
+                initSidebarToggle();
+                // Setup section templates modal
+                setupSectionTemplatesModal();
 
             }).catch(error => {
                 console.error('❌ Page Builder initialization failed:', error);
@@ -281,6 +283,274 @@ function initSidebarToggle() {
                 window.devicePreview.refresh();
             }
         }, 300); // Wait for CSS transition to complete
+    });
+}
+
+// Setup section templates modal functionality
+function setupSectionTemplatesModal() {
+    console.log('🎯 Setting up section templates modal...');
+    
+    // Get the Add Section button from toolbar
+    const addSectionBtn = document.getElementById('addSectionBtn');
+    if (!addSectionBtn) {
+        console.error('❌ Add Section button not found in toolbar');
+        return;
+    }
+    
+    // Override the default modal trigger to load templates dynamically
+    addSectionBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        console.log('🔘 Add Section button clicked');
+        
+        // Load templates into modal before showing
+        loadSectionTemplatesIntoModal();
+        
+        // Show the modal
+        const modal = new bootstrap.Modal(document.getElementById('sectionTemplatesModal'));
+        modal.show();
+    });
+    
+    // Setup modal event handlers
+    setupSectionTemplateModalHandlers();
+}
+
+// Load section templates from left sidebar into modal
+function loadSectionTemplatesIntoModal() {
+    console.log('📋 Loading section templates into modal...');
+    
+    const modalGrid = document.getElementById('sectionTemplateGrid');
+    const loadingState = document.getElementById('templateLoadingState');
+    
+    if (!modalGrid) {
+        console.error('❌ Section template grid not found in modal');
+        return;
+    }
+    
+    // Show loading state
+    if (loadingState) {
+        loadingState.style.display = 'block';
+    }
+    
+    // Get templates from the template manager
+    if (window.pageBuilder && window.pageBuilder.templateManager) {
+        const templates = window.pageBuilder.templateManager.templates;
+        
+        if (templates && templates.size > 0) {
+            renderTemplatesInModal(templates, modalGrid, loadingState);
+        } else {
+            console.warn('⚠️ No templates available from template manager');
+            showModalErrorState(modalGrid, loadingState);
+        }
+    } else {
+        console.warn('⚠️ Template manager not available, using fallback templates');
+        loadFallbackTemplatesInModal(modalGrid, loadingState);
+    }
+}
+
+// Render templates in modal grid
+function renderTemplatesInModal(templatesMap, modalGrid, loadingState) {
+    console.log('🎨 Rendering templates in modal...');
+    
+    let templatesHtml = '<div class="row g-3">';
+    
+    // Collect all templates from all categories
+    const allTemplates = [];
+    templatesMap.forEach((categoryTemplates, category) => {
+        categoryTemplates.forEach(template => {
+            allTemplates.push({ ...template, category });
+        });
+    });
+    
+    // Render each template as a card
+    allTemplates.forEach(template => {
+        templatesHtml += createModalTemplateCard(template);
+    });
+    
+    templatesHtml += '</div>';
+    
+    // Hide loading state and show templates
+    if (loadingState) {
+        loadingState.style.display = 'none';
+    }
+    
+    modalGrid.innerHTML = templatesHtml;
+    
+    console.log(`✅ Rendered ${allTemplates.length} templates in modal`);
+}
+
+// Create template card HTML for modal
+function createModalTemplateCard(template) {
+    return `
+        <div class="col-md-6 col-lg-4 col-xl-3 mb-3">
+            <div class="card section-template-card h-100" 
+                 data-template-key="${template.key}" 
+                 data-template-id="${template.id || template.key}"
+                 data-section-type="${template.category}"
+                 data-template-type="${template.type || 'core'}"
+                 style="cursor: pointer; transition: all 0.2s ease; min-height: 200px;">
+                <div class="card-body text-center d-flex flex-column justify-content-between p-3">
+                    <div>
+                        <i class="${template.icon || 'ri-layout-grid-line'} display-6 text-primary mb-2"></i>
+                        <h6 class="card-title mb-2" style="font-size: 0.9rem;">${template.name}</h6>
+                        <p class="text-muted small mb-2" style="font-size: 0.8rem; line-height: 1.3;">${template.description || 'Section template'}</p>
+                    </div>
+                    <div class="template-meta small text-muted mt-auto">
+                        <span class="badge bg-light text-dark" style="font-size: 0.7rem;">${template.category}</span>
+                        ${template.column_layout ? `<span class="badge bg-light text-dark ms-1" style="font-size: 0.7rem;">${template.column_layout}</span>` : ''}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Load fallback templates if template manager is not available
+function loadFallbackTemplatesInModal(modalGrid, loadingState) {
+    console.log('📦 Loading fallback templates in modal...');
+    
+    const fallbackTemplates = [
+        {
+            key: 'hero-banner',
+            name: 'Hero Banner',
+            category: 'header',
+            column_layout: 'full-width',
+            description: 'Full-width hero section with image and text',
+            icon: 'ri-image-line'
+        },
+        {
+            key: 'two-column',
+            name: 'Two Columns',
+            category: 'content',
+            column_layout: '6-6',
+            description: 'Two equal columns layout',
+            icon: 'ri-layout-column-line'
+        },
+        {
+            key: 'three-column',
+            name: 'Three Columns',
+            category: 'content',
+            column_layout: '4-4-4',
+            description: 'Three equal columns layout',
+            icon: 'ri-layout-grid-line'
+        },
+        {
+            key: 'full-width',
+            name: 'Full Width',
+            category: 'content',
+            column_layout: 'full-width',
+            description: 'Single full-width content area',
+            icon: 'ri-layout-row-line'
+        }
+    ];
+    
+    let templatesHtml = '<div class="row g-3">';
+    fallbackTemplates.forEach(template => {
+        templatesHtml += createModalTemplateCard(template);
+    });
+    templatesHtml += '</div>';
+    
+    // Hide loading state and show templates
+    if (loadingState) {
+        loadingState.style.display = 'none';
+    }
+    
+    modalGrid.innerHTML = templatesHtml;
+    
+    console.log('✅ Fallback templates loaded in modal');
+}
+
+// Show error state in modal
+function showModalErrorState(modalGrid, loadingState) {
+    if (loadingState) {
+        loadingState.style.display = 'none';
+    }
+    
+    modalGrid.innerHTML = `
+        <div class="text-center py-4">
+            <i class="ri-error-warning-line text-danger mb-3" style="font-size: 3rem;"></i>
+            <h6 class="text-danger">Failed to Load Templates</h6>
+            <p class="text-muted">Could not load section templates. Please try again.</p>
+            <button class="btn btn-outline-primary" onclick="loadSectionTemplatesIntoModal()">
+                <i class="ri-refresh-line me-2"></i>Retry
+            </button>
+        </div>
+    `;
+}
+
+// Setup modal event handlers
+function setupSectionTemplateModalHandlers() {
+    console.log('🎧 Setting up section template modal handlers...');
+    
+    const modal = document.getElementById('sectionTemplatesModal');
+    const addBtn = document.getElementById('addSelectedSectionBtn');
+    let selectedTemplate = null;
+    
+    if (!modal || !addBtn) {
+        console.error('❌ Modal elements not found');
+        return;
+    }
+    
+    // Handle template card selection
+    modal.addEventListener('click', function(e) {
+        const templateCard = e.target.closest('.section-template-card');
+        if (!templateCard) return;
+        
+        // Remove previous selection
+        modal.querySelectorAll('.section-template-card').forEach(card => {
+            card.classList.remove('border-primary', 'bg-primary', 'bg-opacity-10');
+            card.style.borderWidth = '';
+        });
+        
+        // Add selection to clicked card
+        templateCard.classList.add('border-primary', 'bg-primary', 'bg-opacity-10');
+        templateCard.style.borderWidth = '2px';
+        
+        // Store selected template data
+        selectedTemplate = {
+            key: templateCard.dataset.templateKey,
+            id: templateCard.dataset.templateId,
+            sectionType: templateCard.dataset.sectionType,
+            templateType: templateCard.dataset.templateType,
+            name: templateCard.querySelector('.card-title').textContent
+        };
+        
+        // Enable add button
+        addBtn.disabled = false;
+        
+        console.log('✅ Template selected:', selectedTemplate);
+    });
+    
+    // Handle add button click
+    addBtn.addEventListener('click', function() {
+        if (!selectedTemplate) {
+            console.warn('⚠️ No template selected');
+            return;
+        }
+        
+        console.log('🚀 Adding section with template:', selectedTemplate);
+        
+        // Close modal
+        bootstrap.Modal.getInstance(modal).hide();
+        
+        // TODO: Call page builder to create section
+        // This will be implemented in the next step
+        console.log('📋 Section creation will be implemented next');
+        
+        // Reset selection
+        selectedTemplate = null;
+        addBtn.disabled = true;
+    });
+    
+    // Reset selection when modal is hidden
+    modal.addEventListener('hidden.bs.modal', function() {
+        selectedTemplate = null;
+        addBtn.disabled = true;
+        
+        // Remove all selections
+        modal.querySelectorAll('.section-template-card').forEach(card => {
+            card.classList.remove('border-primary', 'bg-primary', 'bg-opacity-10');
+            card.style.borderWidth = '';
+        });
     });
 }
 

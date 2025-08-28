@@ -55,7 +55,7 @@
                 </a>
                 <div class="collapse" id="themeWidgetsCollapse">
                     <div class="nav-item-content p-2">
-                        <div class="component-grid" id="themeWidgetsGrid">
+                        <div class="component-list" id="themeWidgetsGrid">
                             <!-- GridStack theme widgets will be loaded here -->
                             <div class="text-center p-3">
                                 <div class="spinner-border spinner-border-sm text-primary" role="status">
@@ -250,10 +250,10 @@
     gap: 8px;
 }
 
-/* Widget grid styling - stacked for better usability */
+/* Widget list styling - full width stacked */
 #themeWidgetsGrid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    display: flex;
+    flex-direction: column;
     gap: 8px;
 }
 

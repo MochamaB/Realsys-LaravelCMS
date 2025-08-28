@@ -236,7 +236,7 @@
         <!-- Start right Content here -->
         <!-- ============================================================== -->
         <div class="main-content">
-            <div class="page-content" style="padding-right: 0px;">
+            <div class="page-content" style="padding-left: 0px;">
                 
                     
                     <!-- Breadcrumb Navigation -->

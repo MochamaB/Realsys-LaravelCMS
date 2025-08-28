@@ -1,6 +1,6 @@
 <!-- Section Templates Modal -->
 <div class="modal fade" id="sectionTemplatesModal" tabindex="-1" aria-labelledby="sectionTemplatesModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="sectionTemplatesModalLabel">Choose Section Template</h5>
@@ -12,41 +12,22 @@
                         <p class="text-muted">Select a section template to add to your page. Each template provides a different layout structure.</p>
                     </div>
                 </div>
-                <div class="section-template-grid" id="sectionTemplateGrid">
-                    <!-- Section templates loaded dynamically -->
-                    <div class="row g-3">
-                        <div class="col-md-6 col-lg-4">
-                            <div class="card section-template-card" data-template-type="full-width">
-                                <div class="card-body text-center">
-                                    <i class="ri-layout-row-line display-4 text-primary mb-3"></i>
-                                    <h6>Full Width</h6>
-                                    <p class="text-muted small">A full-width section for hero content</p>
-                                </div>
-                            </div>
+                <div class="section-template-grid" id="sectionTemplateGrid" style="max-height: 60vh; overflow-y: auto;">
+                    <!-- Loading state -->
+                    <div class="text-center py-4" id="templateLoadingState">
+                        <div class="spinner-border text-primary mb-3" role="status">
+                            <span class="visually-hidden">Loading templates...</span>
                         </div>
-                        <div class="col-md-6 col-lg-4">
-                            <div class="card section-template-card" data-template-type="two-columns">
-                                <div class="card-body text-center">
-                                    <i class="ri-layout-2-line display-4 text-primary mb-3"></i>
-                                    <h6>Two Columns</h6>
-                                    <p class="text-muted small">A two-column layout section</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 col-lg-4">
-                            <div class="card section-template-card" data-template-type="three-columns">
-                                <div class="card-body text-center">
-                                    <i class="ri-layout-3-line display-4 text-primary mb-3"></i>
-                                    <h6>Three Columns</h6>
-                                    <p class="text-muted small">A three-column layout section</p>
-                                </div>
-                            </div>
-                        </div>
+                        <p class="text-muted">Loading section templates...</p>
                     </div>
+                    <!-- Templates will be loaded dynamically here -->
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="addSelectedSectionBtn" disabled>
+                    <i class="ri-add-line me-2"></i>Add Section
+                </button>
             </div>
         </div>
     </div>

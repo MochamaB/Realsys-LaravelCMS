@@ -129,9 +129,11 @@ class PageController extends Controller
                 Page::where('id', '!=', $page->id)->update(['is_homepage' => false]);
             }
 
-            // After creation, redirect to the designer view (show method)
-            return redirect()->route('admin.pages.show', $page)
-                ->with('success', 'Page created successfully.');
+            // After creation, redirect to pages index with modal trigger
+            return redirect()->route('admin.pages.index')
+                ->with('success', 'Page created successfully.')
+                ->with('show_builder_modal', true)
+                ->with('created_page_id', $page->id);
         } catch (ValidationException $e) {
             return redirect()->back()
                 ->withErrors($e->errors())
