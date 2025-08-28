@@ -233,37 +233,12 @@ class SectionManager {
     }
 
     /**
-     * Add section to proper layout area based on section type
+     * Add section to layout container (simplified - no categorization)
      */
     addSectionToLayout(container, sectionElement, section) {
-        const sectionType = section.template_section?.section_type || 'content';
-        
-        // Create or get layout structure
-        let layoutStructure = container.querySelector('.layout-structure');
-        if (!layoutStructure) {
-            layoutStructure = this.createLayoutStructure(container);
-        }
-        
-        // Add section to appropriate area based on type
-        switch (sectionType) {
-            case 'header':
-                const header = layoutStructure.querySelector('.site-header .header-sections');
-                header.appendChild(sectionElement);
-                console.log('📍 Added header section to header area');
-                break;
-                
-            case 'footer':
-                const footer = layoutStructure.querySelector('.site-footer .footer-sections');
-                footer.appendChild(sectionElement);
-                console.log('📍 Added footer section to footer area');
-                break;
-                
-            default:
-                // Content sections go in main area
-                const main = layoutStructure.querySelector('.site-main .page-content .content-sections');
-                main.appendChild(sectionElement);
-                console.log('📍 Added content section to main area');
-        }
+        // Simply append to the main container
+        container.appendChild(sectionElement);
+        console.log('📍 Added section to layout:', section.id);
     }
 
     /**

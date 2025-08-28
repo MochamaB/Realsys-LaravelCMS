@@ -931,6 +931,204 @@ class PageBuilderController extends Controller
     }
 
     /**
+     * Get available section templates for the left sidebar
+     * 
+     * @return JsonResponse
+     */
+    public function getAvailableSectionTemplates(): JsonResponse
+    {
+        try {
+            // Get active theme
+            $activeTheme = \App\Models\Theme::where('is_active', true)->first();
+            
+            if (!$activeTheme) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'No active theme found'
+                ], 404);
+            }
+
+            // Core section templates (universal across all themes)
+            $coreTemplates = [
+                [
+                    'key' => 'full-width',
+                    'name' => 'Full Width',
+                    'description' => 'Single column spanning full container width',
+                    'icon' => 'ri-layout-row-line',
+                    'preview_image' => asset('assets/admin/images/sections/full-width-preview.png'),
+                    'category' => 'layout',
+                    'type' => 'core'
+                ],
+                [
+                    'key' => 'multi-column',
+                    'name' => 'Multi Column',
+                    'description' => 'Dynamic columns based on widget count (2-6 widgets)',
+                    'icon' => 'ri-layout-column-line',
+                    'preview_image' => asset('assets/admin/images/sections/multi-column-preview.png'),
+                    'category' => 'layout',
+                    'type' => 'core'
+                ],
+                [
+                    'key' => 'sidebar-left',
+                    'name' => 'Sidebar Left',
+                    'description' => 'Left sidebar with main content area',
+                    'icon' => 'ri-layout-left-2-line',
+                    'preview_image' => asset('assets/admin/images/sections/sidebar-left-preview.png'),
+                    'category' => 'layout',
+                    'type' => 'core'
+                ],
+                [
+                    'key' => 'sidebar-right',
+                    'name' => 'Sidebar Right',
+                    'description' => 'Right sidebar with main content area',
+                    'icon' => 'ri-layout-right-2-line',
+                    'preview_image' => asset('assets/admin/images/sections/sidebar-right-preview.png'),
+                    'category' => 'layout',
+                    'type' => 'core'
+                ]
+            ];
+
+            // Discover theme-specific sections
+            $themeTemplates = $this->discoverThemeSections($activeTheme);
+
+            // Merge and deduplicate (core templates take precedence)
+            $allTemplates = $this->mergeAndDeduplicateTemplates($coreTemplates, $themeTemplates);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'theme' => [
+                        'name' => $activeTheme->name,
+                        'slug' => $activeTheme->slug
+                    ],
+                    'templates' => $allTemplates,
+                    'total_count' => count($allTemplates)
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error loading section templates: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to load section templates: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Discover theme-specific section templates
+     * 
+     * @param \App\Models\Theme $theme
+     * @return array
+     */
+    private function discoverThemeSections($theme): array
+    {
+        $sectionPath = resource_path("themes/{$theme->slug}/sections");
+        $themeTemplates = [];
+
+        if (!is_dir($sectionPath)) {
+            return $themeTemplates;
+        }
+
+        $files = glob($sectionPath . '/*.blade.php');
+        
+        foreach ($files as $file) {
+            $filename = basename($file, '.blade.php');
+            
+            // Skip if it's a core template (avoid duplicates)
+            if (in_array($filename, ['full-width', 'multi-column', 'sidebar-left', 'sidebar-right', 'default'])) {
+                continue;
+            }
+
+            // Extract metadata from file comments or use defaults
+            $metadata = $this->extractSectionMetadata($file);
+            
+            $themeTemplates[] = [
+                'key' => $filename,
+                'name' => $metadata['name'] ?? ucwords(str_replace('-', ' ', $filename)),
+                'description' => $metadata['description'] ?? "Theme-specific {$filename} section layout",
+                'icon' => $metadata['icon'] ?? 'ri-layout-grid-line',
+                'preview_image' => $this->getSectionPreviewImage($theme, $filename),
+                'category' => $metadata['category'] ?? 'theme',
+                'type' => 'theme'
+            ];
+        }
+
+        return $themeTemplates;
+    }
+
+    /**
+     * Extract metadata from section file comments
+     * 
+     * @param string $filePath
+     * @return array
+     */
+    private function extractSectionMetadata($filePath): array
+    {
+        $content = file_get_contents($filePath);
+        $metadata = [];
+
+        // Look for metadata in comments at the top of the file
+        if (preg_match('/{{--\s*@section-name:\s*(.+?)\s*--}}/i', $content, $matches)) {
+            $metadata['name'] = trim($matches[1]);
+        }
+
+        if (preg_match('/{{--\s*@section-description:\s*(.+?)\s*--}}/i', $content, $matches)) {
+            $metadata['description'] = trim($matches[1]);
+        }
+
+        if (preg_match('/{{--\s*@section-icon:\s*(.+?)\s*--}}/i', $content, $matches)) {
+            $metadata['icon'] = trim($matches[1]);
+        }
+
+        if (preg_match('/{{--\s*@section-category:\s*(.+?)\s*--}}/i', $content, $matches)) {
+            $metadata['category'] = trim($matches[1]);
+        }
+
+        return $metadata;
+    }
+
+    /**
+     * Get section preview image path
+     * 
+     * @param \App\Models\Theme $theme
+     * @param string $sectionKey
+     * @return string
+     */
+    private function getSectionPreviewImage($theme, $sectionKey): string
+    {
+        $previewPath = "themes/{$theme->slug}/sections/previews/{$sectionKey}.png";
+        
+        if (file_exists(public_path($previewPath))) {
+            return asset($previewPath);
+        }
+        
+        // Fallback to admin section placeholder
+        return asset('assets/admin/images/sections/section-placeholder.png');
+    }
+
+    /**
+     * Merge and deduplicate section templates (core takes precedence)
+     * 
+     * @param array $coreTemplates
+     * @param array $themeTemplates
+     * @return array
+     */
+    private function mergeAndDeduplicateTemplates($coreTemplates, $themeTemplates): array
+    {
+        $coreKeys = array_column($coreTemplates, 'key');
+        
+        // Filter out theme templates that conflict with core templates
+        $filteredThemeTemplates = array_filter($themeTemplates, function($template) use ($coreKeys) {
+            return !in_array($template['key'], $coreKeys);
+        });
+
+        // Merge core first, then theme templates
+        return array_merge($coreTemplates, $filteredThemeTemplates);
+    }
+
+    /**
      * Generate widget preview HTML
      */
     private function generateWidgetPreviewHtml($widget, $settings, $selectedItems, $contentQuery, $contentTypeId)

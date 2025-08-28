@@ -319,6 +319,7 @@ Route::prefix('api')->middleware('admin.auth')->group(function () {
         Route::get('/widgets/{widget}/content-types', [App\Http\Controllers\Api\PageBuilderController::class, 'getWidgetContentTypes'])->name('api.page-builder.widgets.content-types');
         Route::get('/widgets/{widget}/field-definitions', [App\Http\Controllers\Api\PageBuilderController::class, 'getWidgetFieldDefinitions'])->name('api.page-builder.widgets.field-definitions');
         Route::post('/widgets/{widget}/preview', [App\Http\Controllers\Api\PageBuilderController::class, 'previewWidget'])->name('api.page-builder.widgets.preview');
+        Route::get('/section-templates', [App\Http\Controllers\Api\PageBuilderController::class, 'getAvailableSectionTemplates'])->name('api.page-builder.section-templates');
         Route::get('/content-types/{contentType}/items', [App\Http\Controllers\Api\PageBuilderController::class, 'getContentTypeItems'])->name('api.page-builder.content-types.items');
         Route::post('/content-types/{contentType}/items/query', [App\Http\Controllers\Api\PageBuilderController::class, 'queryContentItems'])->name('api.page-builder.content-types.items.query');
         Route::post('/content-types/{contentType}/create-default-item', [App\Http\Controllers\Api\PageBuilderController::class, 'createDefaultContentItem'])->name('api.page-builder.content-types.create-default-item');

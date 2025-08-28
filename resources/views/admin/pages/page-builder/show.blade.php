@@ -13,6 +13,119 @@
 
 <!-- Section Configuration Modal CSS -->
 <link href="{{ asset('assets/admin/css/page-builder/section-config-modal.css') }}" rel="stylesheet" />
+
+<!-- Consolidated Template & Component Styling -->
+<style>
+/* ===== CONSOLIDATED TEMPLATE ITEM STYLES ===== */
+/* Overrides any conflicting styles from gridstack-designer.css */
+
+.template-item {
+    position: relative !important;
+    background: #fff !important;
+    border: 1px solid #e3e6f0 !important;
+    border-radius: 8px !important;
+    padding: 12px !important;
+    margin-bottom: 8px !important;
+    cursor: grab !important;
+    transition: all 0.2s ease !important;
+    user-select: none !important;
+    text-align: left !important; /* Override center alignment from CSS file */
+}
+
+.template-item:hover {
+    border-color: #5a67d8 !important;
+    box-shadow: 0 2px 8px rgba(90, 103, 216, 0.15) !important;
+    transform: translateY(-1px) !important;
+}
+
+.template-item:active {
+    cursor: grabbing !important;
+    transform: translateY(0) !important;
+}
+
+.template-item.creating {
+    opacity: 0.7 !important;
+    pointer-events: none !important;
+}
+
+.template-item.dragging {
+    opacity: 0.5 !important;
+    transform: rotate(2deg) !important;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Template Icon Styling */
+.template-icon {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 28px !important;
+    height: 28px !important;
+    background: #f8f9fa !important;
+    border-radius: 6px !important;
+    color: #5a67d8 !important;
+    font-size: 14px !important;
+    flex-shrink: 0 !important;
+}
+
+/* Core vs Theme Template Icon Colors */
+.template-item[data-template-type="core"] .template-icon {
+    background: #e6fffa !important;
+    color: #319795 !important;
+}
+
+.template-item[data-template-type="theme"] .template-icon {
+    background: #fef5e7 !important;
+    color: #d69e2e !important;
+}
+
+/* Template Name Styling */
+.template-name {
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: #2d3748 !important;
+    line-height: 1.3 !important;
+    flex-grow: 1 !important;
+}
+
+/* Drag Handle Styling */
+.drag-handle {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 24px !important;
+    height: 24px !important;
+    color: #6c757d !important;
+    font-size: 14px !important;
+    opacity: 0 !important;
+    transition: opacity 0.2s ease !important;
+    cursor: grab !important;
+    flex-shrink: 0 !important;
+}
+
+.template-item:hover .drag-handle {
+    opacity: 1 !important;
+}
+
+.drag-handle:hover {
+    color: #5a67d8 !important;
+}
+
+.drag-handle:active {
+    cursor: grabbing !important;
+}
+
+/* Loading State */
+.sectionsGrid .spinner-border {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+/* Component Item Alias (for backward compatibility) */
+.component-item {
+    /* Inherit all template-item styles */
+}
+</style>
 @endsection
 
 @section('js')
@@ -40,23 +153,23 @@
 
 @section('content')
 <!-- Page Builder Content -->
-<div class="container-fluid h-100 p-0">
+<div class="container-fluid h-100 g-0">
     <!-- Toolbar -->
-    <div class="row">
-        <div class="col-12 p-0">
+    <div class="row g-0">
+        <div class="col-12 ">
             @include('admin.pages.page-builder.components.toolbar')
         </div>
     </div>
     
     <!-- Main Page Builder Interface -->
-        <div class="row h-100">
+        <div class="row h-100 g-0">
         <!-- Left Sidebar -->
-            <div class="col-lg-3 col-md-4 d-none d-lg-block p-0" id="leftSidebarContainer">
+            <div class="col-lg-3 col-md-4 d-none d-lg-block" id="leftSidebarContainer">
                 @include('admin.pages.page-builder.components.left-sidebar')
             </div>
 
             <!-- Main Canvas Area -->
-            <div class="col p-0" id="canvasContainer">
+            <div class="col" id="canvasContainer">
                 @include('admin.pages.page-builder.components.canvas')
             </div>
         </div>

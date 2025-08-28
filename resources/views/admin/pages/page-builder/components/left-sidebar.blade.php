@@ -16,7 +16,7 @@
             
             <!-- Sections Category -->
             <div class="nav-item">
-                <a class="nav-link d-flex align-items-center" 
+                <a class="nav-link d-flex align-items-center collapsed" 
                    data-bs-toggle="collapse" 
                    href="#sectionsCollapse" 
                    role="button" 
@@ -26,7 +26,7 @@
                     <span class="nav-text">Page Sections</span>
                     <i class="ri-arrow-down-s-line ms-auto collapse-icon"></i>
                 </a>
-                <div class="collapse show" id="sectionsCollapse">
+                <div class="collapse" id="sectionsCollapse">
                     <div class="nav-item-content p-2">
                         <div class="component-grid" id="sectionsGrid">
                             <!-- GridStack section templates will be loaded here -->

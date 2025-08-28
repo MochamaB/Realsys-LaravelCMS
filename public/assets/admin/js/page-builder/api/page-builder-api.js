@@ -128,7 +128,14 @@ class PageBuilderAPI {
     }
 
     /**
-     * Get available section templates
+     * Get available section templates for left sidebar
+     */
+    async getSectionTemplates() {
+        return await this.makeRequest('GET', '/section-templates');
+    }
+
+    /**
+     * Get available section templates (legacy method)
      */
     async getTemplateSections() {
         return await this.makeRequest('GET', '/templates/sections');

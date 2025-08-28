@@ -46,23 +46,50 @@ class TemplateManager {
     }
 
     /**
-     * Load available section templates (using fallback since templates = sections)
+     * Load available section templates from API
      */
     async loadAvailableTemplates() {
         try {
-            console.log('🔄 Loading available section templates (using fallback data)...');
+            console.log('🔄 Loading available section templates from API...');
             
-            // Since template sections are the same as page sections, 
-            // we'll use fallback templates for the sidebar
-            this.loadFallbackTemplates();
+            // Load section templates from new API endpoint
+            const response = await this.api.getSectionTemplates();
             
-            console.log(`✅ Loaded ${this.templates.size} template categories`);
+            if (response.success && response.data) {
+                const { templates } = response.data;
+                
+                // Group templates by category for sidebar display
+                this.groupTemplatesByCategory(templates);
+                
+                console.log(`✅ Loaded ${templates.length} section templates from API`);
+            } else {
+                throw new Error('Failed to load section templates from API');
+            }
             
         } catch (error) {
-            console.error('❌ Error loading templates:', error);
+            console.error('❌ Error loading templates from API:', error);
             // Load fallback templates for development
             this.loadFallbackTemplates();
         }
+    }
+
+    /**
+     * Group templates by category for sidebar organization
+     */
+    groupTemplatesByCategory(templates) {
+        this.templates.clear();
+        
+        templates.forEach(template => {
+            const category = template.category || 'layout';
+            
+            if (!this.templates.has(category)) {
+                this.templates.set(category, []);
+            }
+            
+            this.templates.get(category).push(template);
+        });
+        
+        console.log('📋 Templates grouped by category:', Array.from(this.templates.keys()));
     }
 
     /**
@@ -150,7 +177,7 @@ class TemplateManager {
     }
 
     /**
-     * Render templates in the sidebar
+     * Render templates in the sidebar (no category grouping)
      */
     renderTemplates() {
         if (!this.container) return;
@@ -165,24 +192,17 @@ class TemplateManager {
 
             let templatesHtml = '';
             
-            // Render templates grouped by category with headers
+            // Collect all templates from all categories into a single array
+            const allTemplates = [];
             this.templates.forEach((categoryTemplates, category) => {
-                // Add category header
-                templatesHtml += `
-                    <div class="template-category-header">
-                        <div class="small text-muted text-uppercase fw-bold mb-2">
-                            ${this.formatCategoryName(category)}
-                        </div>
-                    </div>
-                `;
-                
-                // Add templates in this category
                 categoryTemplates.forEach(template => {
-                    templatesHtml += this.createTemplateHTML(template, category);
+                    allTemplates.push({ ...template, category });
                 });
-                
-                // Add spacing between categories
-                templatesHtml += '<div class="mb-3"></div>';
+            });
+
+            // Render all templates together without category grouping
+            allTemplates.forEach(template => {
+                templatesHtml += this.createTemplateHTML(template, template.category);
             });
 
             this.container.innerHTML = templatesHtml;
@@ -196,21 +216,31 @@ class TemplateManager {
     }
 
     /**
-     * Create HTML for a single template item
+     * Create HTML for a single template item with drag icon
      */
     createTemplateHTML(template, category) {
         return `
-            <div class="component-item template-item" 
+            <div class="template-item" 
                  data-template-key="${template.key}" 
-                 data-template-id="${template.id}"
+                 data-template-id="${template.id || template.key}"
                  data-section-type="${category}"
-                 data-column-layout="${template.column_layout}"
+                 data-template-type="${template.type || 'core'}"
                  draggable="true"
                  title="${template.description || template.name}">
-                <i class="${template.icon || 'ri-layout-grid-line'}"></i>
-                <div class="label">${template.name}</div>
-                <div class="template-meta">
-                    <small class="text-muted">${template.column_layout}</small>
+                <div class="d-flex align-items-center justify-content-between">
+                    <!-- Icon + Name aligned left -->
+                    <div class="d-flex align-items-center">
+                        <div class="template-icon me-2">
+                            <i class="${template.icon || 'ri-layout-grid-line'}"></i>
+                        </div>
+                        <div class="template-name">
+                            ${template.name}
+                        </div>
+                    </div>
+                    <!-- Drag handle aligned right -->
+                    <div class="drag-handle" title="Drag to add section">
+                        <i class="ri-drag-move-line"></i>
+                    </div>
                 </div>
             </div>
         `;
