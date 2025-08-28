@@ -394,15 +394,15 @@
         
         // Edit Button
         const editBtn = document.createElement('button');
-        editBtn.className = 'section-toolbar-btn';
-        editBtn.innerHTML = '<i class="ri-settings-line"></i> Edit';
+        editBtn.className = 'section-toolbar-btn btn-secondary';
+        editBtn.innerHTML = '<i class="ri-pencil-fill"></i> Edit';
         editBtn.setAttribute('data-action', 'edit');
         editBtn.title = 'Edit Section Settings';
         
         // Delete Button
         const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'section-toolbar-btn';
-        deleteBtn.innerHTML = '<i class="ri-delete-bin-line"></i> Delete';
+        deleteBtn.className = 'section-toolbar-btn btn-danger';
+        deleteBtn.innerHTML = '<i class="ri-delete-bin-fill"></i> Delete';
         deleteBtn.setAttribute('data-action', 'delete');
         deleteBtn.title = 'Delete Section';
         
@@ -605,21 +605,18 @@
         
         switch (action) {
             case 'edit':
-                if (elementType === 'widget') {
-                    // Trigger widget editor
-                    selectWidget(
-                        targetElement.dataset.previewWidget,
-                        targetElement.dataset.widgetId,
-                        targetElement.dataset.sectionId,
-                        targetElement.dataset.widgetName
-                    );
-                } else {
-                    // Trigger section editor
-                    selectSection(
-                        targetElement.dataset.previewSection,
-                        targetElement.dataset.sectionName
-                    );
-                }
+                // Send toolbar action message to parent for both widgets and sections
+                parent.postMessage({
+                    type: 'toolbar-action',
+                    data: { 
+                        action: 'edit',
+                        elementType: elementType,
+                        elementId: elementId,
+                        elementName: elementName
+                    }
+                }, '*');
+                
+                console.log(`✏️ Edit ${elementType}: ${elementName} (ID: ${elementId}) - message sent to parent`);
                 break;
                 
             case 'copy':

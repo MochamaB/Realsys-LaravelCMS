@@ -1,6 +1,6 @@
 {{-- ✅ NEW VERSION with Universal Styling --}}
 <x-universal-section :pageSection="$pageSection">
-    <div class="container-fluid">
+   
         <div class="row">
             <div class="col-12">
                 {{-- Render widgets for this section --}}
@@ -32,5 +32,5 @@
                 @endif
             </div>
         </div>
-    </div>
+    
 </x-universal-section>

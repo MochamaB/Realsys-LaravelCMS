@@ -513,7 +513,7 @@ class SectionManager {
      */
     createSectionConfigModal(section) {
         const modal = document.createElement('div');
-        modal.className = 'modal fade';
+        modal.className = 'modal fade section-config-modal';
         modal.id = `sectionConfigModal-${section.id}`;
         modal.tabIndex = -1;
         modal.setAttribute('aria-labelledby', `sectionConfigModalLabel-${section.id}`);

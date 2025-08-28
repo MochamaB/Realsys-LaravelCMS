@@ -224,6 +224,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Setup iframe message listener
                 setupIframeMessageListener();
+                
+                // Debug: Log section manager availability
+                setTimeout(() => {
+                    console.log('🔍 Debug: Page Builder components:', {
+                        pageBuilder: !!window.pageBuilder,
+                        sectionManager: !!window.pageBuilder?.sectionManager,
+                        sectionsCount: window.pageBuilder?.sectionManager?.sections?.size || 0
+                    });
+                }, 2000);
                 // Initialize sidebar toggle functionality
                 initSidebarToggle();
                 // Setup section templates modal
@@ -572,7 +581,8 @@ function setupIframeMessageListener() {
         
         switch (type) {
             case 'section-selected':
-                handleSectionSelected(data.sectionId, data.sectionName);
+                // Only store selection, don't open modal
+                handleSectionSelection(data.sectionId, data.sectionName);
                 break;
                 
             case 'toolbar-action':
@@ -590,14 +600,90 @@ function setupIframeMessageListener() {
     });
 }
 
-function handleSectionSelected(sectionId, sectionName) {
-    console.log('📦 Section selected:', { sectionId, sectionName });
+function handleSectionSelection(sectionId, sectionName) {
+    console.log('📦 Section selected (no modal):', { sectionId, sectionName });
     
     // Store selected section info globally
     window.selectedSection = { id: sectionId, name: sectionName };
     
-    // You can add additional section selection UI updates here
-    console.log(`✅ Section "${sectionName}" (ID: ${sectionId}) is now selected`);
+    // Add visual feedback or other selection handling here if needed
+    console.log(`✅ Section "${sectionName}" (ID: ${sectionId}) selected`);
+}
+
+async function openSectionConfigModal(sectionId, sectionName) {
+    console.log('🔧 Opening section configuration modal:', { sectionId, sectionName });
+    
+    // Store selected section info globally
+    window.selectedSection = { id: sectionId, name: sectionName };
+    
+    try {
+        // Fetch section data from API instead of relying on pre-loaded data
+        console.log('🔍 Fetching section data from API...');
+        const sectionData = await fetchSectionData(sectionId);
+        
+        if (sectionData) {
+            console.log('✅ Section data retrieved:', sectionData);
+            
+            // Check if SectionManager is available
+            if (window.pageBuilder && window.pageBuilder.sectionManager && 
+                typeof window.pageBuilder.sectionManager.openSectionConfigModal === 'function') {
+                
+                try {
+                    window.pageBuilder.sectionManager.openSectionConfigModal(sectionData);
+                    console.log('✅ Modal opened with API data');
+                } catch (error) {
+                    console.error('❌ Error opening modal with SectionManager:', error);
+                    openFallbackSectionModal(sectionId, sectionName);
+                }
+            } else {
+                console.warn('⚠️ SectionManager not available, using fallback modal');
+                openEnhancedFallbackModal(sectionData);
+            }
+        } else {
+            console.error('❌ Failed to fetch section data');
+            openFallbackSectionModal(sectionId, sectionName);
+        }
+    } catch (error) {
+        console.error('❌ Error in openSectionConfigModal:', error);
+        openFallbackSectionModal(sectionId, sectionName);
+    }
+}
+
+async function fetchSectionData(sectionId) {
+    try {
+        // Use the PageBuilder API to fetch section configuration
+        const response = await fetch(`/admin/api/page-builder/sections/${sectionId}/configuration`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': window.csrfToken || document.querySelector('meta[name="csrf-token"]')?.content
+            }
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            if (result.success) {
+                console.log('✅ Section configuration fetched from API');
+                return result.data;
+            } else {
+                console.warn('⚠️ API returned failure:', result.message);
+            }
+        } else {
+            console.warn('⚠️ API request failed:', response.status, response.statusText);
+        }
+    } catch (error) {
+        console.error('❌ Error fetching section data:', error);
+    }
+    
+    // Fallback: create a basic section object
+    return {
+        id: parseInt(sectionId),
+        template_section: { 
+            name: `Section ${sectionId}`,
+            section_type: 'content'
+        },
+        config: {}
+    };
 }
 
 function handleToolbarAction(actionData) {
@@ -614,7 +700,13 @@ function handleToolbarAction(actionData) {
             
         case 'edit':
             console.log(`✏️ Edit ${elementType}: ${elementName} (ID: ${elementId})`);
-            // Handle edit actions
+            if (elementType === 'section') {
+                // Open section config modal for edit action
+                openSectionConfigModal(elementId, elementName);
+            } else if (elementType === 'widget') {
+                // Handle widget editing (for future implementation)
+                console.log('🎯 Widget edit not implemented yet:', elementId);
+            }
             break;
             
         case 'delete':
@@ -639,6 +731,62 @@ function openWidgetModalForSection(sectionId, sectionName) {
     }
     
     console.log(`✅ Widget modal opened for section "${sectionName}"`);
+}
+
+function openFallbackSectionModal(sectionId, sectionName) {
+    console.log('📋 Opening fallback section modal:', { sectionId, sectionName });
+    
+    // Create a simple Bootstrap modal for basic section information
+    const modalHtml = `
+        <div class="modal fade" id="fallbackSectionModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="ri-settings-line me-2"></i>Section: ${sectionName}
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-info">
+                            <i class="ri-information-line me-2"></i>
+                            <strong>Section ID:</strong> ${sectionId}<br>
+                            <strong>Section Name:</strong> ${sectionName}
+                        </div>
+                        <p>Section configuration modal is loading...</p>
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing fallback modal
+    const existingModal = document.getElementById('fallbackSectionModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add modal to DOM
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('fallbackSectionModal'));
+    modal.show();
+    
+    // Clean up on hide
+    document.getElementById('fallbackSectionModal').addEventListener('hidden.bs.modal', function() {
+        this.remove();
+    });
+    
+    console.log('✅ Fallback section modal opened');
 }
 
 function getSelectedSectionInfo() {

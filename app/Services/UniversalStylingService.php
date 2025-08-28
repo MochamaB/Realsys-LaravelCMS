@@ -15,11 +15,24 @@ class UniversalStylingService
      */
     public function buildSectionClasses(PageSection $pageSection): string
     {
-        return collect([
+        $classes = [
             'cms-section',
-            'section-' . ($pageSection->templateSection->section_type ?? 'default'),
-            $pageSection->css_classes
-        ])->filter()->implode(' ');
+            'section-' . ($pageSection->templateSection->section_type ?? 'default')
+        ];
+        
+        // Add container class only if theme section doesn't handle containers
+        // This prevents double container-fluid nesting
+        $sectionType = $pageSection->templateSection->section_type ?? 'default';
+        if (!$this->themeHandlesContainer($sectionType)) {
+            $classes[] = 'container-fluid';
+        }
+        
+        // Add custom CSS classes
+        if ($pageSection->css_classes) {
+            $classes[] = $pageSection->css_classes;
+        }
+        
+        return collect($classes)->filter()->implode(' ');
     }
 
     /**
@@ -32,7 +45,7 @@ class UniversalStylingService
     {
         $styles = [];
         
-        if ($pageSection->background_color) {
+        if ($pageSection->background_color && $this->isValidColor($pageSection->background_color)) {
             $styles[] = "background-color: {$pageSection->background_color}";
         }
         
@@ -40,14 +53,14 @@ class UniversalStylingService
             $padding = is_array($pageSection->padding) 
                 ? implode(' ', $pageSection->padding) 
                 : $pageSection->padding;
-            $styles[] = "padding: {$padding}";
+            $styles[] = "padding: " . $this->ensureUnits($padding);
         }
         
         if ($pageSection->margin) {
             $margin = is_array($pageSection->margin)
                 ? implode(' ', $pageSection->margin)
                 : $pageSection->margin;
-            $styles[] = "margin: {$margin}";
+            $styles[] = "margin: " . $this->ensureUnits($margin);
         }
         
         return implode('; ', $styles);
@@ -104,22 +117,22 @@ class UniversalStylingService
             $padding = is_array($widget->padding) 
                 ? implode(' ', $widget->padding) 
                 : $widget->padding;
-            $styles[] = "padding: {$padding}";
+            $styles[] = "padding: " . $this->ensureUnits($padding);
         }
         
         if ($widget->margin) {
             $margin = is_array($widget->margin)
                 ? implode(' ', $widget->margin)
                 : $widget->margin;
-            $styles[] = "margin: {$margin}";
+            $styles[] = "margin: " . $this->ensureUnits($margin);
         }
         
         if ($widget->min_height) {
-            $styles[] = "min-height: {$widget->min_height}";
+            $styles[] = "min-height: " . $this->ensureUnits($widget->min_height);
         }
         
         if ($widget->max_height) {
-            $styles[] = "max-height: {$widget->max_height}";
+            $styles[] = "max-height: " . $this->ensureUnits($widget->max_height);
         }
         
         return implode('; ', $styles);
@@ -145,6 +158,59 @@ class UniversalStylingService
             $widget->grid_h,
             $widget->grid_id
         );
+    }
+
+    /**
+     * Ensure CSS values have proper units (px, rem, em, %, etc.)
+     * Converts "40 0 0 40" to "40px 0 0 40px"
+     * 
+     * @param string $value
+     * @return string
+     */
+    private function ensureUnits(string $value): string
+    {
+        // If already has units, return as is
+        if (preg_match('/(px|rem|em|%|vh|vw|pt|pc|in|cm|mm|ex|ch|vmin|vmax)/', $value)) {
+            return $value;
+        }
+        
+        // Handle space-separated values (like "40 0 0 40")
+        $parts = preg_split('/\s+/', trim($value));
+        $result = [];
+        
+        foreach ($parts as $part) {
+            if (is_numeric($part)) {
+                // Add px unit to numeric values
+                $result[] = $part === '0' ? '0' : $part . 'px';
+            } else {
+                // Keep non-numeric values as is (auto, inherit, etc.)
+                $result[] = $part;
+            }
+        }
+        
+        return implode(' ', $result);
+    }
+
+    /**
+     * Check if theme section template handles its own container classes
+     * This prevents double container-fluid nesting
+     * 
+     * @param string $sectionType
+     * @return bool
+     */
+    private function themeHandlesContainer(string $sectionType): bool
+    {
+        // List of section types where theme templates handle containers
+        // Based on actual analysis of theme files in resources/themes/miata/sections/
+        $themeContainerMap = [
+            'full-width' => true,    // has container-fluid
+            'multi-column' => true,  // has container
+            'sidebar-left' => true,  // has container
+            'sidebar-right' => true, // has container
+            'default' => false       // has NO container, just col-12
+        ];
+        
+        return $themeContainerMap[$sectionType] ?? false;
     }
 
     /**

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Fixes Test</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .demo-section {
+            border: 2px dashed #007bff;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+        
+        .demo-section::before {
+            content: attr(data-title);
+            position: absolute;
+            top: -10px;
+            left: 10px;
+            background: #007bff;
+            color: white;
+            padding: 2px 8px;
+            font-size: 12px;
+            border-radius: 3px;
+        }
+
+        .demo-widget {
+            border: 1px solid #28a745;
+            background: #f8f9fa;
+            padding: 1rem;
+            margin: 0.5rem;
+        }
+
+        .issue-demo {
+            background: #ffe6e6;
+            border: 2px solid #dc3545;
+        }
+
+        .fixed-demo {
+            background: #e6ffe6;
+            border: 2px solid #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="container my-5">
+        <h1 class="mb-4">CSS Fixes Test Page</h1>
+        <p class="alert alert-info">
+            This page demonstrates the CSS fixes implemented for container-fluid conflicts and CSS unit issues.
+        </p>
+
+        <!-- Before Fix: Double Container Issue -->
+        <div class="demo-section issue-demo" data-title="BEFORE: Double Container Issue">
+            <h3>Problem: Double Container-Fluid Nesting</h3>
+            <section class="cms-section section-full-width container-fluid" style="padding: 40 0 0 40;">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="demo-widget">
+                                <h5>Widget with Malformed CSS</h5>
+                                <p><strong>Issues:</strong></p>
+                                <ul>
+                                    <li>Double container-fluid nesting</li>
+                                    <li>Malformed padding: "40 0 0 40" (missing px)</li>
+                                    <li>Extra spacing and layout issues</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- After Fix: Proper Container -->
+        <div class="demo-section fixed-demo" data-title="AFTER: Fixed Container Logic">
+            <h3>Fixed: Smart Container Management</h3>
+            <section class="cms-section section-full-width" style="padding: 40px 0 0 40px;">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="demo-widget">
+                                <h5>Widget with Fixed CSS</h5>
+                                <p><strong>Improvements:</strong></p>
+                                <ul>
+                                    <li>Single container (theme-handled)</li>
+                                    <li>Proper padding: "40px 0 0 40px"</li>
+                                    <li>Clean layout without conflicts</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Widget Spacing Examples -->
+        <div class="demo-section fixed-demo" data-title="AFTER: Fixed Widget Spacing">
+            <h3>Fixed Widget Spacing Examples</h3>
+            
+            <div class="demo-widget" style="padding: 20px 15px 10px 5px; margin: 10px auto;">
+                <h5>Widget with Proper Units</h5>
+                <p>Padding: 20px 15px 10px 5px (was: "20 15 10 5")</p>
+                <p>Margin: 10px auto (was: "10 auto")</p>
+            </div>
+
+            <div class="demo-widget" style="padding: 1rem 0.5rem; margin: 0 0 1rem 0; min-height: 100px;">
+                <h5>Widget with Mixed Units</h5>
+                <p>Supports rem, em, px, and other valid CSS units</p>
+                <p>Min-height: 100px (was: "100")</p>
+            </div>
+        </div>
+
+        <!-- Container Type Demonstrations -->
+        <div class="demo-section" data-title="Container Types by Section">
+            <h3>Container Logic by Section Type</h3>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Theme-Handled Containers</h5>
+                    <small class="text-muted">No container-fluid added to section classes</small>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <strong>full-width</strong> → has container-fluid
+                        </li>
+                        <li class="list-group-item">
+                            <strong>multi-column</strong> → has container
+                        </li>
+                        <li class="list-group-item">
+                            <strong>sidebar-left</strong> → has container
+                        </li>
+                        <li class="list-group-item">
+                            <strong>sidebar-right</strong> → has container
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h5>Service-Handled Containers</h5>
+                    <small class="text-muted">container-fluid added by UniversalStylingService</small>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <strong>default</strong> → no container, just col-12
+                        </li>
+                        <li class="list-group-item">
+                            <strong>custom</strong> → depends on theme implementation
+                        </li>
+                        <li class="list-group-item">
+                            <em>Other unknown types default to no container</em>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Results Summary -->
+        <div class="alert alert-success">
+            <h4>✅ Fix Summary</h4>
+            <ul class="mb-0">
+                <li><strong>CSS Units:</strong> All numeric values now have proper px units</li>
+                <li><strong>Container Conflicts:</strong> Smart container logic prevents double nesting</li>
+                <li><strong>Theme Compatibility:</strong> Respects existing theme container usage</li>
+                <li><strong>Validation:</strong> Invalid colors and extreme values are filtered out</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        console.log('CSS Fixes Test Page Loaded');
+        console.log('Original HTML example showed: style="padding: 40 0 0 40; margin: 0 0 0 0"');
+        console.log('Fixed version will show: style="padding: 40px 0 0 40px; margin: 0 0 0 0"');
+        
+        // Highlight the difference in browser dev tools
+        document.querySelectorAll('.demo-section').forEach(section => {
+            section.addEventListener('click', () => {
+                console.log('Section clicked:', section.getAttribute('data-title'));
+            });
+        });
+    </script>
+</body>
+</html>
