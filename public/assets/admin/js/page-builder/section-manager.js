@@ -5,9 +5,10 @@
  * and rendering sections in the GridStack layout.
  */
 class SectionManager {
-    constructor(api, gridManager) {
+    constructor(api, gridManager, unifiedLoader = null) {
         this.api = api;
         this.gridManager = gridManager;
+        this.unifiedLoader = unifiedLoader;
         this.sections = new Map(); // Store sections by ID
         this.sectionElements = new Map(); // Store DOM elements by section ID
         
@@ -19,6 +20,11 @@ class SectionManager {
      */
     async loadSections() {
         try {
+            // Use unified loader if available
+            if (this.unifiedLoader) {
+                this.unifiedLoader.show('loadSections', 'Loading page sections...', 10);
+            }
+            
             console.log('🔄 Loading page sections...');
             
             const response = await this.api.getSections();
@@ -34,13 +40,25 @@ class SectionManager {
                 });
                 
                 console.log(`✅ Loaded ${response.data.length} sections:`, response.data);
+                
+                // Hide loader
+                if (this.unifiedLoader) {
+                    this.unifiedLoader.hide('loadSections');
+                }
+                
                 return response.data;
             } else {
                 console.warn('⚠️ No sections found in response');
+                if (this.unifiedLoader) {
+                    this.unifiedLoader.hide('loadSections');
+                }
                 return [];
             }
         } catch (error) {
             console.error('❌ Error loading sections:', error);
+            if (this.unifiedLoader) {
+                this.unifiedLoader.showError('loadSections', 'Failed to load sections');
+            }
             throw error;
         }
     }
@@ -475,15 +493,20 @@ class SectionManager {
     }
 
     /**
-     * Open section configuration modal
+     * Open section configuration modal using existing Blade modal
      */
     async openSectionConfigModal(section) {
         try {
             console.log('🔧 Opening section configuration modal for:', section.id);
             
-            // Create modal element
-            const modal = this.createSectionConfigModal(section);
-            document.body.appendChild(modal);
+            // Get the existing Blade modal
+            const modal = document.getElementById('sectionConfigModal');
+            if (!modal) {
+                throw new Error('Section configuration modal not found');
+            }
+            
+            // Store current section reference
+            this.currentSection = section;
             
             // Initialize Bootstrap modal
             const bsModal = new bootstrap.Modal(modal, {
@@ -491,11 +514,11 @@ class SectionManager {
                 keyboard: false
             });
             
-            // Load current section configuration
-            await this.loadSectionConfiguration(section, modal);
+            // Load current section configuration into the form
+            await this.loadSectionConfigurationIntoForm(section);
             
             // Setup modal event handlers
-            this.setupSectionConfigModalEvents(modal, section, bsModal);
+            this.setupBladeModalEventHandlers(modal, section, bsModal);
             
             // Show modal
             bsModal.show();
@@ -745,34 +768,207 @@ class SectionManager {
     }
 
     /**
-     * Load current section configuration into modal
+     * Load section configuration into the Blade modal form
      */
-    async loadSectionConfiguration(section, modal) {
+    async loadSectionConfigurationIntoForm(section) {
         try {
-            console.log('📄 Loading section configuration:', section.id);
+            console.log('📄 Loading section configuration into form:', section.id);
             
             // Get current configuration from section or API
             let config = section.config || {};
             
             // If no config exists locally, try to fetch from API
-            if (!section.config) {
+            if (!section.config || Object.keys(section.config).length === 0) {
                 try {
                     const response = await this.api.getSectionConfiguration(section.id);
                     if (response.success && response.data) {
                         config = response.data;
+                        // Update section with fetched config
+                        section.config = config;
                     }
                 } catch (error) {
                     console.warn('⚠️ Could not fetch section configuration, using defaults');
                 }
             }
             
-            // Populate form fields
-            this.populateSectionConfigForm(modal, section, config);
+            // Populate the Blade modal form fields
+            this.populateBladeModalForm(section, config);
             
-            console.log('✅ Section configuration loaded');
+            console.log('✅ Section configuration loaded into form');
             
         } catch (error) {
             console.error('❌ Error loading section configuration:', error);
+        }
+    }
+
+    /**
+     * Populate the Blade modal form with section data
+     */
+    populateBladeModalForm(section, config) {
+        console.log('🔄 Populating Blade modal form with:', { section, config });
+        
+        // Update modal title
+        const modalTitle = document.getElementById('sectionConfigModalLabel');
+        if (modalTitle) {
+            const sectionName = section.template_section?.name || `Section ${section.id}`;
+            modalTitle.innerHTML = `<i class="ri-settings-3-line me-2"></i>Section Configuration: ${sectionName}`;
+        }
+        
+        // Configuration Tab Fields
+        // Hidden section ID
+        const sectionIdInput = document.getElementById('sectionId');
+        if (sectionIdInput) sectionIdInput.value = section.id;
+        
+        // Section Name
+        const sectionNameInput = document.getElementById('sectionName');
+        if (sectionNameInput) sectionNameInput.value = config.name || section.template_section?.name || `Section ${section.id}`;
+        
+        // Position
+        const positionInput = document.getElementById('sectionPosition');
+        if (positionInput) positionInput.value = config.position || section.position || 0;
+        
+        // Allows Widgets
+        const allowsWidgetsInput = document.getElementById('allowsWidgets');
+        if (allowsWidgetsInput) allowsWidgetsInput.checked = config.allows_widgets !== false && section.allows_widgets !== false;
+        
+        // Widget Types (handle JSON data)
+        this.populateWidgetTypes(config.widget_types || section.widget_types);
+        
+        // Styling & Grid Tab Fields
+        // Grid Settings
+        const gridXInput = document.getElementById('gridX');
+        if (gridXInput) gridXInput.value = config.grid_x || section.grid_x || 0;
+        
+        const gridYInput = document.getElementById('gridY');
+        if (gridYInput) gridYInput.value = config.grid_y || section.grid_y || 0;
+        
+        const gridWInput = document.getElementById('gridW');
+        if (gridWInput) gridWInput.value = config.grid_w || section.grid_w || 12;
+        
+        const gridHInput = document.getElementById('gridH');
+        if (gridHInput) gridHInput.value = config.grid_h || section.grid_h || 4;
+        
+        // Column overrides
+        const columnSpanInput = document.getElementById('columnSpanOverride');
+        if (columnSpanInput) columnSpanInput.value = config.column_span_override || '';
+        
+        const columnOffsetInput = document.getElementById('columnOffsetOverride');
+        if (columnOffsetInput) columnOffsetInput.value = config.column_offset_override || '';
+        
+        // Lock position
+        const lockedPositionInput = document.getElementById('lockedPosition');
+        if (lockedPositionInput) lockedPositionInput.checked = config.locked_position || section.locked_position || false;
+        
+        // Styling Settings
+        const cssClassesInput = document.getElementById('cssClasses');
+        if (cssClassesInput) cssClassesInput.value = config.css_classes || section.css_classes || '';
+        
+        const backgroundColorInput = document.getElementById('backgroundColor');
+        const backgroundColorTextInput = document.getElementById('backgroundColorText');
+        const bgColor = config.background_color || section.background_color || '#ffffff';
+        if (backgroundColorInput) backgroundColorInput.value = bgColor;
+        if (backgroundColorTextInput) backgroundColorTextInput.value = bgColor;
+        
+        // Separated Padding inputs
+        const paddingTopInput = document.getElementById('paddingTop');
+        const paddingBottomInput = document.getElementById('paddingBottom');
+        const paddingLeftInput = document.getElementById('paddingLeft');
+        const paddingRightInput = document.getElementById('paddingRight');
+        
+        if (paddingTopInput) paddingTopInput.value = config.padding_top || section.padding_top || 0;
+        if (paddingBottomInput) paddingBottomInput.value = config.padding_bottom || section.padding_bottom || 0;
+        if (paddingLeftInput) paddingLeftInput.value = config.padding_left || section.padding_left || 0;
+        if (paddingRightInput) paddingRightInput.value = config.padding_right || section.padding_right || 0;
+        
+        // Separated Margin inputs
+        const marginTopInput = document.getElementById('marginTop');
+        const marginBottomInput = document.getElementById('marginBottom');
+        const marginLeftInput = document.getElementById('marginLeft');
+        const marginRightInput = document.getElementById('marginRight');
+        
+        if (marginTopInput) marginTopInput.value = config.margin_top || section.margin_top || 0;
+        if (marginBottomInput) marginBottomInput.value = config.margin_bottom || section.margin_bottom || 0;
+        if (marginLeftInput) marginLeftInput.value = config.margin_left || section.margin_left || 0;
+        if (marginRightInput) marginRightInput.value = config.margin_right || section.margin_right || 0;
+        
+        const resizeHandlesInput = document.getElementById('resizeHandles');
+        if (resizeHandlesInput) resizeHandlesInput.value = config.resize_handles || section.resize_handles || 'all';
+        
+        console.log('✅ Blade modal form populated');
+    }
+
+    /**
+     * Populate widget types checkboxes
+     */
+    populateWidgetTypes(widgetTypes) {
+        const container = document.getElementById('widgetTypesContainer');
+        if (!container) return;
+        
+        // Show loading initially
+        container.innerHTML = '<div class="text-muted text-center py-2"><i class="ri-loader-4-line spin"></i> Loading widget types...</div>';
+        
+        // Get available widget types (this would typically come from an API)
+        // For now, use common widget types
+        const availableWidgetTypes = [
+            { key: 'text', name: 'Text Widget', description: 'Rich text content' },
+            { key: 'image', name: 'Image Widget', description: 'Image display' },
+            { key: 'gallery', name: 'Gallery Widget', description: 'Image gallery' },
+            { key: 'video', name: 'Video Widget', description: 'Video embed' },
+            { key: 'button', name: 'Button Widget', description: 'Call-to-action button' },
+            { key: 'form', name: 'Form Widget', description: 'Contact forms' },
+            { key: 'map', name: 'Map Widget', description: 'Google Maps' },
+            { key: 'social', name: 'Social Widget', description: 'Social media links' }
+        ];
+        
+        // Parse current widget types
+        let selectedTypes = [];
+        if (typeof widgetTypes === 'string') {
+            try {
+                selectedTypes = JSON.parse(widgetTypes);
+            } catch (e) {
+                selectedTypes = widgetTypes.split(',').map(t => t.trim());
+            }
+        } else if (Array.isArray(widgetTypes)) {
+            selectedTypes = widgetTypes;
+        }
+        
+        // Create checkboxes
+        let html = '';
+        availableWidgetTypes.forEach(type => {
+            const isChecked = selectedTypes.length === 0 || selectedTypes.includes(type.key);
+            html += `
+                <div class="form-check">
+                    <input class="form-check-input widget-type-checkbox" type="checkbox" 
+                           id="widgetType_${type.key}" value="${type.key}" ${isChecked ? 'checked' : ''}>
+                    <label class="form-check-label" for="widgetType_${type.key}">
+                        <strong>${type.name}</strong>
+                        <div class="form-text">${type.description}</div>
+                    </label>
+                </div>
+            `;
+        });
+        
+        container.innerHTML = html;
+        
+        // Update hidden field when checkboxes change
+        this.updateWidgetTypesJson();
+        
+        // Add event listeners
+        container.querySelectorAll('.widget-type-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', () => this.updateWidgetTypesJson());
+        });
+    }
+
+    /**
+     * Update the hidden widget types JSON field
+     */
+    updateWidgetTypesJson() {
+        const checkboxes = document.querySelectorAll('.widget-type-checkbox:checked');
+        const selectedTypes = Array.from(checkboxes).map(cb => cb.value);
+        
+        const hiddenField = document.getElementById('widgetTypesJson');
+        if (hiddenField) {
+            hiddenField.value = JSON.stringify(selectedTypes);
         }
     }
 
@@ -842,89 +1038,292 @@ class SectionManager {
     }
 
     /**
-     * Setup section configuration modal event handlers
+     * Setup event handlers for the Blade modal
      */
-    setupSectionConfigModalEvents(modal, section, bsModal) {
-        const sectionId = section.id;
+    setupBladeModalEventHandlers(modal, section, bsModal) {
+        // Remove any existing event listeners to prevent duplicates
+        this.removeBladeModalEventHandlers();
         
         // Save button handler
-        const saveBtn = modal.querySelector(`#saveSectionConfigBtn-${sectionId}`);
+        const saveBtn = document.getElementById('saveSectionBtn');
         if (saveBtn) {
-            saveBtn.addEventListener('click', async () => {
-                await this.saveSectionConfiguration(modal, section, bsModal);
-            });
+            this.saveBtnHandler = async () => {
+                await this.saveSectionConfigurationFromForm(section, bsModal);
+            };
+            saveBtn.addEventListener('click', this.saveBtnHandler);
         }
         
         // Delete button handler
-        const deleteBtn = modal.querySelector(`#deleteSectionBtn-${sectionId}`);
+        const deleteBtn = document.getElementById('deleteSectionBtn');
         if (deleteBtn) {
-            deleteBtn.addEventListener('click', async () => {
-                await this.confirmDeleteSection(section, bsModal);
-            });
+            this.deleteBtnHandler = async () => {
+                await this.confirmDeleteSectionFromForm(section, bsModal);
+            };
+            deleteBtn.addEventListener('click', this.deleteBtnHandler);
         }
         
-        // Background type change handler
-        const bgTypeSelect = modal.querySelector(`#backgroundType-${sectionId}`);
-        if (bgTypeSelect) {
-            bgTypeSelect.addEventListener('change', (e) => {
-                this.handleBackgroundTypeChange(modal, sectionId, e.target.value);
-            });
+        // Background color sync handler
+        const backgroundColorInput = document.getElementById('backgroundColor');
+        const backgroundColorTextInput = document.getElementById('backgroundColorText');
+        
+        if (backgroundColorInput && backgroundColorTextInput) {
+            this.bgColorHandler = (e) => {
+                backgroundColorTextInput.value = e.target.value;
+            };
+            this.bgColorTextHandler = (e) => {
+                if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
+                    backgroundColorInput.value = e.target.value;
+                }
+            };
+            
+            backgroundColorInput.addEventListener('input', this.bgColorHandler);
+            backgroundColorTextInput.addEventListener('input', this.bgColorTextHandler);
         }
         
         // Modal cleanup on hide
-        modal.addEventListener('hidden.bs.modal', () => {
-            modal.remove();
-        });
+        this.modalHideHandler = () => {
+            this.removeBladeModalEventHandlers();
+            this.currentSection = null;
+        };
+        modal.addEventListener('hidden.bs.modal', this.modalHideHandler);
     }
 
     /**
-     * Save section configuration
+     * Remove event handlers to prevent memory leaks
      */
-    async saveSectionConfiguration(modal, section, bsModal) {
+    removeBladeModalEventHandlers() {
+        const saveBtn = document.getElementById('saveSectionBtn');
+        const deleteBtn = document.getElementById('deleteSectionBtn');
+        const backgroundColorInput = document.getElementById('backgroundColor');
+        const backgroundColorTextInput = document.getElementById('backgroundColorText');
+        const modal = document.getElementById('sectionConfigModal');
+        
+        if (saveBtn && this.saveBtnHandler) {
+            saveBtn.removeEventListener('click', this.saveBtnHandler);
+        }
+        if (deleteBtn && this.deleteBtnHandler) {
+            deleteBtn.removeEventListener('click', this.deleteBtnHandler);
+        }
+        if (backgroundColorInput && this.bgColorHandler) {
+            backgroundColorInput.removeEventListener('input', this.bgColorHandler);
+        }
+        if (backgroundColorTextInput && this.bgColorTextHandler) {
+            backgroundColorTextInput.removeEventListener('input', this.bgColorTextHandler);
+        }
+        if (modal && this.modalHideHandler) {
+            modal.removeEventListener('hidden.bs.modal', this.modalHideHandler);
+        }
+    }
+
+    /**
+     * Save section configuration from Blade modal form
+     */
+    async saveSectionConfigurationFromForm(section, bsModal) {
         try {
-            console.log('💾 Saving section configuration:', section.id);
+            console.log('💾 Saving section configuration from form:', section.id);
             
             // Show loading state
-            const saveBtn = modal.querySelector(`#saveSectionConfigBtn-${section.id}`);
+            const saveBtn = document.getElementById('saveSectionBtn');
+            const saveSpinner = document.getElementById('saveSpinner');
             const originalText = saveBtn.innerHTML;
-            saveBtn.innerHTML = '<i class="ri-loader-4-line spinner-border spinner-border-sm me-1"></i>Saving...';
-            saveBtn.disabled = true;
             
-            // Collect form data
-            const configData = this.collectSectionConfigData(modal, section.id);
-            
-            // Save via API
             const response = await this.api.updateSection(section.id, configData);
             
             if (response.success) {
                 // Update local section data
                 section.config = { ...section.config, ...configData };
                 
+                // Update progress
+                if (this.unifiedLoader) {
+                    this.unifiedLoader.setProgress(60);
+                    this.unifiedLoader.updateMessage('Refreshing section display...');
+                }
+                
                 // Refresh section rendering
                 await this.refreshSectionDisplay(section);
                 
+                // Update progress
+                if (this.unifiedLoader) {
+                    this.unifiedLoader.setProgress(80);
+                    this.unifiedLoader.updateMessage('Reloading preview...');
+                }
+                
+                // Reload the preview to show changes
+                await this.reloadPreview();
+                
                 // Show success message
-                this.showConfigSuccessMessage(modal, 'Section configuration saved successfully!');
+                this.showSuccessMessage('Section configuration updated successfully');
                 
-                // Close modal after short delay
-                setTimeout(() => {
-                    bsModal.hide();
-                }, 1000);
+                // Complete and hide loader
+                if (this.unifiedLoader) {
+                    this.unifiedLoader.setProgress(100);
+                    this.unifiedLoader.hide('saveSection');
+                }
                 
-                console.log('✅ Section configuration saved successfully');
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('sectionConfigModal'));
+                if (modal) {
+                    modal.hide();
+                }
+                
+                console.log(' Section configuration saved successfully');
                 
             } else {
                 throw new Error(response.message || 'Failed to save section configuration');
             }
             
         } catch (error) {
-            console.error('❌ Error saving section configuration:', error);
-            this.showConfigErrorMessage(modal, 'Failed to save configuration. Please try again.');
-            
+            console.error(' Error saving section configuration:', error);
+            if (this.unifiedLoader) {
+                this.unifiedLoader.showError('saveSection', 'Failed to save configuration');
+            }
+            this.showBladeModalErrorMessage('Failed to save configuration. Please try again.');
+        } finally {
             // Restore button state
-            const saveBtn = modal.querySelector(`#saveSectionConfigBtn-${section.id}`);
-            saveBtn.innerHTML = '<i class="ri-save-line me-1"></i>Save Changes';
-            saveBtn.disabled = false;
+            const saveBtn = document.getElementById('saveSectionBtn');
+            const saveSpinner = document.getElementById('saveSpinner');
+            
+            if (saveSpinner) saveSpinner.classList.add('d-none');
+            if (saveBtn) {
+                saveBtn.disabled = false;
+            }
+        }
+    }
+
+    /**
+     * Collect form data from Blade modal
+     */
+    collectBladeModalFormData() {
+        const data = {};
+        
+        // Configuration tab
+        const sectionNameInput = document.getElementById('sectionName');
+        if (sectionNameInput) data.name = sectionNameInput.value.trim();
+        
+        const positionInput = document.getElementById('sectionPosition');
+        if (positionInput) data.position = parseInt(positionInput.value) || 0;
+        
+        const allowsWidgetsInput = document.getElementById('allowsWidgets');
+        if (allowsWidgetsInput) data.allows_widgets = allowsWidgetsInput.checked;
+        
+        const widgetTypesJson = document.getElementById('widgetTypesJson');
+        if (widgetTypesJson && widgetTypesJson.value) {
+            try {
+                data.widget_types = JSON.parse(widgetTypesJson.value);
+            } catch (e) {
+                data.widget_types = [];
+            }
+        }
+        
+        // Styling & Grid tab
+        const gridXInput = document.getElementById('gridX');
+        if (gridXInput) data.grid_x = parseInt(gridXInput.value) || 0;
+        
+        const gridYInput = document.getElementById('gridY');
+        if (gridYInput) data.grid_y = parseInt(gridYInput.value) || 0;
+        
+        const gridWInput = document.getElementById('gridW');
+        if (gridWInput) data.grid_w = parseInt(gridWInput.value) || 12;
+        
+        const gridHInput = document.getElementById('gridH');
+        if (gridHInput) data.grid_h = parseInt(gridHInput.value) || 4;
+        
+        const columnSpanInput = document.getElementById('columnSpanOverride');
+        if (columnSpanInput) data.column_span_override = columnSpanInput.value.trim();
+        
+        const columnOffsetInput = document.getElementById('columnOffsetOverride');
+        if (columnOffsetInput) data.column_offset_override = columnOffsetInput.value.trim();
+        
+        const lockedPositionInput = document.getElementById('lockedPosition');
+        if (lockedPositionInput) data.locked_position = lockedPositionInput.checked;
+        
+        const cssClassesInput = document.getElementById('cssClasses');
+        if (cssClassesInput) data.css_classes = cssClassesInput.value.trim();
+        
+        const backgroundColorInput = document.getElementById('backgroundColor');
+        if (backgroundColorInput) data.background_color = backgroundColorInput.value;
+        
+        // Collect separated padding values
+        const paddingTopInput = document.getElementById('paddingTop');
+        const paddingBottomInput = document.getElementById('paddingBottom');
+        const paddingLeftInput = document.getElementById('paddingLeft');
+        const paddingRightInput = document.getElementById('paddingRight');
+        
+        if (paddingTopInput) data.padding_top = parseInt(paddingTopInput.value) || 0;
+        if (paddingBottomInput) data.padding_bottom = parseInt(paddingBottomInput.value) || 0;
+        if (paddingLeftInput) data.padding_left = parseInt(paddingLeftInput.value) || 0;
+        if (paddingRightInput) data.padding_right = parseInt(paddingRightInput.value) || 0;
+        
+        // Collect separated margin values
+        const marginTopInput = document.getElementById('marginTop');
+        const marginBottomInput = document.getElementById('marginBottom');
+        const marginLeftInput = document.getElementById('marginLeft');
+        const marginRightInput = document.getElementById('marginRight');
+        
+        if (marginTopInput) data.margin_top = parseInt(marginTopInput.value) || 0;
+        if (marginBottomInput) data.margin_bottom = parseInt(marginBottomInput.value) || 0;
+        if (marginLeftInput) data.margin_left = parseInt(marginLeftInput.value) || 0;
+        if (marginRightInput) data.margin_right = parseInt(marginRightInput.value) || 0;
+        
+        const resizeHandlesInput = document.getElementById('resizeHandles');
+        if (resizeHandlesInput) data.resize_handles = resizeHandlesInput.value;
+        
+        console.log('📋 Collected form data:', data);
+        return data;
+    }
+
+    /**
+     * Confirm delete section from Blade modal
+     */
+    async confirmDeleteSectionFromForm(section, bsModal) {
+        if (confirm(`Are you sure you want to delete this section? This action cannot be undone.`)) {
+            try {
+                await this.deleteSection(section.id);
+                bsModal.hide();
+                
+                // Emit event for page builder to refresh
+                document.dispatchEvent(new CustomEvent('pagebuilder:section-deleted', {
+                    detail: { sectionId: section.id }
+                }));
+                
+                console.log('✅ Section deleted successfully');
+            } catch (error) {
+                console.error('❌ Error deleting section:', error);
+                this.showBladeModalErrorMessage('Failed to delete section. Please try again.');
+            }
+        }
+    }
+
+    /**
+     * Show success message in Blade modal
+     */
+    showBladeModalSuccessMessage(message) {
+        const alertDiv = document.getElementById('sectionConfigAlert');
+        const alertMessage = document.getElementById('alertMessage');
+        
+        if (alertDiv && alertMessage) {
+            alertDiv.className = 'alert alert-success alert-dismissible fade show';
+            alertMessage.innerHTML = `<i class="ri-check-line me-2"></i>${message}`;
+            alertDiv.classList.remove('d-none');
+            
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                alertDiv.classList.add('d-none');
+            }, 3000);
+        }
+    }
+
+    /**
+     * Show error message in Blade modal
+     */
+    showBladeModalErrorMessage(message) {
+        const alertDiv = document.getElementById('sectionConfigAlert');
+        const alertMessage = document.getElementById('alertMessage');
+        
+        if (alertDiv && alertMessage) {
+            alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+            alertMessage.innerHTML = `<i class="ri-error-warning-line me-2"></i>${message}`;
+            alertDiv.classList.remove('d-none');
         }
     }
 
@@ -1455,6 +1854,36 @@ class SectionManager {
         } catch (error) {
             console.error('❌ Error refreshing section content:', error);
             throw error;
+        }
+    }
+
+    /**
+     * Reload the preview iframe to show updated changes
+     */
+    async reloadPreview() {
+        try {
+            console.log('🔄 Reloading preview iframe...');
+            
+            // Find the preview iframe
+            const previewIframe = document.getElementById('pagePreviewIframe');
+            if (previewIframe) {
+                // Store current src to force reload
+                const currentSrc = previewIframe.src;
+                
+                // Add timestamp to force reload
+                const separator = currentSrc.includes('?') ? '&' : '?';
+                const newSrc = `${currentSrc}${separator}_t=${Date.now()}`;
+                
+                // Reload iframe
+                previewIframe.src = newSrc;
+                
+                console.log('✅ Preview iframe reloaded');
+            } else {
+                console.warn('⚠️ Preview iframe not found');
+            }
+            
+        } catch (error) {
+            console.error('❌ Error reloading preview:', error);
         }
     }
 }

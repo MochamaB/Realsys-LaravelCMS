@@ -64,21 +64,35 @@
     padding: 10px;
     transition: all 0.3s ease;
     position: relative;
+    overflow-x: auto;
+    overflow-y: hidden;
 }
 
 .preview-container.device-desktop {
     width: 100%;
     max-width: none;
+    overflow: visible;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.preview-container.device-desktop iframe {
+    width: 1520px;
+    transform-origin: top left;
+    transition: transform 0.3s ease;
 }
 
 .preview-container.device-tablet {
     width: 768px;
     max-width: 768px;
+    margin: 0 auto;
 }
 
 .preview-container.device-mobile {
     width: 375px;
     max-width: 375px;
+    margin: 0 auto;
 }
 
 #preview-iframe {
@@ -292,6 +306,17 @@ document.addEventListener('DOMContentLoaded', async function() {
                         break;
                 }
                 devicePreview.setDevice(device);
+                
+                // Show/hide zoom controls based on device
+                const zoomControls = document.getElementById('zoom-controls');
+                if (zoomControls) {
+                    if (device === 'desktop') {
+                        zoomControls.style.display = 'flex';
+                    } else {
+                        zoomControls.style.display = 'none';
+                    }
+                }
+                
                 console.log(`📱 Device switched to: ${device}`);
             }
         });

@@ -24,7 +24,7 @@
                         @endif
                     @endforeach
                 @else
-                    <div class="col-12">
+                    <div class="col-12"  style="min-height: 80px; border: 1px dotted #ccc; padding: 10px;">
                         <div class="no-widgets text-center">
                             <em class="text-muted">No widgets assigned to this section</em>
                         </div>

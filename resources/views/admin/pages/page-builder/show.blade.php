@@ -11,11 +11,68 @@
 <!-- Multi-Step Widget Modal CSS -->
 <link href="{{ asset('assets/admin/css/page-builder/widget-modal.css') }}" rel="stylesheet" />
 
-<!-- Section Configuration Modal CSS -->
-<link href="{{ asset('assets/admin/css/page-builder/section-config-modal.css') }}" rel="stylesheet" />
+
 
 <!-- Consolidated Template & Component Styling -->
 <style>
+/* ===== UNIFIED PROGRESS BAR LOADER STYLES ===== */
+.unified-page-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background-color: #f8f9fa;
+    z-index: 9999;
+    overflow: hidden;
+    transition: opacity 0.3s ease;
+}
+
+.unified-page-loader .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #28a745, #20c997, #17a2b8);
+    background-size: 200% 100%;
+    animation: loading 2s ease-in-out infinite;
+    border-radius: 0;
+    transition: width 0.3s ease;
+    width: 0%;
+}
+
+.unified-page-loader.error .progress-bar {
+    background: linear-gradient(90deg, #dc3545, #e74c3c);
+    animation: error-pulse 1s ease-in-out infinite;
+}
+
+.unified-page-loader .progress-bar.complete {
+    background: #28a745;
+    animation: none;
+}
+
+.unified-page-loader .loader-message {
+    position: absolute;
+    top: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    font-weight: 500;
+    color: #495057;
+    white-space: nowrap;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 2px 8px;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+@keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+@keyframes error-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
 /* ===== CONSOLIDATED TEMPLATE ITEM STYLES ===== */
 /* Overrides any conflicting styles from gridstack-designer.css */
 
@@ -133,6 +190,9 @@
 <script src="{{ asset('assets/admin/libs/gridstack/dist/gridstack-all.js') }}"></script>
 <script src="{{ asset('assets/admin/libs/sortablejs/Sortable.min.js') }}"></script>
 
+<!-- Unified Loader Manager -->
+<script src="{{ asset('assets/admin/js/page-builder/unified-loader-manager.js') }}"></script>
+
 <!-- Page Builder JS Modules -->
 <script src="{{ asset('assets/admin/js/page-builder/api/page-builder-api.js') }}?v={{ time() }}"></script>
 <script src="{{ asset('assets/admin/js/page-builder/grid-manager.js') }}?v={{ time() }}"></script>
@@ -170,6 +230,12 @@
 
             <!-- Main Canvas Area -->
             <div class="col" id="canvasContainer">
+                <!-- Unified Progress Bar Loader -->
+                <div class="unified-page-loader" id="pageBuilderLoader" style="display: none;">
+                    <div class="progress-bar"></div>
+                    <div class="loader-message">Loading...</div>
+                </div>
+                
                 @include('admin.pages.page-builder.components.canvas')
             </div>
         </div>
@@ -538,12 +604,16 @@ function setupSectionTemplateModalHandlers() {
         
         console.log('🚀 Adding section with template:', selectedTemplate);
         
+        // Call section creation function via page builder instance
+        if (window.pageBuilder && typeof window.pageBuilder.createSectionFromTemplate === 'function') {
+            window.pageBuilder.createSectionFromTemplate(selectedTemplate);
+        } else {
+            console.error('❌ Page Builder not available or createSectionFromTemplate method not found');
+            alert('Page Builder is not ready. Please refresh the page and try again.');
+        }
+        
         // Close modal
         bootstrap.Modal.getInstance(modal).hide();
-        
-        // TODO: Call page builder to create section
-        // This will be implemented in the next step
-        console.log('📋 Section creation will be implemented next');
         
         // Reset selection
         selectedTemplate = null;
@@ -636,8 +706,8 @@ async function openSectionConfigModal(sectionId, sectionName) {
                     openFallbackSectionModal(sectionId, sectionName);
                 }
             } else {
-                console.warn('⚠️ SectionManager not available, using fallback modal');
-                openEnhancedFallbackModal(sectionData);
+                console.warn('⚠️ SectionManager not available, using built-in modal');
+                openSectionConfigModalWithLoader(sectionData);
             }
         } else {
             console.error('❌ Failed to fetch section data');
@@ -662,9 +732,37 @@ async function fetchSectionData(sectionId) {
         
         if (response.ok) {
             const result = await response.json();
-            if (result.success) {
+            if (result.success && result.data) {
                 console.log('✅ Section configuration fetched from API');
-                return result.data;
+                
+                // Transform API response to match SectionManager expectations
+                const sectionData = {
+                    id: parseInt(sectionId),
+                    template_section: {
+                        name: result.data.name || `Section ${sectionId}`,
+                        section_type: result.data.section_type || 'content',
+                        description: result.data.description || '',
+                        column_layout: result.data.column_layout || '',
+                        container_type: result.data.container_type || 'container'
+                    },
+                    config: result.data,
+                    allows_widgets: result.data.allows_widgets || true,
+                    widget_types: result.data.widget_types || null,
+                    position: result.data.position || 0,
+                    grid_x: result.data.grid_x || 0,
+                    grid_y: result.data.grid_y || 0,
+                    grid_w: result.data.grid_w || 12,
+                    grid_h: result.data.grid_h || 4,
+                    css_classes: result.data.css_classes || '',
+                    background_color: result.data.background_color || '',
+                    padding: result.data.padding || '',
+                    margin: result.data.margin || '',
+                    locked_position: result.data.locked_position || false,
+                    resize_handles: result.data.resize_handles || ''
+                };
+                
+                console.log('🔄 Transformed section data for SectionManager:', sectionData);
+                return sectionData;
             } else {
                 console.warn('⚠️ API returned failure:', result.message);
             }
@@ -675,15 +773,34 @@ async function fetchSectionData(sectionId) {
         console.error('❌ Error fetching section data:', error);
     }
     
-    // Fallback: create a basic section object
-    return {
+    // Fallback: create a basic section object that matches SectionManager structure
+    const fallbackSection = {
         id: parseInt(sectionId),
         template_section: { 
             name: `Section ${sectionId}`,
-            section_type: 'content'
+            section_type: 'content',
+            description: '',
+            column_layout: 'full-width',
+            container_type: 'container'
         },
-        config: {}
+        config: {},
+        allows_widgets: true,
+        widget_types: null,
+        position: 0,
+        grid_x: 0,
+        grid_y: 0,
+        grid_w: 12,
+        grid_h: 4,
+        css_classes: '',
+        background_color: '',
+        padding: '',
+        margin: '',
+        locked_position: false,
+        resize_handles: ''
     };
+    
+    console.log('🔄 Using fallback section data:', fallbackSection);
+    return fallbackSection;
 }
 
 function handleToolbarAction(actionData) {
@@ -789,9 +906,75 @@ function openFallbackSectionModal(sectionId, sectionName) {
     console.log('✅ Fallback section modal opened');
 }
 
-function getSelectedSectionInfo() {
-    // Return the currently selected section from iframe communication
-    return window.selectedSection || null;
+function openEnhancedFallbackModal(sectionData) {
+    console.log('📋 Opening enhanced fallback modal with data:', sectionData);
+    
+    // Create a more detailed Bootstrap modal for section configuration
+    const modalHtml = `
+        <div class="modal fade" id="enhancedSectionModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="ri-settings-line me-2"></i>Configure Section: ${sectionData.template_section?.name || 'Section'}
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="alert alert-info">
+                                    <i class="ri-information-line me-2"></i>
+                                    <strong>Section ID:</strong> ${sectionData.id}<br>
+                                    <strong>Section Type:</strong> ${sectionData.template_section?.section_type || 'content'}<br>
+                                    <strong>Template:</strong> ${sectionData.template_section?.name || 'Unknown'}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="mb-0">Section Configuration</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="text-muted">Configuration options will be available here.</p>
+                                        <div class="text-center">
+                                            <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                                <span class="visually-hidden">Loading configuration...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing enhanced modal
+    const existingModal = document.getElementById('enhancedSectionModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add modal to DOM
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('enhancedSectionModal'));
+    modal.show();
+    
+    // Clean up on hide
+    document.getElementById('enhancedSectionModal').addEventListener('hidden.bs.modal', function() {
+        this.remove();
+    });
+    
+    console.log('✅ Enhanced section modal opened with API data');
 }
 
 // Legacy loadAvailableWidgets - replaced by WidgetModalManager.loadWidgetLibrary()
@@ -808,6 +991,107 @@ function getSelectedSectionInfo() {
 
 // Legacy setupAddWidgetHandler - replaced by WidgetModalManager.handleFinalSubmission()
 // function setupAddWidgetHandler() { ... }
+
+// Section Configuration Modal Enhancements
+document.addEventListener('DOMContentLoaded', function() {
+    // Show loader when opening section config modal
+    function showSectionConfigLoader() {
+        const loader = document.getElementById('sectionConfigLoader');
+        const content = document.getElementById('sectionConfigTabContent');
+        if (loader && content) {
+            loader.style.display = 'block';
+            content.style.display = 'none';
+        }
+    }
+    
+    function hideSectionConfigLoader() {
+        const loader = document.getElementById('sectionConfigLoader');
+        const content = document.getElementById('sectionConfigTabContent');
+        if (loader && content) {
+            loader.style.display = 'none';
+            content.style.display = 'block';
+        }
+    }
+    
+    // Enhanced section config modal opener with loader
+    window.openSectionConfigModalWithLoader = function(sectionData) {
+        // Show the modal first
+        const modal = new bootstrap.Modal(document.getElementById('sectionConfigModal'));
+        modal.show();
+        
+        // Show loader
+        showSectionConfigLoader();
+        
+        // Simulate loading time or actual data loading
+        setTimeout(() => {
+            // Populate form with section data if provided
+            if (sectionData) {
+                populateSectionConfigForm(sectionData);
+            }
+            
+            // Hide loader and show content
+            hideSectionConfigLoader();
+        }, 800);
+    };
+    
+    // Color picker sync functionality
+    function setupColorPickerSync() {
+        const colorPicker = document.getElementById('backgroundColor');
+        const colorText = document.getElementById('backgroundColorText');
+        
+        if (colorPicker && colorText) {
+            // Sync color picker to text input
+            colorPicker.addEventListener('input', function() {
+                colorText.value = this.value;
+            });
+            
+            // Sync text input to color picker
+            colorText.addEventListener('input', function() {
+                if (/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(this.value)) {
+                    colorPicker.value = this.value;
+                }
+            });
+        }
+    }
+    
+    // Initialize color picker sync when modal is shown
+    document.getElementById('sectionConfigModal')?.addEventListener('shown.bs.modal', function() {
+        setupColorPickerSync();
+    });
+    
+    // Function to populate section config form
+    window.populateSectionConfigForm = function(sectionData) {
+        // Populate basic fields
+        document.getElementById('sectionId').value = sectionData.id || '';
+        document.getElementById('sectionPosition').value = sectionData.position || '';
+        document.getElementById('allowsWidgets').checked = sectionData.allows_widgets || false;
+        
+        // Grid settings
+        document.getElementById('gridX').value = sectionData.grid_x || 0;
+        document.getElementById('gridY').value = sectionData.grid_y || 0;
+        document.getElementById('gridW').value = sectionData.grid_w || 12;
+        document.getElementById('gridH').value = sectionData.grid_h || 4;
+        
+        // Styling settings
+        document.getElementById('cssClasses').value = sectionData.css_classes || '';
+        document.getElementById('backgroundColor').value = sectionData.background_color || '#ffffff';
+        document.getElementById('backgroundColorText').value = sectionData.background_color || '#ffffff';
+        document.getElementById('padding').value = sectionData.padding || '';
+        document.getElementById('margin').value = sectionData.margin || '';
+        document.getElementById('columnSpanOverride').value = sectionData.column_span_override || '';
+        document.getElementById('columnOffsetOverride').value = sectionData.column_offset_override || '';
+        document.getElementById('resizeHandles').value = sectionData.resize_handles || 'all';
+        document.getElementById('lockedPosition').checked = sectionData.locked_position || false;
+        
+        // Handle widget_types JSON field
+        if (sectionData.widget_types) {
+            document.getElementById('widgetTypesJson').value = JSON.stringify(sectionData.widget_types);
+            // TODO: Update widget types UI when implemented
+        }
+        
+        console.log('Section config form populated:', sectionData);
+    };
+});
 
 </script>
 @endpush

@@ -7,24 +7,30 @@ class DevicePreview {
     constructor(previewContainer) {
         this.container = previewContainer;
         this.iframe = previewContainer.querySelector('iframe');
+        this.canvasContainer = this.container.parentElement;
         this.currentDevice = 'desktop';
+        
         this.devices = {
             desktop: { 
-                width: '100%', 
-                height: '100%',
+                width: 1520,
+                height: 'auto',
                 name: 'Desktop',
-                icon: 'ri-computer-line'
+                viewportWidth: 1520,
+                icon: 'ri-computer-line',
+                zoom: 1
             },
             tablet: { 
-                width: '768px', 
-                height: '1024px',
+                width: 768,
+                height: 1024,
                 name: 'Tablet',
+                viewportWidth: 768,
                 icon: 'ri-tablet-line'
             },
             mobile: { 
-                width: '375px', 
-                height: '667px',
+                width: 375,
+                height: 667,
                 name: 'Mobile',
+                viewportWidth: 375,
                 icon: 'ri-smartphone-line'
             }
         };
@@ -37,6 +43,9 @@ class DevicePreview {
      */
     init() {
         this.setupDeviceClasses();
+        this.setupZoomControls();
+        this.setupResizeHandler();
+        this.setDevice('desktop'); // Default to desktop with zoom
         console.log('📱 Device Preview initialized');
     }
     
@@ -55,23 +64,19 @@ class DevicePreview {
         // Update container class
         this.container.className = `preview-container device-${device}`;
         
-        // Apply device styles
+        // Apply device-specific styling
         if (device === 'desktop') {
-            this.iframe.style.width = '100%';
-            this.iframe.style.height = '100%';
-            this.iframe.style.maxWidth = 'none';
-            this.iframe.style.maxHeight = 'none';
+            // For desktop, use zoom-based approach with fixed 1520px width
+            this.setupDesktopViewport();
         } else {
-            this.iframe.style.width = settings.width;
-            this.iframe.style.height = settings.height;
-            this.iframe.style.maxWidth = settings.width;
-            this.iframe.style.maxHeight = settings.height;
+            // For tablet/mobile, use direct dimension approach
+            this.setupMobileViewport(device, settings);
         }
         
         // Add device frame if needed
         this.updateDeviceFrame(device);
         
-        console.log(`📱 Device preview set to: ${device} (${settings.width} x ${settings.height})`);
+        console.log(`📱 Device preview set to: ${device}`);
         
         // Notify iframe about device change
         this.notifyIframeDeviceChange(device);
@@ -327,11 +332,188 @@ class DevicePreview {
      */
     showDeviceInfo() {
         const device = this.devices[this.currentDevice];
-        const message = `Current device: ${device.name} (${device.width} × ${device.height})`;
+        const zoomInfo = this.currentDevice === 'desktop' ? ` @ ${Math.round(device.zoom * 100)}%` : '';
+        const message = `Current device: ${device.name} (${device.width} × ${device.height})${zoomInfo}`;
         
         if (window.livePreview) {
             window.livePreview.showMessage(message, 'info');
         }
+    }
+    
+    /**
+     * Setup desktop viewport with zoom functionality
+     */
+    setupDesktopViewport() {
+        const desktopSettings = this.devices.desktop;
+        
+        // Set iframe to fixed desktop width
+        this.iframe.style.width = `${desktopSettings.width}px`;
+        this.iframe.style.height = '100vh';
+        this.iframe.style.maxWidth = 'none';
+        this.iframe.style.maxHeight = 'none';
+        
+        // Calculate and apply zoom
+        this.calculateAndApplyDesktopZoom();
+    }
+    
+    /**
+     * Setup mobile/tablet viewport (direct dimensions)
+     */
+    setupMobileViewport(device, settings) {
+        // Remove any transform scaling for mobile/tablet
+        this.iframe.style.transform = '';
+        this.iframe.style.transformOrigin = '';
+        this.container.style.overflow = 'hidden';
+        
+        // Apply direct dimensions
+        this.iframe.style.width = `${settings.width}px`;
+        this.iframe.style.height = `${settings.height}px`;
+        this.iframe.style.maxWidth = `${settings.width}px`;
+        this.iframe.style.maxHeight = `${settings.height}px`;
+    }
+    
+    /**
+     * Calculate and apply zoom for desktop viewport
+     */
+    calculateAndApplyDesktopZoom() {
+        if (this.currentDevice !== 'desktop') return;
+        
+        const containerWidth = this.canvasContainer.clientWidth;
+        const padding = 60; // Account for padding/margins
+        const availableWidth = containerWidth - padding;
+        const desktopWidth = this.devices.desktop.width;
+        
+        // Calculate zoom to fit available space
+        let zoom = Math.min(availableWidth / desktopWidth, 1);
+        zoom = Math.max(zoom, 0.1); // Minimum 10% zoom
+        
+        // Update device zoom setting
+        this.devices.desktop.zoom = zoom;
+        
+        // Apply zoom
+        this.setDesktopZoomWithCentering(zoom);
+        
+        console.log(`🔍 Desktop zoom calculated: ${Math.round(zoom * 100)}%`);
+    }
+    
+    /**
+     * Set desktop zoom with centering
+     */
+    setDesktopZoomWithCentering(zoom) {
+        if (this.currentDevice !== 'desktop') return;
+        
+        zoom = Math.max(0.1, Math.min(2, zoom)); // Clamp between 10% and 200%
+        this.devices.desktop.zoom = zoom;
+        
+        const containerWidth = this.canvasContainer.clientWidth;
+        const desktopWidth = this.devices.desktop.width;
+        const scaledWidth = desktopWidth * zoom;
+        const leftMargin = Math.max(0, (containerWidth - scaledWidth) / 2);
+        
+        // Apply transform scaling
+        this.iframe.style.transform = `scale(${zoom})`;
+        this.iframe.style.transformOrigin = 'top left';
+        this.iframe.style.marginLeft = `${leftMargin}px`;
+        
+        // Update container overflow
+        this.container.style.overflow = 'visible';
+        
+        console.log(`🔍 Desktop zoom set to: ${Math.round(zoom * 100)}%, Left margin: ${leftMargin}px`);
+        
+        // Update zoom display if available
+        this.updateZoomDisplay(zoom);
+    }
+    
+    /**
+     * Setup zoom controls
+     */
+    setupZoomControls() {
+        // Zoom in button
+        const zoomInBtn = document.querySelector('[data-action="zoom-in"]');
+        if (zoomInBtn) {
+            zoomInBtn.addEventListener('click', () => {
+                if (this.currentDevice === 'desktop') {
+                    const currentZoom = this.devices.desktop.zoom;
+                    this.setDesktopZoomWithCentering(currentZoom + 0.1);
+                }
+            });
+        }
+        
+        // Zoom out button
+        const zoomOutBtn = document.querySelector('[data-action="zoom-out"]');
+        if (zoomOutBtn) {
+            zoomOutBtn.addEventListener('click', () => {
+                if (this.currentDevice === 'desktop') {
+                    const currentZoom = this.devices.desktop.zoom;
+                    this.setDesktopZoomWithCentering(currentZoom - 0.1);
+                }
+            });
+        }
+        
+        // Zoom reset button
+        const zoomResetBtn = document.querySelector('[data-action="zoom-reset"]');
+        if (zoomResetBtn) {
+            zoomResetBtn.addEventListener('click', () => {
+                if (this.currentDevice === 'desktop') {
+                    this.calculateAndApplyDesktopZoom();
+                }
+            });
+        }
+        
+        // Zoom to fit button
+        const zoomFitBtn = document.querySelector('[data-action="zoom-fit"]');
+        if (zoomFitBtn) {
+            zoomFitBtn.addEventListener('click', () => {
+                if (this.currentDevice === 'desktop') {
+                    this.calculateAndApplyDesktopZoom();
+                }
+            });
+        }
+    }
+    
+    /**
+     * Setup resize handler for automatic zoom adjustment
+     */
+    setupResizeHandler() {
+        const resizeObserver = new ResizeObserver(() => {
+            if (this.currentDevice === 'desktop') {
+                // Recalculate zoom when container size changes
+                setTimeout(() => {
+                    this.calculateAndApplyDesktopZoom();
+                }, 100);
+            }
+        });
+        
+        if (this.canvasContainer) {
+            resizeObserver.observe(this.canvasContainer);
+        }
+    }
+    
+    /**
+     * Update zoom display in toolbar
+     */
+    updateZoomDisplay(zoom) {
+        const zoomDisplay = document.querySelector('[data-zoom-display]');
+        if (zoomDisplay) {
+            zoomDisplay.textContent = `${Math.round(zoom * 100)}%`;
+        }
+    }
+    
+    /**
+     * Get current zoom level
+     */
+    getCurrentZoom() {
+        return this.currentDevice === 'desktop' ? this.devices.desktop.zoom : 1;
+    }
+    
+    /**
+     * Refresh the preview (recalculate zoom if needed)
+     */
+    refresh() {
+        if (this.currentDevice === 'desktop') {
+            this.calculateAndApplyDesktopZoom();
+        }
+        console.log('🔄 Device preview refreshed');
     }
 }
 

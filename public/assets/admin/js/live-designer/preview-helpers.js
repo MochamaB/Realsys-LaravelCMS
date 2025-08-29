@@ -394,7 +394,7 @@
         
         // Edit Button
         const editBtn = document.createElement('button');
-        editBtn.className = 'section-toolbar-btn btn-secondary';
+        editBtn.className = 'section-toolbar-btn btn-primary';
         editBtn.innerHTML = '<i class="ri-pencil-fill"></i> Edit';
         editBtn.setAttribute('data-action', 'edit');
         editBtn.title = 'Edit Section Settings';

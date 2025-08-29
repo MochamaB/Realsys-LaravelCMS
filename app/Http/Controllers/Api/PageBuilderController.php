@@ -8,7 +8,9 @@ use App\Models\PageSection;
 use App\Models\PageSectionWidget;
 use App\Models\Widget;
 use App\Models\ContentType;
+use App\Models\TemplateSection;
 use App\Services\TemplateRenderer;
+use App\Services\PageSectionManager;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
@@ -21,10 +23,12 @@ use Illuminate\Http\JsonResponse;
 class PageBuilderController extends Controller
 {
     protected $templateRenderer;
+    protected $pageSectionManager;
 
-    public function __construct(TemplateRenderer $templateRenderer)
+    public function __construct(TemplateRenderer $templateRenderer, PageSectionManager $pageSectionManager)
     {
         $this->templateRenderer = $templateRenderer;
+        $this->pageSectionManager = $pageSectionManager;
     }
 
     /**
@@ -683,9 +687,18 @@ class PageBuilderController extends Controller
                 'description' => 'sometimes|string|max:500',
                 'column_layout' => 'sometimes|string',
                 'container_type' => 'sometimes|string|in:container,container-fluid,none',
-                'padding_top' => 'sometimes|string|in:0,1,3,5',
-                'padding_bottom' => 'sometimes|string|in:0,1,3,5',
-                'margin_bottom' => 'sometimes|string|in:0,2,4,5',
+                // Individual padding/margin fields (new separated inputs)
+                'padding_top' => 'sometimes|numeric|min:0|max:100',
+                'padding_bottom' => 'sometimes|numeric|min:0|max:100',
+                'padding_left' => 'sometimes|numeric|min:0|max:100',
+                'padding_right' => 'sometimes|numeric|min:0|max:100',
+                'margin_top' => 'sometimes|numeric|min:0|max:100',
+                'margin_bottom' => 'sometimes|numeric|min:0|max:100',
+                'margin_left' => 'sometimes|numeric|min:0|max:100',
+                'margin_right' => 'sometimes|numeric|min:0|max:100',
+                // Legacy fields for backward compatibility
+                'padding' => 'sometimes|string|max:50',
+                'margin' => 'sometimes|string|max:50',
                 'background_type' => 'sometimes|string|in:none,color,gradient,image',
                 'background_color' => 'sometimes|string|regex:/^#[0-9A-Fa-f]{6}$/',
                 'text_color' => 'sometimes|string|regex:/^#[0-9A-Fa-f]{6}$/',
@@ -786,44 +799,243 @@ class PageBuilderController extends Controller
             // Validate the incoming data
             $validated = $request->validate([
                 'template_key' => 'required|string',
-                'name' => 'sometimes|string|max:255',
+                'template_type' => 'sometimes|string|in:core,theme',
+                'template_section_id' => 'sometimes|integer|exists:template_sections,id',
                 'grid_x' => 'sometimes|integer|min:0',
                 'grid_y' => 'sometimes|integer|min:0',
                 'grid_w' => 'sometimes|integer|min:1|max:12',
                 'grid_h' => 'sometimes|integer|min:1'
             ]);
 
-            // Create the section
-            $section = PageSection::create([
+            \Log::info('Creating section with data:', $validated);
+
+            // Find or create template section based on template_key
+            $templateSection = $this->findOrCreateTemplateSection(
+                $validated['template_key'],
+                $validated['template_type'] ?? 'core',
+                $page->template,
+                $validated
+            );
+
+            // Calculate next Y position if not provided
+            if (!isset($validated['grid_y'])) {
+                $maxY = PageSection::where('page_id', $page->id)
+                    ->max(\DB::raw('grid_y + grid_h'));
+                $validated['grid_y'] = $maxY ? $maxY + 1 : 0;
+            }
+
+            // Generate unique grid_id
+            $gridId = PageSection::generateUniqueGridId($templateSection->id);
+
+            if (!$templateSection) {
+                throw new \Exception('Failed to create or find template section');
+            }
+
+            // Create the page section with proper column mapping
+            $pageSection = PageSection::create([
                 'page_id' => $page->id,
-                'template_section_id' => 1, // This would need to be determined by template_key
-                'position' => PageSection::where('page_id', $page->id)->max('position') + 1,
+                'template_section_id' => $templateSection->id,
+                'position' => $this->getNextPosition($page->id),
                 'grid_x' => $validated['grid_x'] ?? 0,
-                'grid_y' => $validated['grid_y'] ?? 0,
-                'grid_w' => $validated['grid_w'] ?? 12,
-                'grid_h' => $validated['grid_h'] ?? 4,
-                'config' => json_encode([
-                    'name' => $validated['name'] ?? 'New Section',
-                    'section_type' => 'content'
-                ])
+                'grid_y' => $validated['grid_y'],
+                'grid_w' => $validated['grid_w'] ?? ($templateSection->w ?? 12),
+                'grid_h' => $validated['grid_h'] ?? ($templateSection->h ?? 4),
+                'grid_id' => $gridId,
+                'allows_widgets' => true,
+                'locked_position' => false
             ]);
-            
-            $section->load('templateSection');
-            
+
+            // Load relationships for response
+            $pageSection->load(['templateSection']);
+
+            // Sync page sections to ensure consistency
+            $this->pageSectionManager->syncPageSections($page);
+
+            \Log::info('Section created successfully:', [
+                'page_section_id' => $pageSection->id,
+                'template_section_id' => $templateSection->id,
+                'template_key' => $validated['template_key']
+            ]);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Section created successfully',
-                'data' => $section
+                'data' => [
+                    'page_section' => [
+                        'id' => $pageSection->id,
+                        'name' => $templateSection->name,
+                        'grid_x' => $pageSection->grid_x,
+                        'grid_y' => $pageSection->grid_y,
+                        'grid_w' => $pageSection->grid_w,
+                        'grid_h' => $pageSection->grid_h,
+                        'position' => $pageSection->position
+                    ],
+                    'template_section' => [
+                        'id' => $templateSection->id,
+                        'name' => $templateSection->name,
+                        'section_type' => $templateSection->section_type,
+                        'column_layout' => $templateSection->column_layout
+                    ],
+                    'grid_config' => [
+                        'x' => $pageSection->grid_x,
+                        'y' => $pageSection->grid_y,
+                        'w' => $pageSection->grid_w,
+                        'h' => $pageSection->grid_h
+                    ]
+                ]
             ]);
             
         } catch (\Exception $e) {
-            \Log::error('Error creating section: ' . $e->getMessage());
+            \Log::error('Error creating section: ' . $e->getMessage(), [
+                'page_id' => $page->id,
+                'request_data' => $request->all()
+            ]);
             
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create section: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Find or create a template section
+     * 
+     * @param string $templateKey
+     * @param string $templateType
+     * @param Template $template
+     * @param array $validated
+     * @return TemplateSection|null
+     */
+    private function findOrCreateTemplateSection($templateKey, $templateType, $template, $validated)
+    {
+        // First try to find existing template section by slug
+        $templateSection = TemplateSection::where('template_id', $template->id)
+            ->where('slug', $templateKey)
+            ->first();
+
+        if ($templateSection) {
+            \Log::info('Found existing template section:', ['id' => $templateSection->id, 'slug' => $templateSection->slug]);
+            return $templateSection;
+        }
+
+        // If not found, create new template section with theme-agnostic approach
+        $sectionData = $this->getTemplateSectionData($templateKey, $templateType);
+        
+        // Get next position for template section
+        $maxPosition = TemplateSection::where('template_id', $template->id)->max('position');
+        $nextPosition = $maxPosition ? $maxPosition + 1 : 0;
+        
+        $templateSection = TemplateSection::create([
+            'template_id' => $template->id,
+            'name' => $sectionData['name'],
+            'slug' => $templateKey,
+            'section_type' => $sectionData['section_type'],
+            'column_layout' => $sectionData['column_layout'],
+            'position' => $nextPosition,
+            'x' => $validated['grid_x'] ?? 0,
+            'y' => $validated['grid_y'] ?? 0,
+            'w' => $validated['grid_w'] ?? ($sectionData['w'] ?? 12),
+            'h' => $validated['grid_h'] ?? ($sectionData['h'] ?? 4),
+            'is_repeatable' => $sectionData['is_repeatable'] ?? false,
+            'max_widgets' => $sectionData['max_widgets'] ?? null,
+            'description' => $sectionData['description'] ?? null,
+            'settings' => json_encode($sectionData['config'] ?? [])
+        ]);
+
+        \Log::info('Created new template section:', ['id' => $templateSection->id, 'name' => $templateSection->name]);
+        return $templateSection;
+    }
+
+    /**
+     * Get next position for page section
+     * 
+     * @param int $pageId
+     * @return int
+     */
+    private function getNextPosition(int $pageId): int
+    {
+        $maxPosition = PageSection::where('page_id', $pageId)->max('position');
+        return $maxPosition ? $maxPosition + 1 : 0;
+    }
+
+    /**
+     * Get template section data based on template key
+     * 
+     * @param string $templateKey
+     * @param string $templateType
+     * @return array
+     */
+    private function getTemplateSectionData($templateKey, $templateType)
+    {
+        $templates = [
+            'hero-banner' => [
+                'name' => 'Hero Banner',
+                'section_type' => 'full-width',
+                'column_layout' => '12',
+                'config' => [
+                    'background_type' => 'image',
+                    'padding_top' => '5',
+                    'padding_bottom' => '5',
+                    'text_alignment' => 'center'
+                ]
+            ],
+            'two-columns' => [
+                'name' => 'Two Columns',
+                'section_type' => 'multi-column',
+                'column_layout' => '6-6',
+                'config' => [
+                    'column_ratio' => '6-6',
+                    'padding_top' => '3',
+                    'padding_bottom' => '3'
+                ]
+            ],
+            'three-columns' => [
+                'name' => 'Three Columns',
+                'section_type' => 'multi-column',
+                'column_layout' => '4-4-4',
+                'config' => [
+                    'column_ratio' => '4-4-4',
+                    'padding_top' => '3',
+                    'padding_bottom' => '3'
+                ]
+            ],
+            'full-width' => [
+                'name' => 'Full Width',
+                'section_type' => 'full-width',
+                'column_layout' => '12',
+                'config' => [
+                    'container_type' => 'container-fluid',
+                    'padding_top' => '3',
+                    'padding_bottom' => '3'
+                ]
+            ],
+            'sidebar-left' => [
+                'name' => 'Sidebar Left',
+                'section_type' => 'sidebar-left',
+                'column_layout' => '4-8',
+                'config' => [
+                    'sidebar_width' => '3',
+                    'content_width' => '9'
+                ]
+            ],
+            'sidebar-right' => [
+                'name' => 'Sidebar Right',
+                'section_type' => 'sidebar-right',
+                'column_layout' => '8-4',
+                'config' => [
+                    'sidebar_width' => '3',
+                    'content_width' => '9'
+                ]
+            ]
+        ];
+
+        return $templates[$templateKey] ?? [
+            'name' => ucwords(str_replace('-', ' ', $templateKey)),
+            'section_type' => 'full-width',
+            'column_layout' => '12',
+            'config' => []
+        ];
     }
 
     /**

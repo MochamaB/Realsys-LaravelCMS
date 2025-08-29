@@ -1,97 +1,255 @@
-In a given section the html rendered for a widget for example the slider widget is
-<section class="cms-section section-full-width container-fluid" id="section-1" style="background-color: #ffffff; padding: 40 0 0 40; margin: 0 0 0 0" data-section-id="1" data-section-type="full-width" data-gs-x="0" data-gs-y="0" data-gs-w="12" data-gs-h="3" data-gs-id="section_1753641046_688670566ea19_1">
-    <div class="section-content">
-        <div class="container-fluid">
-        <div class="row">
-            <div class="col-12">
-                
-                                                                                        <div class="cms-widget widget-slider" id="widget-1" style="padding: 0 0 0 0; margin: 0 0 0 0" data-widget-id="6" data-widget-slug="slider" data-page-section-widget-id="1" data-gs-x="0" data-gs-y="0" data-gs-w="6" data-gs-h="3" data-gs-id="widget_1754415380703_byodgr4eo">
-    
-    <section class="slider-main-area">
-    <div class="main-slider an-si">
-        <div class="bend niceties preview-2">
-            <div id="ensign-nivoslider-68b06d3186cc9" class="slides nivoSlider">
-                                                        
-                                            <img src="http://realsyscms.local:8080//storage/media/11/1.jpg" alt="Title 1" title="#slider-direction-1" style="width: 1157px; visibility: hidden;">
-                                                                            
-                                            <img src="http://realsyscms.local:8080//storage/media/18/2.jpg" alt="Title 2" title="#slider-direction-2" style="width: 1157px; visibility: hidden;">
-                                                                            
-                                                                            
-                                                <img class="nivo-main-image" src="http://realsyscms.local:8080//storage/media/11/1.jpg" style="display: inline; height: 579px; width: 1157px;"><div class="nivo-caption" style="display: block;">
-                    <div class="container">
-                        <div class="slide-all ">
-                                                            <div class="layer-1">
-                                    <h3 class="title5 ">Title 1</h3>
-                                </div>
-                                                        
-                                                        
-                                                        
-                                                            <div class="layer-3">
-                                    <a class="min1" href="#">Button Text 1</a>
-                                </div>
-                                                    </div>
-                    </div>
-                </div>
-				
-                                            
-                <div id="slider-direction-1" class="slider-direction">
-                    <div class="container">
-                        <div class="slide-all ">
-                                                            <div class="layer-1">
-                                    <h3 class="title5 ">Title 1</h3>
-                                </div>
-                                                        
-                                                        
-                                                        
-                                                            <div class="layer-3">
-                                    <a class="min1" href="#">Button Text 1</a>
-                                </div>
-                                                    </div>
-                    </div>
-                </div>
-                                            
-                <div id="slider-direction-2" class="slider-direction">
-                    <div class="container">
-                        <div class="slide-all slide2">
-                                                            <div class="layer-1">
-                                    <h3 class="title5 moment">Title 2</h3>
-                                </div>
-                                                        
-                                                        
-                                                        
-                                                            <div class="layer-3">
-                                    <a class="min1" href="#">Button Text 2</a>
-                                </div>
-                                                    </div>
-                    </div>
-                </div>
-                                            
-                <div id="slider-direction-3" class="slider-direction">
-                    <div class="container">
-                        <div class="slide-all slide2">
-                                                        
-                                                        
-                                                        
-                                                    </div>
-                    </div>
-                </div>
-                                            
-                <div id="slider-direction-4" class="slider-direction">
-                    <div class="container">
-                        <div class="slide-all slide2">
-                                                        
-                                                        
-                                                        
-                                                    </div>
-                    </div>
-                </div>
-                    </div>
-    </div>
-</section>
-    
-</div>                                                                        </div>
-        </div>
-    </div>
-    </div>
-    
-</section> 
+TypeError: Cannot read properties of null (reading 'addEventListener')
+    at app.js:1042:55
+    at app.js:1178:2
+(anonymous) @ app.js:1042
+(anonymous) @ app.js:1178Understand this error
+page-builder-api.js?v=1756422435:241 📦 PageBuilder API module loaded
+grid-manager.js?v=1756422435:471 📦 Grid Manager module loaded
+section-manager.js?v=1756422435:1465 📦 Section Manager module loaded
+widget-manager.js?v=1756422435:850 📦 Widget Manager module loaded
+widget-library.js?v=1756422435:384 📦 Widget Library module loaded
+template-manager.js?v=1756422435:531 📦 Template Manager module loaded
+theme-manager.js?v=1756422435:364 📦 Theme Manager module loaded
+page-builder-main.js?v=1756422435:998 📦 Page Builder Main Controller loaded
+page-builder:2580 🔧 GridStack Page Builder initializing for page: 1
+page-builder:2309 Uncaught TypeError: Cannot read properties of null (reading 'querySelector')
+    at HTMLDocument.<anonymous> (page-builder:2309:44)
+(anonymous) @ page-builder:2309Understand this error
+page-builder:2585 🚀 Starting Page Builder initialization...
+page-builder-main.js?v=1756422435:31 🏗️ Page Builder Main Controller initialized with options: {pageId: 1, apiBaseUrl: '/admin/api/page-builder', csrfToken: 'mH3Wx5eb69iakd7v2gpuCvnf6okaOnfhDSVoxs2k', containerId: 'gridStackContainer'}
+page-builder-main.js?v=1756422435:44 🚀 Initializing Page Builder Main Controller...
+page-builder-main.js?v=1756422435:90 🔗 Initializing API layer...
+page-builder-api.js?v=1756422435:20 🔗 PageBuilder API initialized: {baseUrl: '/admin/api/page-builder', pageId: 1, hasCsrf: true}
+page-builder-main.js?v=1756422435:98 ✅ API layer initialized
+page-builder-main.js?v=1756422435:105 🔧 Initializing managers...
+page-builder-main.js?v=1756422435:109 🔍 Checking class availability: {SectionManager: 'function', WidgetManager: 'function', WidgetLibrary: 'function', TemplateManager: 'function', ThemeManager: 'function'}
+section-manager.js?v=1756422435:14 📋 Section Manager initialized
+widget-manager.js?v=1756422435:15 🧩 Widget Manager initialized
+widget-library.js?v=1756422435:14 📚 Widget Library initialized
+widget-library.js?v=1756422435:22 🔄 Initializing Widget Library...
+widget-library.js?v=1756422435:52 🔄 Loading available widgets from API...
+page-builder-api.js?v=1756422435:184 🌐 API GET: /admin/api/page-builder/widgets/available 
+index.ts-abec1db7.js:1 [Long Running Recorder] Content script initialised
+device-preview.js?v=1756422435:478 📱 Initializing Device Preview...
+device-preview.js?v=1756422435:246 📏 Recalculated iframe height: 600px
+device-preview.js?v=1756422435:449 🖥️ Viewport set to 1520px for desktop mode
+device-preview.js?v=1756422435:161 📱 Device preview set to: desktop
+device-preview.js?v=1756422435:46 📱 Page Builder Device Preview initialized
+device-preview.js?v=1756422435:480 ✅ Device Preview initialized
+index.ts-abec1db7.js:3 [Long Running Recorder] Recorder disabled
+device-preview.js?v=1756422435:276 📐 Container width: 893.2000122070312px, Available: 833.2000122070312px, Desktop width: 1520px
+device-preview.js?v=1756422435:349 🔍 Desktop zoom with centering: 54.8%, Scaled width: 833px, Container: 893px, Left margin: 30px
+index.ts-abec1db7.js:1 [Long Running Recorder] Content script initialised
+BlockingPageContent.js:2  action SET_STORAGE_DATA @ 02:07:17.586
+BlockingPageContent.js:2  prev state {blocking: false}
+BlockingPageContent.js:2  action     {type: 'SET_STORAGE_DATA', urls: {…}, online: true, eula: true, welcome: true, …}
+BlockingPageContent.js:2  next state {blocking: false}
+index.ts-abec1db7.js:3 [Long Running Recorder] Recorder disabled
+NotificationContent.js:2  action SET_LOCALE @ 02:07:17.713
+NotificationContent.js:2  prev state {notification: false, locale: '', mode: '', os: '', browser: '', …}
+NotificationContent.js:2  action     {type: 'SET_LOCALE', locale: 'en'}
+NotificationContent.js:2  next state {notification: false, locale: 'en', mode: '', os: '', browser: '', …}
+NotificationContent.js:2  action SET_STORAGE_DATA @ 02:07:17.802
+NotificationContent.js:2  prev state {notification: false, locale: 'en', mode: '', os: '', browser: '', …}
+NotificationContent.js:2  action     {type: 'SET_STORAGE_DATA', urls: {…}, online: true, eula: true, welcome: true, …}
+NotificationContent.js:2  next state {notification: false, locale: 'en', mode: 'Promoter', os: 'win', browser: 'chrome', …}
+page-builder-api.js?v=1756422435:203 ✅ API GET Success: {success: true, data: {…}}
+widget-library.js?v=1756422435:74 ✅ Loaded 8 widgets from all categories: (8) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+widget-library.js?v=1756422435:161 🎨 Rendering widgets in sidebar...
+widget-library.js?v=1756422435:185 ✅ Rendered 8 widgets successfully
+widget-library.js?v=1756422435:236 🎯 Setting up widget drag & drop...
+widget-library.js?v=1756422435:251 ✅ Widget drag & drop setup complete
+widget-library.js?v=1756422435:39 ✅ Widget Library initialized successfully
+template-manager.js?v=1756422435:15 📋 Template Manager initialized
+template-manager.js?v=1756422435:23 🔄 Initializing Template Manager...
+template-manager.js?v=1756422435:53 🔄 Loading available section templates from API...
+page-builder-api.js?v=1756422435:184 🌐 API GET: /admin/api/page-builder/section-templates 
+page-builder-api.js?v=1756422435:203 ✅ API GET Success: {success: true, data: {…}}
+template-manager.js?v=1756422435:92 📋 Templates grouped by category: (2) ['layout', 'theme']
+template-manager.js?v=1756422435:64 ✅ Loaded 5 section templates from API
+template-manager.js?v=1756422435:186 🎨 Rendering section templates in sidebar...
+template-manager.js?v=1756422435:210 ✅ Section templates rendered successfully
+template-manager.js?v=1756422435:262 🎯 Setting up template drag & drop...
+template-manager.js?v=1756422435:285 ✅ Template drag & drop setup complete
+template-manager.js?v=1756422435:40 ✅ Template Manager initialized successfully
+theme-manager.js?v=1756422435:17 🎨 Theme Manager initialized
+theme-manager.js?v=1756422435:25 🔄 Initializing Theme Manager...
+theme-manager.js?v=1756422435:46 🔄 Loading theme assets from API...
+page-builder-api.js?v=1756422435:184 🌐 API GET: /admin/api/page-builder/theme/assets 
+page-builder-api.js?v=1756422435:203 ✅ API GET Success: {success: true, data: {…}}
+theme-manager.js?v=1756422435:52 ✅ Theme assets loaded: {name: 'Miata', slug: 'miata', base_path: '/themes/miata', css: Array(0), js: Array(0)}
+theme-manager.js?v=1756422435:93 🎨 Applying theme to canvas...
+theme-manager.js?v=1756422435:149 📦 Created theme preview wrapper
+theme-manager.js?v=1756422435:262 ✅ Applied theme styles to container
+theme-manager.js?v=1756422435:111 ✅ Theme applied to canvas successfully
+theme-manager.js?v=1756422435:34 ✅ Theme Manager initialized successfully
+page-builder-main.js?v=1756422435:160 ✅ All managers initialized successfully
+page-builder-main.js?v=1756422435:179 🔄 Loading initial page content with rendered HTML for page ID: 1
+page-builder-main.js?v=1756422435:182 🎨 Loading rendered page content...
+page-builder-api.js?v=1756422435:184 🌐 API GET: /admin/api/page-builder/pages/1/rendered 
+iframe:45 🏗️ Page Builder page structure loaded: {page: {…}, sections: Array(4)}
+active-calendar.js:1 Uncaught TypeError: $(...).fullCalendar is not a function
+    at active-calendar.js:1:16
+(anonymous) @ active-calendar.js:1Understand this error
+main.js:7 Uncaught TypeError: $(...).meanmenu is not a function
+    at main.js:7:23
+    at main.js:338:3
+(anonymous) @ main.js:7
+(anonymous) @ main.js:338Understand this error
+preview-helpers.js:35 🎨 Initializing preview helpers
+preview-helpers.js:67 🗺️ Using existing universal component data attributes...
+preview-helpers.js:79 📦 Enhanced section "Hero Header" (ID: 1)
+preview-helpers.js:79 📦 Enhanced section "Content" (ID: 2)
+preview-helpers.js:79 📦 Enhanced section "Multi Column Section" (ID: 3)
+preview-helpers.js:109 🎯 Enhanced widget "Image Slider Widget" (instance: 1, widget: 6)
+preview-helpers.js:109 🎯 Enhanced widget "Counter Statistics Widget" (instance: 3, widget: 1)
+preview-helpers.js:109 🎯 Enhanced widget "Header with Description" (instance: 4, widget: 4)
+preview-helpers.js:109 🎯 Enhanced widget "Header with Description" (instance: 6, widget: 4)
+preview-helpers.js:109 🎯 Enhanced widget "Header with Description" (instance: 7, widget: 4)
+preview-helpers.js:109 🎯 Enhanced widget "Header with Description" (instance: 5, widget: 4)
+preview-helpers.js:113 ✅ Enhanced 6 widgets and 3 sections using existing data attributes
+preview-helpers.js:182 🎯 Setup interactions for 6 widgets
+preview-helpers.js:204 📦 Setup interactions for 3 sections
+preview-helpers.js:242 ⌨️ Keyboard shortcuts enabled
+preview-helpers.js:290 📢 Message listener setup
+preview-helpers.js:59 ✅ Preview helpers initialized
+index.ts-abec1db7.js:1 [Long Running Recorder] Content script initialised
+index.ts-abec1db7.js:3 [Long Running Recorder] Recorder disabled
+page-builder-api.js?v=1756422435:203 ✅ API GET Success: {success: true, data: {…}}
+page-builder-main.js?v=1756422435:192 🎨 Loaded rendered page: {id: 1, title: 'Home Page', template: 'Default Template'}
+page-builder-main.js?v=1756422435:193 📋 Found 4 rendered sections: (4) [{…}, {…}, {…}, {…}]
+page-builder-main.js?v=1756422435:194 🎯 Theme assets: {css: Array(0), js: Array(0), base_path: '/themes/miata'}
+page-builder-main.js?v=1756422435:844 🎯 Loading theme assets: {css: Array(0), js: Array(0), base_path: '/themes/miata'}
+page-builder-main.js?v=1756422435:848 ⚠️ Theme assets container not found
+loadThemeAssets @ page-builder-main.js?v=1756422435:848
+loadInitialContent @ page-builder-main.js?v=1756422435:203
+await in loadInitialContent
+init @ page-builder-main.js?v=1756422435:57
+await in init
+(anonymous) @ page-builder:2597
+setTimeout
+(anonymous) @ page-builder:2584Understand this warning
+page-builder-main.js?v=1756422435:206 🎨 Rendering sections with real content to GridStack...
+page-builder-main.js?v=1756422435:208 🎨 Adding rendered section to grid: 1 undefined
+page-builder-main.js?v=1756422435:879 ⚠️ GridStack not available, using fallback rendering
+addRenderedSectionToGrid @ page-builder-main.js?v=1756422435:879
+(anonymous) @ page-builder-main.js?v=1756422435:209
+loadInitialContent @ page-builder-main.js?v=1756422435:207
+await in loadInitialContent
+init @ page-builder-main.js?v=1756422435:57
+await in init
+(anonymous) @ page-builder:2597
+setTimeout
+(anonymous) @ page-builder:2584Understand this warning
+page-builder-main.js?v=1756422435:939 🔧 Using fallback rendering for section: 1
+page-builder-main.js?v=1756422435:208 🎨 Adding rendered section to grid: 2 undefined
+page-builder-main.js?v=1756422435:879 ⚠️ GridStack not available, using fallback rendering
+addRenderedSectionToGrid @ page-builder-main.js?v=1756422435:879
+(anonymous) @ page-builder-main.js?v=1756422435:209
+loadInitialContent @ page-builder-main.js?v=1756422435:207
+await in loadInitialContent
+init @ page-builder-main.js?v=1756422435:57
+await in init
+(anonymous) @ page-builder:2597
+setTimeout
+(anonymous) @ page-builder:2584Understand this warning
+page-builder-main.js?v=1756422435:939 🔧 Using fallback rendering for section: 2
+page-builder-main.js?v=1756422435:208 🎨 Adding rendered section to grid: 3 undefined
+page-builder-main.js?v=1756422435:879 ⚠️ GridStack not available, using fallback rendering
+addRenderedSectionToGrid @ page-builder-main.js?v=1756422435:879
+(anonymous) @ page-builder-main.js?v=1756422435:209
+loadInitialContent @ page-builder-main.js?v=1756422435:207
+await in loadInitialContent
+init @ page-builder-main.js?v=1756422435:57
+await in init
+(anonymous) @ page-builder:2597
+setTimeout
+(anonymous) @ page-builder:2584Understand this warning
+page-builder-main.js?v=1756422435:939 🔧 Using fallback rendering for section: 3
+page-builder-main.js?v=1756422435:208 🎨 Adding rendered section to grid: 19 undefined
+page-builder-main.js?v=1756422435:879 ⚠️ GridStack not available, using fallback rendering
+addRenderedSectionToGrid @ page-builder-main.js?v=1756422435:879
+(anonymous) @ page-builder-main.js?v=1756422435:209
+loadInitialContent @ page-builder-main.js?v=1756422435:207
+await in loadInitialContent
+init @ page-builder-main.js?v=1756422435:57
+await in init
+(anonymous) @ page-builder:2597
+setTimeout
+(anonymous) @ page-builder:2584Understand this warning
+page-builder-main.js?v=1756422435:939 🔧 Using fallback rendering for section: 19
+page-builder-main.js?v=1756422435:212 ✅ Loaded 4 sections with real rendered content
+page-builder-main.js?v=1756422435:233 🎧 Setting up global event listeners...
+page-builder-main.js?v=1756422435:263 ✅ Global event listeners setup complete
+page-builder-main.js?v=1756422435:270 🎯 Setting up drop zones...
+page-builder-main.js?v=1756422435:286 ✅ Drop zones setup complete
+page-builder-main.js?v=1756422435:71 ✅ Page Builder Main Controller initialized successfully
+page-builder:2598 ✅ Page Builder initialized successfully
+page-builder:2960 📡 Setting up iframe message listener...
+page-builder:2687 🎯 Setting up section templates modal...
+page-builder:2878 🎧 Setting up section template modal handlers...
+page-builder:2617 🔍 Debug: Page Builder components: {pageBuilder: true, sectionManager: true, sectionsCount: 0}
+
+console after selecting section and clicking add Button
+✅ Created toolbar buttons for section 1
+preview-helpers.js:330 ✓ Section selected: Hero Header (ID: 1)
+page-builder:2969 📨 Received message from iframe: {type: 'section-selected', data: {…}}
+page-builder:2995 📦 Section selected (no modal): {sectionId: '1', sectionName: 'Hero Header'}
+page-builder:3001 ✅ Section "Hero Header" (ID: 1) selected
+preview-helpers.js:424 🔧 Section toolbar action: edit on section "Hero Header" (ID: 1)
+preview-helpers.js:604 🔧 Toolbar action: edit on section "Hero Header" (ID: 1)
+preview-helpers.js:619 ✏️ Edit section: Hero Header (ID: 1) - message sent to parent
+page-builder:2969 📨 Received message from iframe: {type: 'toolbar-action', data: {…}}
+page-builder:3081 🔧 Toolbar action received: {action: 'edit', elementType: 'section', elementId: '1', elementName: 'Hero Header'}
+page-builder:3093 ✏️ Edit section: Hero Header (ID: 1)
+page-builder:3005 🔧 Opening section configuration modal: {sectionId: '1', sectionName: 'Hero Header'}
+page-builder:3012 🔍 Fetching section data from API...
+page-builder:3057 ✅ Section configuration fetched from API
+page-builder:3016 ✅ Section data retrieved: {name: 'Hero Header', section_type: 'full-width', description: '', column_layout: 'full-width', container_type: 'container', …}
+section-manager.js?v=1756422435:482 🔧 Opening section configuration modal for: undefined
+section-manager.js?v=1756422435:752 📄 Loading section configuration: undefined
+page-builder-api.js?v=1756422435:184 🌐 API GET: /admin/api/page-builder/sections/undefined/configuration 
+page-builder:3024 ✅ Modal opened with API data
+javascript?v=1744785126:2031  GET http://realsyscms.local:8080/admin/api/page-builder/sections/undefined/configuration 404 (Not Found)
+window.fetch @ javascript?v=1744785126:2031
+makeRequest @ page-builder-api.js?v=1756422435:196
+getSectionConfiguration @ page-builder-api.js?v=1756422435:70
+loadSectionConfiguration @ section-manager.js?v=1756422435:760
+openSectionConfigModal @ section-manager.js?v=1756422435:495
+openSectionConfigModal @ page-builder:3023
+await in openSectionConfigModal
+handleToolbarAction @ page-builder:3096
+(anonymous) @ page-builder:2980
+postMessage
+handleToolbarAction @ preview-helpers.js:609
+(anonymous) @ preview-helpers.js:427Understand this error
+page-builder-api.js?v=1756422435:207 ❌ API GET Error for /admin/api/page-builder/sections/undefined/configuration: Error: No query results for model [App\Models\PageSection] undefined
+    at PageBuilderAPI.makeRequest (page-builder-api.js?v=1756422435:200:23)
+    at async PageBuilderAPI.getSectionConfiguration (page-builder-api.js?v=1756422435:70:16)
+    at async SectionManager.loadSectionConfiguration (section-manager.js?v=1756422435:760:38)
+    at async SectionManager.openSectionConfigModal (section-manager.js?v=1756422435:495:13)
+makeRequest @ page-builder-api.js?v=1756422435:207
+await in makeRequest
+getSectionConfiguration @ page-builder-api.js?v=1756422435:70
+loadSectionConfiguration @ section-manager.js?v=1756422435:760
+openSectionConfigModal @ section-manager.js?v=1756422435:495
+openSectionConfigModal @ page-builder:3023
+await in openSectionConfigModal
+handleToolbarAction @ page-builder:3096
+(anonymous) @ page-builder:2980
+postMessage
+handleToolbarAction @ preview-helpers.js:609
+(anonymous) @ preview-helpers.js:427Understand this error
+section-manager.js?v=1756422435:765 ⚠️ Could not fetch section configuration, using defaults
+loadSectionConfiguration @ section-manager.js?v=1756422435:765
+await in loadSectionConfiguration
+openSectionConfigModal @ section-manager.js?v=1756422435:495
+openSectionConfigModal @ page-builder:3023
+await in openSectionConfigModal
+handleToolbarAction @ page-builder:3096
+(anonymous) @ page-builder:2980
+postMessage
+handleToolbarAction @ preview-helpers.js:609
+(anonymous) @ preview-helpers.js:427Understand this warning
+section-manager.js?v=1756422435:772 ✅ Section configuration loaded
+section-manager.js?v=1756422435:503 ✅ Section configuration modal opened

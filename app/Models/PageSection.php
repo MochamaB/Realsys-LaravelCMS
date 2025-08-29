@@ -37,6 +37,15 @@ class PageSection extends Model
         'background_color',
         'padding',
         'margin',
+        // Individual padding/margin fields
+        'padding_top',
+        'padding_bottom',
+        'padding_left',
+        'padding_right',
+        'margin_top',
+        'margin_bottom',
+        'margin_left',
+        'margin_right',
         'locked_position',
         'resize_handles'
     ];

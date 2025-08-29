@@ -14,14 +14,16 @@ class PageBuilderMain {
             ...options
         };
         
-        // Core components
-        this.api = null;
-        this.gridManager = null;
-        this.sectionManager = null;
-        this.widgetManager = null;
-        this.widgetLibrary = null;
-        this.templateManager = null;
-        this.themeManager = null;
+        // Initialize unified loader
+        this.unifiedLoader = new UnifiedLoaderManager();
+        
+        // Initialize components
+        this.api = new PageBuilderAPI(this.options.pageId, this.options.csrfToken);
+        this.gridManager = new GridManager(this.options.containerId, this.options);
+        this.sectionManager = new SectionManager(this.api, this.gridManager, this.unifiedLoader);
+        this.widgetManager = new WidgetManager(this.api, this.sectionManager);
+        this.templateManager = new TemplateManager(this.api);
+        this.themeManager = new ThemeManager(this.api);
         
         // State
         this.initialized = false;
@@ -420,6 +422,236 @@ class PageBuilderMain {
         }
         
         return null;
+    }
+
+    /**
+     * Create section from template (called from modal)
+     */
+    async createSectionFromTemplate(templateData) {
+        console.log('🏗️ Creating section from template:', templateData);
+        
+        try {
+            // Show loading state in grid
+            const loadingSection = this.addLoadingSectionToGrid(templateData);
+            
+            // Prepare API request data
+            const requestData = {
+                template_key: templateData.key,
+                template_type: templateData.templateType || 'core',
+                section_type: templateData.sectionType || 'content',
+                name: templateData.name,
+                grid_x: 0,
+                grid_w: 12,
+                grid_h: 4
+            };
+            
+            console.log('📤 Sending section creation request:', requestData);
+            
+            // Make API call to create section
+            const response = await fetch(`/admin/api/page-builder/pages/${this.options.pageId}/sections`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': this.options.csrfToken || document.querySelector('meta[name="csrf-token"]')?.content
+                },
+                body: JSON.stringify(requestData)
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok && result.success) {
+                console.log('✅ Section created successfully:', result.data);
+                
+                // Replace loading section with real section
+                this.replaceLoadingSectionWithReal(loadingSection, result.data);
+                
+                // Show success message
+                this.showNotification('success', `Section "${result.data.page_section.name}" added successfully`);
+                
+                // Refresh the entire page builder canvas to show the new section
+                await this.refresh();
+                
+            } else {
+                console.error('❌ Section creation failed:', result);
+                
+                // Remove loading section
+                if (loadingSection) {
+                    loadingSection.remove();
+                }
+                
+                // Show error message
+                this.showNotification('error', result.message || 'Failed to create section');
+            }
+            
+        } catch (error) {
+            console.error('❌ Error creating section:', error);
+            
+            // Remove loading section if it exists
+            const loadingSection = document.querySelector('.loading-section');
+            if (loadingSection) {
+                loadingSection.remove();
+            }
+            
+            // Show error message
+            this.showNotification('error', 'Failed to create section: ' + error.message);
+        }
+    }
+
+    addLoadingSectionToGrid(templateData) {
+        console.log('⏳ Adding loading section to grid...');
+        
+        // Find the GridStack container
+        const gridContainer = document.getElementById(this.options.containerId);
+        if (!gridContainer) {
+            console.error('❌ GridStack container not found');
+            return null;
+        }
+        
+        // Create loading section element
+        const loadingSection = document.createElement('div');
+        loadingSection.className = 'grid-stack-item loading-section';
+        loadingSection.setAttribute('gs-x', '0');
+        loadingSection.setAttribute('gs-y', '0');
+        loadingSection.setAttribute('gs-w', '12');
+        loadingSection.setAttribute('gs-h', '4');
+        
+        loadingSection.innerHTML = `
+            <div class="grid-stack-item-content">
+                <div class="section-loading-placeholder">
+                    <div class="d-flex align-items-center justify-content-center h-100">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary mb-3" role="status">
+                                <span class="visually-hidden">Creating section...</span>
+                            </div>
+                            <h6 class="text-primary">Creating "${templateData.name}"</h6>
+                            <p class="text-muted small">Please wait...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Add to grid
+        gridContainer.appendChild(loadingSection);
+        
+        console.log('✅ Loading section added to grid');
+        return loadingSection;
+    }
+
+    replaceLoadingSectionWithReal(loadingSection, sectionData) {
+        console.log('🔄 Replacing loading section with real section:', sectionData);
+        
+        if (!loadingSection) {
+            console.warn('⚠️ Loading section not found, adding new section directly');
+            this.addRealSectionToGrid(sectionData);
+            return;
+        }
+        
+        // Create real section element
+        const realSection = document.createElement('div');
+        realSection.className = 'grid-stack-item';
+        realSection.setAttribute('gs-x', sectionData.grid_config.x);
+        realSection.setAttribute('gs-y', sectionData.grid_config.y);
+        realSection.setAttribute('gs-w', sectionData.grid_config.w);
+        realSection.setAttribute('gs-h', sectionData.grid_config.h);
+        realSection.setAttribute('data-section-id', sectionData.page_section.id);
+        
+        realSection.innerHTML = `
+            <div class="grid-stack-item-content">
+                <div class="section-content">
+                    <div class="section-header d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="section-title mb-0">${sectionData.page_section.name}</h6>
+                        <div class="section-actions">
+                            <button class="btn btn-sm btn-outline-primary" onclick="window.pageBuilder?.editSection(${sectionData.page_section.id})">
+                                <i class="ri-settings-line"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="section-body">
+                        <div class="empty-section-placeholder text-center py-4">
+                            <i class="ri-add-line text-muted mb-2" style="font-size: 2rem;"></i>
+                            <p class="text-muted mb-0">Click to add widgets</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Replace loading section with real section
+        loadingSection.parentNode.replaceChild(realSection, loadingSection);
+        
+        console.log('✅ Loading section replaced with real section');
+    }
+
+    addRealSectionToGrid(sectionData) {
+        console.log('➕ Adding real section directly to grid:', sectionData);
+        
+        const gridContainer = document.getElementById(this.options.containerId);
+        if (!gridContainer) {
+            console.error('❌ GridStack container not found');
+            return;
+        }
+        
+        // Create real section element
+        const realSection = document.createElement('div');
+        realSection.className = 'grid-stack-item';
+        realSection.setAttribute('gs-x', sectionData.grid_config.x);
+        realSection.setAttribute('gs-y', sectionData.grid_config.y);
+        realSection.setAttribute('gs-w', sectionData.grid_config.w);
+        realSection.setAttribute('gs-h', sectionData.grid_config.h);
+        realSection.setAttribute('data-section-id', sectionData.page_section.id);
+        
+        realSection.innerHTML = `
+            <div class="grid-stack-item-content">
+                <div class="section-content">
+                    <div class="section-header d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="section-title mb-0">${sectionData.page_section.name}</h6>
+                        <div class="section-actions">
+                            <button class="btn btn-sm btn-outline-primary" onclick="window.pageBuilder?.editSection(${sectionData.page_section.id})">
+                                <i class="ri-settings-line"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="section-body">
+                        <div class="empty-section-placeholder text-center py-4">
+                            <i class="ri-add-line text-muted mb-2" style="font-size: 2rem;"></i>
+                            <p class="text-muted mb-0">Click to add widgets</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Add to grid
+        gridContainer.appendChild(realSection);
+        
+        console.log('✅ Real section added to grid');
+    }
+
+    showNotification(type, message) {
+        console.log(`📢 ${type.toUpperCase()}: ${message}`);
+        
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+        notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        
+        notification.innerHTML = `
+            <i class="ri-${type === 'success' ? 'check-line' : 'error-warning-line'} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        // Add to page
+        document.body.appendChild(notification);
+        
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 5000);
     }
 
     /**

@@ -29,5 +29,9 @@
 .gjs-three-bg {
     background-color: #0ab39c;
 }
+.modalheaderbackground {
+    background-color: #405189 !important;
+    padding-bottom: 15px !important;
+}
 
 
