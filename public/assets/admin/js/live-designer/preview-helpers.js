@@ -687,16 +687,21 @@
     }
     
     function handleAddWidget(sectionId) {
+        // Find the section element to get its name
+        const sectionElement = document.querySelector(`[data-preview-section="${sectionId}"]`);
+        const sectionName = sectionElement ? sectionElement.getAttribute('data-section-name') : null;
+        
         parent.postMessage({
             type: 'toolbar-action',
             data: { 
                 action: 'add-widget',
                 elementType: 'section',
-                elementId: sectionId
+                elementId: sectionId,
+                elementName: sectionName
             }
         }, '*');
         
-        console.log(`➕ Add widget to section: ${sectionId}`);
+        console.log(`➕ Add widget to section: ${sectionId} (${sectionName || 'unnamed'})`);
     }
     
 })();

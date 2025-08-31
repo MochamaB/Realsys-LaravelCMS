@@ -1127,6 +1127,36 @@ class SectionManager {
             const saveSpinner = document.getElementById('saveSpinner');
             const originalText = saveBtn.innerHTML;
             
+            // Collect form data from the modal form
+            const configData = {
+                position: parseInt(document.getElementById('sectionPosition')?.value) || 0,
+                background_color: document.getElementById('backgroundColor')?.value || '',
+                css_classes: document.getElementById('cssClasses')?.value || '',
+                // Collect individual padding values and convert to JSON string
+                padding: JSON.stringify({
+                    top: parseInt(document.getElementById('paddingTop')?.value) || 0,
+                    bottom: parseInt(document.getElementById('paddingBottom')?.value) || 0,
+                    left: parseInt(document.getElementById('paddingLeft')?.value) || 0,
+                    right: parseInt(document.getElementById('paddingRight')?.value) || 0
+                }),
+                // Collect individual margin values and convert to JSON string  
+                margin: JSON.stringify({
+                    top: parseInt(document.getElementById('marginTop')?.value) || 0,
+                    bottom: parseInt(document.getElementById('marginBottom')?.value) || 0,
+                    left: parseInt(document.getElementById('marginLeft')?.value) || 0,
+                    right: parseInt(document.getElementById('marginRight')?.value) || 0
+                }),
+                column_span_override: document.getElementById('columnSpanOverride')?.value || null,
+                column_offset_override: document.getElementById('columnOffsetOverride')?.value || null,
+                // Grid settings
+                grid_x: parseInt(document.getElementById('gridX')?.value) || 0,
+                grid_y: parseInt(document.getElementById('gridY')?.value) || 0,
+                grid_w: parseInt(document.getElementById('gridW')?.value) || 12,
+                grid_h: parseInt(document.getElementById('gridH')?.value) || 4,
+                locked_position: document.getElementById('lockedPosition')?.checked || false,
+                allows_widgets: document.getElementById('allowsWidgets')?.checked || true
+            };
+            
             const response = await this.api.updateSection(section.id, configData);
             
             if (response.success) {
@@ -1152,7 +1182,7 @@ class SectionManager {
                 await this.reloadPreview();
                 
                 // Show success message
-                this.showSuccessMessage('Section configuration updated successfully');
+                console.log('✅ Section configuration updated successfully');
                 
                 // Complete and hide loader
                 if (this.unifiedLoader) {

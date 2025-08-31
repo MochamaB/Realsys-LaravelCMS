@@ -1,19 +1,18 @@
 <!-- Live Designer - Right Sidebar -->
-<div class="sidebar-container right" id="right-sidebar-container">
-    <div class="designer-sidebar right" id="right-sidebar">
-        <!-- Sidebar Header -->
-        <div class="sidebar-header p-3 border-bottom d-flex align-items-center justify-content-between">
-            <button class="btn btn-sm btn-outline-secondary sidebar-collapse-btn me-2" id="collapse-right-sidebar">
-                <i class="ri-arrow-right-line"></i>
-            </button>
-            <h6 class="mb-0 d-flex align-items-center">
-                <i class="ri-settings-line me-2"></i>
-                <span class="sidebar-title">Widget Properties</span>
-            </h6>
-        </div>
-        
-        <!-- Sidebar Content -->
-        <div class="sidebar-content p-3" id="widget-editor-container">
+<div class="designer-right-sidebar bg-white border-start" id="rightSidebar" style="height: calc(100vh - 100px); overflow-y: auto;">
+    <!-- Sidebar Header -->
+    <div class="sidebar-header p-3 border-bottom d-flex align-items-center justify-content-between" style="background-color: #6c757d;">
+        <h6 class="mb-0">
+            <span class="sidebar-title" style="color: white;">Widget Properties</span>
+        </h6>
+        <button class="btn btn-outline-secondary border-0" id="rightSidebarToggleBtn" title="Collapse Sidebar">
+            <i class="ri-arrow-right-line" style="color: white; font-size: 18px;"></i>
+        </button>
+    </div>
+    
+    <!-- Sidebar Content -->
+    <div class="sidebar-content">
+        <div class="sidebar-content-inner p-3" id="widget-editor-container">
             <div class="no-selection text-center py-5">
                 <div class="mb-3">
                     <i class="ri-cursor-line" style="font-size: 3rem; color: #6c757d;"></i>
@@ -25,73 +24,113 @@
     </div>
     
     <!-- Collapsed state icons (shown when sidebar is collapsed) -->
-    <div class="sidebar-collapsed-icons" style="display: none;">
+    <div class="sidebar-collapsed-icons d-none">
         <div class="collapsed-icon-item" title="Widget Properties">
-            <i class="ri-arrow-left-line"></i>
+            <i class="ri-settings-line"></i>
         </div>
     </div>
 </div>
 
 <style>
-/* Right Sidebar Styling */
-.sidebar-container.right {
+/* Right Sidebar Styling - Match Left Sidebar Structure */
+.designer-right-sidebar {
+    width: 280px;
     transition: all 0.3s ease;
     position: relative;
 }
 
-.designer-sidebar.right {
-    width: 350px;
-    background: #fff;
-    border-left: 1px solid #e9ecef;
-    height: 100%;
-    transition: all 0.3s ease;
-    position: relative;
+.designer-right-sidebar .sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
-/* Collapsed state */
-.sidebar-container.right.collapsed .designer-sidebar {
-    width: 70px;
-}
-
-.sidebar-container.right.collapsed .sidebar-content {
-    display: none;
-}
-
-.sidebar-container.right.collapsed .sidebar-title {
-    display: none;
-}
-
-.sidebar-container.right.collapsed .sidebar-collapsed-icons {
-    display: flex !important;
+/* Collapsed icons styling */
+.sidebar-collapsed-icons {
+    display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 10px;
+}
+
+.collapsed-icon-item {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: transparent;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.collapsed-icon-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.collapsed-icon-item i {
+    font-size: 22px;
+    color: white;
+}
+
+/* Collapsed state - handled by main CSS */
+#right-sidebar-container.collapsed .designer-right-sidebar {
+    width: 70px;
+    background-color: #6c757d !important;
+}
+
+#right-sidebar-container.collapsed .sidebar-header {
+    background-color: #6c757d;
+    color: white;
+}
+
+#right-sidebar-container.collapsed .sidebar-header h6,
+#right-sidebar-container.collapsed .sidebar-header i {
+    color: white !important;
+}
+
+#right-sidebar-container.collapsed .sidebar-title {
+    display: none;
+}
+
+#right-sidebar-container.collapsed .sidebar-content {
+    display: none;
+}
+
+#right-sidebar-container.collapsed .sidebar-collapsed-icons {
+    display: flex !important;
     padding: 10px 0;
 }
 
-.sidebar-container.right.collapsed .sidebar-collapse-btn {
-    transform: rotate(180deg);
+#right-sidebar-container.collapsed #rightSidebarToggleBtn {
+    background-color: transparent !important;
+    border: none !important;
+    color: white !important;
 }
 
 /* Mobile adjustments */
 @media (max-width: 991.98px) {
-    .designer-sidebar.right {
+    .designer-right-sidebar {
         position: fixed;
-        right: -350px;
-        top: 0;
+        right: -280px;
+        top: 140px;
         z-index: 1050;
-        height: 100vh;
+        height: calc(100vh - 140px);
         box-shadow: -2px 0 10px rgba(0,0,0,0.1);
     }
     
-    .designer-sidebar.right.show {
+    .designer-right-sidebar.show {
         right: 0;
     }
     
-    .sidebar-container.right.collapsed .designer-sidebar.right {
+    .collapsed .designer-right-sidebar {
         right: -70px;
     }
     
-    .sidebar-container.right.collapsed .designer-sidebar.right.show {
+    .collapsed .designer-right-sidebar.show {
         right: 0;
         width: 70px;
     }

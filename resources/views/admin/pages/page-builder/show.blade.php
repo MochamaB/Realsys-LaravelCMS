@@ -17,7 +17,7 @@
 <style>
 /* ===== UNIFIED PROGRESS BAR LOADER STYLES ===== */
 .unified-page-loader {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
     width: 100%;
@@ -229,7 +229,7 @@
             </div>
 
             <!-- Main Canvas Area -->
-            <div class="col" id="canvasContainer">
+            <div class="col" id="canvasContainer" style="position: relative;">
                 <!-- Unified Progress Bar Loader -->
                 <div class="unified-page-loader" id="pageBuilderLoader" style="display: none;">
                     <div class="progress-bar"></div>
@@ -255,6 +255,8 @@
 // GridStack Page Builder - API-Driven Architecture
 window.pageId = {{ $page->id }};
 window.csrfToken = '{{ csrf_token() }}';
+window.widgetModalManagerReady = false;
+window.pendingWidgetModalRequests = [];
 
 console.log('🔧 GridStack Page Builder initializing for page:', window.pageId);
 
@@ -287,6 +289,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     '/admin/api/page-builder',
                     window.csrfToken
                 );
+                window.widgetModalManagerReady = true
                 
                 // Setup iframe message listener
                 setupIframeMessageListener();
@@ -312,6 +315,43 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, 100); // Small delay to ensure all scripts are loaded
 });
+
+// Add this function to initialize WidgetModalManager
+function initializeWidgetModalManager() {
+    console.log('🔄 Initializing WidgetModalManager...');
+    
+    try {
+        window.widgetModalManager = new WidgetModalManager(
+            '/admin/api/page-builder',
+            window.csrfToken
+        );
+        
+        // Mark as ready
+        window.widgetModalManagerReady = true;
+        console.log('✅ WidgetModalManager initialized successfully');
+        
+        // Process any pending requests
+        processPendingWidgetModalRequests();
+        
+    } catch (error) {
+        console.error('❌ Failed to initialize WidgetModalManager:', error);
+        // Still mark as ready to prevent infinite waiting
+        window.widgetModalManagerReady = true;
+    }
+}
+// Add this function to handle pending requests
+function processPendingWidgetModalRequests() {
+    if (window.pendingWidgetModalRequests.length > 0) {
+        console.log(`📦 Processing ${window.pendingWidgetModalRequests.length} pending widget modal requests`);
+        
+        window.pendingWidgetModalRequests.forEach(request => {
+            openWidgetModalForSection(request.sectionId, request.sectionName);
+        });
+        
+        // Clear the queue
+        window.pendingWidgetModalRequests = [];
+    }
+}
 
 // Legacy Widget Modal Handlers - Replaced by WidgetModalManager
 // These functions are kept for backward compatibility but are no longer used
@@ -836,19 +876,39 @@ function handleToolbarAction(actionData) {
     }
 }
 
+
+
 function openWidgetModalForSection(sectionId, sectionName) {
-    console.log('🎯 Opening widget modal for section:', { sectionId, sectionName });
+    console.log('🎯 Request to open widget modal for section:', { sectionId, sectionName });
     
-    // Use the new WidgetModalManager to open the modal
-    if (window.widgetModalManager) {
-        window.widgetModalManager.openForSection(sectionId, sectionName);
-    } else {
-        console.error('❌ WidgetModalManager not initialized');
-        alert('Widget modal is not ready. Please refresh the page.');
+    // Check if WidgetModalManager is ready
+    if (!window.widgetModalManagerReady) {
+        console.log('⏳ WidgetModalManager not ready yet, queuing request');
+        window.pendingWidgetModalRequests.push({ sectionId, sectionName });
+        return;
     }
     
-    console.log(`✅ Widget modal opened for section "${sectionName}"`);
+    // Check if WidgetModalManager instance exists
+    if (!window.widgetModalManager) {
+        console.error('❌ WidgetModalManager not available');
+        showFallbackWidgetModal(sectionId, sectionName);
+        return;
+    }
+    
+    console.log('🚀 Opening widget modal for section:', { sectionId, sectionName });
+    
+    // Add a small delay to ensure DOM is ready and no conflicts with other modals
+    setTimeout(() => {
+        try {
+            window.widgetModalManager.openForSection(sectionId, sectionName);
+            console.log(`✅ Widget modal opened for section "${sectionName}"`);
+        } catch (error) {
+            console.error('❌ Error opening widget modal:', error);
+            showFallbackWidgetModal(sectionId, sectionName);
+        }
+    }, 100);
 }
+
 
 function openFallbackSectionModal(sectionId, sectionName) {
     console.log('📋 Opening fallback section modal:', { sectionId, sectionName });

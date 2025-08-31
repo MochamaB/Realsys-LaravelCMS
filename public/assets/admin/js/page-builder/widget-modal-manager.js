@@ -25,8 +25,10 @@ class WidgetModalManager {
     init() {
         this.modal = new bootstrap.Modal(document.getElementById('widgetContentModal'));
         this.setupEventListeners();
+        this.initialized = true;
     }
-
+    
+    
     setupEventListeners() {
         // Step navigation buttons
         document.getElementById('nextStepBtn')?.addEventListener('click', () => this.nextStep());

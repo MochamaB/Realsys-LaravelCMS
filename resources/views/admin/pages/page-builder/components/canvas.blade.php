@@ -1,27 +1,10 @@
-
-
-<div id="iframeLoader"
-         style="position: absolute; 
-                top: 0; left: 0; 
-                width: 100%; height: 100%; 
-                background: rgba(255, 255, 255, 0.8); 
-                display: flex; 
-                align-items: top; 
-                justify-content: center; 
-                z-index: 9999;">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
-        </div>
-    </div>
-        
         <!-- Page Preview Iframe (Main Preview) -->
-        
-            <iframe 
-                id="pagePreviewIframe" 
-                src="/admin/api/page-builder/pages/{{ $page->id }}/rendered/iframe"
-                style="width: 100%; height: auto; border: none; border-radius: 0px;margin: 0px !important;"
-                frameborder="0">
-            </iframe>
+        <iframe 
+            id="pagePreviewIframe" 
+            src="/admin/api/page-builder/pages/{{ $page->id }}/rendered/iframe"
+            style="width: 100%; height: auto; border: none; border-radius: 0px;margin: 0px !important;"
+            frameborder="0">
+        </iframe>
         
         
         <!-- GridStack Container (for future GridStack implementation) -->
@@ -49,28 +32,60 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     const iframe = document.getElementById("pagePreviewIframe");
-    const loader = document.getElementById("iframeLoader");
-
-    iframe.addEventListener("load", function () {
-        // Hide loader, show iframe
-        loader.style.display = "none";
-        iframe.style.display = "block";
-
-        try {
-            // Access iframe document
-            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-
-            // Remove iframe internal scrollbars
-            iframe.style.overflow = "hidden";
-            iframeDoc.body.style.overflow = "hidden";
-
-            // Adjust height to fit content
-            iframe.style.height = iframeDoc.body.scrollHeight + "px";
-
-        } catch (e) {
-            console.warn("Cross-origin restriction: can't access iframe content");
+    
+    // Get unified loader instance (will be available after page-builder-main.js loads)
+    let unifiedLoader = null;
+    
+    // Wait for unified loader to be available
+    const waitForLoader = () => {
+        if (window.UnifiedLoaderManager) {
+            unifiedLoader = new UnifiedLoaderManager();
+            setupIframeLoading();
+        } else {
+            setTimeout(waitForLoader, 100);
         }
-    });
+    };
+    
+    const setupIframeLoading = () => {
+        // Show unified loader when iframe starts loading
+        unifiedLoader.show('iframeLoad', 'Loading page preview...', 10);
+        
+        iframe.addEventListener("load", function () {
+            try {
+                // Access iframe document
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+
+                // Update progress
+                unifiedLoader.setProgress(70);
+                unifiedLoader.updateMessage('Adjusting iframe layout...');
+
+                // Remove iframe internal scrollbars
+                iframe.style.overflow = "hidden";
+                iframeDoc.body.style.overflow = "hidden";
+
+                // Adjust height to fit content
+                iframe.style.height = iframeDoc.body.scrollHeight + "px";
+                
+                // Complete loading
+                unifiedLoader.setProgress(100);
+                unifiedLoader.hide('iframeLoad');
+
+                console.log('✅ Iframe loaded successfully');
+
+            } catch (e) {
+                console.warn("Cross-origin restriction: can't access iframe content");
+                // Still hide loader even if we can't access content
+                unifiedLoader.hide('iframeLoad');
+            }
+        });
+        
+        iframe.addEventListener("error", function () {
+            unifiedLoader.showError('iframeLoad', 'Failed to load page preview');
+        });
+    };
+    
+    // Start waiting for loader
+    waitForLoader();
 });
 </script>
 @endpush

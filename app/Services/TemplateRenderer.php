@@ -88,7 +88,7 @@ class TemplateRenderer
         
         if ($page) {
             // Load page sections with their widgets
-            $pageSections = $page->sections()->with(['templateSection', 'widgets'])->get();
+            $pageSections = $page->sections()->with(['templateSection', 'widgets'])->orderBy('position')->get();
             
             foreach ($pageSections as $pageSection) {
                 // Get widget data prepared for rendering
