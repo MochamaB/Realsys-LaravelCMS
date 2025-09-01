@@ -1,8 +1,76 @@
 /**
- * Theme Manager
+ * THEME MANAGER
+ * =============
  * 
- * Handles loading theme assets (CSS/JS) and applying them to the canvas
- * to show the real frontend appearance during page building.
+ * GENERAL PURPOSE:
+ * Manages theme assets (CSS/JS) and applies them to the page builder canvas
+ * to provide live preview functionality. Ensures sections and widgets appear
+ * with the actual frontend styling during the building process.
+ * 
+ * KEY FUNCTIONS/METHODS & DUPLICATION STATUS:
+ * 
+ * THEME INITIALIZATION:
+ * • init() - **UNIQUE** - Initialize theme manager and load assets
+ * • loadThemeAssets() - **DUPLICATED** - Similar logic in page-builder-main.js loadThemeAssets()
+ * • getDefaultAssets() - **UNIQUE** - Provide fallback theme assets
+ * 
+ * ASSET LOADING & MANAGEMENT:
+ * • applyThemeToCanvas() - **UNIQUE** - Apply loaded assets to the page builder
+ * • loadCSS() - **UNIQUE** - Dynamically load CSS assets
+ * • loadJS() - **UNIQUE** - Dynamically load JavaScript assets
+ * • unloadThemeAssets() - **UNIQUE** - Remove theme assets when switching themes
+ * • validateAssetUrls() - **UNIQUE** - Validate asset URLs before loading
+ * 
+ * ASSET INJECTION:
+ * • injectCSSAssets() - **UNIQUE** - Inject CSS files into page head
+ * • injectJSAssets() - **UNIQUE** - Inject JavaScript files into page
+ * • createAssetElement() - **UNIQUE** - Create DOM elements for assets
+ * • removeAssetElement() - **UNIQUE** - Remove asset elements from DOM
+ * 
+ * ASSET CACHING & OPTIMIZATION:
+ * • cacheAssetInfo() - **UNIQUE** - Cache asset information for performance
+ * • checkAssetCache() - **UNIQUE** - Check if assets are already loaded
+ * • clearAssetCache() - **UNIQUE** - Clear cached asset data
+ * • optimizeAssetLoading() - **UNIQUE** - Optimize loading order and performance
+ * 
+ * THEME SWITCHING:
+ * • switchTheme() - **UNIQUE** - Change to different theme
+ * • preloadThemeAssets() - **UNIQUE** - Pre-load assets for smooth switching
+ * • cleanupPreviousTheme() - **UNIQUE** - Remove previous theme assets
+ * 
+ * ASSET MONITORING:
+ * • monitorAssetLoading() - **UNIQUE** - Track asset loading progress
+ * • handleAssetLoadError() - **UNIQUE** - Handle failed asset loads
+ * • retryFailedAssets() - **UNIQUE** - Retry loading failed assets
+ * • reportAssetStatus() - **UNIQUE** - Report loading status to other components
+ * 
+ * LIVE PREVIEW INTEGRATION:
+ * • updatePreviewStyles() - **UNIQUE** - Update preview iframe with theme styles
+ * • syncThemeWithPreview() - **UNIQUE** - Keep preview in sync with builder
+ * • handlePreviewResize() - **UNIQUE** - Handle responsive preview changes
+ * 
+ * ERROR HANDLING & FALLBACKS:
+ * • showThemeLoadError() - **UNIQUE** - Display theme loading errors
+ * • useDefaultTheme() - **UNIQUE** - Fallback to default theme on error
+ * • validateThemeCompatibility() - **UNIQUE** - Check theme compatibility
+ * 
+ * UTILITY METHODS:
+ * • getThemeInfo() - **UNIQUE** - Get current theme information
+ * • isThemeLoaded() - **UNIQUE** - Check if theme is fully loaded
+ * • getAssetLoadingStatus() - **UNIQUE** - Get loading status of all assets
+ * • generateAssetId() - **UNIQUE** - Generate unique identifiers for assets
+ * 
+ * MAJOR DUPLICATION ISSUES:
+ * 1. **ASSET LOADING**: loadThemeAssets() duplicated in page-builder-main.js
+ * 2. **CSS/JS INJECTION**: Similar asset injection logic might exist elsewhere
+ * 3. **ERROR HANDLING**: Asset error handling may be duplicated across files
+ * 4. **LOADING STATES**: Custom loading logic instead of using unified loader
+ * 
+ * INCONSISTENCIES WITH OTHER FILES:
+ * • page-builder-main.js has loadThemeAssets() with different implementation
+ * • Asset loading approach may differ from other dynamic loading in the system
+ * • Error handling patterns may not match other components
+ * • Loading states don't use unified-loader-manager.js
  */
 class ThemeManager {
     constructor(api) {

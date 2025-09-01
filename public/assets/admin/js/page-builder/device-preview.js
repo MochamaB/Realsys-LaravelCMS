@@ -1,6 +1,89 @@
 /**
- * Page Builder Device Preview Manager
- * Standalone implementation for page builder responsive preview
+ * DEVICE PREVIEW MANAGER
+ * ======================
+ * 
+ * GENERAL PURPOSE:
+ * Manages responsive device preview functionality for the page builder.
+ * Handles device switching (desktop/tablet/mobile), iframe resizing,
+ * and responsive toolbar controls for live preview testing.
+ * 
+ * KEY FUNCTIONS/METHODS & DUPLICATION STATUS:
+ * 
+ * DEVICE PREVIEW INITIALIZATION:
+ * • init() - **UNIQUE** - Initialize device preview system
+ * • setupContainer() - **UNIQUE** - Configure preview container and iframe
+ * • setupDeviceToolbarHandlers() - **UNIQUE** - Configure device switching controls
+ * • setupZoomControls() - **UNIQUE** - Configure zoom functionality
+ * • setupResizeHandler() - **UNIQUE** - Handle window resize events
+ * 
+ * DEVICE MANAGEMENT:
+ * • setDevice() - **UNIQUE** - Switch to specific device preview mode
+ * • getCurrentDevice() - **UNIQUE** - Get currently active device
+ * • getDeviceConfig() - **UNIQUE** - Get configuration for specific device
+ * • validateDeviceMode() - **UNIQUE** - Ensure device mode is valid
+ * 
+ * IFRAME & CONTAINER CONTROL:
+ * • resizeIframe() - **UNIQUE** - Resize iframe to match device dimensions
+ * • updateIframeStyles() - **UNIQUE** - Apply device-specific iframe styling
+ * • centerIframeInContainer() - **UNIQUE** - Center iframe within container
+ * • adjustContainerForDevice() - **UNIQUE** - Modify container for device mode
+ * 
+ * ZOOM FUNCTIONALITY:
+ * • setZoom() - **UNIQUE** - Set specific zoom level for preview
+ * • zoomIn() - **UNIQUE** - Increase preview zoom level
+ * • zoomOut() - **UNIQUE** - Decrease preview zoom level
+ * • resetZoom() - **UNIQUE** - Reset zoom to default level
+ * • calculateOptimalZoom() - **UNIQUE** - Calculate best zoom for container
+ * 
+ * RESPONSIVE BEHAVIOR:
+ * • handleWindowResize() - **UNIQUE** - Adjust preview when window resizes
+ * • maintainAspectRatio() - **UNIQUE** - Keep proper device aspect ratio
+ * • updateViewportSettings() - **UNIQUE** - Update iframe viewport meta tags
+ * • syncWithDeviceSettings() - **UNIQUE** - Sync preview with device config
+ * 
+ * TOOLBAR INTEGRATION:
+ * • updateToolbarState() - **UNIQUE** - Update toolbar to match current device
+ * • handleToolbarDeviceChange() - **UNIQUE** - Process device changes from toolbar
+ * • syncToolbarWithPreview() - **UNIQUE** - Keep toolbar in sync with preview state
+ * 
+ * DEVICE CONFIGURATION:
+ * • getDeviceSettings() - **UNIQUE** - Get settings for all supported devices
+ * • updateDeviceSettings() - **UNIQUE** - Update configuration for devices
+ * • addCustomDevice() - **UNIQUE** - Add custom device configuration
+ * • removeCustomDevice() - **UNIQUE** - Remove custom device configuration
+ * 
+ * PREVIEW UTILITIES:
+ * • refreshPreview() - **UNIQUE** - Reload preview iframe
+ * • capturePreviewScreenshot() - **UNIQUE** - Take screenshot of current preview
+ * • exportPreviewSettings() - **UNIQUE** - Export current preview configuration
+ * • importPreviewSettings() - **UNIQUE** - Import preview configuration
+ * 
+ * ERROR HANDLING:
+ * • handlePreviewError() - **UNIQUE** - Handle preview loading errors
+ * • showDeviceNotSupported() - **UNIQUE** - Display unsupported device message
+ * • fallbackToDesktop() - **UNIQUE** - Fallback to desktop mode on errors
+ * 
+ * UTILITY METHODS:
+ * • isDeviceSupported() - **UNIQUE** - Check if device mode is supported
+ * • getCurrentZoom() - **UNIQUE** - Get current zoom level
+ * • getPreviewDimensions() - **UNIQUE** - Get current preview dimensions
+ * 
+ * MAJOR DUPLICATION ISSUES:
+ * 1. **IFRAME HANDLING**: Similar iframe manipulation might exist in other files
+ * 2. **DEVICE CONFIGURATIONS**: Device settings might be duplicated elsewhere
+ * 3. **RESIZE LOGIC**: Window resize handling might overlap with other components
+ * 4. **TOOLBAR SYNC**: Toolbar state management might conflict with other toolbar code
+ * 
+ * INCONSISTENCIES WITH OTHER FILES:
+ * • Iframe manipulation approach may differ from live preview helpers
+ * • Device configuration format may not match other device-related code
+ * • Toolbar integration may conflict with other toolbar management
+ * • Error handling patterns may differ from other components
+ * 
+ * INTEGRATION POINTS:
+ * • Works closely with live preview iframe
+ * • Integrates with page builder toolbar
+ * • May interact with theme assets for proper responsive display
  */
 class PageBuilderDevicePreview {
     constructor() {

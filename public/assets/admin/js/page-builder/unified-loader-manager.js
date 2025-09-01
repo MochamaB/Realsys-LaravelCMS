@@ -1,8 +1,85 @@
 /**
- * Unified Loader Manager
+ * UNIFIED LOADER MANAGER
+ * ======================
  * 
- * Provides a single progress bar loader for all page builder operations
- * Replaces multiple scattered loaders with a consistent, centralized system
+ * GENERAL PURPOSE:
+ * Provides a centralized, consistent loading indicator system for all PageBuilder
+ * operations. Replaces scattered loading implementations with a single, unified
+ * progress bar that tracks multiple concurrent operations.
+ * 
+ * KEY FUNCTIONS/METHODS & DUPLICATION STATUS:
+ * 
+ * LOADER INITIALIZATION:
+ * • init() - **UNIQUE** - Initialize loader elements and setup
+ * • validateLoaderElements() - **UNIQUE** - Ensure all required DOM elements exist
+ * • configureLoaderStyles() - **UNIQUE** - Apply consistent styling to loader
+ * 
+ * OPERATION MANAGEMENT:
+ * • show() - **BYPASSED** - Other files implement custom loading states instead
+ * • hide() - **BYPASSED** - Other files implement custom loading states instead
+ * • update() - **UNIQUE** - Update loader progress and message
+ * • setProgress() - **UNIQUE** - Set specific progress percentage
+ * • setMessage() - **UNIQUE** - Update loader message text
+ * 
+ * MULTI-OPERATION TRACKING:
+ * • trackOperation() - **UNIQUE** - Add operation to tracking set
+ * • completeOperation() - **UNIQUE** - Mark operation as complete
+ * • getActiveOperations() - **UNIQUE** - Get list of currently running operations
+ * • calculateCombinedProgress() - **UNIQUE** - Calculate overall progress from multiple ops
+ * • isAnyOperationActive() - **UNIQUE** - Check if any operations are running
+ * 
+ * LOADER STATE MANAGEMENT:
+ * • showLoader() - **UNIQUE** - Display loader with animation
+ * • hideLoader() - **UNIQUE** - Hide loader with smooth transition
+ * • resetLoader() - **UNIQUE** - Reset to initial state
+ * • toggleLoader() - **UNIQUE** - Toggle loader visibility
+ * 
+ * PROGRESS VISUALIZATION:
+ * • updateProgressBar() - **UNIQUE** - Update visual progress indicator
+ * • animateProgress() - **UNIQUE** - Smooth progress bar animations
+ * • setProgressColor() - **UNIQUE** - Change progress color based on state
+ * • showCompletionState() - **UNIQUE** - Display completion animation
+ * • showErrorState() - **UNIQUE** - Display error state styling
+ * 
+ * MESSAGE MANAGEMENT:
+ * • updateMessage() - **UNIQUE** - Update loader message text
+ * • queueMessage() - **UNIQUE** - Queue message for display
+ * • clearMessage() - **UNIQUE** - Clear current message
+ * • formatMessage() - **UNIQUE** - Format message for display
+ * 
+ * ERROR HANDLING:
+ * • showError() - **UNIQUE** - Display error state in loader
+ * • clearError() - **UNIQUE** - Clear error state
+ * • handleOperationError() - **UNIQUE** - Process operation errors
+ * 
+ * UTILITY METHODS:
+ * • isVisible() - **UNIQUE** - Check if loader is currently visible
+ * • getCurrentProgress() - **UNIQUE** - Get current progress percentage
+ * • getOperationCount() - **UNIQUE** - Get number of active operations
+ * • destroy() - **UNIQUE** - Clean up loader resources
+ * 
+ * MAJOR DUPLICATION ISSUES:
+ * 1. **CRITICAL BYPASS**: Most components implement their own loading states instead of using this
+ * 2. **SCATTERED LOADERS**: Custom loading indicators in multiple files:
+ *    - page-builder-main.js has showGlobalLoader() and hideGlobalLoader()
+ *    - widget-library.js has showLoadingState() and hideLoadingState()
+ *    - template-manager.js has showLoadingState() and hideLoadingState()
+ *    - widget-modal-manager.js has showLoadingStep() and hideLoadingStep()
+ *    - theme-manager.js has custom loading logic
+ * 3. **INCONSISTENT UX**: Different loading styles and behaviors across components
+ * 4. **NO COORDINATION**: Multiple loaders can appear simultaneously
+ * 
+ * FILES THAT SHOULD USE THIS BUT DON'T:
+ * • page-builder-main.js - Uses custom global loader
+ * • widget-library.js - Implements separate loading states
+ * • template-manager.js - Implements separate loading states
+ * • widget-modal-manager.js - Uses custom step loading
+ * • section-manager.js - Sometimes bypasses unified loader
+ * • theme-manager.js - Uses custom asset loading indicators
+ * 
+ * ARCHITECTURAL INTENT VS REALITY:
+ * This class was designed to be the ONLY loading system but is largely ignored,
+ * resulting in inconsistent user experience and duplicated loading logic.
  */
 class UnifiedLoaderManager {
     constructor() {

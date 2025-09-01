@@ -682,6 +682,7 @@ class PageBuilderController extends Controller
         try {
             // Validate the incoming data
             $validated = $request->validate([
+                'position' => 'sometimes|integer|min:0',
                 'name' => 'sometimes|string|max:255',
                 'section_type' => 'sometimes|string|in:header,content,footer,sidebar',
                 'description' => 'sometimes|string|max:500',
@@ -714,13 +715,36 @@ class PageBuilderController extends Controller
             // Get current config
             $currentConfig = $section->config ? json_decode($section->config, true) : [];
             
-            // Merge with new data
-            $newConfig = array_merge($currentConfig, $validated);
+            // Separate position and other direct model fields from config fields
+            $directFields = [];
+            $configFields = $validated;
             
-            // Update the section
-            $section->update([
+            // Handle position as direct model field
+            if (isset($validated['position'])) {
+                $directFields['position'] = $validated['position'];
+                unset($configFields['position']);
+            }
+            
+            // Handle other direct model fields
+            if (isset($validated['css_classes'])) {
+                $directFields['css_classes'] = $validated['css_classes'];
+                unset($configFields['css_classes']);
+            }
+            
+            if (isset($validated['background_color'])) {
+                $directFields['background_color'] = $validated['background_color'];
+                unset($configFields['background_color']);
+            }
+            
+            // Merge config fields with existing config
+            $newConfig = array_merge($currentConfig, $configFields);
+            
+            // Update the section with both direct fields and config
+            $updateData = array_merge($directFields, [
                 'config' => json_encode($newConfig)
             ]);
+            
+            $section->update($updateData);
             
             // If name was provided, also update the template section name
             if (isset($validated['name']) && $section->templateSection) {

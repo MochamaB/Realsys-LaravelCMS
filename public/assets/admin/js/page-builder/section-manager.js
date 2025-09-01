@@ -1,8 +1,63 @@
 /**
- * Section Manager
+ * SECTION MANAGER
+ * ===============
  * 
- * Handles all section-related operations including CRUD, positioning,
- * and rendering sections in the GridStack layout.
+ * GENERAL PURPOSE:
+ * Manages all section-related operations including CRUD operations, positioning,
+ * rendering in GridStack, and section configuration. Acts as the primary interface
+ * between sections and the grid layout system.
+ * 
+ * KEY FUNCTIONS/METHODS & DUPLICATION STATUS:
+ * 
+ * SECTION LOADING & MANAGEMENT:
+ * • loadSections() - **DUPLICATED** - Similar logic in page-builder-main.js loadInitialContent()
+ * • createSection() - **DUPLICATED** - Section creation also in show.blade.php and page-builder-main.js
+ * • updateSection() - **UNIQUE** - Section property updates
+ * • deleteSection() - **DUPLICATED** - Section deletion also in page-builder-main.js
+ * • getSectionById() - **UNIQUE** - Section lookup by ID
+ * • getAllSections() - **UNIQUE** - Get all sections as array
+ * 
+ * GRID INTEGRATION:
+ * • renderSectionInGrid() - **UNIQUE** - Add section to GridStack layout
+ * • updateSectionPosition() - **UNIQUE** - Handle GridStack position changes
+ * • removeSectionFromGrid() - **UNIQUE** - Remove section from GridStack
+ * • refreshSectionInGrid() - **UNIQUE** - Update existing section in grid
+ * 
+ * SECTION CONFIGURATION:
+ * • openSectionConfigModal() - **DUPLICATED** - Modal handling also in show.blade.php
+ * • updateSectionConfiguration() - **UNIQUE** - Save section config changes
+ * • loadSectionConfiguration() - **UNIQUE** - Load current section settings
+ * 
+ * SECTION RENDERING:
+ * • renderSectionHTML() - **UNIQUE** - Generate section HTML structure
+ * • renderSectionControls() - **UNIQUE** - Add edit/delete controls to sections
+ * • refreshSectionContent() - **UNIQUE** - Update section content without full reload
+ * 
+ * SECTION VALIDATION:
+ * • validateSectionData() - **UNIQUE** - Validate section data before save
+ * • checkSectionPermissions() - **UNIQUE** - Verify user can modify section
+ * 
+ * EVENT HANDLING:
+ * • setupSectionEvents() - **DUPLICATED** - Event setup also scattered in show.blade.php
+ * • handleSectionClick() - **UNIQUE** - Section selection handling
+ * • handleSectionDrag() - **UNIQUE** - GridStack drag operations
+ * 
+ * UTILITY METHODS:
+ * • calculateSectionHeight() - **UNIQUE** - Auto-calculate section height based on content
+ * • generateSectionId() - **UNIQUE** - Generate unique identifiers for new sections
+ * • formatSectionForGrid() - **UNIQUE** - Prepare section data for GridStack
+ * 
+ * MAJOR DUPLICATION ISSUES:
+ * 1. **MODAL MANAGEMENT**: Section config modal handled both here and show.blade.php
+ * 2. **CREATION LOGIC**: Section creation spread across multiple files
+ * 3. **EVENT HANDLING**: Section events scattered across different components
+ * 4. **LOADING STATES**: Each file implements its own loading indicators
+ * 5. **API CALLS**: Some methods bypass the centralized API layer
+ * 
+ * INCONSISTENCIES WITH OTHER FILES:
+ * • show.blade.php has openSectionConfigModal() with different approach
+ * • page-builder-main.js has createSectionFromTemplate() with overlapping logic
+ * • Multiple files handle section deletion differently
  */
 class SectionManager {
     constructor(api, gridManager, unifiedLoader = null) {

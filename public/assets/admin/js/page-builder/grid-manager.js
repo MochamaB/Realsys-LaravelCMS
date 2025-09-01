@@ -1,8 +1,83 @@
 /**
- * Grid Manager
+ * GRID MANAGER
+ * ============
  * 
- * Handles GridStack library integration, manages the grid layout,
- * and handles drag & drop functionality.
+ * GENERAL PURPOSE:
+ * Manages GridStack library integration for the page builder canvas. Handles
+ * grid layout, section positioning, drag & drop operations, and responsive
+ * grid behavior for the visual page building interface.
+ * 
+ * KEY FUNCTIONS/METHODS & DUPLICATION STATUS:
+ * 
+ * GRIDSTACK INITIALIZATION:
+ * • initialize() - **UNIQUE** - Initialize GridStack with configuration options
+ * • setupGridEvents() - **UNIQUE** - Configure GridStack event listeners
+ * • configureGridOptions() - **UNIQUE** - Set up grid layout parameters
+ * • validateGridContainer() - **UNIQUE** - Ensure grid container exists and is valid
+ * 
+ * GRID ITEM MANAGEMENT:
+ * • addWidget() - **UNIQUE** - Add new item to GridStack
+ * • removeWidget() - **UNIQUE** - Remove item from GridStack
+ * • updateWidget() - **UNIQUE** - Update existing grid item properties
+ * • moveWidget() - **UNIQUE** - Move grid item to new position
+ * • resizeWidget() - **UNIQUE** - Resize grid item dimensions
+ * 
+ * POSITION & LAYOUT HANDLING:
+ * • handlePositionChange() - **UNIQUE** - Process GridStack position changes
+ * • updateItemPosition() - **UNIQUE** - Update individual item positions
+ * • validateGridPosition() - **UNIQUE** - Ensure positions are valid
+ * • calculateOptimalPosition() - **UNIQUE** - Find best position for new items
+ * • snapToGrid() - **UNIQUE** - Snap items to grid boundaries
+ * 
+ * GRID UTILITIES:
+ * • getGridStats() - **UNIQUE** - Get current grid statistics and metrics
+ * • clearGrid() - **UNIQUE** - Remove all items from grid
+ * • refreshGrid() - **UNIQUE** - Refresh grid layout and items
+ * • exportGridLayout() - **UNIQUE** - Export current grid configuration
+ * • importGridLayout() - **UNIQUE** - Import and apply grid configuration
+ * 
+ * RESPONSIVE BEHAVIOR:
+ * • handleScreenResize() - **UNIQUE** - Adjust grid for screen size changes
+ * • updateGridColumns() - **UNIQUE** - Change grid column count for responsiveness
+ * • adaptToViewport() - **UNIQUE** - Adapt grid layout to current viewport
+ * 
+ * DRAG & DROP SUPPORT:
+ * • enableDragDrop() - **UNIQUE** - Enable drag and drop functionality
+ * • disableDragDrop() - **UNIQUE** - Disable drag and drop
+ * • configureDragOptions() - **UNIQUE** - Set drag behavior options
+ * • handleExternalDrop() - **UNIQUE** - Process drops from external sources
+ * 
+ * GRID VALIDATION:
+ * • validateGridItem() - **UNIQUE** - Validate grid item before adding
+ * • checkGridBounds() - **UNIQUE** - Ensure items stay within grid bounds
+ * • resolveGridCollisions() - **UNIQUE** - Handle item collision resolution
+ * 
+ * ELEMENT ID MANAGEMENT:
+ * • extractSectionIdFromElement() - **UNIQUE** - Get section ID from DOM element
+ * • generateGridItemId() - **UNIQUE** - Create unique identifiers for grid items
+ * • findElementByGridId() - **UNIQUE** - Locate DOM element by grid ID
+ * 
+ * ERROR HANDLING:
+ * • handleGridError() - **UNIQUE** - Process GridStack errors
+ * • showGridLoadError() - **UNIQUE** - Display grid initialization errors
+ * • fallbackGridBehavior() - **UNIQUE** - Provide fallback when GridStack fails
+ * 
+ * UTILITY METHODS:
+ * • isGridInitialized() - **UNIQUE** - Check if GridStack is ready
+ * • getGridContainer() - **UNIQUE** - Get reference to grid container element
+ * • resetGrid() - **UNIQUE** - Reset grid to initial state
+ * 
+ * MAJOR DUPLICATION ISSUES:
+ * 1. **POSITION HANDLING**: Position change logic might be duplicated in section-manager.js
+ * 2. **ELEMENT ID EXTRACTION**: ID extraction logic might exist in other components
+ * 3. **ERROR HANDLING**: Grid error patterns may be inconsistent with other managers
+ * 4. **INITIALIZATION**: Grid setup might be duplicated in page-builder-main.js
+ * 
+ * INCONSISTENCIES WITH OTHER FILES:
+ * • Position change events may be handled differently in section-manager.js
+ * • Element ID extraction patterns may vary across components
+ * • Error handling approach may differ from other managers
+ * • Grid container validation may be duplicated in initialization code
  */
 class GridManager {
     constructor(containerSelector = '#gridStackContainer') {

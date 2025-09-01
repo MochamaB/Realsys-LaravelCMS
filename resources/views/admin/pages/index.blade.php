@@ -95,7 +95,7 @@
     </div>
 
 <!-- Designer Selection Modal -->
-<div class="modal fade" id="designerSelectionModal" tabindex="-1" aria-labelledby="designerSelectionModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+<div class="modal fade" id="designerSelectionModal" tabindex="-1" aria-labelledby="designerSelectionModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
@@ -130,22 +130,14 @@
             
             // Handle row clicks and design button clicks
             document.querySelectorAll('.clickable-row').forEach(row => {
-                // Handle row click (navigate to page show)
+                // Handle row click (trigger modal)
                 row.addEventListener('click', function(e) {
-                    // Don't navigate if the design button or action buttons were clicked
-                    if (!e.target.closest('.design-page-btn') && 
-                        !e.target.closest('.remove-item-btn') &&
+                    // Don't trigger modal if action buttons were clicked
+                    if (!e.target.closest('.remove-item-btn') &&
                         !e.target.closest('.btn-soft-success') &&
                         !e.target.closest('.btn-soft-danger')) {
-                        window.location.href = "{{ route('admin.pages.show', '') }}/" + this.getAttribute('data-page-id');
-                    }
-                });
-                
-                // Find the design button within this row and add click handler
-                const designBtn = row.querySelector('.design-page-btn');
-                if (designBtn) {
-                    designBtn.addEventListener('click', function(e) {
-                        e.stopPropagation(); // Prevent row click event
+                        
+                        // Set current page data
                         currentPageId = this.getAttribute('data-page-id');
                         currentPageTitle = this.getAttribute('data-page-title');
                         selectedPageTitleSpan.textContent = currentPageTitle;
@@ -207,8 +199,21 @@
                                 this.style.boxShadow = '';
                             });
                         });
-                    });
-                }
+                        
+                        // Show modal programmatically
+                        const modal = new bootstrap.Modal(document.getElementById('designerSelectionModal'));
+                        modal.show();
+                        
+                        // Ensure backdrop is properly removed when modal is hidden
+                        document.getElementById('designerSelectionModal').addEventListener('hidden.bs.modal', function () {
+                            // Remove any lingering backdrops
+                            document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+                            // Restore body scroll
+                            document.body.classList.remove('modal-open');
+                            document.body.style.removeProperty('padding-right');
+                        });
+                    }
+                });
             });
 
             // Delete confirmation
@@ -247,37 +252,80 @@
         });
     </script>
     <script>
-document.addEventListener("DOMContentLoaded", function () {
-    document.querySelectorAll(".clickable-row").forEach(function(row) {
-        row.addEventListener("click", function () {
-            // Get data attributes
-            const pageId = this.dataset.pageId;
-            const pageTitle = this.dataset.pageTitle;
-
-            // Pass them to modal hidden inputs or title if needed
-            document.querySelector("#designerSelectionModal input[name='page_id']").value = pageId;
-            document.querySelector("#designerSelectionModal .modal-title").innerText = pageTitle;
-
-            // Show modal programmatically
-            var modal = new bootstrap.Modal(document.getElementById('designerSelectionModal'));
-            modal.show();
-        });
-    });
-});
-
 // Auto-trigger modal for newly created pages
 @if(session('show_builder_modal') && session('created_page_id'))
 document.addEventListener('DOMContentLoaded', function() {
     const pageId = {{ session('created_page_id') }};
     const pageTitle = 'Select Page Builder';
     
-    // Set modal data
-    document.querySelector("#designerSelectionModal input[name='page_id']").value = pageId;
-    document.querySelector("#designerSelectionModal .modal-title").innerText = pageTitle;
+    // Set modal data using the existing structure
+    const selectedPageTitleSpan = document.querySelector('#selectedPageTitle span');
+    const designerOptionsContainer = document.getElementById('designerOptionsContainer');
+    
+    if (selectedPageTitleSpan) {
+        selectedPageTitleSpan.textContent = pageTitle;
+    }
+    
+    // Generate designer option cards
+    if (designerOptionsContainer) {
+        designerOptionsContainer.innerHTML = `
+            <div class="col-md-6">
+                <a href="/admin/pages/${pageId}/page-builder" class="text-decoration-none">
+                    <div class="card h-100" style="transition: all 0.3s ease;">
+                        <div class="card-body text-center">
+                            <div class="avatar-lg mx-auto mb-4">
+                                <div class="avatar-title bg-primary-subtle text-primary rounded-circle fs-2">
+                                    <i class="ri-layout-grid-line"></i>
+                                </div>
+                            </div>
+                            <h5 class="card-title text-dark">Page Builder</h5>
+                            <p class="text-muted mb-3">Structure-based layout designer with sections and widgets</p>
+                            <div class="features text-start">
+                                <div class="mb-2"><i class="ri-check-line text-success me-2"></i>Drag & drop sections</div>
+                                <div class="mb-2"><i class="ri-check-line text-success me-2"></i>Widget library</div>
+                                <div class="mb-2"><i class="ri-check-line text-success me-2"></i>Responsive layouts</div>
+                                <div class="mb-2"><i class="ri-check-line text-success me-2"></i>Template system</div>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-6">
+                <a href="/admin/pages/${pageId}/live-designer" class="text-decoration-none">
+                    <div class="card h-100" style="transition: all 0.3s ease;">
+                        <div class="card-body text-center">
+                            <div class="avatar-lg mx-auto mb-4">
+                                <div class="avatar-title bg-info-subtle text-info rounded-circle fs-2">
+                                    <i class="ri-brush-line"></i>
+                                </div>
+                            </div>
+                            <h5 class="card-title text-dark">Live Designer</h5>
+                            <p class="text-muted mb-3">Visual WYSIWYG editor for precise content design</p>
+                            <div class="features text-start">
+                                <div class="mb-2"><i class="ri-check-line text-success me-2"></i>Visual editing</div>
+                                <div class="mb-2"><i class="ri-check-line text-success me-2"></i>Component styles</div>
+                                <div class="mb-2"><i class="ri-check-line text-success me-2"></i>Live preview</div>
+                                <div class="mb-2"><i class="ri-check-line text-success me-2"></i>Advanced widgets</div>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        `;
+    }
     
     // Show modal automatically
     const modal = new bootstrap.Modal(document.getElementById('designerSelectionModal'));
     modal.show();
+    
+    // Ensure backdrop is properly removed when modal is hidden
+    document.getElementById('designerSelectionModal').addEventListener('hidden.bs.modal', function () {
+        // Remove any lingering backdrops
+        document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+        // Restore body scroll
+        document.body.classList.remove('modal-open');
+        document.body.style.removeProperty('padding-right');
+    });
 });
 @endif
 </script>

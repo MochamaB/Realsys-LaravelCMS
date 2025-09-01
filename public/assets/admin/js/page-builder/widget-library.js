@@ -1,8 +1,66 @@
 /**
- * Widget Library Manager
+ * WIDGET LIBRARY MANAGER
+ * ======================
  * 
- * Handles loading and rendering available widgets in the left sidebar.
- * Manages drag & drop functionality for widgets.
+ * GENERAL PURPOSE:
+ * Manages the widget library in the left sidebar, including loading, rendering,
+ * and drag & drop functionality for available widgets. Provides the interface
+ * for users to discover and add widgets to sections.
+ * 
+ * KEY FUNCTIONS/METHODS & DUPLICATION STATUS:
+ * 
+ * WIDGET LIBRARY INITIALIZATION:
+ * • init() - **UNIQUE** - Initialize widget library in sidebar
+ * • loadAvailableWidgets() - **DUPLICATED** - Similar logic in widget-manager.js
+ * • loadFallbackWidgets() - **UNIQUE** - Provide fallback widgets during development
+ * 
+ * WIDGET RENDERING IN SIDEBAR:
+ * • renderWidgets() - **UNIQUE** - Display all widgets in sidebar grid
+ * • renderWidgetsByCategory() - **UNIQUE** - Group widgets by category in sidebar
+ * • renderWidgetCard() - **UNIQUE** - Generate individual widget cards for sidebar
+ * • updateWidgetLibraryUI() - **UNIQUE** - Refresh sidebar widget display
+ * 
+ * DRAG & DROP FUNCTIONALITY:
+ * • setupDragAndDrop() - **UNIQUE** - Configure draggable widgets in sidebar
+ * • handleDragStart() - **UNIQUE** - Start drag operation for widgets
+ * • handleDragEnd() - **UNIQUE** - Clean up after drag operation
+ * • createDragPreview() - **UNIQUE** - Visual preview during drag
+ * • setDragData() - **UNIQUE** - Set data for drop operations
+ * 
+ * WIDGET FILTERING & SEARCH:
+ * • filterWidgets() - **UNIQUE** - Filter widgets by search term
+ * • filterByCategory() - **UNIQUE** - Show/hide widgets by category
+ * • setupSearchHandlers() - **UNIQUE** - Configure search functionality
+ * • resetFilters() - **UNIQUE** - Clear all applied filters
+ * 
+ * WIDGET INFORMATION:
+ * • showWidgetTooltip() - **UNIQUE** - Display widget information on hover
+ * • hideWidgetTooltip() - **UNIQUE** - Hide widget tooltip
+ * • getWidgetInfo() - **UNIQUE** - Get detailed widget information
+ * • formatWidgetDescription() - **UNIQUE** - Format widget descriptions for display
+ * 
+ * ERROR & LOADING STATES:
+ * • showLoadingState() - **DUPLICATED** - Loading states scattered in multiple files
+ * • hideLoadingState() - **DUPLICATED** - Loading states scattered in multiple files
+ * • showErrorState() - **UNIQUE** - Display error when widgets fail to load
+ * • showEmptyState() - **UNIQUE** - Show message when no widgets available
+ * 
+ * UTILITY METHODS:
+ * • getWidgetsByCategory() - **UNIQUE** - Group widgets by category for filtering
+ * • isWidgetAvailable() - **UNIQUE** - Check if widget is available for use
+ * • refreshLibrary() - **UNIQUE** - Reload widget library from API
+ * 
+ * MAJOR DUPLICATION ISSUES:
+ * 1. **WIDGET LOADING**: loadAvailableWidgets() duplicated in widget-manager.js
+ * 2. **LOADING STATES**: Loading indicators implemented separately from unified loader
+ * 3. **API CALLS**: Some direct API calls bypass the centralized PageBuilderAPI
+ * 4. **DRAG DATA**: Drag data format might be inconsistent with drop handlers
+ * 
+ * INCONSISTENCIES WITH OTHER FILES:
+ * • widget-manager.js has loadAvailableWidgets() with similar but different logic
+ * • Drag data format may not match expectations in drop handlers
+ * • Loading states don't use unified-loader-manager.js
+ * • Some API calls bypass page-builder-api.js layer
  */
 class WidgetLibrary {
     constructor(api) {

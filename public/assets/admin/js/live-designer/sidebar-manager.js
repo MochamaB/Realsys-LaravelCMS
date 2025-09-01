@@ -1,307 +1,191 @@
 /**
  * Sidebar Manager for Live Designer
- * Handles sidebar interactions and state management
+ * Handles sidebar collapse/expand functionality via header buttons only
  */
 class SidebarManager {
-    constructor(editor) {
-        this.editor = editor;
-        this.leftSidebar = document.getElementById('left-sidebar');
-        this.rightSidebar = document.getElementById('right-sidebar');
-        this.canvasArea = document.getElementById('canvas-area');
-        this.selectedComponent = null;
-        this.rightSidebarManuallyToggled = false;
+    constructor() {
+        this.leftSidebarContainer = document.getElementById('leftSidebarContainer');
+        this.rightSidebarContainer = document.getElementById('right-sidebar-container');
+        this.leftToggleBtn = document.getElementById('sidebarToggleBtn');
+        this.rightToggleBtn = document.getElementById('rightSidebarToggleBtn');
         
-        this.initializeEventListeners();
-        this.initializeEditorEvents();
-        this.initializeAutoCollapse();
-        console.log('🎛️ SidebarManager initialized');
+        this.init();
     }
     
     /**
-     * Initialize event listeners for sidebar controls
+     * Initialize sidebar manager
      */
-    initializeEventListeners() {
-        // Left sidebar toggle
-        const leftToggle = document.getElementById('toggle-left-sidebar');
-        if (leftToggle) {
-            leftToggle.addEventListener('click', () => this.toggleLeftSidebar());
-        }
+    init() {
+        console.log('🎛️ SidebarManager initializing...');
         
-        // Right sidebar toggle
-        const rightToggle = document.getElementById('toggle-right-sidebar');
-        if (rightToggle) {
-            rightToggle.addEventListener('click', () => this.toggleRightSidebar());
-        }
+        // Setup left sidebar toggle with retry
+        this.setupLeftSidebarToggle();
         
-        // Handle collapsed icon clicks
-        this.initializeCollapsedIconHandlers();
+        // Setup right sidebar toggle with retry
+        this.setupRightSidebarToggle();
+        
+        console.log('✅ SidebarManager initialized');
     }
     
     /**
-     * Initialize collapsed icon handlers
+     * Setup left sidebar toggle functionality
      */
-    initializeCollapsedIconHandlers() {
-        // Left sidebar collapsed icons
-        const leftCollapsedIcons = this.leftSidebar?.querySelectorAll('.collapsed-icon');
-        if (leftCollapsedIcons) {
-            leftCollapsedIcons.forEach(icon => {
-                icon.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    
-                    // If sidebar is collapsed, expand it and switch to the tab
-                    if (this.leftSidebar.classList.contains('collapsed')) {
-                        this.toggleLeftSidebar();
-                        
-                        // Switch to the corresponding tab after expansion
-                        setTimeout(() => {
-                            const tabName = icon.dataset.tab;
-                            const tabButton = document.getElementById(`${tabName}-tab`);
-                            if (tabButton) {
-                                tabButton.click();
-                            }
-                        }, 350); // Wait for animation to complete
-                    }
-                });
-            });
+    setupLeftSidebarToggle() {
+        if (!this.leftToggleBtn || !this.leftSidebarContainer) {
+            // Retry after delay if elements not found
+            setTimeout(() => {
+                this.leftToggleBtn = document.getElementById('sidebarToggleBtn');
+                this.leftSidebarContainer = document.getElementById('leftSidebarContainer');
+                if (this.leftToggleBtn && this.leftSidebarContainer) {
+                    this.attachLeftSidebarEvents();
+                } else {
+                    console.warn('⚠️ Left sidebar elements not found after retry');
+                }
+            }, 1000);
+            return;
         }
         
-        // Right sidebar collapsed icons
-        const rightCollapsedIcons = this.rightSidebar?.querySelectorAll('.collapsed-icon');
-        if (rightCollapsedIcons) {
-            rightCollapsedIcons.forEach(icon => {
-                icon.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    
-                    // If sidebar is collapsed, expand it and switch to the tab
-                    if (this.rightSidebar.classList.contains('collapsed')) {
-                        this.toggleRightSidebar();
-                        
-                        // Switch to the corresponding tab after expansion
-                        setTimeout(() => {
-                            const tabName = icon.dataset.tab;
-                            const tabButton = document.getElementById(`${tabName}-tab`);
-                            if (tabButton) {
-                                tabButton.click();
-                            }
-                        }, 350); // Wait for animation to complete
-                    }
-                });
-            });
+        this.attachLeftSidebarEvents();
+    }
+    
+    /**
+     * Attach left sidebar event listeners
+     */
+    attachLeftSidebarEvents() {
+        this.leftToggleBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.toggleLeftSidebar();
+        });
+        console.log('✅ Left sidebar toggle setup complete');
+    }
+    
+    /**
+     * Setup right sidebar toggle functionality
+     */
+    setupRightSidebarToggle() {
+        if (!this.rightToggleBtn || !this.rightSidebarContainer) {
+            // Retry after delay if elements not found
+            setTimeout(() => {
+                this.rightToggleBtn = document.getElementById('rightSidebarToggleBtn');
+                this.rightSidebarContainer = document.getElementById('right-sidebar-container');
+                if (this.rightToggleBtn && this.rightSidebarContainer) {
+                    this.attachRightSidebarEvents();
+                } else {
+                    console.warn('⚠️ Right sidebar elements not found after retry');
+                }
+            }, 1000);
+            return;
         }
+        
+        this.attachRightSidebarEvents();
+    }
+    
+    /**
+     * Attach right sidebar event listeners
+     */
+    attachRightSidebarEvents() {
+        this.rightToggleBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.toggleRightSidebar();
+        });
+        
+        // Set initial icon state
+        this.updateRightSidebarIcon();
+        console.log('✅ Right sidebar toggle setup complete');
     }
     
     /**
      * Toggle left sidebar collapsed state
      */
     toggleLeftSidebar() {
-        if (!this.leftSidebar) return;
+        if (!this.leftSidebarContainer) return;
         
-        this.leftSidebar.classList.toggle('collapsed');
+        this.leftSidebarContainer.classList.toggle('collapsed');
+        this.updateLeftSidebarIcon();
         
-        // Update button icon
-        const toggleBtn = document.getElementById('toggle-left-sidebar');
-        if (toggleBtn) {
-            const icon = toggleBtn.querySelector('i');
-            if (this.leftSidebar.classList.contains('collapsed')) {
-                icon.className = 'ri-layout-left-line';
-                toggleBtn.title = 'Expand Component Library';
-            } else {
-                icon.className = 'ri-layout-left-2-line';
-                toggleBtn.title = 'Collapse Component Library';
-            }
-        }
-        
-        // Trigger canvas resize if GrapesJS is loaded
-        setTimeout(() => {
-            if (this.editor && typeof this.editor.trigger === 'function') {
-                this.editor.trigger('canvas:update-dimensions');
-            }
-        }, 300);
-        
-        console.log('🔄 Left sidebar toggled:', this.leftSidebar.classList.contains('collapsed') ? 'collapsed' : 'expanded');
+        console.log('📋 Left sidebar toggled:', 
+            this.leftSidebarContainer.classList.contains('collapsed') ? 'collapsed' : 'expanded');
     }
     
     /**
      * Toggle right sidebar collapsed state
      */
     toggleRightSidebar() {
-        if (!this.rightSidebar) return;
+        if (!this.rightSidebarContainer) return;
         
-        // Mark as manually toggled
-        this.rightSidebarManuallyToggled = true;
+        this.rightSidebarContainer.classList.toggle('collapsed');
+        this.updateRightSidebarIcon();
         
-        this.rightSidebar.classList.toggle('collapsed');
-        
-        // Update button icon
-        const toggleBtn = document.getElementById('toggle-right-sidebar');
-        if (toggleBtn) {
-            const icon = toggleBtn.querySelector('i');
-            if (this.rightSidebar.classList.contains('collapsed')) {
-                icon.className = 'ri-layout-right-line';
-                toggleBtn.title = 'Show Properties Panel';
-            } else {
-                icon.className = 'ri-layout-right-2-line';
-                toggleBtn.title = 'Hide Properties Panel';
-            }
-        }
-        
-        // Trigger canvas resize if GrapesJS is loaded
-        this.triggerCanvasResize();
-        
-        // Reset manual toggle flag after a delay to allow auto-collapse again
-        setTimeout(() => {
-            this.rightSidebarManuallyToggled = false;
-        }, 2000);
-        
-        console.log('🔄 Right sidebar manually toggled:', this.rightSidebar.classList.contains('collapsed') ? 'collapsed' : 'expanded');
+        console.log('🔧 Right sidebar toggled:', 
+            this.rightSidebarContainer.classList.contains('collapsed') ? 'collapsed' : 'expanded');
     }
     
     /**
-     * Get sidebar states
+     * Update left sidebar toggle button icon
+     */
+    updateLeftSidebarIcon() {
+        if (!this.leftToggleBtn) return;
+        
+        const icon = this.leftToggleBtn.querySelector('i');
+        if (!icon) return;
+        
+        if (this.leftSidebarContainer.classList.contains('collapsed')) {
+            icon.className = 'ri-arrow-right-line';
+        } else {
+            icon.className = 'ri-arrow-left-line';
+        }
+    }
+    
+    /**
+     * Update right sidebar toggle button icon
+     */
+    updateRightSidebarIcon() {
+        if (!this.rightToggleBtn) return;
+        
+        const icon = this.rightToggleBtn.querySelector('i');
+        if (!icon) return;
+        
+        if (this.rightSidebarContainer.classList.contains('collapsed')) {
+            icon.className = 'ri-arrow-left-line';
+        } else {
+            icon.className = 'ri-arrow-right-line';
+        }
+    }
+    
+    /**
+     * Get current sidebar states
      */
     getSidebarStates() {
         return {
-            leftCollapsed: this.leftSidebar?.classList.contains('collapsed') || false,
-            rightCollapsed: this.rightSidebar?.classList.contains('collapsed') || false
+            leftCollapsed: this.leftSidebarContainer?.classList.contains('collapsed') || false,
+            rightCollapsed: this.rightSidebarContainer?.classList.contains('collapsed') || false
         };
     }
     
     /**
-     * Set sidebar states
+     * Set sidebar states programmatically
      */
     setSidebarStates(states) {
         if (states.leftCollapsed !== undefined) {
-            if (states.leftCollapsed && !this.leftSidebar?.classList.contains('collapsed')) {
-                this.toggleLeftSidebar();
-            } else if (!states.leftCollapsed && this.leftSidebar?.classList.contains('collapsed')) {
+            const isCurrentlyCollapsed = this.leftSidebarContainer?.classList.contains('collapsed');
+            if (states.leftCollapsed !== isCurrentlyCollapsed) {
                 this.toggleLeftSidebar();
             }
         }
         
         if (states.rightCollapsed !== undefined) {
-            if (states.rightCollapsed && !this.rightSidebar?.classList.contains('collapsed')) {
+            const isCurrentlyCollapsed = this.rightSidebarContainer?.classList.contains('collapsed');
+            if (states.rightCollapsed !== isCurrentlyCollapsed) {
                 this.toggleRightSidebar();
-            } else if (!states.rightCollapsed && this.rightSidebar?.classList.contains('collapsed')) {
-                this.toggleRightSidebar();
             }
         }
-    }
-    
-    /**
-     * Initialize editor events for component selection
-     */
-    initializeEditorEvents() {
-        if (!this.editor) return;
-        
-        // Listen for component selection
-        if (typeof this.editor.on === 'function') {
-            this.editor.on('component:selected', (component) => {
-                this.selectedComponent = component;
-                this.handleComponentSelection();
-            });
-            
-            this.editor.on('component:deselected', () => {
-                this.selectedComponent = null;
-                this.handleComponentDeselection();
-            });
-        }
-    }
-    
-    /**
-     * Initialize auto-collapse behavior
-     */
-    initializeAutoCollapse() {
-        // Auto-collapse right sidebar on page load
-        setTimeout(() => {
-            if (this.rightSidebar && !this.rightSidebar.classList.contains('collapsed')) {
-                this.collapseRightSidebar();
-            }
-        }, 500);
-    }
-    
-    /**
-     * Handle component selection - show right sidebar
-     */
-    handleComponentSelection() {
-        if (this.rightSidebar && this.rightSidebar.classList.contains('collapsed')) {
-            this.expandRightSidebar();
-        }
-        console.log('🎯 Component selected - right sidebar expanded');
-    }
-    
-    /**
-     * Handle component deselection - auto-collapse if not manually toggled
-     */
-    handleComponentDeselection() {
-        if (!this.rightSidebarManuallyToggled && this.rightSidebar && !this.rightSidebar.classList.contains('collapsed')) {
-            setTimeout(() => {
-                // Double check no component is selected after a brief delay
-                if (!this.selectedComponent) {
-                    this.collapseRightSidebar();
-                }
-            }, 300);
-        }
-        console.log('🎯 Component deselected - right sidebar auto-collapsed');
-    }
-    
-    /**
-     * Collapse right sidebar
-     */
-    collapseRightSidebar() {
-        if (this.rightSidebar && !this.rightSidebar.classList.contains('collapsed')) {
-            this.rightSidebar.classList.add('collapsed');
-            this.updateRightSidebarToggleButton();
-            this.triggerCanvasResize();
-        }
-    }
-    
-    /**
-     * Expand right sidebar
-     */
-    expandRightSidebar() {
-        if (this.rightSidebar && this.rightSidebar.classList.contains('collapsed')) {
-            this.rightSidebar.classList.remove('collapsed');
-            this.updateRightSidebarToggleButton();
-            this.triggerCanvasResize();
-        }
-    }
-    
-    /**
-     * Update right sidebar toggle button state
-     */
-    updateRightSidebarToggleButton() {
-        const toggleBtn = document.getElementById('toggle-right-sidebar');
-        if (toggleBtn) {
-            const icon = toggleBtn.querySelector('i');
-            if (this.rightSidebar?.classList.contains('collapsed')) {
-                icon.className = 'ri-layout-right-line';
-                toggleBtn.title = 'Show Properties Panel';
-            } else {
-                icon.className = 'ri-layout-right-2-line';
-                toggleBtn.title = 'Hide Properties Panel';
-            }
-        }
-    }
-    
-    /**
-     * Trigger canvas resize
-     */
-    triggerCanvasResize() {
-        setTimeout(() => {
-            if (this.editor && typeof this.editor.trigger === 'function') {
-                this.editor.trigger('canvas:update-dimensions');
-            }
-        }, 300);
-    }
-    
-    /**
-     * Clean up sidebar manager
-     */
-    destroy() {
-        // Remove event listeners would go here if we stored references
-        console.log('🗑️ SidebarManager destroyed');
     }
 }
+
+// Initialize sidebar manager when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    window.sidebarManager = new SidebarManager();
+});
 
 // Export for use in other modules
 window.SidebarManager = SidebarManager;

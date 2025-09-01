@@ -1,8 +1,80 @@
 /**
- * Template Manager
+ * TEMPLATE MANAGER
+ * ================
  * 
- * Handles loading, rendering, and creating sections from templates.
- * Manages section templates in the left sidebar and template creation workflow.
+ * GENERAL PURPOSE:
+ * Manages section templates in the left sidebar and handles template-based section
+ * creation. Provides drag & drop functionality for templates and manages the
+ * template selection workflow for rapid page building.
+ * 
+ * KEY FUNCTIONS/METHODS & DUPLICATION STATUS:
+ * 
+ * TEMPLATE INITIALIZATION:
+ * • init() - **UNIQUE** - Initialize template manager and sidebar
+ * • loadAvailableTemplates() - **UNIQUE** - Load section templates from API
+ * • loadFallbackTemplates() - **UNIQUE** - Provide fallback templates during development
+ * • groupTemplatesByCategory() - **UNIQUE** - Organize templates by category for sidebar
+ * 
+ * TEMPLATE RENDERING IN SIDEBAR:
+ * • renderTemplates() - **UNIQUE** - Display all templates in sidebar grid
+ * • renderTemplatesByCategory() - **UNIQUE** - Group templates by category in sidebar
+ * • renderTemplateCard() - **UNIQUE** - Generate individual template cards
+ * • updateTemplateUI() - **UNIQUE** - Refresh template display in sidebar
+ * 
+ * DRAG & DROP FUNCTIONALITY:
+ * • setupDragAndDrop() - **UNIQUE** - Configure draggable templates in sidebar
+ * • handleDragStart() - **UNIQUE** - Start drag operation for templates
+ * • handleDragEnd() - **UNIQUE** - Clean up after template drag
+ * • createDragPreview() - **UNIQUE** - Visual preview during template drag
+ * • setTemplateDragData() - **UNIQUE** - Set data for template drop operations
+ * 
+ * TEMPLATE-BASED SECTION CREATION:
+ * • createSectionFromTemplate() - **DUPLICATED** - Similar logic in page-builder-main.js and show.blade.php
+ * • processTemplateCreation() - **UNIQUE** - Handle template selection and creation
+ * • validateTemplateData() - **UNIQUE** - Validate template before section creation
+ * • applyTemplateDefaults() - **UNIQUE** - Apply default values from template
+ * 
+ * TEMPLATE INFORMATION:
+ * • getTemplateInfo() - **UNIQUE** - Get detailed template information
+ * • showTemplatePreview() - **UNIQUE** - Display template preview/thumbnail
+ * • hideTemplatePreview() - **UNIQUE** - Hide template preview
+ * • formatTemplateDescription() - **UNIQUE** - Format template descriptions
+ * 
+ * TEMPLATE FILTERING & SEARCH:
+ * • filterTemplates() - **UNIQUE** - Filter templates by search term
+ * • filterByCategory() - **UNIQUE** - Show/hide templates by category
+ * • setupTemplateSearch() - **UNIQUE** - Configure template search functionality
+ * • resetTemplateFilters() - **UNIQUE** - Clear all template filters
+ * 
+ * ERROR & LOADING STATES:
+ * • showLoadingState() - **DUPLICATED** - Loading states scattered in multiple files
+ * • hideLoadingState() - **DUPLICATED** - Loading states scattered in multiple files
+ * • showErrorState() - **UNIQUE** - Display error when templates fail to load
+ * • showEmptyState() - **UNIQUE** - Show message when no templates available
+ * 
+ * TEMPLATE MANAGEMENT:
+ * • refreshTemplateLibrary() - **UNIQUE** - Reload templates from API
+ * • isTemplateAvailable() - **UNIQUE** - Check if template is available for use
+ * • getTemplatesByType() - **UNIQUE** - Get templates filtered by type
+ * • validateTemplateCompatibility() - **UNIQUE** - Check template compatibility
+ * 
+ * UTILITY METHODS:
+ * • generateTemplateId() - **UNIQUE** - Generate unique identifiers for templates
+ * • formatTemplateForAPI() - **UNIQUE** - Prepare template data for API calls
+ * • cleanupTemplateData() - **UNIQUE** - Clean template data before processing
+ * 
+ * MAJOR DUPLICATION ISSUES:
+ * 1. **SECTION CREATION**: createSectionFromTemplate() duplicated in multiple files
+ * 2. **LOADING STATES**: Loading indicators implemented separately from unified loader
+ * 3. **TEMPLATE SELECTION**: Template selection logic scattered across components
+ * 4. **DRAG DATA**: Template drag data format might be inconsistent with drop handlers
+ * 5. **API CALLS**: Some direct API calls bypass the centralized PageBuilderAPI
+ * 
+ * INCONSISTENCIES WITH OTHER FILES:
+ * • page-builder-main.js has createSectionFromTemplate() with overlapping logic
+ * • show.blade.php has template selection modal with different approach
+ * • Template drag data format may not match expectations in drop handlers
+ * • Loading states don't use unified-loader-manager.js
  */
 class TemplateManager {
     constructor(api, sectionManager) {

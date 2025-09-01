@@ -1,8 +1,61 @@
 /**
- * PageBuilder API Layer
+ * PAGEBUILDER API LAYER
+ * ======================
  * 
- * Handles all communication with the PageBuilder API endpoints.
- * Provides a clean interface for CRUD operations and error handling.
+ * GENERAL PURPOSE:
+ * Centralized API communication layer for all PageBuilder operations. 
+ * Provides consistent error handling, request formatting, and response parsing
+ * for all backend communication. Should be the ONLY place making API calls.
+ * 
+ * KEY FUNCTIONS/METHODS & DUPLICATION STATUS:
+ * 
+ * HTTP REQUEST HANDLING:
+ * • makeRequest() - **UNIQUE** - Centralized HTTP request handler with error handling
+ * • handleApiError() - **UNIQUE** - Standardized API error processing
+ * • formatResponse() - **UNIQUE** - Consistent response formatting
+ * 
+ * SECTION API METHODS:
+ * • getSections() - **BYPASSED** - Some files make direct fetch() calls instead
+ * • createSection() - **BYPASSED** - Some files make direct fetch() calls instead  
+ * • updateSection() - **UNIQUE** - Section configuration updates
+ * • deleteSection() - **UNIQUE** - Section deletion
+ * • getSectionWidgets() - **UNIQUE** - Load widgets for specific section
+ * • updateSectionPosition() - **UNIQUE** - GridStack position updates
+ * • getRenderedPage() - **UNIQUE** - Full page with rendered HTML content
+ * 
+ * WIDGET API METHODS:
+ * • getAvailableWidgets() - **UNIQUE** - Load widget library for sidebar
+ * • createWidget() - **UNIQUE** - Add widget to section
+ * • updateWidget() - **UNIQUE** - Widget configuration updates
+ * • deleteWidget() - **UNIQUE** - Widget deletion
+ * • updateWidgetPosition() - **UNIQUE** - Widget positioning within sections
+ * 
+ * TEMPLATE API METHODS:
+ * • getSectionTemplates() - **UNIQUE** - Load available section templates
+ * • createSectionFromTemplate() - **UNIQUE** - Template-based section creation
+ * 
+ * CONTENT API METHODS:
+ * • getContentTypes() - **UNIQUE** - Load available content types for widgets
+ * • getContentItems() - **UNIQUE** - Load content items for specific content type
+ * • createContentItem() - **UNIQUE** - Create new content with default values
+ * 
+ * THEME API METHODS:
+ * • getThemeAssets() - **UNIQUE** - Load CSS/JS assets for live preview
+ * 
+ * CONFIGURATION METHODS:
+ * • getPageConfiguration() - **UNIQUE** - Load page-level settings
+ * • updatePageConfiguration() - **UNIQUE** - Update page settings
+ * 
+ * MAJOR DUPLICATION ISSUES:
+ * 1. **CRITICAL**: Many components bypass this API and make direct fetch() calls
+ * 2. **INCONSISTENT**: Error handling varies across direct API calls
+ * 3. **SCATTERED**: Some files duplicate parts of makeRequest() logic
+ * 4. **NO CACHING**: API responses not cached, causing repeated requests
+ * 
+ * COMPONENTS THAT BYPASS THIS API:
+ * • show.blade.php - Makes direct fetch() calls for section operations
+ * • Some manager classes - Inconsistent API usage
+ * • Widget modal manager - Mixed approach between API and direct calls
  */
 class PageBuilderAPI {
     constructor(config = {}) {

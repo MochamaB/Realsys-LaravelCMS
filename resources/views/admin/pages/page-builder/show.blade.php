@@ -316,30 +316,40 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 100); // Small delay to ensure all scripts are loaded
 });
 
-// Add this function to initialize WidgetModalManager
+// FIXED: Widget Modal Manager Initialization
 function initializeWidgetModalManager() {
     console.log('🔄 Initializing WidgetModalManager...');
     
-    try {
-        window.widgetModalManager = new WidgetModalManager(
-            '/admin/api/page-builder',
-            window.csrfToken
-        );
-        
-        // Mark as ready
-        window.widgetModalManagerReady = true;
-        console.log('✅ WidgetModalManager initialized successfully');
-        
-        // Process any pending requests
-        processPendingWidgetModalRequests();
-        
-    } catch (error) {
-        console.error('❌ Failed to initialize WidgetModalManager:', error);
-        // Still mark as ready to prevent infinite waiting
-        window.widgetModalManagerReady = true;
-    }
+    // Wait for WidgetModalManager class to be available
+    const checkWidgetModalManager = () => {
+        if (typeof window.WidgetModalManager === 'function') {
+            try {
+                window.widgetModalManager = new WidgetModalManager(
+                    '/admin/api/page-builder',
+                    window.csrfToken
+                );
+                
+                // Mark as ready
+                window.widgetModalManagerReady = true;
+                console.log('✅ WidgetModalManager initialized successfully');
+                
+                // Process any pending requests
+                processPendingWidgetModalRequests();
+                
+            } catch (error) {
+                console.error('❌ Failed to initialize WidgetModalManager:', error);
+                // Still mark as ready to prevent infinite waiting
+                window.widgetModalManagerReady = true;
+            }
+        } else {
+            console.log('⏳ Waiting for WidgetModalManager class...');
+            setTimeout(checkWidgetModalManager, 100);
+        }
+    };
+    
+    checkWidgetModalManager();
 }
-// Add this function to handle pending requests
+// Process pending widget modal requests
 function processPendingWidgetModalRequests() {
     if (window.pendingWidgetModalRequests.length > 0) {
         console.log(`📦 Processing ${window.pendingWidgetModalRequests.length} pending widget modal requests`);
@@ -352,7 +362,6 @@ function processPendingWidgetModalRequests() {
         window.pendingWidgetModalRequests = [];
     }
 }
-
 // Legacy Widget Modal Handlers - Replaced by WidgetModalManager
 // These functions are kept for backward compatibility but are no longer used
 // Sidebar toggle functionality
@@ -401,34 +410,120 @@ function initSidebarToggle() {
     });
 }
 
-// Setup section templates modal functionality
-function setupSectionTemplatesModal() {
-    console.log('🎯 Setting up section templates modal...');
+// FIXED: Section Templates Modal Setup
+function setupSectionTemplatesModalFixed() {
+    console.log('🎯 Setting up section templates modal (FIXED)...');
     
-    // Get the Add Section button from toolbar
-    const addSectionBtn = document.getElementById('addSectionBtn');
+    // Wait for DOM elements to be ready and try multiple selectors
+    const findAddSectionButton = () => {
+        // Try multiple possible selectors for the Add Section button
+        const selectors = [
+            '#addSectionBtn',
+            '[data-bs-target="#sectionTemplatesModal"]',
+            '.add-section-btn',
+            'button[onclick*="sectionTemplates"]',
+            'button:contains("Add Section")'
+        ];
+        
+        for (const selector of selectors) {
+            const btn = document.querySelector(selector);
+            if (btn) {
+                console.log('✅ Found Add Section button with selector:', selector);
+                return btn;
+            }
+        }
+        
+        console.warn('⚠️ Add Section button not found with any selector');
+        return null;
+    };
+    
+    const addSectionBtn = findAddSectionButton();
     if (!addSectionBtn) {
         console.error('❌ Add Section button not found in toolbar');
         return;
     }
     
-    // Override the default modal trigger to load templates dynamically
-    addSectionBtn.addEventListener('click', function(e) {
+    // Remove any existing listeners to prevent duplicates
+    const newAddSectionBtn = addSectionBtn.cloneNode(true);
+    addSectionBtn.parentNode.replaceChild(newAddSectionBtn, addSectionBtn);
+    
+    // Add new event listener
+    newAddSectionBtn.addEventListener('click', function(e) {
         e.preventDefault();
-        console.log('🔘 Add Section button clicked');
+        e.stopPropagation();
+        console.log('📘 Add Section button clicked (FIXED)');
         
         // Load templates into modal before showing
         loadSectionTemplatesIntoModal();
         
         // Show the modal
-        const modal = new bootstrap.Modal(document.getElementById('sectionTemplatesModal'));
-        modal.show();
+        const modal = document.getElementById('sectionTemplatesModal');
+        if (modal) {
+            const bsModal = new bootstrap.Modal(modal);
+            bsModal.show();
+        } else {
+            console.error('❌ Section Templates Modal not found');
+            alert('Section templates modal not found. Please refresh the page.');
+        }
     });
     
     // Setup modal event handlers
     setupSectionTemplateModalHandlers();
 }
 
+function setupAddWidgetButtonHandlers() {
+    console.log('🎯 Setting up Add Widget button handlers...');
+    
+    // Method 1: Direct button click handlers
+    document.addEventListener('click', function(e) {
+        // Handle Add Widget buttons
+        if (e.target.matches('[data-action="add-widget"]') || 
+            e.target.closest('[data-action="add-widget"]')) {
+            
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const button = e.target.closest('[data-action="add-widget"]') || e.target;
+            const sectionId = button.dataset.sectionId || button.getAttribute('data-section-id');
+            const sectionName = button.dataset.sectionName || button.getAttribute('data-section-name') || 'Section';
+            
+            console.log('🎯 Add Widget button clicked:', { sectionId, sectionName });
+            
+            if (sectionId) {
+                openWidgetModalForSection(sectionId, sectionName);
+            } else {
+                console.error('❌ No section ID found for Add Widget button');
+            }
+        }
+        
+        // Handle other modal triggers
+        if (e.target.matches('[data-bs-toggle="modal"]') || e.target.closest('[data-bs-toggle="modal"]')) {
+            const trigger = e.target.closest('[data-bs-toggle="modal"]') || e.target;
+            const targetModal = trigger.getAttribute('data-bs-target');
+            
+            console.log('📝 Modal trigger clicked:', targetModal);
+            
+            // Special handling for different modals
+            if (targetModal === '#sectionTemplatesModal') {
+                e.preventDefault();
+                loadSectionTemplatesIntoModal();
+            }
+        }
+    });
+    
+    // Method 2: Listen for toolbar actions from iframe
+    window.addEventListener('message', function(event) {
+        if (event.data && event.data.type === 'toolbar-action') {
+            const { action, elementType, elementId, elementName } = event.data.data;
+            
+            console.log('📨 Toolbar action received:', { action, elementType, elementId, elementName });
+            
+            if (action === 'add-widget' && elementType === 'section') {
+                openWidgetModalForSection(elementId, elementName);
+            }
+        }
+    });
+}
 // Load section templates from left sidebar into modal
 function loadSectionTemplatesIntoModal() {
     console.log('📋 Loading section templates into modal...');

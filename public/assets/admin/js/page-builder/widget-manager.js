@@ -1,8 +1,72 @@
 /**
- * Widget Manager
+ * WIDGET MANAGER
+ * ==============
  * 
- * Handles all widget-related operations including CRUD, positioning,
- * rendering, and drag & drop functionality.
+ * GENERAL PURPOSE:
+ * Manages all widget-related operations including CRUD, positioning, rendering,
+ * and drag & drop functionality within sections. Handles widget lifecycle from
+ * creation to deletion and manages widget-specific configurations.
+ * 
+ * KEY FUNCTIONS/METHODS & DUPLICATION STATUS:
+ * 
+ * WIDGET LOADING & MANAGEMENT:
+ * • loadAvailableWidgets() - **DUPLICATED** - Similar logic in widget-library.js
+ * • loadSectionWidgets() - **UNIQUE** - Load widgets for specific section
+ * • createWidget() - **DUPLICATED** - Widget creation also in widget-modal-manager.js
+ * • updateWidget() - **UNIQUE** - Widget property updates
+ * • deleteWidget() - **UNIQUE** - Widget deletion with cleanup
+ * • getWidgetById() - **UNIQUE** - Widget lookup by ID
+ * 
+ * WIDGET RENDERING:
+ * • renderSectionWidgets() - **UNIQUE** - Render all widgets within a section
+ * • renderWidgetHTML() - **UNIQUE** - Generate individual widget HTML
+ * • renderWidgetControls() - **UNIQUE** - Add edit/delete controls to widgets
+ * • refreshWidgetContent() - **UNIQUE** - Update widget content without full reload
+ * • renderEmptyWidgetState() - **UNIQUE** - Show "no widgets" placeholder
+ * 
+ * DRAG & DROP HANDLING:
+ * • handleWidgetDrop() - **UNIQUE** - Process widget drops from sidebar
+ * • handleWidgetMove() - **UNIQUE** - Handle widget repositioning within sections
+ * • setupWidgetDropZones() - **UNIQUE** - Configure drop targets in sections
+ * • validateWidgetDrop() - **UNIQUE** - Check if widget drop is valid
+ * 
+ * WIDGET CONFIGURATION:
+ * • openWidgetConfigModal() - **DUPLICATED** - Modal handling also in widget-modal-manager.js
+ * • updateWidgetConfiguration() - **UNIQUE** - Save widget config changes
+ * • loadWidgetConfiguration() - **UNIQUE** - Load current widget settings
+ * • getWidgetDefaultConfig() - **UNIQUE** - Get default configuration for widget type
+ * 
+ * WIDGET POSITIONING:
+ * • updateWidgetPosition() - **UNIQUE** - Handle widget position changes
+ * • calculateWidgetPosition() - **UNIQUE** - Calculate optimal widget placement
+ * • snapWidgetToGrid() - **UNIQUE** - Align widgets to section grid
+ * 
+ * WIDGET VALIDATION:
+ * • validateWidgetData() - **UNIQUE** - Validate widget data before save
+ * • checkWidgetPermissions() - **UNIQUE** - Verify user can modify widget
+ * • validateWidgetContent() - **UNIQUE** - Ensure widget content is valid
+ * 
+ * EVENT HANDLING:
+ * • setupWidgetEvents() - **DUPLICATED** - Event setup also in show.blade.php
+ * • handleWidgetClick() - **UNIQUE** - Widget selection handling
+ * • handleWidgetResize() - **UNIQUE** - Widget resize operations
+ * 
+ * UTILITY METHODS:
+ * • generateWidgetId() - **UNIQUE** - Generate unique identifiers for new widgets
+ * • formatWidgetForSection() - **UNIQUE** - Prepare widget data for section rendering
+ * • cleanupWidgetReferences() - **UNIQUE** - Remove widget references on deletion
+ * 
+ * MAJOR DUPLICATION ISSUES:
+ * 1. **WIDGET LIBRARY**: loadAvailableWidgets() duplicated in widget-library.js
+ * 2. **MODAL MANAGEMENT**: Widget config modal handled in multiple places
+ * 3. **CREATION LOGIC**: Widget creation spread between this and widget-modal-manager.js
+ * 4. **EVENT HANDLING**: Widget events scattered across components
+ * 5. **DROP HANDLING**: Similar drop logic in multiple files
+ * 
+ * INCONSISTENCIES WITH OTHER FILES:
+ * • widget-modal-manager.js has different widget creation approach
+ * • widget-library.js duplicates widget loading functionality
+ * • show.blade.php has widget event handlers with different patterns
  */
 class WidgetManager {
     constructor(api, sectionManager) {

@@ -1,6 +1,92 @@
 /**
- * Field Type Defaults Service
- * Creates content items with default values based on field types configuration
+ * FIELD TYPE DEFAULTS SERVICE
+ * ===========================
+ * 
+ * GENERAL PURPOSE:
+ * Provides default values for different field types when creating new content items.
+ * Handles field type detection, default value generation, and content item creation
+ * with appropriate default values based on content type structure.
+ * 
+ * KEY FUNCTIONS/METHODS & DUPLICATION STATUS:
+ * 
+ * CONTENT CREATION WITH DEFAULTS:
+ * • createContentItemWithDefaults() - **UNIQUE** - Create content with default field values
+ * • applyFieldDefaults() - **UNIQUE** - Apply default values to content fields
+ * • generateDefaultContent() - **UNIQUE** - Generate complete default content structure
+ * 
+ * CONTENT TYPE STRUCTURE:
+ * • getContentTypeStructure() - **UNIQUE** - Load content type field definitions
+ * • parseFieldDefinitions() - **UNIQUE** - Parse field definitions from content type
+ * • validateContentTypeStructure() - **UNIQUE** - Ensure content type structure is valid
+ * 
+ * FIELD TYPE DEFAULTS:
+ * • getDefaultValueForFieldType() - **UNIQUE** - Get default value for specific field type
+ * • applyFieldTypeDefaults() - **UNIQUE** - Apply defaults based on field type
+ * • updateDefaultValues() - **UNIQUE** - Update default value configurations
+ * • validateFieldDefault() - **UNIQUE** - Ensure field default is appropriate
+ * 
+ * CONTENT ITEM CREATION:
+ * • createContentItem() - **UNIQUE** - Create new content item via API
+ * • prepareContentData() - **UNIQUE** - Prepare content data for API submission
+ * • validateContentData() - **UNIQUE** - Validate content before creation
+ * • handleContentCreationResponse() - **UNIQUE** - Process content creation response
+ * 
+ * FIELD TYPE HANDLING:
+ * • handleTextField() - **UNIQUE** - Handle text field defaults
+ * • handleNumberField() - **UNIQUE** - Handle numeric field defaults
+ * • handleDateField() - **UNIQUE** - Handle date/datetime field defaults
+ * • handleBooleanField() - **UNIQUE** - Handle boolean field defaults
+ * • handleSelectField() - **UNIQUE** - Handle select/option field defaults
+ * • handleRelationField() - **UNIQUE** - Handle relation field defaults
+ * • handleMediaField() - **UNIQUE** - Handle image/file field defaults
+ * • handleJsonField() - **UNIQUE** - Handle JSON/object field defaults
+ * • handleRepeaterField() - **UNIQUE** - Handle repeater field defaults
+ * 
+ * DEFAULT VALUE DEFINITIONS:
+ * • fieldTypeDefaults - **UNIQUE** - Central registry of default values by field type
+ * • getTextDefaults() - **UNIQUE** - Get defaults for text-based fields
+ * • getNumericDefaults() - **UNIQUE** - Get defaults for numeric fields
+ * • getDateDefaults() - **UNIQUE** - Get defaults for date fields
+ * • getMediaDefaults() - **UNIQUE** - Get defaults for media fields
+ * • getRelationDefaults() - **UNIQUE** - Get defaults for relation fields
+ * 
+ * CONTENT VALIDATION:
+ * • validateFieldValue() - **UNIQUE** - Validate field value against field definition
+ * • validateRequiredFields() - **UNIQUE** - Ensure required fields have values
+ * • sanitizeFieldValue() - **UNIQUE** - Sanitize field values before creation
+ * 
+ * API INTEGRATION:
+ * • makeAPIRequest() - **DUPLICATED** - API request logic might duplicate page-builder-api.js
+ * • handleAPIError() - **DUPLICATED** - Error handling might duplicate page-builder-api.js
+ * • formatAPIResponse() - **DUPLICATED** - Response formatting might duplicate page-builder-api.js
+ * 
+ * ERROR HANDLING:
+ * • handleFieldError() - **UNIQUE** - Handle field-specific errors
+ * • showValidationError() - **UNIQUE** - Display validation errors
+ * • recoverFromError() - **UNIQUE** - Attempt error recovery
+ * 
+ * UTILITY METHODS:
+ * • generateCurrentDate() - **UNIQUE** - Generate current date in proper format
+ * • generateCurrentDateTime() - **UNIQUE** - Generate current datetime
+ * • formatDefaultValue() - **UNIQUE** - Format default values for display
+ * • isValidFieldType() - **UNIQUE** - Check if field type is supported
+ * 
+ * MAJOR DUPLICATION ISSUES:
+ * 1. **API CALLS**: Direct API calls bypass the centralized PageBuilderAPI layer
+ * 2. **ERROR HANDLING**: Custom error handling instead of using centralized patterns
+ * 3. **VALIDATION**: Field validation logic might overlap with other validation code
+ * 4. **DEFAULT VALUES**: Some default value logic might exist elsewhere
+ * 
+ * INCONSISTENCIES WITH OTHER FILES:
+ * • API request patterns differ from page-builder-api.js
+ * • Error handling approach may differ from other services
+ * • Content creation flow may not integrate well with widget-modal-manager.js
+ * • Field type definitions might not match other field type handling code
+ * 
+ * INTEGRATION POINTS:
+ * • Used by widget-modal-manager.js for content creation
+ * • May be used by other components that need default content
+ * • Should integrate with centralized API layer for consistency
  */
 class FieldTypeDefaultsService {
     constructor(apiBaseUrl, csrfToken) {

@@ -1,11 +1,6 @@
 <!-- Live Designer Toolbar -->
 <div class="page-title-box d-sm-flex align-items-center justify-content-between bg-galaxy-transparent mb-0 ms-0 p-3">
     <div class="d-flex align-items-center">
-        <!-- Toggle Right Sidebar (Mobile Only) -->
-        <button class="btn btn-outline-secondary me-3" id="toggle-right-sidebar" title="Toggle Properties Panel" style="display: none;">
-            <i class="ri-layout-right-2-line"></i>
-        </button>
-        
         <h5 class="page-title mb-0">
             <i class="ri-brush-line me-2"></i>
             Live Designer - {{ $page->title }}
@@ -16,17 +11,17 @@
     <div class="page-title-middle">
         <div class="btn-group" role="group" aria-label="Device preview">
             <input type="radio" class="btn-check" name="preview-mode" id="desktop-mode" checked>
-            <label class="btn btn-outline-secondary " for="desktop-mode" title="Desktop">
+            <label class="btn btn-outline-secondary" for="desktop-mode" title="Desktop" data-device="desktop">
                 <i class="ri-computer-line"></i>
             </label>
             
             <input type="radio" class="btn-check" name="preview-mode" id="tablet-mode">
-            <label class="btn btn-outline-secondary " for="tablet-mode" title="Tablet">
+            <label class="btn btn-outline-secondary" for="tablet-mode" title="Tablet" data-device="tablet">
                 <i class="ri-tablet-line"></i>
             </label>
             
             <input type="radio" class="btn-check" name="preview-mode" id="mobile-mode">
-            <label class="btn btn-outline-secondary " for="mobile-mode" title="Mobile">
+            <label class="btn btn-outline-secondary" for="mobile-mode" title="Mobile" data-device="mobile">
                 <i class="ri-smartphone-line"></i>
             </label>
         </div>
@@ -35,12 +30,12 @@
     
     <div class="page-title-right">
         <!-- Zoom Controls (Desktop Only) -->
-        <div class="btn-group me-2" role="group" aria-label="Zoom Controls" id="zoom-controls">
-            <button type="button" class="btn btn-outline-secondary btn-sm" data-action="zoom-out" title="Zoom Out">
+        <div class="btn-group me-2 zoom-controls" role="group" aria-label="Zoom Controls" id="zoom-controls">
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-zoom="out" title="Zoom Out">
                 <i class="ri-zoom-out-line"></i>
             </button>
             
-            <button type="button" class="btn btn-outline-secondary btn-sm" data-action="zoom-fit" title="Zoom to Fit">
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-zoom="fit" title="Zoom to Fit">
                 <i class="ri-focus-3-line"></i>
             </button>
             
@@ -48,11 +43,11 @@
                 100%
             </span>
             
-            <button type="button" class="btn btn-outline-secondary btn-sm" data-action="zoom-reset" title="Reset Zoom">
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-zoom="reset" title="Reset Zoom">
                 <i class="ri-refresh-line"></i>
             </button>
             
-            <button type="button" class="btn btn-outline-secondary btn-sm" data-action="zoom-in" title="Zoom In">
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-zoom="in" title="Zoom In">
                 <i class="ri-zoom-in-line"></i>
             </button>
         </div>

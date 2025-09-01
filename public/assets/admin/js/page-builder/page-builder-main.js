@@ -1,8 +1,68 @@
 /**
- * Page Builder Main Controller
+ * PAGE BUILDER MAIN CONTROLLER
+ * ============================
  * 
- * Orchestrates all page builder components including GridStack integration,
- * section management, widget management, and API communication.
+ * GENERAL PURPOSE:
+ * Main orchestrator class that initializes and coordinates all PageBuilder components.
+ * Handles system-wide initialization, event management, global state, and provides
+ * the primary interface for page building operations.
+ * 
+ * KEY FUNCTIONS/METHODS & DUPLICATION STATUS:
+ * 
+ * INITIALIZATION & SETUP:
+ * • init() - **UNIQUE** - Master initialization sequence for entire system
+ * • initializeAPI() - **UNIQUE** - Sets up centralized API layer
+ * • initializeManagers() - **UNIQUE** - Initializes all component managers
+ * • loadInitialContent() - **UNIQUE** - Loads page sections and content
+ * • setupGlobalEvents() - **DUPLICATED** - Event setup also in show.blade.php
+ * • setupDropZones() - **UNIQUE** - Global drag/drop zone configuration
+ * 
+ * CONTENT MANAGEMENT:
+ * • handleGlobalDrop() - **UNIQUE** - Processes drag/drop operations
+ * • handleTemplateDropOnCanvas() - **UNIQUE** - Creates sections from templates
+ * • handleWidgetDropOnCanvas() - **UNIQUE** - Adds widgets to canvas
+ * • createSectionFromTemplate() - **DUPLICATED** - Similar logic in show.blade.php
+ * • addLoadingSectionToGrid() - **UNIQUE** - Shows loading states during creation
+ * • replaceLoadingSectionWithReal() - **UNIQUE** - Replaces loading with real content
+ * 
+ * UI STATE MANAGEMENT:
+ * • showGlobalLoader() - **DUPLICATED** - Loading states scattered in multiple files
+ * • hideGlobalLoader() - **DUPLICATED** - Loading states scattered in multiple files  
+ * • showEmptyPageState() - **UNIQUE** - Empty canvas state management
+ * • hideEmptyPageState() - **UNIQUE** - Hides empty state when content added
+ * • showErrorState() - **UNIQUE** - Error state display
+ * • showNotification() - **UNIQUE** - Toast notifications
+ * 
+ * EVENT HANDLERS:
+ * • handleSectionPositionChanged() - **UNIQUE** - GridStack position updates
+ * • handleSectionCreated() - **UNIQUE** - New section event handling
+ * • handleSectionDeleted() - **UNIQUE** - Section deletion event handling
+ * • handleWidgetDropped() - **UNIQUE** - Widget drop event handling
+ * • handleTemplateDropped() - **UNIQUE** - Template drop event handling
+ * 
+ * UTILITY METHODS:
+ * • calculateGridPosition() - **UNIQUE** - Converts drop coordinates to grid position
+ * • findNearestSection() - **UNIQUE** - Finds closest section for widget drops
+ * • createDefaultSection() - **UNIQUE** - Creates fallback section when none exist
+ * • updatePageStats() - **UNIQUE** - Updates section/widget counters
+ * • getPageData() - **UNIQUE** - Returns current page state
+ * • isReady() - **UNIQUE** - Checks initialization status
+ * • refresh() - **UNIQUE** - Reloads entire page builder
+ * 
+ * HYBRID LIVE PREVIEW INTEGRATION:
+ * • loadThemeAssets() - **DUPLICATED** - Theme loading also in theme-manager.js
+ * • addRenderedSectionToGrid() - **UNIQUE** - Renders sections with real HTML
+ * • wrapSectionForGrid() - **UNIQUE** - Wraps sections for GridStack compatibility
+ * • fallbackRenderSection() - **UNIQUE** - Fallback rendering when GridStack unavailable
+ * • editSection() - **DUPLICATED** - Section editing also in show.blade.php
+ * • deleteSection() - **UNIQUE** - Section deletion with confirmation
+ * 
+ * MAJOR DUPLICATION ISSUES:
+ * 1. Event setup duplicated in show.blade.php
+ * 2. Section creation logic partially duplicated in show.blade.php  
+ * 3. Loading state management scattered across multiple files
+ * 4. Theme asset loading duplicated in theme-manager.js
+ * 5. Modal management inconsistent with widget-modal-manager.js
  */
 class PageBuilderMain {
     constructor(options = {}) {

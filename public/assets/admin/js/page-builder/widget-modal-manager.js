@@ -1,6 +1,88 @@
 /**
- * Widget Modal Manager - Handles multi-step widget addition modal
- * Based on the Step-by-Step Widget Modal Implementation Plan
+ * WIDGET MODAL MANAGER
+ * ====================
+ * 
+ * GENERAL PURPOSE:
+ * Manages the multi-step widget addition modal that guides users through widget
+ * selection, content type selection, content selection, and final configuration.
+ * Handles the complete widget creation workflow from start to finish.
+ * 
+ * KEY FUNCTIONS/METHODS & DUPLICATION STATUS:
+ * 
+ * MODAL INITIALIZATION & STATE:
+ * • init() - **UNIQUE** - Initialize modal and setup event listeners
+ * • setupEventListeners() - **DUPLICATED** - Event setup also scattered in show.blade.php
+ * • resetModalState() - **UNIQUE** - Reset modal to initial state
+ * • getModalData() - **UNIQUE** - Get current modal data state
+ * 
+ * STEP MANAGEMENT:
+ * • nextStep() - **UNIQUE** - Advance to next step in widget creation
+ * • previousStep() - **UNIQUE** - Go back to previous step
+ * • goToStep() - **UNIQUE** - Jump directly to specific step
+ * • canNavigateToStep() - **UNIQUE** - Check if step navigation is allowed
+ * • updateStepIndicators() - **UNIQUE** - Update visual step progress
+ * • validateCurrentStep() - **UNIQUE** - Validate current step before proceeding
+ * 
+ * STEP 1: WIDGET SELECTION:
+ * • loadWidgetLibrary() - **DUPLICATED** - Similar logic in widget-library.js and widget-manager.js
+ * • renderWidgetLibrary() - **DUPLICATED** - Widget rendering also in widget-library.js
+ * • handleWidgetSelection() - **UNIQUE** - Process widget selection in modal
+ * • updateWidgetPreview() - **UNIQUE** - Show selected widget preview
+ * • filterWidgetsByType() - **UNIQUE** - Filter widgets in modal view
+ * 
+ * STEP 2: CONTENT TYPE SELECTION:
+ * • loadContentTypes() - **UNIQUE** - Load available content types for selected widget
+ * • renderContentTypes() - **UNIQUE** - Display content type options
+ * • handleContentTypeSelection() - **UNIQUE** - Process content type selection
+ * • validateContentTypeCompatibility() - **UNIQUE** - Check widget/content type compatibility
+ * 
+ * STEP 3: CONTENT SELECTION:
+ * • loadContentItems() - **UNIQUE** - Load items for selected content type
+ * • renderContentItems() - **UNIQUE** - Display content selection interface
+ * • handleContentSelection() - **UNIQUE** - Process content item selection
+ * • handleContentQuery() - **UNIQUE** - Handle content filtering/search
+ * • createNewContentItem() - **UNIQUE** - Create new content if needed
+ * 
+ * MODAL MANAGEMENT:
+ * • openForSection() - **DUPLICATED** - Similar function in show.blade.php (openWidgetModalForSection)
+ * • closeModal() - **UNIQUE** - Close modal and cleanup state
+ * • showModal() - **UNIQUE** - Display modal with specific configuration
+ * • hideModal() - **UNIQUE** - Hide modal without state changes
+ * 
+ * FINAL SUBMISSION:
+ * • handleFinalSubmission() - **DUPLICATED** - Widget creation also in widget-manager.js
+ * • validateSubmission() - **UNIQUE** - Validate all data before submission
+ * • prepareWidgetData() - **UNIQUE** - Format data for API submission
+ * • submitWidgetCreation() - **UNIQUE** - Send widget creation request
+ * 
+ * ERROR & LOADING STATES:
+ * • showLoadingStep() - **DUPLICATED** - Loading states scattered in multiple files
+ * • hideLoadingStep() - **DUPLICATED** - Loading states scattered in multiple files
+ * • showStepError() - **UNIQUE** - Display step-specific errors
+ * • clearStepError() - **UNIQUE** - Clear error messages
+ * 
+ * UTILITY METHODS:
+ * • getCurrentStep() - **UNIQUE** - Get current step number
+ * • getTotalSteps() - **UNIQUE** - Get total number of steps
+ * • isStepComplete() - **UNIQUE** - Check if step has valid data
+ * • getStepData() - **UNIQUE** - Get data for specific step
+ * 
+ * MAJOR DUPLICATION ISSUES:
+ * 1. **WIDGET LOADING**: Widget library loading duplicated across multiple files
+ * 2. **MODAL OPENING**: openForSection() duplicated in show.blade.php as openWidgetModalForSection()
+ * 3. **WIDGET CREATION**: Final submission logic overlaps with widget-manager.js
+ * 4. **EVENT HANDLING**: Modal event setup scattered across components
+ * 5. **LOADING STATES**: Custom loading instead of using unified-loader-manager.js
+ * 
+ * INITIALIZATION ISSUES:
+ * • Complex initialization sequence with timing dependencies
+ * • Multiple files attempt to initialize this modal
+ * • Initialization conflicts with show.blade.php widget modal code
+ * 
+ * INCONSISTENCIES WITH OTHER FILES:
+ * • show.blade.php has openWidgetModalForSection() with similar but different logic
+ * • widget-manager.js has createWidget() with different approach
+ * • Widget library loading differs from widget-library.js implementation
  */
 class WidgetModalManager {
     constructor(apiBaseUrl, csrfToken) {
