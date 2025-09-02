@@ -72,6 +72,12 @@ Route::middleware('admin.auth')->group(function () {
         ->name('admin.pages.page-builder');
     Route::get('/pages/{page}/live-designer', [App\Http\Controllers\Admin\LiveDesignerViewController::class, 'show'])
         ->name('admin.pages.live-designer');
+    
+    // Live Designer API endpoints
+    Route::get('/api/widgets/{widget}/content-types', [App\Http\Controllers\Admin\LiveDesignerViewController::class, 'getWidgetContentTypes'])
+        ->name('admin.api.widgets.content-types');
+    Route::get('/api/content-types/{contentType}/items', [App\Http\Controllers\Admin\LiveDesignerViewController::class, 'getContentItems'])
+        ->name('admin.api.content-types.items');
 
     // Widgets - Global routes
     Route::resource('widgets', WidgetController::class);

@@ -32,11 +32,8 @@ class WidgetLibrary {
                 this.unifiedLoader.show('widget-loading', 'Loading widgets...', 10);
             }
             
-            // Load available widgets from API
-            await this.loadAvailableWidgets();
-            
-            // Render widgets in sidebar
-            this.renderWidgets();
+            // Load widgets from server-rendered data
+            this.loadWidgetsFromServerData();
             
             // Setup drag and drop functionality (like page-builder)
             this.setupDragAndDrop();
@@ -61,58 +58,11 @@ class WidgetLibrary {
     }
 
     /**
-     * Load available widgets from the API
+     * Load widgets from server-rendered data (no API call needed)
      */
-    async loadAvailableWidgets() {
-        try {
-            console.log('🔄 Loading available widgets from API...');
-            
-            // Use the correct API endpoint for page-builder widgets
-            const response = await fetch('/admin/api/page-builder/widgets/available', {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
-                }
-            });
-            
-            if (response.ok) {
-                const data = await response.json();
-                
-                if (data.success && data.data?.widgets) {
-                    // Clear existing widgets
-                    this.widgets.clear();
-                    
-                    // Flatten all widgets from all categories into a single array
-                    const allWidgets = [];
-                    Object.keys(data.data.widgets).forEach(category => {
-                        data.data.widgets[category].forEach(widget => {
-                            allWidgets.push({
-                                ...widget,
-                                category: category,
-                                // Ensure preview_image is properly set
-                                preview_image: widget.preview_image || null
-                            });
-                        });
-                    });
-                    
-                    // Store all widgets in a single 'all' category for unified display
-                    this.widgets.set('all', allWidgets);
-                    
-                    console.log(`✅ Loaded ${allWidgets.length} theme widgets from API:`, allWidgets.map(w => `${w.name} (${w.preview_image ? 'with image' : 'icon only'})`));
-                } else {
-                    throw new Error(data.message || 'No widgets data received from API');
-                }
-            } else {
-                throw new Error(`API Error: ${response.status}`);
-            }
-            
-        } catch (error) {
-            console.error('❌ Error loading widgets from API:', error);
-            console.log('📦 Using fallback widget data for development');
-            // Load fallback widgets for development
-            this.loadFallbackWidgets();
-        }
+    loadWidgetsFromServerData() {
+        // Widgets are now pre-rendered in HTML, just setup interactions
+        console.log('📦 Using server-rendered theme widgets');
     }
 
     /**

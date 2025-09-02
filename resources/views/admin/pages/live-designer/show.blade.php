@@ -290,6 +290,229 @@
     font-size: 0.9rem;
     font-weight: 500;
 }
+
+/* Drill-down button styles */
+.drill-down-btn {
+    background: #0d6efd;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.drill-down-btn:hover {
+    background: #0b5ed7;
+    transform: scale(1.1);
+}
+
+.drill-down-btn i {
+    font-size: 10px;
+    line-height: 1;
+}
+
+.drill-down-btn .content-count {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: #dc3545;
+    color: white;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+}
+
+/* Widget title row adjustments */
+.widget-title-row,
+.label-row {
+    padding: 0.5rem;
+    margin: 0;
+}
+
+.widget-title,
+.label {
+    flex: 1;
+    margin-right: 0.5rem;
+}
+
+/* Ensure proper spacing for widgets with drill-down */
+.theme-widget-item.has-drill-down .widget-title,
+.component-item.has-drill-down .label {
+    margin-right: 0.75rem;
+}
+
+/* Content Types and Items Grid Styles */
+.content-types-grid,
+.content-items-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    padding: 1rem;
+}
+
+.content-type-card,
+.content-item-card {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.content-type-card:hover,
+.content-item-card:hover {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    transform: translateY(-1px);
+}
+
+/* Content Type Card Styles */
+.content-type-icon {
+    width: 40px;
+    height: 40px;
+    background: #f8f9fa;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.content-type-info {
+    flex: 1;
+}
+
+.content-type-name {
+    font-weight: 600;
+    color: #212529;
+    margin-bottom: 0.25rem;
+}
+
+.content-type-count {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.content-type-arrow {
+    color: #6c757d;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+/* Content Item Card Styles */
+.content-item-thumbnail {
+    width: 50px;
+    height: 50px;
+    border-radius: 0.375rem;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.content-thumbnail {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.content-item-info {
+    flex: 1;
+}
+
+.content-item-title {
+    font-weight: 600;
+    color: #212529;
+    margin-bottom: 0.25rem;
+    line-height: 1.3;
+}
+
+.content-item-status {
+    font-size: 0.75rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: 1rem;
+    text-transform: uppercase;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.content-item-status[data-status="published"],
+.content-item-status:contains("published") {
+    background: #d1e7dd;
+    color: #0f5132;
+}
+
+.content-item-status[data-status="draft"],
+.content-item-status:contains("draft") {
+    background: #fff3cd;
+    color: #664d03;
+}
+
+/* View transitions */
+.widgets-view,
+.content-types-view,
+.content-items-view {
+    transition: opacity 0.3s ease;
+}
+
+.content-types-view,
+.content-items-view {
+    display: none;
+}
+
+/* Breadcrumb navigation */
+#drillDownBreadcrumb {
+    background: #fff;
+    border-bottom: 1px solid #e9ecef;
+    padding: 0.75rem 1rem;
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+#drillDownBack {
+    background: none;
+    border: none;
+    color: #0d6efd;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+}
+
+#drillDownBack:hover {
+    background: rgba(13, 110, 253, 0.1);
+}
+
+#breadcrumbText {
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.9rem;
+}
 </style>
 @endsection
 
@@ -310,7 +533,7 @@
         </div>
         
         <!-- Canvas Container -->
-        <div class="col" id="canvasContainer">
+        <div class="col" id="canvasContainer" style="padding:20px 0px !important">
             <!-- Unified Progress Bar Loader -->
             <div class="unified-page-loader" id="liveDesignerLoader" style="display: none;">
                 <div class="progress-bar"></div>
@@ -368,6 +591,7 @@
 <!-- Left Sidebar Component Library Modules -->
 <script src="{{ asset('assets/admin/js/live-designer/unified-loader-manager.js') }}?v={{ time() }}"></script>
 <script src="{{ asset('assets/admin/js/live-designer/template-manager.js') }}?v={{ time() }}"></script>
+<script src="{{ asset('assets/admin/js/live-designer/widget-drill-down.js') }}?v={{ time() }}"></script>
 <script src="{{ asset('assets/admin/js/live-designer/widget-library.js') }}?v={{ time() }}"></script>
 <script src="{{ asset('assets/admin/js/live-designer/default-widget-library.js') }}?v={{ time() }}"></script>
 @endsection
@@ -425,16 +649,17 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     console.log('✅ Live Designer initialized');
 
-    // Initialize left sidebar component library managers
+    // Initialize left sidebar component library managers (simplified - no loading)
     const unifiedLoader = new UnifiedLoaderManager();
     const templateManager = new TemplateManager(null, livePreview, unifiedLoader);
     const widgetLibrary = new WidgetLibrary(livePreview, unifiedLoader);
     const defaultWidgetLibrary = new DefaultWidgetLibrary(livePreview, unifiedLoader);
     
-    // Initialize left sidebar components
+    // Initialize left sidebar components (server-rendered, just setup interactions)
     await templateManager.init();
-    await widgetLibrary.init();
     await defaultWidgetLibrary.init();
+    
+    console.log('✅ Live Designer components initialized (widget drill-down handled separately)');
     
     // Device preview is now fully handled by device-preview.js
 
@@ -446,6 +671,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     window.templateManager = templateManager;
     window.widgetLibrary = widgetLibrary;
     window.defaultWidgetLibrary = defaultWidgetLibrary;
+
 
     // Mobile sidebar toggle (right sidebar only)
     const toggleRightSidebar = document.getElementById('toggle-right-sidebar');

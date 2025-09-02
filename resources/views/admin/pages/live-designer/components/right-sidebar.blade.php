@@ -1,7 +1,7 @@
 <!-- Live Designer - Right Sidebar -->
 <div class="designer-right-sidebar bg-white border-start" id="rightSidebar" style="height: calc(100vh - 100px); overflow-y: auto;">
     <!-- Sidebar Header -->
-    <div class="sidebar-header p-3 border-bottom d-flex align-items-center justify-content-between" style="background-color: #6c757d;">
+    <div class="sidebar-header p-3 border-bottom d-flex align-items-center justify-content-between" style="background-color: #f7b84b;">
         <h6 class="mb-0">
             <span class="sidebar-title" style="color: white;">Widget Properties</span>
         </h6>
@@ -15,7 +15,7 @@
         <div class="sidebar-content-inner p-3" id="widget-editor-container">
             <div class="no-selection text-center py-5">
                 <div class="mb-3">
-                    <i class="ri-cursor-line" style="font-size: 3rem; color: #6c757d;"></i>
+                    <i class="ri-cursor-line" style="font-size: 3rem; color: #f7b84b;"></i>
                 </div>
                 <h5 class="mb-3">Select a Widget</h5>
                 <p class="text-muted mb-0">Click on any widget in the preview to edit its properties and settings</p>
@@ -79,11 +79,11 @@
 /* Collapsed state - handled by main CSS */
 #right-sidebar-container.collapsed .designer-right-sidebar {
     width: 70px;
-    background-color: #6c757d !important;
+    background-color: #f7b84b !important;
 }
 
 #right-sidebar-container.collapsed .sidebar-header {
-    background-color: #6c757d;
+    background-color: #f7b84b;
     color: white;
 }
 

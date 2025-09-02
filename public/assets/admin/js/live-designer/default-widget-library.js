@@ -32,11 +32,8 @@ class DefaultWidgetLibrary {
                 this.unifiedLoader.show('default-widget-loading', 'Loading default widgets...', 10);
             }
             
-            // Load default widgets
-            this.loadDefaultWidgets();
-            
-            // Render widgets in sidebar
-            this.renderDefaultWidgets();
+            // Default widgets are now server-rendered, just setup interactions
+            console.log('📦 Using server-rendered default widgets');
             
             // Setup drag and drop functionality
             this.setupDragAndDrop();

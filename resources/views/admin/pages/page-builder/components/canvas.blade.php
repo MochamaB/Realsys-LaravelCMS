@@ -19,7 +19,7 @@
             </div>
             <h5 class="text-muted">Start Building Your Page</h5>
             <p class="text-muted mb-4">Drag sections from the sidebar or click the button below to get started</p>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#sectionTemplatesModal">
+            <button class="btn btn-primary" id="addFirstSectionBtn">
                 <i class="ri-add-line me-2"></i>Add Your First Section
             </button>
         </div>

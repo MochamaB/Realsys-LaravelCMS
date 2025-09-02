@@ -1,0 +1,304 @@
+/**
+ * PAGE BUILDER PREVIEW HELPER CSS
+ * ================================
+ * 
+ * Styles specifically for Page Builder preview iframe interactions.
+ * This is separate from live-designer/preview-helpers.css to avoid conflicts.
+ */
+
+/* Page Builder preview mode indicator */
+body.pagebuilder-preview {
+    position: relative;
+}
+
+/* Widget interaction styles */
+[data-pagebuilder-widget] {
+    transition: outline 0.2s ease, box-shadow 0.2s ease;
+}
+
+[data-pagebuilder-widget]:hover {
+    outline: 2px dashed #007bff !important;
+    outline-offset: 2px;
+    cursor: pointer;
+}
+
+[data-pagebuilder-widget]:focus {
+    outline: 2px solid #007bff !important;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.25);
+}
+
+/* Section interaction styles */
+[data-pagebuilder-section] {
+    transition: outline 0.2s ease, box-shadow 0.2s ease;
+    min-height: 30px;
+}
+
+[data-pagebuilder-section]:hover {
+    outline: 2px dashed #28a745 !important;
+    outline-offset: 2px;
+}
+
+[data-pagebuilder-section]:focus {
+    outline: 2px solid #28a745 !important;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(40, 167, 69, 0.25);
+}
+
+/* Selected states */
+.pagebuilder-selected {
+    outline: 3px solid #007bff !important;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 6px rgba(0, 123, 255, 0.15) !important;
+}
+
+.pagebuilder-highlighted {
+    outline: 2px dashed #ffc107 !important;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(255, 193, 7, 0.15) !important;
+}
+
+/* Empty section styling */
+[data-pagebuilder-section]:empty::after {
+    content: "Empty Section - Click to configure";
+    display: block;
+    padding: 20px;
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+    background: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    border-radius: 4px;
+    margin: 10px 0;
+}
+
+/* Widget without content styling */
+[data-pagebuilder-widget]:empty::after {
+    content: "Widget - Click to edit";
+    display: block;
+    padding: 15px;
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+    background: #e9ecef;
+    border: 1px dashed #ced4da;
+    border-radius: 4px;
+}
+
+/* Prevent text selection during interactions */
+.pagebuilder-preview * {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* Allow text selection on actual content elements */
+.pagebuilder-preview p,
+.pagebuilder-preview h1,
+.pagebuilder-preview h2,
+.pagebuilder-preview h3,
+.pagebuilder-preview h4,
+.pagebuilder-preview h5,
+.pagebuilder-preview h6,
+.pagebuilder-preview span,
+.pagebuilder-preview div[contenteditable] {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+}
+
+/* Ensure interactive elements work normally */
+[data-pagebuilder-widget] a,
+[data-pagebuilder-widget] button,
+[data-pagebuilder-widget] input,
+[data-pagebuilder-widget] select,
+[data-pagebuilder-widget] textarea {
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+[data-pagebuilder-widget] input,
+[data-pagebuilder-widget] select,
+[data-pagebuilder-widget] textarea {
+    cursor: text;
+}
+
+/* Modal triggers should work normally */
+[data-bs-toggle="modal"],
+[data-toggle="modal"] {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* Accessibility improvements */
+[data-pagebuilder-widget][tabindex],
+[data-pagebuilder-section][tabindex] {
+    outline: none;
+}
+
+[data-pagebuilder-widget][tabindex]:focus,
+[data-pagebuilder-section][tabindex]:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+/* Page Builder Toolbar Buttons */
+.pagebuilder-toolbar-buttons {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    z-index: 1000;
+    display: flex;
+    gap: 5px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 5px;
+    border-radius: 5px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    border: 1px solid #dee2e6;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    pointer-events: none;
+}
+
+/* Show toolbar when parent is selected */
+.pagebuilder-selected .pagebuilder-toolbar-buttons {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: all;
+}
+
+/* Widget toolbar positioning (different from section toolbar) */
+.pagebuilder-toolbar-buttons.widget-toolbar {
+    top: -35px;
+    right: 0;
+    left: auto;
+}
+
+/* Toolbar button styling */
+.pagebuilder-toolbar-btn {
+    padding: 4px 8px;
+    border: none;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.pagebuilder-toolbar-btn i {
+    font-size: 12px;
+}
+
+/* Button variants */
+.pagebuilder-toolbar-btn.btn-primary {
+    background: #007bff;
+    color: white;
+}
+
+.pagebuilder-toolbar-btn.btn-primary:hover {
+    background: #0056b3;
+    transform: translateY(-1px);
+}
+
+.pagebuilder-toolbar-btn.btn-success {
+    background: #28a745;
+    color: white;
+}
+
+.pagebuilder-toolbar-btn.btn-success:hover {
+    background: #1e7e34;
+    transform: translateY(-1px);
+}
+
+.pagebuilder-toolbar-btn.btn-info {
+    background: #17a2b8;
+    color: white;
+}
+
+.pagebuilder-toolbar-btn.btn-info:hover {
+    background: #117a8b;
+    transform: translateY(-1px);
+}
+
+.pagebuilder-toolbar-btn.btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.pagebuilder-toolbar-btn.btn-danger:hover {
+    background: #c82333;
+    transform: translateY(-1px);
+}
+
+/* Toolbar positioning adjustments for edge cases */
+.pagebuilder-toolbar-buttons:before {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 15px;
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid rgba(255, 255, 255, 0.95);
+}
+
+.pagebuilder-toolbar-buttons.widget-toolbar:before {
+    left: auto;
+    right: 15px;
+}
+
+/* Ensure toolbar is above other content */
+[data-pagebuilder-section],
+[data-pagebuilder-widget] {
+    position: relative;
+    z-index: 1;
+}
+
+.pagebuilder-selected {
+    z-index: 100 !important;
+}
+
+/* Hide toolbar on small screens to avoid clutter */
+@media (max-width: 768px) {
+    .pagebuilder-toolbar-buttons {
+        top: -30px;
+        padding: 3px;
+        gap: 3px;
+    }
+    
+    .pagebuilder-toolbar-btn {
+        padding: 3px 6px;
+        font-size: 10px;
+    }
+    
+    .pagebuilder-toolbar-btn i {
+        font-size: 10px;
+    }
+    
+    /* Hide text on mobile, show only icons */
+    .pagebuilder-toolbar-btn span {
+        display: none;
+    }
+}
+
+/* Responsive design considerations */
+@media (max-width: 768px) {
+    [data-pagebuilder-widget]:hover,
+    [data-pagebuilder-section]:hover {
+        outline-width: 1px;
+        outline-offset: 1px;
+    }
+    
+    .pagebuilder-selected {
+        outline-width: 2px !important;
+        outline-offset: 1px !important;
+    }
+}

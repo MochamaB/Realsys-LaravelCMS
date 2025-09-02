@@ -29,13 +29,33 @@
                 <div class="collapse" id="sectionsCollapse">
                     <div class="nav-item-content p-2">
                         <div class="component-grid" id="sectionsGrid">
-                            <!-- Live Designer section templates will be loaded here -->
-                            <div class="text-center p-3">
-                                <div class="spinner-border spinner-border-sm text-primary" role="status">
-                                    <span class="visually-hidden">Loading sections...</span>
+                            @if(isset($sectionTemplates) && isset($sectionTemplates['templates']) && count($sectionTemplates['templates']) > 0)
+                                @foreach($sectionTemplates['templates'] as $template)
+                                    <div class="section-template-item mb-2" 
+                                         data-template-key="{{ $template['key'] }}"
+                                         data-template-type="{{ $template['type'] }}">
+                                        <div class="template-card border rounded p-2 draggable-section">
+                                            <div class="d-flex align-items-center">
+                                                <i class="{{ $template['icon'] }} me-2 text-primary"></i>
+                                                <div class="flex-grow-1">
+                                                    <div class="template-name fw-bold">{{ $template['name'] }}</div>
+                                                    <small class="text-muted">{{ $template['description'] }}</small>
+                                                </div>
+                                                <button class="btn btn-sm btn-outline-primary add-section-btn" 
+                                                        data-template-key="{{ $template['key'] }}"
+                                                        data-template-type="{{ $template['type'] }}">
+                                                    <i class="ri-add-line"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            @else
+                                <div class="text-center p-3">
+                                    <i class="ri-inbox-line text-muted mb-2" style="font-size: 2rem;"></i>
+                                    <div class="text-muted small">No section templates found</div>
                                 </div>
-                                <div class="mt-2 small text-muted">Loading sections...</div>
-                            </div>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -55,14 +75,188 @@
                 </a>
                 <div class="collapse" id="themeWidgetsCollapse">
                     <div class="nav-item-content p-2">
-                        <div class="component-grid" id="themeWidgetsGrid">
-                            <!-- Live Designer theme widgets from API will be loaded here -->
-                            <div class="text-center p-3">
-                                <div class="spinner-border spinner-border-sm text-primary" role="status">
-                                    <span class="visually-hidden">Loading theme widgets...</span>
-                                </div>
-                                <div class="mt-2 small text-muted">Loading theme widgets...</div>
+                        <!-- Drill-down container -->
+                        <div id="widgetDrillDownContainer">
+                            
+                            <!-- Breadcrumb Navigation -->
+                            <div class="drill-down-breadcrumb" id="drillDownBreadcrumb" style="display: none;">
+                                <button class="btn btn-sm btn-outline-secondary back-btn" id="drillDownBack">
+                                    <i class="ri-arrow-left-line"></i>
+                                </button>
+                                <span class="breadcrumb-text" id="breadcrumbText"></span>
                             </div>
+
+                            <!-- Widgets View (Default) - Keep Current Grid Structure -->
+                            <div class="widgets-view" id="widgetsView">
+                                <div class="component-grid" id="themeWidgetsGrid">
+                                    @if(isset($themeWidgets) && count($themeWidgets) > 0)
+                                    @if(isset($themeWidgets))
+                                        {{-- Debug: Check what data we have --}}
+                                        <script>
+                                            console.log('Server theme widgets data:', @json($themeWidgets));
+                                        </script>
+                                    @endif
+                                        @foreach($themeWidgets as $widget)
+                                            <!-- Keep existing widget item structure with drill-down button on right -->
+                                            @if($widget['preview_image'])
+                                                <div class="theme-widget-item @if($widget['has_content_types']) has-drill-down @endif" 
+                                                     data-widget-id="{{ $widget['id'] }}" 
+                                                     data-widget-slug="{{ $widget['slug'] }}"
+                                                     draggable="true"
+                                                     title="{{ $widget['description'] }}">
+                                                    <div class="widget-preview">
+                                                        <img src="{{ $widget['preview_image'] }}" alt="{{ $widget['name'] }}" 
+                                                             onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'{{ $widget['icon'] }}\'></i>';">
+                                                    </div>
+                                                    <div class="widget-title-row d-flex justify-content-between align-items-center">
+                                                        <div class="widget-title">{{ $widget['name'] }}</div>
+                                                        @if($widget['has_content_types'] ?? false)
+                                                            <button class="drill-down-btn expand-content-types-btn" 
+                                                                    data-drill-widget-id="{{ $widget['id'] }}"
+                                                                    title="View {{ $widget['content_types_count'] ?? 0 }} content types">
+                                                                <i class="ri-arrow-right-line"></i>
+                                                                <span class="content-count">{{ $widget['content_types_count'] ?? 0 }}</span>
+                                                            </button>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            @else
+                                                <div class="component-item @if($widget['has_content_types']) has-drill-down @endif" 
+                                                     data-widget-id="{{ $widget['id'] }}" 
+                                                     data-widget-slug="{{ $widget['slug'] }}"
+                                                     draggable="true"
+                                                     title="{{ $widget['description'] }}">
+                                                    <i class="{{ $widget['icon'] }}"></i>
+                                                    <div class="label-row d-flex justify-content-between align-items-center">
+                                                        <div class="label">{{ $widget['name'] }}</div>
+                                                        @if($widget['has_content_types'] ?? false)
+                                                            <button class="drill-down-btn expand-content-types-btn" 
+                                                                    data-drill-widget-id="{{ $widget['id'] }}"
+                                                                    title="View {{ $widget['content_types_count'] ?? 0 }} content types">
+                                                                <i class="ri-arrow-right-line"></i>
+                                                                <span class="content-count">{{ $widget['content_types_count'] ?? 0 }}</span>
+                                                            </button>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            @endif
+                                        @endforeach
+                                    @else
+                                        <div class="text-center p-3">
+                                            <i class="ri-palette-line text-muted mb-2" style="font-size: 2rem;"></i>
+                                            <div class="text-muted small">No theme widgets available</div>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- Content Types View -->
+                            <div class="content-types-view" id="contentTypesView" style="display: none;">
+                                <div class="content-types-grid" id="contentTypesGrid">
+                                    <!-- Content types will be populated here using template -->
+                                </div>
+                                
+                                <!-- Content Type Card Template (Hidden) -->
+                                <div class="content-type-card-template d-none">
+                                    <div class="card card-body border border-dashed border-primary">
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm flex-shrink-0 me-3">
+                                                <span class="avatar-title bg-primary-subtle text-primary rounded-circle fs-3">
+                                                    <i class="content-type-icon-placeholder"></i>
+                                                </span>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-1 content-type-name"></h6>
+                                                <p class="text-muted mb-0 content-type-count"></p>
+                                            </div>
+                                            <div class="flex-shrink-0">
+                                                <i class="ri-arrow-right-line text-muted fs-5"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Empty State Template -->
+                                <div class="content-types-empty-template d-none">
+                                    <div class="text-center p-4">
+                                        <div class="avatar-md mx-auto mb-4">
+                                            <div class="avatar-title bg-light text-muted rounded-circle fs-2">
+                                                <i class="ri-folder-line"></i>
+                                            </div>
+                                        </div>
+                                        <h5 class="fs-16 mb-1">No Content Types Available</h5>
+                                        <p class="text-muted mb-0">This widget doesn't have any content types configured.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Content Items View -->
+                            <div class="content-items-view" id="contentItemsView" style="display: none;">
+                                <div class="content-items-grid" id="contentItemsGrid">
+                                    <!-- Content items will be populated here using template -->
+                                </div>
+                                
+                                <!-- Content Item Card Template (Hidden) -->
+                                <div class="content-item-card-template d-none">
+                                    <div class="card">
+                                        <div class="card-body p-3">
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-sm flex-shrink-0 me-3">
+                                                    <img class="avatar-title rounded content-item-thumbnail" 
+                                                         src="" alt="" style="width: 40px; height: 40px; object-fit: cover;">
+                                                </div>
+                                                <div class="flex-grow-1 overflow-hidden">
+                                                    <h6 class="mb-1 text-truncate content-item-title"></h6>
+                                                    <p class="text-muted mb-0">
+                                                        <span class="badge bg-success-subtle text-success content-item-status"></span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Empty State Template -->
+                                <div class="content-items-empty-template d-none">
+                                    <div class="text-center p-4">
+                                        <div class="avatar-md mx-auto mb-4">
+                                            <div class="avatar-title bg-light text-muted rounded-circle fs-2">
+                                                <i class="ri-file-line"></i>
+                                            </div>
+                                        </div>
+                                        <h5 class="fs-16 mb-1">No Content Items Available</h5>
+                                        <p class="text-muted mb-0">No content items found for this content type.</p>
+                                    </div>
+                                </div>
+                                
+                                <!-- Loading State Template -->
+                                <div class="content-loading-template d-none">
+                                    <div class="text-center p-4">
+                                        <div class="spinner-border text-primary mb-3" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                        <h6 class="mb-1 loading-message">Loading...</h6>
+                                        <p class="text-muted mb-0">Please wait while we fetch the data.</p>
+                                    </div>
+                                </div>
+                                
+                                <!-- Error State Template -->
+                                <div class="content-error-template d-none">
+                                    <div class="text-center p-4">
+                                        <div class="avatar-md mx-auto mb-4">
+                                            <div class="avatar-title bg-danger-subtle text-danger rounded-circle fs-2">
+                                                <i class="ri-error-warning-line"></i>
+                                            </div>
+                                        </div>
+                                        <h5 class="fs-16 mb-1 text-danger">Error Loading Data</h5>
+                                        <p class="text-muted mb-3 error-message">Something went wrong while loading the content.</p>
+                                        <button class="btn btn-outline-primary btn-sm" onclick="widgetDrillDown.navigateBack()">
+                                            <i class="ri-arrow-left-line me-1"></i>Go Back
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -83,13 +277,24 @@
                 <div class="collapse" id="defaultWidgetsCollapse">
                     <div class="nav-item-content p-2">
                         <div class="component-grid" id="defaultWidgetsGrid">
-                            <!-- Default/fallback widgets will be loaded here -->
-                            <div class="text-center p-3">
-                                <div class="spinner-border spinner-border-sm text-primary" role="status">
-                                    <span class="visually-hidden">Loading default widgets...</span>
+                            @if(isset($defaultWidgets) && count($defaultWidgets) > 0)
+                                @foreach($defaultWidgets as $widget)
+                                    <div class="component-item" 
+                                         data-widget-id="{{ $widget['id'] }}" 
+                                         data-widget-slug="{{ $widget['slug'] }}"
+                                         data-widget-category="{{ $widget['category'] }}"
+                                         draggable="true"
+                                         title="{{ $widget['description'] }}">
+                                        <i class="{{ $widget['icon'] }}"></i>
+                                        <div class="label">{{ $widget['name'] }}</div>
+                                    </div>
+                                @endforeach
+                            @else
+                                <div class="text-center p-3">
+                                    <i class="ri-apps-line text-muted mb-2" style="font-size: 2rem;"></i>
+                                    <div class="text-muted small">No default widgets available</div>
                                 </div>
-                                <div class="mt-2 small text-muted">Loading default widgets...</div>
-                            </div>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -197,21 +402,25 @@
     border: none;
     border-radius: 0;
     color: #6c757d;
+    font-weight: 600;
     padding: 12px 16px;
     font-size: 14px;
     background: transparent;
-    border-bottom: 1px solid #f1f3f4;
+    border: 1px solid #9de1d7;
     transition: all 0.2s ease;
 }
 
 .designer-left-sidebar .nav-link:hover {
-    background-color: #f8f9fa;
-    color: #495057;
+    background-color: #daf4f0;
+    color: #099885;
 }
 
-.designer-left-sidebar .nav-link.active {
-    background-color: #e3f2fd;
-    color: #1976d2;
+/* Active / expanded */
+.designer-left-sidebar .nav-link:not(.collapsed) {
+  background: #daf4f0;        /* light green background */
+  color: #099885;             /* Bootstrap primary */
+  font-weight: 600;
+  border: 1px solid #9de1d7;
 }
 
 .designer-left-sidebar .nav-link.collapsed .collapse-icon {
@@ -344,8 +553,8 @@
 /* Theme Widget Items with Preview Images */
 .theme-widget-item {
     background: #fff;
-    border: 1px solid #e9ecef;
-    border-radius: 6px;
+    border: 1px solid #cccccc;
+    border-radius: 0px;
     padding: 8px;
     text-align: center;
     cursor: pointer;

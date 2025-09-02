@@ -58,7 +58,7 @@
             </button>
         </div>
         <!-- Add Section Button -->
-        <button class="btn btn-success me-2" id="addSectionBtn" data-bs-toggle="modal" data-bs-target="#sectionTemplatesModal">
+        <button class="btn btn-success me-2" id="addSectionBtn">
             <i class="ri-add-line"></i> Add Section
         </button>
         

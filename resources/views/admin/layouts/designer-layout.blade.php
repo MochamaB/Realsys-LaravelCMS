@@ -208,13 +208,13 @@
             display: none !important;
         }
 
-        /* Ensure no modal backdrop on load */
-        .modal-backdrop {
+        /* FIXED: Allow modal backdrops but hide stale ones on initial load */
+        .modal-backdrop.stale-backdrop {
             display: none !important;
         }
 
-        /* Prevent body scroll lock on load */
-        body {
+        /* FIXED: Allow Bootstrap to manage body overflow for modals */
+        body.initial-load {
             overflow: auto !important;
         }
     </style>
@@ -236,7 +236,7 @@
         <!-- Start right Content here -->
         <!-- ============================================================== -->
         <div class="main-content">
-            <div class="page-content" style="padding-left: 0px; padding-right: 0px;">
+            <div class="page-content">
                 
                     
                     <!-- Breadcrumb Navigation -->
@@ -322,20 +322,24 @@
             const verticalOverlay = document.querySelector('.vertical-overlay');
             const appMenu = document.querySelector('.app-menu');
 
-            // Remove any modal overlays on page load
-            function removeModalOverlays() {
-                // Remove any existing modal backdrops
+            // FIXED: Only remove stale modal overlays, not active ones
+            function removeStaleModalOverlays() {
+                // Only mark existing backdrops as stale (don't remove them)
                 const modalBackdrops = document.querySelectorAll('.modal-backdrop');
                 modalBackdrops.forEach(backdrop => {
-                    backdrop.remove();
+                    // Mark as stale so CSS can hide them
+                    backdrop.classList.add('stale-backdrop');
                 });
 
-                // Remove body classes that might lock scrolling
-                body.classList.remove('modal-open');
-                body.style.overflow = 'auto';
-                body.style.paddingRight = '';
+                // Remove body classes that might be left from previous page
+                if (!document.querySelector('.modal.show')) {
+                    // Only remove modal-open if no active modals
+                    body.classList.remove('modal-open');
+                    body.style.overflow = '';
+                    body.style.paddingRight = '';
+                }
 
-                // Hide vertical overlay
+                // Hide vertical overlay (sidebar overlay, not modal)
                 if (verticalOverlay) {
                     verticalOverlay.style.display = 'none';
                 }
@@ -380,13 +384,22 @@
 
             // Initialize the layout as vertical hovered by default
             body.classList.add('vertical-sidebar-enable');
+            
+            // Add initial-load class to allow forced overflow control
+            body.classList.add('initial-load');
 
-            // Remove modal overlays on page load
-            removeModalOverlays();
+            // Remove only stale modal overlays on page load (not active ones)
+            removeStaleModalOverlays();
 
-            // Also remove overlays after a short delay to ensure everything is loaded
-            setTimeout(removeModalOverlays, 100);
-            setTimeout(removeModalOverlays, 500);
+            // Also remove stale overlays after a short delay to ensure everything is loaded  
+            setTimeout(removeStaleModalOverlays, 100);
+            setTimeout(removeStaleModalOverlays, 500);
+            
+            // Remove initial-load class after initialization to allow normal Bootstrap modal behavior
+            setTimeout(() => {
+                body.classList.remove('initial-load');
+                console.log('🔧 Layout initialization complete - Bootstrap modals now enabled');
+            }, 1000);
         });
     </script>
 

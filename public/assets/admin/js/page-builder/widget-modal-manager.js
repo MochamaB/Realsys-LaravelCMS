@@ -105,9 +105,17 @@ class WidgetModalManager {
     }
 
     init() {
-        this.modal = new bootstrap.Modal(document.getElementById('widgetContentModal'));
+        const modalElement = document.getElementById('widgetContentModal');
+        if (!modalElement) {
+            console.error('❌ Widget modal element not found: #widgetContentModal');
+            this.initialized = false;
+            return;
+        }
+        
+        this.modal = new bootstrap.Modal(modalElement);
         this.setupEventListeners();
         this.initialized = true;
+        console.log('✅ Widget Modal Manager initialized successfully');
     }
     
     
@@ -137,9 +145,17 @@ class WidgetModalManager {
 
     // Public methods
     openForSection(sectionId, sectionName) {
+        console.log('🎯 Opening widget modal for section:', { sectionId, sectionName });
+        
+        // Check initialization
+        if (!this.initialized) {
+            console.error('❌ Widget Modal Manager not initialized');
+            return;
+        }
+        
         // Ensure we have valid data
         if (!sectionId) {
-            console.error('Section ID is required to open widget modal');
+            console.error('❌ Section ID is required to open widget modal');
             this.showError('Section ID is required');
             return;
         }

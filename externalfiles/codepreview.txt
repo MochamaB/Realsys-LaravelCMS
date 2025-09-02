@@ -1,16 +1,79 @@
-widget_types: null, …}
-page-builder:2501 ✅ Section data retrieved: {id: 20, template_section: {…}, config: {…}, allows_widgets: true, widget_types: null, …}
-section-manager.js?v=1756681915:589 🔧 Opening section configuration modal for: 20
-section-manager.js?v=1756681915:864 📄 Loading section configuration into form: 20
-section-manager.js?v=1756681915:897 🔄 Populating Blade modal form with: {section: {…}, config: {…}}
-section-manager.js?v=1756681915:986 ✅ Blade modal form populated
-section-manager.js?v=1756681915:886 ✅ Section configuration loaded into form
-page-builder:2509 ✅ Modal opened with API data
-section-manager.js?v=1756681915:615 ✅ Section configuration modal opened
-page-builder:1 Blocked aria-hidden on an element because its descendant retained focus. The focus must not be hidden from assistive technology users. Avoid using aria-hidden on a focused element or its ancestor. Consider using the inert attribute instead, which will also prevent focus. For more details, see the aria-hidden section of the WAI-ARIA specification at https://w3c.github.io/aria/#aria-hidden.
-Element with focus: <button.btn-close>
-Ancestor with aria-hidden: <div.modal fade#addWidgetModal> <div class=​"modal fade" id=​"addWidgetModal" tabindex=​"-1" aria-labelledby=​"addWidgetModalLabel" style=​"padding-right:​ 16px;​ display:​ block;​" aria-hidden=​"true">​…​</div>​
-page-builder:1 Blocked aria-hidden on an element because its descendant retained focus. The focus must not be hidden from assistive technology users. Avoid using aria-hidden on a focused element or its ancestor. Consider using the inert attribute instead, which will also prevent focus. For more details, see the aria-hidden section of the WAI-ARIA specification at https://w3c.github.io/aria/#aria-hidden.
-Element with focus: <button.btn-close>
-Ancestor with aria-hidden: <div.modal fade#sectionConfigModal> <div class=​"modal fade" id=​"sectionConfigModal" tabindex=​"-1" aria-labelledby=​"sectionConfigModalLabel" style=​"display:​ block;​ padding-right:​ 16px;​" aria-hidden=​"true">​…​</div>​
-TISProUrlManualScannerLib.js:1 mouseenter href = http://realsyscms.local:8080/admin/pages
+http://realsyscms.local:8080/assets/admin/css/live-designer/simple-live-designer.css net::ERR_ABORTED 500 (Internal Server Error)Understand this error
+live-designer:1386 Server theme widgets data: (8) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+app.js:1042 Uncaught TypeError: Cannot read properties of null (reading 'addEventListener')
+    at app.js:1042:55
+    at app.js:1178:2
+(anonymous) @ app.js:1042
+(anonymous) @ app.js:1178Understand this error
+unified-loader-manager.js?v=1756767442:232 📦 Live Designer Unified Loader Manager module loaded
+template-manager.js?v=1756767442:527 📦 Live Designer Template Manager module loaded
+widget-library.js?v=1756767442:701 📦 Live Designer Widget Library module loaded
+default-widget-library.js?v=1756767442:316 📦 Live Designer Default Widget Library module loaded
+live-designer:2177 Uncaught TypeError: Cannot read properties of null (reading 'querySelector')
+    at HTMLDocument.<anonymous> (live-designer:2177:44)
+(anonymous) @ live-designer:2177Understand this error
+sidebar-manager.js?v=1756767442:19 🎛️ SidebarManager initializing...
+sidebar-manager.js?v=1756767442:59 ✅ Left sidebar toggle setup complete
+sidebar-manager.js?v=1756767442:94 ✅ Right sidebar toggle setup complete
+sidebar-manager.js?v=1756767442:27 ✅ SidebarManager initialized
+live-preview.js?v=1756767442:37 ✅ Live Preview initialized successfully
+widget-form-manager.js?v=1756767442:21 📝 Widget Form Manager initialized
+device-preview.js?v=1756767442:37 📱 Initializing Device Preview...
+device-preview.js?v=1756767442:329 🖥️ Desktop viewport: 1440px at 100.0% zoom
+device-preview.js?v=1756767442:108 Uncaught (in promise) TypeError: this.toggleZoomControls is not a function
+    at DevicePreview.setDevice (device-preview.js?v=1756767442:108:14)
+    at DevicePreview.finishInit (device-preview.js?v=1756767442:72:14)
+    at DevicePreview.init (device-preview.js?v=1756767442:55:18)
+    at new DevicePreview (device-preview.js?v=1756767442:30:14)
+    at HTMLDocument.<anonymous> (live-designer:2455:27)
+setDevice @ device-preview.js?v=1756767442:108
+finishInit @ device-preview.js?v=1756767442:72
+init @ device-preview.js?v=1756767442:55
+DevicePreview @ device-preview.js?v=1756767442:30
+(anonymous) @ live-designer:2455Understand this error
+BlockingPageContent.js:2  action SET_STORAGE_DATA @ 01:57:41.678
+BlockingPageContent.js:2  prev state {blocking: false}
+BlockingPageContent.js:2  action     {type: 'SET_STORAGE_DATA', urls: {…}, online: true, eula: true, welcome: true, …}
+BlockingPageContent.js:2  next state {blocking: false}
+preview-iframe:45 🏗️ Preview page structure loaded: {page: {…}, sections: Array(4)}
+NotificationContent.js:2  action SET_LOCALE @ 01:57:43.945
+NotificationContent.js:2  prev state {notification: false, locale: '', mode: '', os: '', browser: '', …}
+NotificationContent.js:2  action     {type: 'SET_LOCALE', locale: 'en'}
+NotificationContent.js:2  next state {notification: false, locale: 'en', mode: '', os: '', browser: '', …}
+NotificationContent.js:2  action SET_STORAGE_DATA @ 01:57:44.000
+NotificationContent.js:2  prev state {notification: false, locale: 'en', mode: '', os: '', browser: '', …}
+NotificationContent.js:2  action     {type: 'SET_STORAGE_DATA', urls: {…}, online: true, eula: true, welcome: true, …}
+NotificationContent.js:2  next state {notification: false, locale: 'en', mode: 'Promoter', os: 'win', browser: 'chrome', …}
+index.ts-abec1db7.js:1 [Long Running Recorder] Content script initialised
+index.ts-abec1db7.js:3 [Long Running Recorder] Recorder disabled
+active-calendar.js:1 Uncaught TypeError: $(...).fullCalendar is not a function
+    at active-calendar.js:1:16
+(anonymous) @ active-calendar.js:1Understand this error
+main.js:7 Uncaught TypeError: $(...).meanmenu is not a function
+    at main.js:7:23
+    at main.js:338:3
+(anonymous) @ main.js:7
+(anonymous) @ main.js:338Understand this error
+preview-helpers.js:35 🎨 Initializing preview helpers
+preview-helpers.js:67 🗺️ Using existing universal component data attributes...
+preview-helpers.js:79 📦 Enhanced section "Hero Header" (ID: 1)
+preview-helpers.js:79 📦 Enhanced section "Content" (ID: 2)
+preview-helpers.js:79 📦 Enhanced section "Multi Column Section" (ID: 3)
+preview-helpers.js:109 🎯 Enhanced widget "Image Slider Widget" (instance: 1, widget: 6)
+preview-helpers.js:109 🎯 Enhanced widget "Counter Statistics Widget" (instance: 3, widget: 1)
+preview-helpers.js:109 🎯 Enhanced widget "Header with Description" (instance: 4, widget: 4)
+preview-helpers.js:109 🎯 Enhanced widget "Header with Description" (instance: 6, widget: 4)
+preview-helpers.js:109 🎯 Enhanced widget "Header with Description" (instance: 7, widget: 4)
+preview-helpers.js:109 🎯 Enhanced widget "Header with Description" (instance: 5, widget: 4)
+preview-helpers.js:113 ✅ Enhanced 6 widgets and 3 sections using existing data attributes
+preview-helpers.js:182 🎯 Setup interactions for 6 widgets
+preview-helpers.js:204 📦 Setup interactions for 3 sections
+preview-helpers.js:242 ⌨️ Keyboard shortcuts enabled
+preview-helpers.js:290 📢 Message listener setup
+preview-helpers.js:59 ✅ Preview helpers initialized
+live-preview.js?v=1756767442:182 📝 Preview helpers injected successfully
+device-preview.js?v=1756767442:377 📏 Iframe height adjusted to: 3469px
+index.ts-abec1db7.js:1 [Long Running Recorder] Content script initialised
+index.ts-abec1db7.js:3 [Long Running Recorder] Recorder disabled
+device-preview.js?v=1756767442:699 🔍 Desktop zoom set to: 49%, Left margin: 30px
+device-preview.js?v=1756767442:672 🔍 Desktop zoom calculated: 49%

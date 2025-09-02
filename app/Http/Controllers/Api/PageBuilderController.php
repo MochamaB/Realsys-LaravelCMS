@@ -1592,8 +1592,9 @@ class PageBuilderController extends Controller
         // Inject preview data using the existing page structure data
         $pageContent = $this->injectPreviewDataFromStructure($page, $pageContent);
 
-        // Inject preview helper assets
-        $previewAssets = $this->getPreviewAssets();
+        // Inject Page Builder specific preview helper assets (NOT live-designer)
+        $previewAssets = $this->getPageBuilderPreviewAssets();
+        \Log::info('Page Builder using pagebuilder-preview-helper.js (NOT live-designer)');
 
         // Build complete HTML with preview helpers
         $html = '<!DOCTYPE html>
@@ -1606,7 +1607,7 @@ class PageBuilderController extends Controller
     <!-- Theme Assets -->
     ' . $this->getThemeAssetsHtml($page) . '
     
-    <!-- Preview Helper Assets -->
+    <!-- Page Builder Preview Helper Assets -->
     ' . $previewAssets . '
     
     <!-- Preview Structure Data -->
@@ -1739,6 +1740,77 @@ class PageBuilderController extends Controller
         
         section[data-section-id]:last-child {
             margin-bottom: 0;
+        }
+    </style>';
+    }
+
+    /**
+     * Get Page Builder specific preview assets (NOT live-designer assets)
+     * This prevents modal interference by using pagebuilder-preview-helper.js
+     * 
+     * @return string
+     */
+    private function getPageBuilderPreviewAssets(): string
+    {
+        return '
+    <!-- Page Builder Preview Helper CSS -->
+    <link rel="stylesheet" href="' . asset('assets/admin/css/page-builder/pagebuilder-preview-helper.css') . '">
+    
+    <!-- Page Builder Preview Helper JS (NOT live-designer version) -->
+    <script src="' . asset('assets/admin/js/page-builder/pagebuilder-preview-helper.js') . '"></script>
+    
+    <!-- Page Builder Preview Styling -->
+    <style>
+        body {
+            padding: 15px !important;
+            margin: 0 !important;
+            min-height: calc(100vh - 30px) !important;
+        }
+        
+        /* Page Builder specific outline styles */
+        [data-pagebuilder-widget] {
+            position: relative;
+        }
+        
+        [data-pagebuilder-section] {
+            position: relative;
+            min-height: 50px;
+        }
+        
+        .pagebuilder-selected {
+            position: relative !important;
+        }
+        
+        .pagebuilder-highlighted {
+            position: relative !important;
+        }
+        
+        /* Ensure proper spacing for section outlines */
+        section[data-section-id] {
+            margin: 8px 0;
+        }
+        
+        /* First and last section spacing */
+        section[data-section-id]:first-child {
+            margin-top: 0;
+        }
+        
+        section[data-section-id]:last-child {
+            margin-bottom: 0;
+        }
+        
+        /* Page Builder specific hover effects */
+        [data-pagebuilder-widget]:hover {
+            transition: outline 0.2s ease;
+        }
+        
+        [data-pagebuilder-section]:hover {
+            transition: outline 0.2s ease;
+        }
+        
+        /* Ensure outlines are visible above other content */
+        * {
+            box-sizing: border-box;
         }
     </style>';
     }
