@@ -73,6 +73,20 @@ Route::middleware('admin.auth')->group(function () {
     Route::get('/pages/{page}/live-designer', [App\Http\Controllers\Admin\LiveDesignerViewController::class, 'show'])
         ->name('admin.pages.live-designer');
     
+    // Page Builder API Routes
+    Route::prefix('api/page-builder')->name('api.page-builder.')->group(function () {
+        Route::get('/section-templates', [PageBuilderViewController::class, 'loadAvailableSectionTemplates'])
+            ->name('section-templates');
+        Route::get('/theme-widgets', [PageBuilderViewController::class, 'loadThemeWidgets'])
+            ->name('theme-widgets');
+        Route::get('/default-widgets', [PageBuilderViewController::class, 'loadDefaultWidgets'])
+            ->name('default-widgets');
+        Route::get('/widgets/{widget}/content-types', [PageBuilderViewController::class, 'getWidgetContentTypes'])
+            ->name('widgets.content-types');
+        Route::get('/content-types/{contentType}/items', [PageBuilderViewController::class, 'getContentItems'])
+            ->name('content-types.items');
+    });
+    
     // Live Designer API endpoints
     Route::get('/api/widgets/{widget}/content-types', [App\Http\Controllers\Admin\LiveDesignerViewController::class, 'getWidgetContentTypes'])
         ->name('admin.api.widgets.content-types');
@@ -309,13 +323,17 @@ Route::middleware('admin.auth')->group(function () {
         Route::get('/wizard/constituencies', [UserManagementController::class, 'getConstituencies'])->name('wizard.constituencies');
         Route::get('/wizard/wards', [UserManagementController::class, 'getWards'])->name('wizard.wards');
     });
+});
 
-    // API routes for GrapeJS (using web middleware for sessions)
+// API routes for GrapeJS (using web middleware for sessions)
 Route::prefix('api')->middleware('admin.auth')->group(function () {
 
     // =====================================================================
-    // Page Builder API - Simplified endpoints following LivePreview pattern
+    // DISABLED: Old Page Builder API - Conflicted with fresh rebuild
+    // These routes point to the disabled Api\PageBuilderController
+    // Using PageBuilderViewController routes instead (lines 76-88)
     // =====================================================================
+    /*
     Route::prefix('page-builder')->group(function () {
         // Core Page Builder endpoints (based on LivePreviewController)
         Route::get('/pages/{page}/rendered', [App\Http\Controllers\Api\PageBuilderController::class, 'getRenderedPage'])->name('api.page-builder.pages.rendered');
@@ -341,6 +359,7 @@ Route::prefix('api')->middleware('admin.auth')->group(function () {
         Route::post('/pages/{page}/sections', [App\Http\Controllers\Api\PageBuilderController::class, 'createSection'])->name('api.page-builder.sections.create');
         Route::patch('/sections/{section}/position', [App\Http\Controllers\Api\PageBuilderController::class, 'updateSectionPosition'])->name('api.page-builder.sections.position');
     });
+    */
     // Page Designer API
     Route::get('/pages/{page}/render', [PageController::class, 'renderPageContent'])->name('api.pages.render');
     Route::post('/pages/{page}/save-content', [PageController::class, 'savePageContent'])->name('api.pages.save-content');
@@ -394,12 +413,17 @@ Route::prefix('api')->middleware('admin.auth')->group(function () {
         Route::get('/pages/{page}/preview-iframe', [App\Http\Controllers\Api\LivePreviewController::class, 'getPreviewIframe'])->name('preview-iframe');
         Route::get('/page-structure/{page}', [App\Http\Controllers\Api\LivePreviewController::class, 'getPageStructure'])->name('page-structure');
         Route::get('/widget-editor/{instance}', [App\Http\Controllers\Api\LivePreviewController::class, 'getWidgetEditorForm'])->name('widget-editor');
-        Route::get('/section-editor/{section}', [App\Http\Controllers\Api\LivePreviewController::class, 'getSectionEditorForm'])->name('section-editor');
-        Route::post('/widgets/{instance}/update', [App\Http\Controllers\Api\LivePreviewController::class, 'updateWidgetPreview'])->name('update-widget');
-        Route::post('/sections/{section}/update', [App\Http\Controllers\Api\LivePreviewController::class, 'updateSectionPreview'])->name('update-section');
-        Route::post('/sections/{section}/add-widget', [App\Http\Controllers\Api\LivePreviewController::class, 'addWidget'])->name('add-widget');
-        Route::get('/widgets/available', [App\Http\Controllers\Api\LivePreviewController::class, 'getAvailableWidgets'])->name('available-widgets');
+        
+        // Section drag and drop routes
+        Route::post('/sections/reorder', [App\Http\Controllers\Api\LivePreviewController::class, 'reorderSections'])->name('sections.reorder');
+        Route::post('/sections/{section}/clone', [App\Http\Controllers\Api\LivePreviewController::class, 'cloneSection'])->name('sections.clone');
     });
+    
+    Route::get('/section-editor/{section}', [App\Http\Controllers\Api\LivePreviewController::class, 'getSectionEditorForm'])->name('section-editor');
+    Route::post('/widgets/{instance}/update', [App\Http\Controllers\Api\LivePreviewController::class, 'updateWidgetPreview'])->name('update-widget');
+    Route::post('/sections/{section}/update', [App\Http\Controllers\Api\LivePreviewController::class, 'updateSectionPreview'])->name('update-section');
+    Route::post('/sections/{section}/add-widget', [App\Http\Controllers\Api\LivePreviewController::class, 'addWidget'])->name('add-widget');
+    Route::get('/widgets/available', [App\Http\Controllers\Api\LivePreviewController::class, 'getAvailableWidgets'])->name('available-widgets');
 
     Route::get('/sections/{section}/render', [App\Http\Controllers\Api\PageSectionController::class, 'renderSection'])->name('api.sections.render');
 
@@ -461,5 +485,4 @@ Route::prefix('api')->middleware('admin.auth')->group(function () {
             'timestamp' => now()->toISOString()
         ]);
     })->name('api.test-live-preview');
-});
 });

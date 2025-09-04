@@ -412,7 +412,7 @@ class LivePreviewController extends Controller
         // Inject preview helper assets
         $previewAssets = $this->getPreviewAssets();
 
-        // Build complete HTML with preview helpers
+        // Build complete HTML with preview helpers and proper page container
         $html = '<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -430,7 +430,14 @@ class LivePreviewController extends Controller
     ' . $this->getPreviewStructureScript($page) . '
 </head>
 <body>
-    ' . $pageContent . '
+    <!-- Page Container with proper data attributes for preview system -->
+    <div data-preview-page="' . $page->id . '" 
+         data-page-title="' . e($page->title) . '" 
+         data-page-template="' . e($page->template->name ?? 'Unknown Template') . '"
+         data-preview-type="page"
+         class="page-preview-container">
+        ' . $pageContent . '
+    </div>
 </body>
 </html>';
 
@@ -519,6 +526,143 @@ class LivePreviewController extends Controller
     }
 
     /**
+     * Reorder sections within a page
+     */
+    public function reorderSections(Request $request)
+    {
+        try {
+            $request->validate([
+                'section_id' => 'required|integer|exists:page_sections,id',
+                'new_position' => 'required|integer|min:0',
+                'old_position' => 'required|integer|min:0'
+            ]);
+
+            $sectionId = $request->input('section_id');
+            $newPosition = $request->input('new_position');
+            $oldPosition = $request->input('old_position');
+
+            \Log::info('Reordering section', [
+                'section_id' => $sectionId,
+                'old_position' => $oldPosition,
+                'new_position' => $newPosition
+            ]);
+
+            // Find the section
+            $section = \App\Models\PageSection::findOrFail($sectionId);
+            
+            // Get all sections for this page ordered by position
+            $allSections = \App\Models\PageSection::where('page_id', $section->page_id)
+                ->orderBy('position')
+                ->get();
+
+            // Reorder the sections
+            $this->reorderSectionPositions($allSections, $sectionId, $newPosition);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Section position updated successfully',
+                'section_id' => $sectionId,
+                'new_position' => $newPosition
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error reordering sections: ' . $e->getMessage(), [
+                'section_id' => $request->input('section_id'),
+                'exception' => $e
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to reorder section: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Clone a section
+     */
+    public function cloneSection(\App\Models\PageSection $section)
+    {
+        try {
+            \Log::info('Cloning section', ['section_id' => $section->id]);
+
+            // Create a new section with copied data
+            $newSection = $section->replicate();
+            $newSection->name = $section->name . ' (Copy)';
+            
+            // Set position to be after the original section
+            $newSection->position = $section->position + 1;
+            $newSection->save();
+
+            // Update positions of sections that come after
+            \App\Models\PageSection::where('page_id', $section->page_id)
+                ->where('position', '>', $section->position)
+                ->where('id', '!=', $newSection->id)
+                ->increment('position');
+
+            // Clone all widgets in the section
+            foreach ($section->widgets as $widget) {
+                $newWidget = $widget->replicate();
+                $newWidget->page_section_id = $newSection->id;
+                $newWidget->save();
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Section cloned successfully',
+                'newSectionId' => $newSection->id,
+                'originalSectionId' => $section->id
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error cloning section: ' . $e->getMessage(), [
+                'section_id' => $section->id,
+                'exception' => $e
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to clone section: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Reorder section positions
+     */
+    protected function reorderSectionPositions($sections, $movedSectionId, $newPosition)
+    {
+        $sectionsArray = $sections->toArray();
+        $movedSection = null;
+        $movedIndex = null;
+
+        // Find the moved section
+        foreach ($sectionsArray as $index => $section) {
+            if ($section['id'] == $movedSectionId) {
+                $movedSection = $section;
+                $movedIndex = $index;
+                break;
+            }
+        }
+
+        if ($movedSection === null) {
+            throw new \Exception('Section not found');
+        }
+
+        // Remove the moved section from its current position
+        array_splice($sectionsArray, $movedIndex, 1);
+
+        // Insert the moved section at the new position
+        array_splice($sectionsArray, $newPosition, 0, [$movedSection]);
+
+        // Update positions in database
+        foreach ($sectionsArray as $index => $section) {
+            \App\Models\PageSection::where('id', $section['id'])
+                ->update(['position' => $index]);
+        }
+    }
+
+    /**
      * Get preview helper assets
      * 
      * @return string
@@ -528,8 +672,15 @@ class LivePreviewController extends Controller
         return '
     <!-- Preview Helper CSS -->
     <link rel="stylesheet" href="' . asset('assets/admin/css/live-designer/preview-helpers.css') . '">
+    <link href="' . asset('assets/admin/css/icons.min.css') . '" rel="stylesheet" type="text/css" />
     
-    <!-- Preview Helper JS -->
+    <!-- SortableJS Library for Drag and Drop -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    
+    <!-- Preview Helper JS Modules (load in order) -->
+    <script src="' . asset('assets/admin/js/live-designer/widget-preview.js') . '"></script>
+    <script src="' . asset('assets/admin/js/live-designer/section-preview.js') . '"></script>
+    <script src="' . asset('assets/admin/js/live-designer/page-preview.js') . '"></script>
     <script src="' . asset('assets/admin/js/live-designer/preview-helpers.js') . '"></script>
     
     <!-- Internal Preview Spacing -->
@@ -544,6 +695,22 @@ class LivePreviewController extends Controller
         section[data-section-id] {
             margin: 8px 0;
         }
+        
+        /* First and last section spacing */
+        section[data-section-id]:first-child {
+            margin-top: 0;
+        }
+        
+        section[data-section-id]:last-child {
+            margin-bottom: 0;
+        }
+        
+        
+        
+       
+      
+        
+        
         
         /* First and last section spacing */
         section[data-section-id]:first-child {

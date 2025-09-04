@@ -236,13 +236,12 @@
         <!-- Start right Content here -->
         <!-- ============================================================== -->
         <div class="main-content">
-            <div class="page-content">
-                
-                    
+            <div class="page-content px-0">
+                <div class="px-3">
                     <!-- Breadcrumb Navigation -->
                     @include('admin.partials.breadcrumb')
                     <!-- End Breadcrumb Navigation -->
-
+                </div>
                     <!-- Alert Messages -->
                     @include('admin.partials.alerts')
                     <!-- End Alert Messages -->

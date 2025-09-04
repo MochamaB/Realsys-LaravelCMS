@@ -1,13 +1,49 @@
 /**
- * Preview Helper Functions
+ * Preview Helper Functions - Main Coordinator
  * 
- * JavaScript helpers that get injected into the preview iframe
- * These functions enable widget selection and interaction in the preview
+ * Main coordinator that manages specialized preview modules:
+ * - widget-preview.js: Widget interactions and selection
+ * - section-preview.js: Section interactions, drag & drop, and toolbars
+ * - page-preview.js: Page-level interactions and selection
  */
 
 // Initialize preview helpers when document is ready
 (function() {
     'use strict';
+    
+    // Shared state object for communication between modules
+    const sharedState = {
+        currentSelection: {
+            level: 'none', // 'none', 'page', 'section', 'widget'
+            element: null,
+            data: null
+        },
+        
+        // Global deselect function
+        deselectAll: function() {
+            // Handle page deselection
+            if (window.PagePreview && window.PagePreview.getCurrentSelection().level === 'page-selected') {
+                window.PagePreview.deselectPage();
+                return;
+            }
+            
+            // Handle section/widget deselection
+            document.querySelectorAll('.preview-highlighted').forEach(el => {
+                el.classList.remove('preview-highlighted');
+                el.style.boxShadow = '';
+                // Remove toolbar buttons when deselecting
+                const existingButtons = el.querySelector('.section-toolbar-buttons');
+                if (existingButtons) {
+                    existingButtons.remove();
+                }
+            });
+            
+            // Reset selection state
+            this.currentSelection.level = 'none';
+            this.currentSelection.element = null;
+            this.currentSelection.data = null;
+        }
+    };
     
     // Check if we're in an iframe (preview mode)
     const isInIframe = window !== window.parent;
@@ -32,7 +68,7 @@
     }
     
     function initializePreviewHelpers() {
-        console.log('🎨 Initializing preview helpers');
+        console.log('🎨 Initializing preview helpers coordinator');
         
         // First, map the page structure to DOM elements
         if (window.previewPageStructure) {
@@ -41,22 +77,38 @@
             console.warn('⚠️ No page structure data found');
         }
         
-        // Setup widget interactions
-        setupWidgetInteractions();
+        // Initialize specialized modules
+        initializeModules();
         
-        // Setup section interactions
-        setupSectionInteractions();
-        
-        // Setup keyboard shortcuts
+        // Setup global functionality
         setupKeyboardShortcuts();
-        
-        // Setup resize observer for responsive updates
         setupResizeObserver();
-        
-        // Listen for messages from parent
         setupMessageListener();
         
-        console.log('✅ Preview helpers initialized');
+        console.log('✅ Preview helpers coordinator initialized');
+    }
+    
+    function initializeModules() {
+        // Initialize widget preview module
+        if (window.WidgetPreview) {
+            window.WidgetPreview.init(sharedState);
+        } else {
+            console.warn('⚠️ WidgetPreview module not loaded');
+        }
+        
+        // Initialize section preview module
+        if (window.SectionPreview) {
+            window.SectionPreview.init(sharedState);
+        } else {
+            console.warn('⚠️ SectionPreview module not loaded');
+        }
+        
+        // Initialize page preview module
+        if (window.PagePreview) {
+            window.PagePreview.init(sharedState);
+        } else {
+            console.warn('⚠️ PagePreview module not loaded');
+        }
     }
     
     function mapStructureToDOM() {
@@ -65,6 +117,10 @@
         
         const structure = window.previewPageStructure;
         console.log('🗺️ Using existing universal component data attributes...');
+        
+        // Page data attributes are now provided server-side in the HTML
+        // No need for client-side injection since LivePreviewController adds them to the page container
+        console.log(`📄 Enhanced page "${structure.page.title}" (ID: ${structure.page.id}, Template: ${structure.page.template})`);
         
         // Enhance sections with preview data
         const sections = document.querySelectorAll('section[data-section-id]');
@@ -75,6 +131,7 @@
             if (structureSection) {
                 section.setAttribute('data-preview-section', structureSection.id);
                 section.setAttribute('data-section-name', structureSection.name);
+                section.setAttribute('data-preview-type', 'section'); // Add type for page selection
                 
                 console.log(`📦 Enhanced section "${structureSection.name}" (ID: ${structureSection.id})`);
             }
@@ -113,110 +170,21 @@
         console.log(`✅ Enhanced ${widgets.length} widgets and ${sections.length} sections using existing data attributes`);
     }
     
-    function setupWidgetInteractions() {
-        const widgets = document.querySelectorAll('[data-preview-widget]');
-        
-        widgets.forEach(widget => {
-            // Make widget clickable
-            widget.style.cursor = 'pointer';
-            widget.setAttribute('tabindex', '0'); // Make focusable
-            
-            // Click handler
-            widget.addEventListener('click', function(e) {
-                // Check if click is on toolbar actions (in the future when we add real buttons)
-                if (e.target.closest('.preview-toolbar-action')) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleToolbarAction(e.target, this);
-                    return;
-                }
-                
-                e.preventDefault();
-                e.stopPropagation();
-                selectWidget(
-                    this.dataset.previewWidget, // PageSectionWidget instance ID
-                    this.dataset.widgetId, // Original widget ID
-                    this.dataset.sectionId, // Section ID for context
-                    this.dataset.widgetName // Widget name for display
-                );
-            });
-            
-            // Keyboard handler
-            widget.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    selectWidget(
-                        this.dataset.previewWidget,
-                        this.dataset.widgetId,
-                        this.dataset.sectionId,
-                        this.dataset.widgetName
-                    );
-                }
-            });
-            
-            // Hover effects - using box-shadow now
-            widget.addEventListener('mouseenter', function() {
-                if (!this.classList.contains('preview-highlighted')) {
-                    this.style.boxShadow = '0 0 0 2px #0d6efd, 0 0 0 4px rgba(13, 110, 253, 0.2)';
-                }
-            });
-            
-            widget.addEventListener('mouseleave', function() {
-                if (!this.classList.contains('preview-highlighted')) {
-                    this.style.boxShadow = '';
-                }
-            });
-            
-            // Focus effects - using box-shadow
-            widget.addEventListener('focus', function() {
-                this.style.boxShadow = '0 0 0 3px #0d6efd, 0 0 0 5px rgba(13, 110, 253, 0.3)';
-            });
-            
-            widget.addEventListener('blur', function() {
-                if (!this.classList.contains('preview-highlighted')) {
-                    this.style.boxShadow = '';
-                }
-            });
-        });
-        
-        console.log(`🎯 Setup interactions for ${widgets.length} widgets`);
-    }
-    
-    function setupSectionInteractions() {
-        const sections = document.querySelectorAll('[data-preview-section]');
-        
-        sections.forEach(section => {
-            section.addEventListener('click', function(e) {
-                // Only trigger if clicking the section itself, not a child widget
-                if (e.target === this || !e.target.closest('[data-preview-widget]')) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    selectSection(
-                        this.dataset.previewSection, // Section ID
-                        this.dataset.sectionName // Section name for display
-                    );
-                }
-            });
-            
-            // Don't add any empty section indicators - let the templates handle empty states
-        });
-        
-        console.log(`📦 Setup interactions for ${sections.length} sections`);
-    }
+    // Widget and section interactions are now handled by their respective modules
     
     function setupKeyboardShortcuts() {
         document.addEventListener('keydown', function(e) {
             // ESC to deselect
             if (e.key === 'Escape') {
-                deselectAll();
+                sharedState.deselectAll();
             }
             
             // Arrow keys to navigate between widgets
             if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-                const highlighted = document.querySelector('.preview-highlighted');
-                if (highlighted) {
+                const highlighted = document.querySelector('.preview-highlighted[data-preview-widget]');
+                if (highlighted && window.WidgetPreview) {
                     e.preventDefault();
-                    navigateWidgets(highlighted, e.key);
+                    window.WidgetPreview.navigateWidgets(highlighted, e.key);
                 }
             }
             
@@ -225,10 +193,10 @@
                 const widgets = Array.from(document.querySelectorAll('[data-preview-widget]'));
                 const currentIndex = widgets.findIndex(w => w.classList.contains('preview-highlighted'));
                 
-                if (currentIndex >= 0 && currentIndex < widgets.length - 1) {
+                if (currentIndex >= 0 && currentIndex < widgets.length - 1 && window.WidgetPreview) {
                     e.preventDefault();
                     const widget = widgets[currentIndex + 1];
-                    selectWidget(
+                    window.WidgetPreview.selectWidget(
                         widget.dataset.previewWidget,
                         widget.dataset.widgetId,
                         widget.dataset.sectionId,
@@ -239,7 +207,7 @@
             }
         });
         
-        console.log('⌨️ Keyboard shortcuts enabled');
+        console.log('⌨️ Global keyboard shortcuts enabled');
     }
     
     function setupResizeObserver() {
@@ -266,11 +234,13 @@
             
             switch (type) {
                 case 'highlight-widget':
-                    highlightWidget(data.widgetId);
+                    if (window.WidgetPreview) {
+                        window.WidgetPreview.highlightWidget(data.widgetId);
+                    }
                     break;
                     
                 case 'deselect-all':
-                    deselectAll();
+                    sharedState.deselectAll();
                     break;
                     
                 case 'device-changed':
@@ -278,202 +248,37 @@
                     break;
                     
                 case 'scroll-to-widget':
-                    scrollToWidget(data.widgetId);
+                    if (window.WidgetPreview) {
+                        window.WidgetPreview.scrollToWidget(data.widgetId);
+                    }
                     break;
                     
                 case 'update-widget-state':
-                    updateWidgetState(data.widgetId, data.state);
+                    if (window.WidgetPreview) {
+                        window.WidgetPreview.updateWidgetState(data.widgetId, data.state);
+                    }
+                    break;
+                    
+                case 'zoom-changed':
+                    if (window.PagePreview) {
+                        window.PagePreview.handleZoomChange(data.zoom);
+                    }
                     break;
             }
         });
         
-        console.log('📢 Message listener setup');
+        console.log('📢 Global message listener setup');
     }
     
-    function selectWidget(instanceId, widgetId, sectionId, widgetName) {
-        // Clear previous selections
-        deselectAll();
-        
-        // Highlight selected widget
-        highlightWidget(instanceId);
-        
-        // Notify parent with correct PageSectionWidget instance ID
-        parent.postMessage({
-            type: 'widget-selected',
-            data: { 
-                instanceId: instanceId, // PageSectionWidget ID for editing
-                widgetId: widgetId, // Original widget ID for reference
-                sectionId: sectionId, // Section context
-                widgetName: widgetName // Display name
-            }
-        }, '*');
-        
-        console.log(`✓ Widget selected: ${widgetName} (instance: ${instanceId}, widget: ${widgetId}, section: ${sectionId})`);
-    }
+    // Selection functions are now handled by their respective modules
     
-    function selectSection(sectionId, sectionName) {
-        // Clear previous selections
-        deselectAll();
-        
-        // Highlight selected section
-        highlightSection(sectionId);
-        
-        // Notify parent
-        parent.postMessage({
-            type: 'section-selected',
-            data: { 
-                sectionId: sectionId,
-                sectionName: sectionName 
-            }
-        }, '*');
-        
-        console.log(`✓ Section selected: ${sectionName} (ID: ${sectionId})`);
-    }
+    // Highlighting functions are now handled by their respective modules
     
-    function highlightWidget(instanceId) {
-        const widget = document.querySelector(`[data-preview-widget="${instanceId}"]`);
-        if (widget) {
-            // Remove existing highlights
-            document.querySelectorAll('.preview-highlighted').forEach(el => {
-                el.classList.remove('preview-highlighted');
-                el.style.boxShadow = '';
-            });
-            
-            // Add highlight to selected widget
-            widget.classList.add('preview-highlighted');
-            
-            // Scroll into view with some top offset to account for toolbar
-            widget.scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'center',
-                inline: 'center'
-            });
-        }
-    }
+    // Toolbar creation is now handled by the section preview module
     
-    function highlightSection(sectionId) {
-        const section = document.querySelector(`[data-preview-section="${sectionId}"]`);
-        if (section) {
-            // Remove existing highlights
-            document.querySelectorAll('.preview-highlighted').forEach(el => {
-                el.classList.remove('preview-highlighted');
-                el.style.boxShadow = '';
-                // Remove existing toolbar buttons
-                const existingButtons = el.querySelector('.section-toolbar-buttons');
-                if (existingButtons) {
-                    existingButtons.remove();
-                }
-            });
-            
-            // Add highlight to selected section
-            section.classList.add('preview-highlighted');
-            
-            // Create toolbar buttons
-            createSectionToolbarButtons(section, sectionId);
-            
-            // Scroll into view with some top offset to account for toolbar
-            section.scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'center',
-                inline: 'center'
-            });
-        }
-    }
+    // Deselection is now handled by the shared state object
     
-    function createSectionToolbarButtons(section, sectionId) {
-        // Create toolbar buttons container
-        const toolbarButtons = document.createElement('div');
-        toolbarButtons.className = 'section-toolbar-buttons';
-        
-        // Add Widget Button (Primary action)
-        const addWidgetBtn = document.createElement('button');
-        addWidgetBtn.className = 'section-toolbar-btn btn-primary';
-        addWidgetBtn.innerHTML = '<i class="ri-add-line"></i> Add Widget';
-        addWidgetBtn.setAttribute('data-action', 'add-widget');
-        addWidgetBtn.title = 'Add Widget to Section';
-        
-        // Edit Button
-        const editBtn = document.createElement('button');
-        editBtn.className = 'section-toolbar-btn btn-primary';
-        editBtn.innerHTML = '<i class="ri-pencil-fill"></i> Edit';
-        editBtn.setAttribute('data-action', 'edit');
-        editBtn.title = 'Edit Section Settings';
-        
-        // Delete Button
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'section-toolbar-btn btn-danger';
-        deleteBtn.innerHTML = '<i class="ri-delete-bin-fill"></i> Delete';
-        deleteBtn.setAttribute('data-action', 'delete');
-        deleteBtn.title = 'Delete Section';
-        
-        // Add buttons to container
-        toolbarButtons.appendChild(addWidgetBtn);
-        toolbarButtons.appendChild(editBtn);
-        toolbarButtons.appendChild(deleteBtn);
-        
-        // Add click handlers
-        toolbarButtons.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            const button = e.target.closest('.section-toolbar-btn');
-            if (button) {
-                const action = button.getAttribute('data-action');
-                const sectionName = section.getAttribute('data-section-name') || 'Section';
-                
-                console.log(`🔧 Section toolbar action: ${action} on section "${sectionName}" (ID: ${sectionId})`);
-                
-                // Call the existing toolbar action handler
-                handleToolbarAction(button, section);
-            }
-        });
-        
-        // Append to section
-        section.appendChild(toolbarButtons);
-        
-        console.log(`✅ Created toolbar buttons for section ${sectionId}`);
-    }
-    
-    function deselectAll() {
-        document.querySelectorAll('.preview-highlighted').forEach(el => {
-            el.classList.remove('preview-highlighted');
-            el.style.boxShadow = '';
-            // Remove toolbar buttons when deselecting
-            const existingButtons = el.querySelector('.section-toolbar-buttons');
-            if (existingButtons) {
-                existingButtons.remove();
-            }
-        });
-    }
-    
-    function navigateWidgets(currentWidget, direction) {
-        const widgets = Array.from(document.querySelectorAll('[data-preview-widget]'));
-        const currentIndex = widgets.indexOf(currentWidget);
-        
-        let nextIndex;
-        
-        switch (direction) {
-            case 'ArrowUp':
-            case 'ArrowLeft':
-                nextIndex = currentIndex > 0 ? currentIndex - 1 : widgets.length - 1;
-                break;
-            case 'ArrowDown':
-            case 'ArrowRight':
-                nextIndex = currentIndex < widgets.length - 1 ? currentIndex + 1 : 0;
-                break;
-        }
-        
-        if (nextIndex !== undefined && widgets[nextIndex]) {
-            const widget = widgets[nextIndex];
-            selectWidget(
-                widget.dataset.previewWidget,
-                widget.dataset.widgetId,
-                widget.dataset.sectionId,
-                widget.dataset.widgetName
-            );
-            widget.focus();
-        }
-    }
+    // Widget navigation is now handled by the widget preview module
     
     function handleDeviceChange(device, settings) {
         // Update body class for device-specific styles
@@ -483,225 +288,80 @@
         console.log(`📱 Device changed to: ${device}`);
     }
     
-    function scrollToWidget(instanceId) {
-        const widget = document.querySelector(`[data-preview-widget="${instanceId}"]`);
-        if (widget) {
-            widget.scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'center',
-                inline: 'center'
-            });
-        }
-    }
-    
-    function updateWidgetState(instanceId, state) {
-        const widget = document.querySelector(`[data-preview-widget="${instanceId}"]`);
-        if (!widget) return;
-        
-        // Remove existing state classes
-        widget.classList.remove('widget-loading', 'widget-updating', 'widget-updated', 'widget-error');
-        
-        // Add new state class
-        if (state) {
-            widget.classList.add(`widget-${state}`);
-            
-            // Auto-remove temporary states
-            if (['updated', 'error'].includes(state)) {
-                setTimeout(() => {
-                    widget.classList.remove(`widget-${state}`);
-                }, 3000);
-            }
-        }
-    }
-    
     // Expose helper functions globally for parent window access
     window.previewHelpers = {
-        highlightWidget,
-        highlightSection,
-        deselectAll,
-        selectWidget,
-        selectSection,
-        scrollToWidget,
-        updateWidgetState,
+        // Delegate to appropriate modules
+        highlightWidget: function(instanceId) {
+            if (window.WidgetPreview) {
+                window.WidgetPreview.highlightWidget(instanceId);
+            }
+        },
+        
+        highlightSection: function(sectionId) {
+            if (window.SectionPreview) {
+                window.SectionPreview.highlightSection(sectionId);
+            }
+        },
+        
+        deselectAll: function() {
+            sharedState.deselectAll();
+        },
+        
+        selectWidget: function(instanceId, widgetId, sectionId, widgetName) {
+            if (window.WidgetPreview) {
+                window.WidgetPreview.selectWidget(instanceId, widgetId, sectionId, widgetName);
+            }
+        },
+        
+        selectSection: function(sectionId, sectionName) {
+            if (window.SectionPreview) {
+                window.SectionPreview.selectSection(sectionId, sectionName);
+            }
+        },
+        
+        scrollToWidget: function(instanceId) {
+            if (window.WidgetPreview) {
+                window.WidgetPreview.scrollToWidget(instanceId);
+            }
+        },
+        
+        updateWidgetState: function(instanceId, state) {
+            if (window.WidgetPreview) {
+                window.WidgetPreview.updateWidgetState(instanceId, state);
+            }
+        },
         
         // Utility functions
-        getSelectedWidget() {
-            const highlighted = document.querySelector('.preview-highlighted[data-preview-widget]');
-            return highlighted ? {
-                instanceId: highlighted.dataset.previewWidget,
-                widgetId: highlighted.dataset.widgetId,
-                sectionId: highlighted.dataset.sectionId,
-                widgetName: highlighted.dataset.widgetName
-            } : null;
+        getSelectedWidget: function() {
+            return window.WidgetPreview ? window.WidgetPreview.getSelectedWidget() : null;
         },
         
-        getSelectedSection() {
-            const highlighted = document.querySelector('.preview-highlighted[data-preview-section]');
-            return highlighted ? {
-                sectionId: highlighted.dataset.previewSection,
-                sectionName: highlighted.dataset.sectionName
-            } : null;
+        getSelectedSection: function() {
+            return window.SectionPreview ? window.SectionPreview.getSelectedSection() : null;
         },
         
-        getAllWidgets() {
-            return Array.from(document.querySelectorAll('[data-preview-widget]'))
-                .map(widget => ({
-                    instanceId: widget.dataset.previewWidget,
-                    widgetId: widget.dataset.widgetId,
-                    sectionId: widget.dataset.sectionId,
-                    widgetName: widget.dataset.widgetName
-                }));
+        getAllWidgets: function() {
+            return window.WidgetPreview ? window.WidgetPreview.getAllWidgets() : [];
         },
         
-        getAllSections() {
-            return Array.from(document.querySelectorAll('[data-preview-section]'))
-                .map(section => ({
-                    sectionId: section.dataset.previewSection,
-                    sectionName: section.dataset.sectionName
-                }));
+        getAllSections: function() {
+            return window.SectionPreview ? window.SectionPreview.getAllSections() : [];
         },
         
-        getWidgetInfo(instanceId) {
-            const widget = document.querySelector(`[data-preview-widget="${instanceId}"]`);
-            if (widget) {
-                const rect = widget.getBoundingClientRect();
-                return {
-                    instanceId: instanceId,
-                    widgetId: widget.dataset.widgetId,
-                    sectionId: widget.dataset.sectionId,
-                    widgetName: widget.dataset.widgetName,
-                    position: { x: rect.left, y: rect.top },
-                    size: { width: rect.width, height: rect.height },
-                    visible: rect.top >= 0 && rect.bottom <= window.innerHeight
-                };
+        getWidgetInfo: function(instanceId) {
+            return window.WidgetPreview ? window.WidgetPreview.getWidgetInfo(instanceId) : null;
+        },
+        
+        getSectionInfo: function(sectionId) {
+            return window.SectionPreview ? window.SectionPreview.getSectionInfo(sectionId) : null;
+        },
+        
+        getCurrentSelection: function() {
+            if (window.PagePreview && window.PagePreview.isPageSelected()) {
+                return window.PagePreview.getCurrentSelection();
             }
-            return null;
-        },
-        
-        getSectionInfo(sectionId) {
-            const section = document.querySelector(`[data-preview-section="${sectionId}"]`);
-            if (section) {
-                const rect = section.getBoundingClientRect();
-                return {
-                    sectionId: sectionId,
-                    sectionName: section.dataset.sectionName,
-                    position: { x: rect.left, y: rect.top },
-                    size: { width: rect.width, height: rect.height },
-                    visible: rect.top >= 0 && rect.bottom <= window.innerHeight
-                };
-            }
-            return null;
+            return sharedState.currentSelection;
         }
     };
-    
-    // Toolbar Action Handlers
-    function handleToolbarAction(actionElement, targetElement) {
-        const action = actionElement.dataset.action;
-        const elementType = targetElement.dataset.previewWidget ? 'widget' : 'section';
-        const elementId = targetElement.dataset.previewWidget || targetElement.dataset.previewSection;
-        const elementName = targetElement.dataset.widgetName || targetElement.dataset.sectionName;
-        
-        console.log(`🔧 Toolbar action: ${action} on ${elementType} "${elementName}" (ID: ${elementId})`);
-        
-        switch (action) {
-            case 'edit':
-                // Send toolbar action message to parent for both widgets and sections
-                parent.postMessage({
-                    type: 'toolbar-action',
-                    data: { 
-                        action: 'edit',
-                        elementType: elementType,
-                        elementId: elementId,
-                        elementName: elementName
-                    }
-                }, '*');
-                
-                console.log(`✏️ Edit ${elementType}: ${elementName} (ID: ${elementId}) - message sent to parent`);
-                break;
-                
-            case 'copy':
-                handleCopyElement(elementType, elementId, elementName);
-                break;
-                
-            case 'delete':
-                handleDeleteElement(elementType, elementId, elementName);
-                break;
-                
-            case 'move-up':
-            case 'move-down':
-                handleMoveElement(elementType, elementId, action);
-                break;
-                
-            case 'add-widget':
-                if (elementType === 'section') {
-                    handleAddWidget(elementId);
-                }
-                break;
-                
-            default:
-                console.warn(`Unknown toolbar action: ${action}`);
-        }
-    }
-    
-    function handleCopyElement(type, id, name) {
-        parent.postMessage({
-            type: 'toolbar-action',
-            data: { 
-                action: 'copy',
-                elementType: type,
-                elementId: id,
-                elementName: name
-            }
-        }, '*');
-        
-        console.log(`📋 Copy ${type}: ${name}`);
-    }
-    
-    function handleDeleteElement(type, id, name) {
-        if (confirm(`Are you sure you want to delete "${name}"?`)) {
-            parent.postMessage({
-                type: 'toolbar-action',
-                data: { 
-                    action: 'delete',
-                    elementType: type,
-                    elementId: id,
-                    elementName: name
-                }
-            }, '*');
-            
-            console.log(`🗑️ Delete ${type}: ${name}`);
-        }
-    }
-    
-    function handleMoveElement(type, id, direction) {
-        parent.postMessage({
-            type: 'toolbar-action',
-            data: { 
-                action: direction,
-                elementType: type,
-                elementId: id
-            }
-        }, '*');
-        
-        console.log(`📈 Move ${type} ${direction}: ${id}`);
-    }
-    
-    function handleAddWidget(sectionId) {
-        // Find the section element to get its name
-        const sectionElement = document.querySelector(`[data-preview-section="${sectionId}"]`);
-        const sectionName = sectionElement ? sectionElement.getAttribute('data-section-name') : null;
-        
-        parent.postMessage({
-            type: 'toolbar-action',
-            data: { 
-                action: 'add-widget',
-                elementType: 'section',
-                elementId: sectionId,
-                elementName: sectionName
-            }
-        }, '*');
-        
-        console.log(`➕ Add widget to section: ${sectionId} (${sectionName || 'unnamed'})`);
-    }
     
 })();

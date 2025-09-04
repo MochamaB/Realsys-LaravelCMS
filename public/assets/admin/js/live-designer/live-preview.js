@@ -58,6 +58,18 @@ class LivePreview {
                 case 'section-selected':
                     this.onSectionSelected(data);
                     break;
+                case 'section-drag-start':
+                    this.onSectionDragStart(data);
+                    break;
+                case 'section-drag-end':
+                    this.onSectionDragEnd(data);
+                    break;
+                case 'section-drag-mode':
+                    this.onSectionDragMode(data);
+                    break;
+                case 'section-cloned':
+                    this.onSectionCloned(data);
+                    break;
             }
         });
         
@@ -417,6 +429,52 @@ class LivePreview {
     }
     
     /**
+     * Handle section drag start event from iframe
+     */
+    onSectionDragStart(data) {
+        console.log('🎯 Section drag started in iframe:', data);
+        this.showMessage('Section drag started...', 'info');
+        
+        // Optional: Add visual feedback to parent interface
+        document.body.classList.add('section-dragging');
+    }
+    
+    /**
+     * Handle section drag end event from iframe
+     */
+    onSectionDragEnd(data) {
+        console.log('🎯 Section drag ended in iframe:', data);
+        
+        if (data.positionChanged) {
+            this.showMessage(`Section moved from position ${data.oldPosition} to ${data.newPosition}`, 'success');
+        } else {
+            this.showMessage('Section position unchanged', 'info');
+        }
+        
+        // Remove visual feedback
+        document.body.classList.remove('section-dragging');
+    }
+    
+    /**
+     * Handle section drag mode activation from iframe
+     */
+    onSectionDragMode(data) {
+        console.log('🎯 Section drag mode activated:', data);
+        
+        if (data.active) {
+            this.showMessage('Drag mode activated - you can now drag the section', 'info');
+        }
+    }
+    
+    /**
+     * Handle section cloned event from iframe
+     */
+    onSectionCloned(data) {
+        console.log('📋 Section cloned successfully:', data);
+        this.showMessage(`Section "${data.sectionName}" cloned successfully`, 'success');
+    }
+
+    /**
      * Hide loading overlay
      */
     hideLoading() {
@@ -428,29 +486,30 @@ class LivePreview {
     }
     
     /**
-     * Show message to user
+     * Get current zoom level
      */
-    showMessage(message, type = 'info') {
-        const container = document.getElementById('message-container');
-        if (!container) return;
-        
-        const messageElement = document.createElement('div');
-        messageElement.className = `alert alert-${this.getBootstrapAlertType(type)} alert-dismissible fade show`;
-        messageElement.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
-        
-        container.appendChild(messageElement);
-        
-        // Auto-dismiss after 3 seconds
-        setTimeout(() => {
-            if (messageElement.parentNode) {
-                bootstrap.Alert.getInstance(messageElement)?.close();
-            }
-        }, 3000);
+    getCurrentZoom() {
+        const iframe = document.getElementById('preview-iframe');
+        if (iframe && iframe.style.transform) {
+            const match = iframe.style.transform.match(/scale\(([\d.]+)\)/);
+            return match ? parseFloat(match[1]) : 1;
+        }
+        return 1;
     }
-    
+
+    /**
+     * Notify iframe of zoom changes
+     */
+    notifyIframeZoomChange(zoomLevel) {
+        const iframe = document.getElementById('preview-iframe');
+        if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.postMessage({
+                type: 'zoom-changed',
+                zoom: zoomLevel
+            }, '*');
+        }
+    }
+
     /**
      * Get Bootstrap alert type from message type
      */

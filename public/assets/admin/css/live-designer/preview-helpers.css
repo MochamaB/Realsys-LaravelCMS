@@ -110,6 +110,121 @@ section[data-section-id].preview-highlighted::before {
     pointer-events: none;
 }
 
+/* Page highlighting and selection */
+.page-preview-container[data-preview-page] {
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 100vh;
+}
+
+.page-preview-container[data-preview-page]:hover {
+    box-shadow: 0 0 0 2px #099885, 0 0 0 4px rgba(9, 152, 133, 0.2);
+    background-color: rgba(9, 152, 133, 0.05);
+    cursor: pointer;
+}
+
+.page-preview-container[data-preview-page].preview-highlighted {
+    box-shadow: 0 0 0 2px #099885, 0 0 0 6px rgba(9, 152, 133, 0.15) !important;
+    background-color: rgba(9, 152, 133, 0.1);
+    position: relative !important;
+    z-index: 9997 !important;
+}
+
+/* Enhanced Page Selection Toolbar */
+.page-preview-container[data-preview-page].preview-highlighted::after {
+    content: '';
+    position: absolute;
+    top: -50px;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: #099885;
+    border-radius: 6px 6px 0 0;
+    z-index: 9999 !important;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Page toolbar content */
+.page-preview-container[data-preview-page] .page-toolbar-button {
+    content: attr(data-page-title) ' (' attr(data-page-template) ')';
+    position: absolute;
+    top: -38px;
+    left: 12px;
+    color: white;
+    font-size: 12px;
+    font-weight: 500;
+    z-index: 10000 !important;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+/* Clickable toolbar buttons for page */
+[data-preview-page].preview-highlighted .page-toolbar-buttons {
+    position: absolute;
+    top: -45px;
+    right: 12px;
+    display: flex;
+    gap: 8px;
+    z-index: 10001 !important;
+}
+
+.page-toolbar-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 0px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    pointer-events: auto;
+}
+
+.page-toolbar-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.page-toolbar-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.page-toolbar-btn i {
+    font-size: 12px;
+}
+
+/* Page toolbar button variants */
+.page-toolbar-btn.btn-primary {
+    background: rgba(13, 110, 253, 0.8);
+    border-color: rgba(13, 110, 253, 0.9);
+}
+
+.page-toolbar-btn.btn-primary:hover {
+    background: rgba(13, 110, 253, 1);
+    border-color: rgba(13, 110, 253, 1);
+}
+
+.page-toolbar-btn.btn-danger {
+    background: rgba(220, 53, 69, 0.8);
+    border-color: rgba(220, 53, 69, 0.9);
+}
+
+.page-toolbar-btn.btn-danger:hover {
+    background: rgba(220, 53, 69, 1);
+    border-color: rgba(220, 53, 69, 1);
+}
+
 /* Clickable toolbar buttons for sections */
 [data-preview-section].preview-highlighted .section-toolbar-buttons,
 section[data-section-id].preview-highlighted .section-toolbar-buttons {

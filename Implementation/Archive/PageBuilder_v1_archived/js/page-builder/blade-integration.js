@@ -148,8 +148,11 @@ function setupAddWidgetButtonHandlers() {
             e.preventDefault();
             e.stopPropagation();
             
-            console.log('🏗️ Add Section button clicked - opening templates modal');
-            openSectionTemplatesModal();
+            console.log('🏗️ Add Section button clicked - testing modal functionality');
+            
+            // DIAGNOSTIC: Try a simple test modal first
+            createAndShowTestModal();
+            return;
         }
         
         // No special handling needed for other modal triggers - let Bootstrap handle them natively

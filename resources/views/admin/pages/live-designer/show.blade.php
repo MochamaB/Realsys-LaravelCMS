@@ -517,23 +517,23 @@
 @endsection
 
 @section('content')
-<div class="container-fluid h-100 p-0">
+<div class="container-fluid h-100">
     <!-- Toolbar -->
-    <div class="row g-0">
-        <div class="col-12 p-0">
+    <div class="row">
+        <div class="col-12">
             @include('admin.pages.live-designer.components.toolbar')
         </div>
     </div>
     
     <!-- Main Content - Three Column Layout -->
-    <div class="row g-0 h-100">
+    <div class="row h-100">
         <!-- Left Sidebar -->
         <div class="col-auto" id="leftSidebarContainer">
             @include('admin.pages.live-designer.components.left-sidebar')
         </div>
         
         <!-- Canvas Container -->
-        <div class="col" id="canvasContainer" style="padding:20px 0px !important">
+        <div class="col" id="canvasContainer">
             <!-- Unified Progress Bar Loader -->
             <div class="unified-page-loader" id="liveDesignerLoader" style="display: none;">
                 <div class="progress-bar"></div>
