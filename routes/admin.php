@@ -75,6 +75,13 @@ Route::middleware('admin.auth')->group(function () {
     
     // Page Builder API Routes
     Route::prefix('api/page-builder')->name('api.page-builder.')->group(function () {
+        // Phase 1: Iframe Preview Endpoints
+        Route::get('/pages/{page}/preview-iframe', [\App\Http\Controllers\Api\PageBuilderController::class, 'getPagePreviewIframe'])
+            ->name('pages.preview-iframe');
+        Route::get('/pages/{page}/structure', [\App\Http\Controllers\Api\PageBuilderController::class, 'getPageStructure'])
+            ->name('pages.structure');
+            
+        // Widget drill-down data endpoints
         Route::get('/section-templates', [PageBuilderViewController::class, 'loadAvailableSectionTemplates'])
             ->name('section-templates');
         Route::get('/theme-widgets', [PageBuilderViewController::class, 'loadThemeWidgets'])

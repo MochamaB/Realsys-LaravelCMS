@@ -208,21 +208,21 @@
             
             // Edit button
             const editBtn = document.createElement('button');
-            editBtn.className = 'page-toolbar-btn btn-primary';
+            editBtn.className = 'page-toolbar-btn btn-info';
             editBtn.innerHTML = '<i class="ri-pencil-fill"></i> Edit';
             editBtn.title = 'Edit Page Settings';
             editBtn.addEventListener('click', (e) => this.handlePageEdit(e));
             
             // Delete button
             const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'page-toolbar-btn btn-danger';
+            deleteBtn.className = 'page-toolbar-btn btn-info';
             deleteBtn.innerHTML = '<i class="ri-delete-bin-fill"></i> Delete';
             deleteBtn.title = 'Delete Page';
             deleteBtn.addEventListener('click', (e) => this.handlePageDelete(e));
             
             // Close button
             const closeBtn = document.createElement('button');
-            closeBtn.className = 'page-toolbar-btn';
+            closeBtn.className = 'page-toolbar-btn btn-info';
             closeBtn.innerHTML = '<i class="ri-close-line"></i>';
             closeBtn.title = 'Close Page Selection';
             closeBtn.addEventListener('click', (e) => this.deselectPage(e));

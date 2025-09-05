@@ -1,9 +1,9 @@
-<!-- Live Designer Toolbar -->
+<!-- Page Builder Toolbar -->
 <div class="page-title-box d-sm-flex align-items-center justify-content-between bg-galaxy-transparent mb-0 ms-0 p-3">
     <div class="d-flex align-items-center">
         <h5 class="page-title mb-0">
             <i class="ri-brush-line me-2"></i>
-            Page Builder - {{ $page->title }}
+            Page Builder
         </h5>
     </div>
     
@@ -29,28 +29,6 @@
     </div>
     
     <div class="page-title-right">
-        <!-- Zoom Controls (Desktop Only) -->
-        <div class="btn-group me-2 zoom-controls" role="group" aria-label="Zoom Controls" id="zoom-controls">
-            <button type="button" class="btn btn-outline-secondary btn-sm" data-zoom="out" title="Zoom Out">
-                <i class="ri-zoom-out-line"></i>
-            </button>
-            
-            <button type="button" class="btn btn-outline-secondary btn-sm" data-zoom="fit" title="Zoom to Fit">
-                <i class="ri-focus-3-line"></i>
-            </button>
-            
-            <span class="btn btn-outline-secondary btn-sm" data-zoom-display title="Current Zoom Level">
-                100%
-            </span>
-            
-            <button type="button" class="btn btn-outline-secondary btn-sm" data-zoom="reset" title="Reset Zoom">
-                <i class="ri-refresh-line"></i>
-            </button>
-            
-            <button type="button" class="btn btn-outline-secondary btn-sm" data-zoom="in" title="Zoom In">
-                <i class="ri-zoom-in-line"></i>
-            </button>
-        </div>
         <!-- Undo/Redo -->
         <button class="btn btn-outline-secondary  me-2" id="undo-btn" title="Undo">
             <i class="ri-arrow-go-back-line"></i>

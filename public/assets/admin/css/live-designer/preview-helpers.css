@@ -1,10 +1,28 @@
-/* Live Preview Helper Styles */
+/* ========================================
+   UNIFIED LIVE PREVIEW HELPER STYLES
+   ======================================== */
 
-/* Widget highlighting and selection - Updated selectors */
+/* Base Preview Component Styles */
+.preview-component {
+    position: relative;
+    transition: box-shadow 0.2s ease, background-color 0.2s ease;
+    cursor: pointer;
+}
+
+.preview-component:hover {
+    cursor: pointer;
+}
+
+.preview-component.preview-highlighted {
+    position: relative !important;
+    z-index: 9999 !important;
+}
+
+/* Widget Components */
 [data-preview-widget],
 [data-page-section-widget-id] {
-    transition: box-shadow 0.2s ease;
     position: relative;
+    transition: box-shadow 0.2s ease;
 }
 
 [data-preview-widget]:hover,
@@ -20,7 +38,45 @@
     z-index: 9999 !important;
 }
 
-/* Enhanced Widget Selection Toolbar */
+/* ========================================
+   UNIFIED TOOLBAR SYSTEM
+   ======================================== */
+
+/* Base Toolbar Styles - Zoom Compensated */
+.preview-toolbar {
+    content: '';
+    position: absolute;
+    top: -50px;
+    left: 0;
+    right: 0;
+    height: 40px;
+    border-radius: 6px 6px 0 0;
+    z-index: 10000 !important;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+    transform-origin: top left;
+    transform: scale(var(--preview-zoom-inverse, 1));
+}
+
+/* Base Toolbar Label */
+.preview-toolbar-label {
+    position: absolute;
+    top: -38px;
+    left: 12px;
+    color: white;
+    font-size: 12px;
+    font-weight: 500;
+    z-index: 10001 !important;
+    white-space: nowrap;
+    pointer-events: none;
+    transform-origin: top left;
+    transform: scale(var(--preview-zoom-inverse, 1));
+}
+
+/* Widget Toolbar Implementation */
 [data-preview-widget].preview-highlighted::after,
 [data-page-section-widget-id].preview-highlighted::after {
     content: '';
@@ -31,15 +87,17 @@
     height: 40px;
     background: #0d6efd;
     border-radius: 6px 6px 0 0;
-    z-index: 10001 !important;
+    z-index: 10000 !important;
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 12px;
     box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+    transform-origin: top left;
+    transform: scale(var(--preview-zoom-inverse, 1));
 }
 
-/* Widget toolbar content */
+/* Widget Toolbar Label */
 [data-preview-widget].preview-highlighted::before,
 [data-page-section-widget-id].preview-highlighted::before {
     content: attr(data-widget-name) '  ✏️ Edit  📋 Copy  🗑️ Delete';
@@ -49,12 +107,14 @@
     color: white;
     font-size: 12px;
     font-weight: 500;
-    z-index: 10002 !important;
+    z-index: 10001 !important;
     white-space: nowrap;
     pointer-events: none;
+    transform-origin: top left;
+    transform: scale(var(--preview-zoom-inverse, 1));
 }
 
-/* Section highlighting - Updated selectors */
+/* Section Components */
 [data-preview-section],
 section[data-section-id] {
     position: relative;
@@ -76,7 +136,7 @@ section[data-section-id].preview-highlighted {
     z-index: 9998 !important;
 }
 
-/* Enhanced Section Selection Toolbar */
+/* Section Toolbar Implementation */
 [data-preview-section].preview-highlighted::after,
 section[data-section-id].preview-highlighted::after {
     content: '';
@@ -93,9 +153,11 @@ section[data-section-id].preview-highlighted::after {
     justify-content: space-between;
     padding: 0 12px;
     box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+    transform-origin: top left;
+    transform: scale(var(--preview-zoom-inverse, 1));
 }
 
-/* Section toolbar content - make clickable */
+/* Section Toolbar Label */
 [data-preview-section].preview-highlighted::before,
 section[data-section-id].preview-highlighted::before {
     content: attr(data-section-name);
@@ -108,14 +170,18 @@ section[data-section-id].preview-highlighted::before {
     z-index: 10001 !important;
     white-space: nowrap;
     pointer-events: none;
+    transform-origin: top left;
+    transform: scale(var(--preview-zoom-inverse, 1));
 }
 
-/* Page highlighting and selection */
+/* Page Components - Fixed spacing for toolbar visibility */
 .page-preview-container[data-preview-page] {
     position: relative;
     cursor: pointer;
     transition: all 0.2s ease;
     min-height: 100vh;
+    margin-top: 60px; /* Space for toolbar */
+    padding: 0px; /* Canvas spacing for unified loader visibility */
 }
 
 .page-preview-container[data-preview-page]:hover {
@@ -131,9 +197,9 @@ section[data-section-id].preview-highlighted::before {
     z-index: 9997 !important;
 }
 
-/* Enhanced Page Selection Toolbar */
+/* Page Toolbar Implementation */
 .page-preview-container[data-preview-page].preview-highlighted::after {
-    content: '';
+    content: attr(data-page-title);
     position: absolute;
     top: -50px;
     left: 0;
@@ -141,15 +207,17 @@ section[data-section-id].preview-highlighted::before {
     height: 40px;
     background: #099885;
     border-radius: 6px 6px 0 0;
-    z-index: 9999 !important;
+    z-index: 10000 !important;
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 12px;
     box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+    transform-origin: top left;
+    transform: scale(var(--preview-zoom-inverse, 1));
 }
 
-/* Page toolbar content */
+/* Page Toolbar Label */
 .page-preview-container[data-preview-page] .page-toolbar-button {
     content: attr(data-page-title) ' (' attr(data-page-template) ')';
     position: absolute;
@@ -158,127 +226,250 @@ section[data-section-id].preview-highlighted::before {
     color: white;
     font-size: 12px;
     font-weight: 500;
-    z-index: 10000 !important;
+    z-index: 10001 !important;
     white-space: nowrap;
     pointer-events: none;
+    transform-origin: top left;
+    transform: scale(var(--preview-zoom-inverse, 1));
 }
 
-/* Clickable toolbar buttons for page */
-[data-preview-page].preview-highlighted .page-toolbar-buttons {
+/* ========================================
+   UNIFIED BUTTON SYSTEM - Zoom Compensated
+   ======================================== */
+
+/* Base Toolbar Button Container */
+.preview-toolbar-buttons {
     position: absolute;
     top: -45px;
     right: 12px;
     display: flex;
-    gap: 8px;
+    gap: 6px;
     z-index: 10001 !important;
+    transform-origin: top right;
+    transform: scale(var(--preview-zoom-inverse, 1));
 }
 
-.page-toolbar-btn {
-    background: rgba(255, 255, 255, 0.2);
+/* Unified Button Base Styles */
+.preview-btn {
+    background: rgba(255, 255, 255, 0.9);
     border: 1px solid rgba(255, 255, 255, 0.3);
     color: white;
-    padding: 4px 8px;
-    border-radius: 0px;
+    padding: 6px 10px;
+    border-radius: 4px;
     font-size: 11px;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
     display: flex;
     align-items: center;
     gap: 4px;
     pointer-events: auto;
+    white-space: nowrap;
+    min-height: 28px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-.page-toolbar-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
-    border-color: rgba(255, 255, 255, 0.5);
+/* Unified Button Hover - Opacity Effect */
+.preview-btn:hover {
+    opacity: 0.85;
     transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
-.page-toolbar-btn:active {
+.preview-btn:active {
     transform: translateY(0);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-.page-toolbar-btn i {
+.preview-btn i {
     font-size: 12px;
 }
 
-/* Page toolbar button variants */
-.page-toolbar-btn.btn-primary {
-    background: rgba(13, 110, 253, 0.8);
-    border-color: rgba(13, 110, 253, 0.9);
+/* Button Color Variants - Bootstrap Colors */
+.preview-btn--primary {
+    background: #0d6efd;
+    border-color: #0d6efd;
 }
 
-.page-toolbar-btn.btn-primary:hover {
-    background: rgba(13, 110, 253, 1);
-    border-color: rgba(13, 110, 253, 1);
+.preview-btn--success {
+    background: #198754;
+    border-color: #198754;
 }
 
-.page-toolbar-btn.btn-danger {
-    background: rgba(220, 53, 69, 0.8);
-    border-color: rgba(220, 53, 69, 0.9);
+.preview-btn--info {
+    background: #099885;
+    border-color: #099885;
+    color: #fff;
 }
 
-.page-toolbar-btn.btn-danger:hover {
-    background: rgba(220, 53, 69, 1);
-    border-color: rgba(220, 53, 69, 1);
+.preview-btn--warning {
+    background: #ffc107;
+    border-color: #ffc107;
+    color: #000;
 }
 
-/* Clickable toolbar buttons for sections */
+.preview-btn--danger {
+    background: #dc3545;
+    border-color: #dc3545;
+}
+
+.preview-btn--secondary {
+    background: #6c757d;
+    border-color: #6c757d;
+}
+
+/* Component-Specific Button Containers */
+[data-preview-page].preview-highlighted .page-toolbar-buttons,
+.page-preview-container[data-preview-page].preview-highlighted .page-toolbar-buttons {
+    position: absolute;
+    top: -45px;
+    right: 12px;
+    display: flex;
+    gap: 6px;
+    z-index: 10001 !important;
+    transform-origin: top right;
+    transform: scale(var(--preview-zoom-inverse, 1));
+}
+
 [data-preview-section].preview-highlighted .section-toolbar-buttons,
 section[data-section-id].preview-highlighted .section-toolbar-buttons {
     position: absolute;
     top: -45px;
     right: 12px;
     display: flex;
-    gap: 8px;
-    z-index: 10002 !important;
+    gap: 6px;
+    z-index: 10001 !important;
+    transform-origin: top right;
+    transform: scale(var(--preview-zoom-inverse, 1));
 }
 
-.section-toolbar-btn {
-    background: rgba(255, 255, 255, 0.2);
+[data-preview-widget].preview-highlighted .widget-toolbar-buttons,
+[data-page-section-widget-id].preview-highlighted .widget-toolbar-buttons {
+    position: absolute;
+    top: -45px;
+    right: 12px;
+    display: flex;
+    gap: 6px;
+    z-index: 10002 !important;
+    transform-origin: top right;
+    transform: scale(var(--preview-zoom-inverse, 1));
+}
+
+/* Legacy Button Classes - Mapped to Unified System */
+.page-toolbar-btn {
+    background: rgba(255, 255, 255, 0.9);
     border: 1px solid rgba(255, 255, 255, 0.3);
     color: white;
-    padding: 4px 8px;
-    border-radius: 0px;
+    padding: 6px 10px;
+    border-radius: 4px;
     font-size: 11px;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
     display: flex;
     align-items: center;
     gap: 4px;
     pointer-events: auto;
+    white-space: nowrap;
+    min-height: 28px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.page-toolbar-btn:hover {
+    opacity: 0.85;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.section-toolbar-btn {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    pointer-events: auto;
+    white-space: nowrap;
+    min-height: 28px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .section-toolbar-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
-    border-color: rgba(255, 255, 255, 0.5);
+    opacity: 0.85;
     transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
-.section-toolbar-btn:active {
-    transform: translateY(0);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-.section-toolbar-btn i {
-    font-size: 12px;
-}
-
-/* Primary add widget button */
+/* Legacy Button Variants */
+.page-toolbar-btn.btn-primary,
 .section-toolbar-btn.btn-primary {
-    background: rgba(13, 110, 253, 0.8);
-    border-color: rgba(13, 110, 253, 0.9);
+    background: #0d6efd;
+    border-color: #0d6efd;
 }
 
-.section-toolbar-btn.btn-primary:hover {
-    background: rgba(13, 110, 253, 1);
-    border-color: rgba(13, 110, 253, 1);
+.page-toolbar-btn.btn-danger,
+.section-toolbar-btn.btn-danger {
+    background: #dc3545;
+    border-color: #dc3545;
 }
 
-/* Preview mode indicators - removed the top label */
+.page-toolbar-btn.btn-success,
+.section-toolbar-btn.btn-success {
+    background: #198754;
+    border-color: #198754;
+}
+
+.page-toolbar-btn.btn-info,
+.section-toolbar-btn.btn-info {
+    background: #099885;
+    border-color: #099885;
+    color: #fff;
+}
+
+.page-toolbar-btn.btn-warning,
+.section-toolbar-btn.btn-warning {
+    background: #ffc107;
+    border-color: #ffc107;
+    color: #fff;
+}
+
+.page-toolbar-btn.btn-secondary,
+.section-toolbar-btn.btn-secondary {
+    background: #6c757d;
+    border-color: #6c757d;
+}
+
+/* ========================================
+   ZOOM COMPENSATION SYSTEM
+   ======================================== */
+
+/* Zoom compensation - Applied via JavaScript */
+body[data-zoom="0.5"] { --preview-zoom-inverse: 2; }
+body[data-zoom="0.67"] { --preview-zoom-inverse: 1.49; }
+body[data-zoom="0.75"] { --preview-zoom-inverse: 1.33; }
+body[data-zoom="0.8"] { --preview-zoom-inverse: 1.25; }
+body[data-zoom="0.9"] { --preview-zoom-inverse: 1.11; }
+body[data-zoom="1"] { --preview-zoom-inverse: 1; }
+body[data-zoom="1.1"] { --preview-zoom-inverse: 0.91; }
+body[data-zoom="1.25"] { --preview-zoom-inverse: 0.8; }
+body[data-zoom="1.5"] { --preview-zoom-inverse: 0.67; }
+body[data-zoom="1.75"] { --preview-zoom-inverse: 0.57; }
+body[data-zoom="2"] { --preview-zoom-inverse: 0.5; }
+body[data-zoom="2.5"] { --preview-zoom-inverse: 0.4; }
+body[data-zoom="3"] { --preview-zoom-inverse: 0.33; }
+
+/* Default zoom compensation */
+body {
+    --preview-zoom-inverse: 1;
+}
+
+/* Preview mode indicators */
 body[data-preview-mode="true"] {
     position: relative;
 }

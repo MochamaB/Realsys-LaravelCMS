@@ -3,8 +3,10 @@
 @section('title', 'Page Builder - ' . $page->title)
 
 @section('css')
-<!-- Page Builder Draggable CSS -->
+<!-- Page Builder CSS -->
 <link href="{{ asset('assets/admin/css/page-builder/draggable.css') }}" rel="stylesheet" type="text/css" />
+<link href="{{ asset('assets/admin/css/page-builder/pagebuilder-preview-helper.css') }}" rel="stylesheet" type="text/css" />
+<link href="{{ asset('assets/admin/css/page-builder/device-preview.css') }}" rel="stylesheet" type="text/css" />
 @endsection
 
 @section('content')
@@ -24,15 +26,23 @@
         </div>
         
         <!-- Canvas Container -->
-        <div class="col" id="canvasContainer" style="padding:20px 0px !important">
+        <div class="col" id="canvasContainer" style="padding:20px 0px !important; position: relative;">
             <!-- Unified Progress Bar Loader -->
-            <div class="unified-page-loader" id="liveDesignerLoader" style="display: none;">
+            <div class="unified-page-loader" id="pageBuilderLoader" style="display: none;">
                 <div class="progress-bar"></div>
-                <div class="loader-message">Loading...</div>
+                <div class="loader-message">Loading Page Builder Preview...</div>
             </div>
             
-            <!-- Preview Iframe (Direct) -->
-           
+            <!-- Page Builder Preview Iframe -->
+            <iframe 
+                id="pageBuilderPreviewIframe" 
+                src="{{ route('admin.api.page-builder.pages.preview-iframe', $page->id) }}"
+                style="width: 100%; min-height: 600px; border: none; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"
+                frameborder="0"
+                loading="eager"
+                data-page-id="{{ $page->id }}"
+                data-preview-type="pagebuilder">
+            </iframe>
         </div>
         
     </div>
@@ -41,9 +51,17 @@
 <!-- Include Section Templates Modal -->
 @include('admin.pages.page-builder.modals.section-templates')
 
+
 @endsection
 
 @push('scripts')
+<!-- Page Builder Action Handlers -->
+<script src="{{ asset('assets/admin/js/page-builder/actions/pagebuilder-section-actions.js') }}?v={{ time() }}"></script>
+<script src="{{ asset('assets/admin/js/page-builder/actions/pagebuilder-page-actions.js') }}?v={{ time() }}"></script>
+<!-- Page Builder Main Script -->
+<script src="{{ asset('assets/admin/js/page-builder/page-builder.js') }}?v={{ time() }}"></script>
+<!-- Page Builder Device Preview -->
+<script src="{{ asset('assets/admin/js/page-builder/device-preview.js') }}?v={{ time() }}"></script>
 <!-- Page Builder Widget Drill-Down -->
 <script src="{{ asset('assets/admin/js/page-builder/widget-drill-down.js') }}?v={{ time() }}"></script>
 <!-- Page Builder Section Drag Handler -->
