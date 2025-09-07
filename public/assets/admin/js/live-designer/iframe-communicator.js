@@ -132,6 +132,14 @@ class IframeCommunicator {
                 this.handleModeChange(message.data);
                 break;
                 
+            case 'enable-sort-mode':
+                this.handleEnableSortMode(message.data);
+                break;
+                
+            case 'disable-sort-mode':
+                this.handleDisableSortMode(message.data);
+                break;
+                
             default:
                 console.warn(`⚠️ Unknown message type: ${message.type}`);
         }
@@ -223,6 +231,95 @@ class IframeCommunicator {
             case 'edit':
                 // Handle edit mode if implemented
                 break;
+        }
+    }
+    
+    /**
+     * Handle enable sort mode request from parent
+     * @param {object} sortData - Sort mode configuration
+     */
+    handleEnableSortMode(sortData) {
+        console.log(`🔄 Enabling ${sortData.sortableType} sorting mode for container ${sortData.containerId}`);
+        
+        // Check if SortableManager is available
+        if (!window.sortableManager) {
+            console.error('❌ SortableManager not available');
+            this.sendSortModeResponse(sortData, false, 'SortableManager not found');
+            return;
+        }
+        
+        try {
+            // Enable sorting with the new unified approach
+            const success = window.sortableManager.enableSorting({
+                sortableType: sortData.sortableType,
+                containerId: sortData.containerId,
+                itemType: sortData.itemType
+            });
+            
+            if (success) {
+                // Add sort mode class to body
+                document.body.classList.add('mode-sort');
+                document.body.classList.remove('mode-select');
+                
+                // Deselect any currently selected components
+                if (window.selectionManager) {
+                    window.selectionManager.deselect();
+                }
+                
+                console.log(`✅ ${sortData.sortableType} sorting enabled successfully`);
+                this.sendSortModeResponse(sortData, true, 'Sort mode enabled');
+            } else {
+                console.error(`❌ Failed to enable ${sortData.sortableType} sorting`);
+                this.sendSortModeResponse(sortData, false, 'Failed to enable sorting');
+            }
+        } catch (error) {
+            console.error('❌ Error enabling sort mode:', error);
+            this.sendSortModeResponse(sortData, false, error.message);
+        }
+    }
+    
+    /**
+     * Handle disable sort mode request from parent
+     * @param {object} sortData - Sort mode configuration
+     */
+    handleDisableSortMode(sortData) {
+        console.log(`🔄 Disabling ${sortData.componentType} sorting mode`);
+        
+        try {
+            // Disable sorting if SortableManager is available
+            if (window.sortableManager) {
+                window.sortableManager.disable(sortData.componentType);
+            }
+            
+            // Remove sort mode class from body
+            document.body.classList.remove('mode-sort');
+            document.body.classList.add('mode-select');
+            
+            console.log(`✅ ${sortData.componentType} sorting disabled successfully`);
+            this.sendSortModeResponse(sortData, true, 'Sort mode disabled');
+        } catch (error) {
+            console.error('❌ Error disabling sort mode:', error);
+            this.sendSortModeResponse(sortData, false, error.message);
+        }
+    }
+    
+    /**
+     * Send sort mode operation response to parent
+     * @param {object} sortData - Original sort data
+     * @param {boolean} success - Whether operation succeeded
+     * @param {string} message - Response message
+     */
+    sendSortModeResponse(sortData, success, message) {
+        this.sendMessage('sort-mode-response', {
+            componentType: sortData.componentType,
+            success: success,
+            message: message,
+            timestamp: Date.now()
+        });
+        
+        // Execute callback if provided
+        if (sortData.callback && typeof sortData.callback === 'function') {
+            sortData.callback(success);
         }
     }
     

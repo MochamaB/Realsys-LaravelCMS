@@ -201,6 +201,11 @@ class SelectionManager {
         // Show toolbar
         this.toolbar.show(component);
         
+        // Notify sortable manager about component selection
+        if (window.SortableManager && window.SortableManager.onComponentSelected) {
+            window.SortableManager.onComponentSelected(component);
+        }
+        
         // Add to selection history
         this.addToHistory(component);
         
@@ -511,6 +516,23 @@ class SelectionManager {
         this.eventListeners.clear();
     }
     
+    /**
+     * Enable sortable functionality for a component's children
+     * Called when drag button is clicked from toolbar
+     * @param {Object} component - Selected component
+     */
+    enableSortableForComponent(component) {
+        console.log(`🔍 SELECTION: Delegating sortable enable to SortableManager for ${component.type} ${component.id}`);
+        
+        // Delegate to the sortable manager
+        if (window.SortableManager && window.SortableManager.enableSortableForComponent) {
+            return window.SortableManager.enableSortableForComponent(component);
+        } else {
+            console.error('❌ SortableManager not available');
+            return false;
+        }
+    }
+
     /**
      * Cleanup and destroy the selection manager
      */

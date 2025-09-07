@@ -14,29 +14,27 @@ class ComponentToolbar {
         this.currentComponent = null;
         this.isVisible = false;
         
-        // Action definitions for different component types
-        this.actionDefinitions = {
+        // Define available actions for each component type
+        this.actions = {
             page: [
-                { id: 'edit-page', label: 'Edit Page', icon: '✏️', class: 'btn-primary' },
-                { id: 'page-settings', label: 'Settings', icon: '⚙️', class: 'btn-secondary' },
-                { id: 'duplicate-page', label: 'Duplicate', icon: '📋', class: 'btn-secondary' },
-                { id: 'page-seo', label: 'SEO', icon: '🔍', class: 'btn-secondary' }
+                { id: 'edit', icon: 'ri-pencil-fill', label: 'Edit', variant: 'primary' },
+                { id: 'settings', icon: 'bx bx-cog', label: 'Settings', variant: 'secondary' },
+                { id: 'duplicate', icon: 'bx bx-copy', label: 'Duplicate', variant: 'secondary' },
+                { id: 'seo', icon: 'bx bx-search-alt', label: 'SEO', variant: 'secondary' }
             ],
             section: [
-                { id: 'edit-section', label: 'Edit Section', icon: '✏️', class: 'btn-primary' },
-                { id: 'section-settings', label: 'Settings', icon: '⚙️', class: 'btn-secondary' },
-                { id: 'duplicate-section', label: 'Duplicate', icon: '📋', class: 'btn-secondary' },
-                { id: 'move-section-up', label: 'Move Up', icon: '⬆️', class: 'btn-secondary' },
-                { id: 'move-section-down', label: 'Move Down', icon: '⬇️', class: 'btn-secondary' },
-                { id: 'delete-section', label: 'Delete', icon: '🗑️', class: 'btn-danger' }
+                { id: 'edit', icon: 'bx bx-edit', label: 'Edit', variant: 'primary' },
+                { id: 'settings', icon: 'bx bx-cog', label: 'Settings', variant: 'secondary' },
+                { id: 'duplicate', icon: 'bx bx-copy', label: 'Duplicate', variant: 'secondary' },
+                { id: 'delete', icon: 'bx bx-trash', label: 'Delete', variant: 'danger' },
+                { id: 'drag', icon: 'bx bx-move', label: 'Move', variant: 'secondary' },
             ],
             widget: [
-                { id: 'edit-widget', label: 'Edit Widget', icon: '✏️', class: 'btn-primary' },
-                { id: 'widget-settings', label: 'Settings', icon: '⚙️', class: 'btn-secondary' },
-                { id: 'duplicate-widget', label: 'Duplicate', icon: '📋', class: 'btn-secondary' },
-                { id: 'move-widget-up', label: 'Move Up', icon: '⬆️', class: 'btn-secondary' },
-                { id: 'move-widget-down', label: 'Move Down', icon: '⬇️', class: 'btn-secondary' },
-                { id: 'delete-widget', label: 'Delete', icon: '🗑️', class: 'btn-danger' }
+                { id: 'edit', icon: 'bx bx-edit', label: 'Edit', variant: 'primary' },
+                { id: 'settings', icon: 'bx bx-cog', label: 'Settings', variant: 'secondary' },
+                { id: 'duplicate', icon: 'bx bx-copy', label: 'Duplicate', variant: 'secondary' },
+                { id: 'delete', icon: 'bx bx-trash', label: 'Delete', variant: 'danger' },
+                { id: 'drag', icon: 'bx bx-move', label: 'Move', variant: 'secondary' },
             ]
         };
         
@@ -83,7 +81,7 @@ class ComponentToolbar {
     createToolbar(component) {
         // Create main toolbar container
         this.toolbar = document.createElement('div');
-        this.toolbar.className = 'component-toolbar';
+        this.toolbar.className = `component-toolbar component-toolbar--${component.type}`;
         this.toolbar.setAttribute('data-component-type', component.type);
         this.toolbar.setAttribute('data-component-id', component.id);
         
@@ -108,7 +106,7 @@ class ComponentToolbar {
         actionsContainer.className = 'toolbar-actions';
         
         // Add component-specific action buttons
-        const actions = this.actionDefinitions[component.type] || [];
+        const actions = this.actions[component.type] || [];
         actions.forEach(action => {
             const button = this.createActionButton(action, component);
             actionsContainer.appendChild(button);
@@ -129,30 +127,23 @@ class ComponentToolbar {
      */
     createActionButton(action, component) {
         const button = document.createElement('button');
-        button.className = `toolbar-btn ${action.class}`;
+        button.className = `toolbar-btn btn-icon btn-${action.variant}`;
         button.setAttribute('data-action', action.id);
         button.setAttribute('title', action.label);
         button.type = 'button';
         
-        // Add icon if provided
+        // Add icon only (no label for icon-only design)
         if (action.icon) {
-            const icon = document.createElement('span');
-            icon.className = 'btn-icon';
-            icon.textContent = action.icon;
+            const icon = document.createElement('i');
+            icon.className = action.icon;
             button.appendChild(icon);
         }
-        
-        // Add label
-        const label = document.createElement('span');
-        label.className = 'btn-label';
-        label.textContent = action.label;
-        button.appendChild(label);
         
         // Add click handler
         button.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            this.executeAction(action.id, component);
+            this.handleAction(action.id, component);
         });
         
         return button;
@@ -240,43 +231,24 @@ class ComponentToolbar {
         
         // Handle built-in actions
         switch(actionId) {
-            case 'edit-page':
-            case 'edit-section':
-            case 'edit-widget':
+            case 'edit':
                 this.handleEditAction(component);
                 break;
-                
-            case 'page-settings':
-            case 'section-settings':
-            case 'widget-settings':
+            case 'settings':
                 this.handleSettingsAction(component);
                 break;
-                
-            case 'duplicate-page':
-            case 'duplicate-section':
-            case 'duplicate-widget':
+            case 'duplicate':
                 this.handleDuplicateAction(component);
                 break;
-                
-            case 'move-section-up':
-            case 'move-widget-up':
-                this.handleMoveAction(component, 'up');
-                break;
-                
-            case 'move-section-down':
-            case 'move-widget-down':
-                this.handleMoveAction(component, 'down');
-                break;
-                
-            case 'delete-section':
-            case 'delete-widget':
+            case 'delete':
                 this.handleDeleteAction(component);
                 break;
-                
-            case 'page-seo':
-                this.handleSeoAction(component);
+            case 'seo':
+                this.handleSEOAction(component);
                 break;
-                
+            case 'drag':
+                this.handleDragAction(component);
+                break;
             default:
                 console.warn(`⚠️ Unknown action: ${actionId}`);
         }
@@ -370,17 +342,136 @@ class ComponentToolbar {
     }
     
     /**
-     * Handle SEO action for page
-     * @param {Object} component - Page component object
+     * Handle SEO action for component
+     * @param {Object} component - Component object
      */
-    handleSeoAction(component) {
-        console.log(`🔍 Opening SEO settings for page ${component.id}`);
+    handleSEOAction(component) {
+        console.log(`🔍 Opening SEO settings for ${component.type} ${component.id}`);
         
-        // This would typically open an SEO modal or redirect to SEO page
-        const seoUrl = `/admin/pages/${component.id}/seo`;
-        if (window.parent) {
-            window.parent.location.href = seoUrl;
+        // Only available for pages
+        if (component.type === 'page') {
+            const seoUrl = `/admin/pages/${component.id}/seo`;
+            if (window.parent) {
+                window.parent.location.href = seoUrl;
+            }
         }
+    }
+    
+    /**
+     * Handle drag action for component - enable sortable functionality
+     * @param {Object} component - Component object
+     */
+    handleDragAction(component) {
+        console.log(`🔄 Enabling sortable for ${component.type} ${component.id}`);
+        
+        // Enable sortable functionality through selection manager
+        if (this.selectionManager && this.selectionManager.enableSortableForComponent) {
+            const success = this.selectionManager.enableSortableForComponent(component);
+            
+            if (success) {
+                // Provide visual feedback that sortable is now active
+                this.showSortableActiveFeedback(component);
+                console.log(`✅ Sortable enabled for ${component.type}`);
+            } else {
+                console.error(`❌ Failed to enable sortable for ${component.type}`);
+                this.showSortableErrorFeedback(component);
+            }
+        } else {
+            console.error('❌ Selection manager not available or missing enableSortableForComponent method');
+        }
+    }
+    
+    /**
+     * Show visual feedback that sortable is active
+     * @param {Object} component - Component object
+     */
+    showSortableActiveFeedback(component) {
+        // Find the drag button and update its appearance
+        const dragButton = this.toolbar.querySelector('[data-action="drag"]');
+        if (dragButton) {
+            dragButton.classList.add('active');
+            dragButton.style.background = 'rgba(40, 167, 69, 0.9)'; // Success green
+            dragButton.title = `Sortable active for ${component.type}`;
+            
+            // Reset after a few seconds
+            setTimeout(() => {
+                dragButton.classList.remove('active');
+                dragButton.style.background = '';
+                dragButton.title = 'Move';
+            }, 3000);
+        }
+        
+        // Show temporary notification
+        this.showNotification(`Sortable enabled for ${component.type}. You can now drag to reorder items.`, 'success');
+    }
+    
+    /**
+     * Show visual feedback for sortable error
+     * @param {Object} component - Component object
+     */
+    showSortableErrorFeedback(component) {
+        // Find the drag button and update its appearance
+        const dragButton = this.toolbar.querySelector('[data-action="drag"]');
+        if (dragButton) {
+            dragButton.style.background = 'rgba(220, 53, 69, 0.9)'; // Error red
+            dragButton.title = `Cannot enable sortable for ${component.type}`;
+            
+            // Reset after a few seconds
+            setTimeout(() => {
+                dragButton.style.background = '';
+                dragButton.title = 'Move';
+            }, 3000);
+        }
+        
+        // Show temporary notification
+        this.showNotification(`Cannot enable sortable for ${component.type}`, 'error');
+    }
+    
+    /**
+     * Show temporary notification
+     * @param {string} message - Notification message
+     * @param {string} type - Notification type (success, error, info)
+     */
+    showNotification(message, type = 'info') {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `toolbar-notification toolbar-notification--${type}`;
+        notification.textContent = message;
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#007bff'};
+            color: white;
+            padding: 12px 16px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 10000;
+            font-size: 14px;
+            max-width: 300px;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Animate in
+        requestAnimationFrame(() => {
+            notification.style.opacity = '1';
+            notification.style.transform = 'translateX(0)';
+        });
+        
+        // Remove after 4 seconds
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            notification.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 4000);
     }
     
     /**
@@ -452,6 +543,7 @@ class ComponentToolbar {
     isToolbarVisible() {
         return this.isVisible;
     }
+    
     
     /**
      * Get current component that toolbar is shown for

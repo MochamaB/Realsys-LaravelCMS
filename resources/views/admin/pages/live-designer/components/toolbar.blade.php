@@ -29,28 +29,7 @@
     </div>
     
     <div class="page-title-right">
-        <!-- Zoom Controls (Desktop Only) -->
-        <div class="btn-group me-2 zoom-controls" role="group" aria-label="Zoom Controls" id="zoom-controls">
-            <button type="button" class="btn btn-outline-secondary btn-sm" data-zoom="out" title="Zoom Out">
-                <i class="ri-zoom-out-line"></i>
-            </button>
-            
-            <button type="button" class="btn btn-outline-secondary btn-sm" data-zoom="fit" title="Zoom to Fit">
-                <i class="ri-focus-3-line"></i>
-            </button>
-            
-            <span class="btn btn-outline-secondary btn-sm" data-zoom-display title="Current Zoom Level">
-                100%
-            </span>
-            
-            <button type="button" class="btn btn-outline-secondary btn-sm" data-zoom="reset" title="Reset Zoom">
-                <i class="ri-refresh-line"></i>
-            </button>
-            
-            <button type="button" class="btn btn-outline-secondary btn-sm" data-zoom="in" title="Zoom In">
-                <i class="ri-zoom-in-line"></i>
-            </button>
-        </div>
+       
         <!-- Undo/Redo -->
         <button class="btn btn-outline-secondary  me-2" id="undo-btn" title="Undo">
             <i class="ri-arrow-go-back-line"></i>

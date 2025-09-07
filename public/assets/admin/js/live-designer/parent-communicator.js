@@ -116,6 +116,10 @@ class ParentCommunicator {
                 this.handleSortableEvent(message.type, message.data);
                 break;
                 
+            case 'sort-mode-response':
+                this.handleSortModeResponse(message.data);
+                break;
+                
             default:
                 console.warn(`⚠️ Unknown message type from iframe: ${message.type}`);
         }
@@ -432,6 +436,48 @@ class ParentCommunicator {
      */
     handlePageSEO(component) {
         window.location.href = `/admin/pages/${component.id}/seo`;
+    }
+    
+    /**
+     * Handle sort mode response from iframe
+     * @param {object} data - Sort mode response data
+     */
+    handleSortModeResponse(data) {
+        console.log(`📥 Sort mode response: ${data.componentType} - ${data.success ? 'Success' : 'Failed'}`);
+        
+        // Find the toolbar and update button state based on response
+        if (window.componentToolbar) {
+            const actionId = data.componentType === 'section' ? 'sort-sections' : 'sort-widgets';
+            
+            if (data.success) {
+                // Update button to active state
+                window.componentToolbar.updateSortButtonState(actionId, true);
+                
+                // Show success message
+                window.componentToolbar.showSortModeMessage(
+                    `${data.componentType.charAt(0).toUpperCase() + data.componentType.slice(1)} sorting enabled. Drag to reorder.`,
+                    'success'
+                );
+            } else {
+                // Update button to inactive state
+                window.componentToolbar.updateSortButtonState(actionId, false);
+                
+                // Show error message
+                window.componentToolbar.showSortModeMessage(
+                    `Failed to enable ${data.componentType} sorting: ${data.message}`,
+                    'error'
+                );
+            }
+        }
+        
+        // Trigger custom event for other components to listen to
+        document.dispatchEvent(new CustomEvent('sortModeChanged', {
+            detail: {
+                componentType: data.componentType,
+                enabled: data.success,
+                message: data.message
+            }
+        }));
     }
     
     /**
