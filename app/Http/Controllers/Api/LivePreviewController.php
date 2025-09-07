@@ -670,25 +670,36 @@ class LivePreviewController extends Controller
     private function getPreviewAssets(): string
     {
         return '
-    <!-- Preview Helper CSS -->
-    <link rel="stylesheet" href="' . asset('assets/admin/css/live-designer/preview-helpers.css') . '">
+    <!-- Selection Manager CSS -->
+    <link rel="stylesheet" href="' . asset('assets/admin/css/live-designer/selection-manager.css') . '">
     <link href="' . asset('assets/admin/css/icons.min.css') . '" rel="stylesheet" type="text/css" />
     
     <!-- SortableJS Library for Drag and Drop -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     
-    <!-- Preview Helper JS Modules (load in order) -->
-    <script src="' . asset('assets/admin/js/live-designer/widget-preview.js') . '"></script>
-    <script src="' . asset('assets/admin/js/live-designer/section-preview.js') . '"></script>
-    <script src="' . asset('assets/admin/js/live-designer/page-preview.js') . '"></script>
-    <script src="' . asset('assets/admin/js/live-designer/preview-helpers.js') . '"></script>
+    <!-- Selection Manager JS Modules (load in order) -->
+    <script src="' . asset('assets/admin/js/live-designer/iframe-communicator.js') . '"></script>
+    <script src="' . asset('assets/admin/js/live-designer/component-detector.js') . '"></script>
+    <script src="' . asset('assets/admin/js/live-designer/component-toolbar.js') . '"></script>
+    <script src="' . asset('assets/admin/js/live-designer/sortable-manager.js') . '"></script>
+    <script src="' . asset('assets/admin/js/live-designer/content-extractor.js') . '"></script>
+    <script src="' . asset('assets/admin/js/live-designer/selection-manager.js') . '"></script>
+    
+    <!-- Initialize Selection Manager -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            window.iframeCommunicator = new IframeCommunicator();
+            window.selectionManager = new SelectionManager(window.iframeCommunicator);
+            console.log("🎯 Selection Manager initialized");
+        });
+    </script>
     
     <!-- Internal Preview Spacing -->
     <style>
         body {
             padding: 15px !important;
             margin: 0 !important;
-            min-height: calc(100vh - 30px) !important;
+            /* Remove fixed min-height - let content determine height */
         }
         
         /* Ensure proper spacing for section outlines */

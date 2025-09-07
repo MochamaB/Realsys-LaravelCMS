@@ -1,0 +1,567 @@
+/**
+ * Selection Manager CSS - Unified styling for the new live preview selection system
+ * 
+ * Features:
+ * - Component selection and hover states
+ * - Toolbar styling with zoom compensation
+ * - Sortable drag and drop visual feedback
+ * - Mode-specific styling (select, sort, edit)
+ * - Responsive design with proper scaling
+ */
+
+/* =============================================================================
+   CSS Variables and Root Configuration
+   ============================================================================= */
+:root {
+    --selection-primary: #007bff;
+    --selection-primary-hover: #0056b3;
+    --selection-success: #28a745;
+    --selection-danger: #dc3545;
+    --selection-warning: #ffc107;
+    --selection-secondary: #6c757d;
+    --selection-light: #f8f9fa;
+    --selection-dark: #343a40;
+    
+    --selection-border-width: 2px;
+    --selection-border-radius: 4px;
+    --selection-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    --selection-transition: all 0.2s ease;
+    
+    --selection-zoom-inverse: 1;
+    --toolbar-z-index: 10000;
+    --sortable-z-index: 9999;
+}
+
+/* =============================================================================
+   Component Selection States
+   ============================================================================= */
+
+/* Hover State */
+.component-hover {
+    outline: var(--selection-border-width) dashed var(--selection-primary) !important;
+    outline-offset: 2px !important;
+    transition: var(--selection-transition) !important;
+    cursor: pointer !important;
+}
+
+.component-hover--page {
+    outline-color: var(--selection-success) !important;
+}
+
+.component-hover--section {
+    outline-color: var(--selection-primary) !important;
+}
+
+.component-hover--widget {
+    outline-color: var(--selection-warning) !important;
+}
+
+/* Selected State */
+.component-selected {
+    outline: var(--selection-border-width) solid var(--selection-primary) !important;
+    outline-offset: 2px !important;
+    position: relative !important;
+    z-index: 100 !important;
+}
+
+.component-selected--page {
+    outline-color: var(--selection-success) !important;
+}
+
+.component-selected--section {
+    outline-color: var(--selection-primary) !important;
+}
+
+.component-selected--widget {
+    outline-color: var(--selection-warning) !important;
+}
+
+/* =============================================================================
+   Component Toolbar Styling
+   ============================================================================= */
+
+.component-toolbar {
+    position: absolute;
+    background: var(--selection-primary);
+    border: 1px solid var(--selection-primary);
+    border-radius: var(--selection-border-radius);
+    box-shadow: var(--selection-shadow);
+    z-index: var(--toolbar-z-index);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    font-size: 14px;
+    line-height: 1.4;
+    transform-origin: top left;
+    transform: scale(var(--selection-zoom-inverse));
+    color: white;
+}
+
+/* Toolbar Name Section (Left Side) */
+.toolbar-name {
+    display: flex;
+    align-items: center;
+    flex: 1;
+}
+
+.toolbar-icon {
+    font-size: 14px;
+    margin-right: 6px;
+    flex-shrink: 0;
+    opacity: 0.9;
+}
+
+.toolbar-title {
+    font-weight: 500;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 13px;
+}
+
+/* Toolbar Actions (Right Side) */
+.toolbar-actions {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 6px;
+    align-items: center;
+}
+
+/* Toolbar Buttons */
+.toolbar-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: var(--selection-border-radius);
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 11px;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition: var(--selection-transition);
+    white-space: nowrap;
+    min-height: 24px;
+}
+
+.toolbar-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-1px);
+}
+
+.toolbar-btn:active {
+    transform: translateY(0);
+}
+
+.toolbar-btn:focus {
+    outline: 2px solid var(--selection-primary);
+    outline-offset: 2px;
+}
+
+/* Button Variants */
+.toolbar-btn.btn-primary {
+    background-color: var(--selection-primary);
+    border-color: var(--selection-primary);
+}
+
+.toolbar-btn.btn-secondary {
+    background-color: var(--selection-secondary);
+    border-color: var(--selection-secondary);
+}
+
+.toolbar-btn.btn-success {
+    background-color: var(--selection-success);
+    border-color: var(--selection-success);
+}
+
+.toolbar-btn.btn-danger {
+    background-color: var(--selection-danger);
+    border-color: var(--selection-danger);
+}
+
+.toolbar-btn.btn-warning {
+    background-color: var(--selection-warning);
+    border-color: var(--selection-warning);
+    color: var(--selection-dark);
+}
+
+/* Button Icons and Labels */
+.btn-icon {
+    margin-right: 4px;
+    font-size: 14px;
+}
+
+.btn-label {
+    font-size: 12px;
+}
+
+/* Toolbar Close Button */
+.toolbar-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: transparent;
+    color: var(--selection-secondary);
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--selection-transition);
+}
+
+.toolbar-close:hover {
+    background: #e9ecef;
+    color: var(--selection-dark);
+}
+
+/* =============================================================================
+   Sortable Drag and Drop Styling
+   ============================================================================= */
+
+/* Sortable Mode Body Classes */
+.mode-sort {
+    cursor: grab;
+}
+
+.mode-sort * {
+    cursor: inherit;
+}
+
+.sortable-enabled .sortable-item {
+    position: relative;
+    transition: var(--selection-transition);
+}
+
+.sortable-enabled .sortable-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--selection-shadow);
+}
+
+/* Sortable Item States */
+.sortable-item--section {
+    border: 2px dashed transparent;
+    margin: 4px 0;
+    padding: 8px;
+    border-radius: var(--selection-border-radius);
+}
+
+.sortable-item--widget {
+    border: 2px dashed transparent;
+    margin: 2px 0;
+    padding: 4px;
+    border-radius: var(--selection-border-radius);
+}
+
+.sortable-hover {
+    border-color: var(--selection-primary) !important;
+    background-color: rgba(0, 123, 255, 0.05) !important;
+}
+
+/* Sortable Drag States */
+.sortable-ghost-section,
+.sortable-ghost-widget {
+    opacity: 0.5;
+    background: rgba(0, 123, 255, 0.1) !important;
+    border: 2px dashed var(--selection-primary) !important;
+}
+
+.sortable-chosen-section,
+.sortable-chosen-widget {
+    transform: rotate(2deg);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: var(--sortable-z-index);
+}
+
+.sortable-drag-section,
+.sortable-drag-widget {
+    opacity: 0.8;
+    transform: rotate(-2deg);
+    cursor: grabbing !important;
+}
+
+/* Sortable Handles */
+.sortable-handle {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 32px;
+    height: 32px;
+    background: rgba(0, 123, 255, 0.9);
+    border-radius: var(--selection-border-radius);
+    cursor: grab;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: var(--selection-transition);
+    z-index: 1000;
+    transform: scale(var(--selection-zoom-inverse));
+}
+
+.sortable-enabled .sortable-item:hover .sortable-handle {
+    opacity: 1;
+}
+
+.sortable-handle:hover {
+    background: var(--selection-primary-hover);
+    transform: scale(calc(var(--selection-zoom-inverse) * 1.1));
+}
+
+.sortable-handle:active {
+    cursor: grabbing;
+}
+
+/* Handle Icon */
+.sortable-handle-icon {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr;
+    gap: 2px;
+    width: 12px;
+    height: 12px;
+}
+
+.handle-dot {
+    width: 3px;
+    height: 3px;
+    background: white;
+    border-radius: 50%;
+}
+
+/* Handle Label */
+.sortable-handle-label {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: var(--selection-border-radius);
+    font-size: 11px;
+    white-space: nowrap;
+    opacity: 0;
+    transition: var(--selection-transition);
+    pointer-events: none;
+    margin-top: 4px;
+}
+
+.sortable-handle:hover .sortable-handle-label {
+    opacity: 1;
+}
+
+/* =============================================================================
+   Mode-Specific Styling
+   ============================================================================= */
+
+/* Select Mode */
+.mode-select .component-hover {
+    cursor: pointer;
+}
+
+/* Sort Mode */
+.mode-sort {
+    user-select: none;
+}
+
+.mode-sort .component-hover {
+    cursor: grab;
+}
+
+.mode-sort .sortable-dragging {
+    cursor: grabbing;
+}
+
+/* Edit Mode (Future) */
+.mode-edit {
+    cursor: text;
+}
+
+/* =============================================================================
+   Responsive Design and Zoom Compensation
+   ============================================================================= */
+
+/* Zoom Compensation */
+[data-zoom="0.5"] {
+    --selection-zoom-inverse: 2;
+}
+
+[data-zoom="0.75"] {
+    --selection-zoom-inverse: 1.33;
+}
+
+[data-zoom="1"] {
+    --selection-zoom-inverse: 1;
+}
+
+[data-zoom="1.25"] {
+    --selection-zoom-inverse: 0.8;
+}
+
+[data-zoom="1.5"] {
+    --selection-zoom-inverse: 0.67;
+}
+
+[data-zoom="2"] {
+    --selection-zoom-inverse: 0.5;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .component-toolbar {
+        min-width: 250px;
+        max-width: calc(100vw - 20px);
+        font-size: 13px;
+    }
+    
+    .toolbar-actions {
+        gap: 6px;
+        padding: 10px 12px;
+    }
+    
+    .toolbar-btn {
+        padding: 5px 10px;
+        font-size: 11px;
+        min-height: 28px;
+    }
+    
+    .sortable-handle {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .sortable-handle-icon {
+        width: 10px;
+        height: 10px;
+    }
+    
+    .handle-dot {
+        width: 2px;
+        height: 2px;
+    }
+}
+
+/* Tablet Responsive */
+@media (max-width: 1024px) and (min-width: 769px) {
+    .component-toolbar {
+        min-width: 280px;
+        max-width: 450px;
+    }
+    
+    .toolbar-btn {
+        padding: 5px 11px;
+        font-size: 11.5px;
+    }
+}
+
+/* =============================================================================
+   Animation and Transitions
+   ============================================================================= */
+
+/* Smooth transitions for all interactive elements */
+.component-hover,
+.component-selected,
+.toolbar-btn,
+.sortable-handle,
+.sortable-item {
+    transition: var(--selection-transition);
+}
+
+/* Fade in animation for toolbar */
+.component-toolbar {
+    animation: toolbarFadeIn 0.2s ease-out;
+}
+
+@keyframes toolbarFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(calc(var(--selection-zoom-inverse) * 0.95)) translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(var(--selection-zoom-inverse)) translateY(0);
+    }
+}
+
+/* Pulse animation for sortable handles */
+.sortable-enabled .sortable-item:hover .sortable-handle {
+    animation: handlePulse 2s infinite;
+}
+
+@keyframes handlePulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* =============================================================================
+   Utility Classes
+   ============================================================================= */
+
+/* Hide elements that should not be sortable */
+.no-sort {
+    pointer-events: none;
+    opacity: 0.5;
+}
+
+/* Disable selection during drag operations */
+.sortable-dragging * {
+    user-select: none !important;
+    pointer-events: none !important;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    :root {
+        --selection-border-width: 3px;
+        --selection-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+    
+    .component-hover,
+    .component-selected {
+        outline-width: 3px !important;
+    }
+    
+    .toolbar-btn {
+        border-width: 2px;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        transition: none !important;
+        animation: none !important;
+    }
+    
+    .component-toolbar {
+        animation: none;
+    }
+}
+
+/* =============================================================================
+   Print Styles
+   ============================================================================= */
+
+@media print {
+    .component-toolbar,
+    .sortable-handle,
+    .component-hover,
+    .component-selected {
+        display: none !important;
+    }
+}

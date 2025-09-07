@@ -6,6 +6,7 @@
 <!-- Simplified Live Designer CSS -->
 <link rel="stylesheet" href="{{ asset('assets/admin/css/live-designer/simple-live-designer.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/admin/css/live-designer/sidebar-layout.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/admin/css/live-designer/device-preview.css') }}">
 
 <style>
 /* Simplified Live Designer Layout */
@@ -58,50 +59,7 @@
 
 
 
-.canvas-container {
-    background: #f1f4f7;
-    border-radius: 0px;
-    padding: 10px;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    overflow-x: auto;
-    overflow-y: hidden;
-}
 
-
-/* Loading state */
-.loading-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(255, 255, 255, 0.9);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-}
-
-.loading-content {
-    text-align: center;
-    padding: 2rem;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-}
-
-.loading-spinner {
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    border: 2px solid #f3f3f3;
-    border-top: 2px solid #0d6efd;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-bottom: 1rem;
-}
 
 @keyframes spin {
     0% { transform: rotate(0deg); }
@@ -155,16 +113,7 @@
     min-width: 70px;
 }
 
-/* Canvas Container - Takes remaining space between sidebars */
-#canvasContainer {
-    position: relative;
-    background: #f1f4f7;
-    padding: 10px;
-    transition: all 0.3s ease;
-    flex: 1;
-    min-height: 100vh;
-    overflow-y: auto;
-}
+
 
 /* Right Sidebar - Fixed width, touches right edge */
 #right-sidebar-container {
@@ -185,15 +134,12 @@
     min-width: 70px;
 }
 
-/* Preview Iframe - Dynamic height with no scrollbar */
+/* Preview Iframe - Let device-preview.js handle positioning */
 #preview-iframe {
-    width: 100%;
-    height: auto;
     border: none;
-    display: block;
-    margin: 0 auto;
     overflow: hidden;
     background: #fff;
+    /* Remove conflicting CSS - device-preview.js will handle all positioning */
 }
 
 /* Device preview styling is now handled by device-preview.js */
@@ -243,42 +189,7 @@
     }
 }
 
-/* Unified Loader Styles */
-.unified-page-loader {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(255, 255, 255, 0.95);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 1050;
-    backdrop-filter: blur(2px);
-}
 
-.unified-page-loader .progress-bar {
-    width: 200px;
-    height: 4px;
-    background: #e9ecef;
-    border-radius: 2px;
-    overflow: hidden;
-    margin-bottom: 1rem;
-    position: relative;
-}
-
-.unified-page-loader .progress-bar::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, #0d6efd, transparent);
-    animation: progressSlide 1.5s infinite;
-}
 
 @keyframes progressSlide {
     0% { left: -100%; }
@@ -582,142 +493,46 @@
 @endsection
 
 @section('js')
+<!-- Parent-side Selection Manager Integration -->
+<script src="{{ asset('assets/admin/js/live-designer/parent-communicator.js') }}?v={{ time() }}"></script>
 <!-- Live Designer JavaScript -->
 <script src="{{ asset('assets/admin/js/live-designer/live-preview.js') }}?v={{ time() }}"></script>
-<script src="{{ asset('assets/admin/js/live-designer/widget-form-manager.js') }}?v={{ time() }}"></script>
+
 <script src="{{ asset('assets/admin/js/live-designer/device-preview.js') }}?v={{ time() }}"></script>
-<script src="{{ asset('assets/admin/js/live-designer/update-manager.js') }}?v={{ time() }}"></script>
+
 <script src="{{ asset('assets/admin/js/live-designer/sidebar-manager.js') }}?v={{ time() }}"></script>
 <!-- Left Sidebar Component Library Modules -->
-<script src="{{ asset('assets/admin/js/live-designer/unified-loader-manager.js') }}?v={{ time() }}"></script>
-<script src="{{ asset('assets/admin/js/live-designer/template-manager.js') }}?v={{ time() }}"></script>
+
 <script src="{{ asset('assets/admin/js/live-designer/widget-drill-down.js') }}?v={{ time() }}"></script>
-<script src="{{ asset('assets/admin/js/live-designer/widget-library.js') }}?v={{ time() }}"></script>
-<script src="{{ asset('assets/admin/js/live-designer/default-widget-library.js') }}?v={{ time() }}"></script>
+
 @endsection
 
 @push('scripts')
 <script>
-// Initialize Simplified Live Designer
-document.addEventListener('DOMContentLoaded', async function() {
-    // Initialize the live preview system
-    const livePreview = new LivePreview({
-        pageId: {{ $page->id }},
-        apiUrl: '{{ $apiBaseUrl }}',
-        csrfToken: '{{ csrf_token() }}',
-        previewIframe: document.getElementById('preview-iframe'),
-        pageStructureContainer: null, // No longer using page structure sidebar
-        widgetEditorContainer: document.getElementById('widget-editor-container'),
-        skipPageStructure: true // Skip loading page structure since we don't need it
-    });
-
-    // Check if all required classes are available
-    if (typeof UpdateManager === 'undefined') {
-        console.error('UpdateManager class not found');
-        return;
-    }
-    if (typeof WidgetFormManager === 'undefined') {
-        console.error('WidgetFormManager class not found');
+// Initialize Minimal Live Designer
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if required classes are available
+    if (typeof ParentCommunicator === 'undefined') {
+        console.error('ParentCommunicator class not found - selection manager integration disabled');
         return;
     }
     if (typeof DevicePreview === 'undefined') {
         console.error('DevicePreview class not found');
         return;
     }
-    if (typeof UnifiedLoaderManager === 'undefined') {
-        console.error('UnifiedLoaderManager class not found');
-        return;
-    }
-    if (typeof TemplateManager === 'undefined') {
-        console.error('TemplateManager class not found');
-        return;
-    }
-    if (typeof WidgetLibrary === 'undefined') {
-        console.error('WidgetLibrary class not found');
-        return;
-    }
-    if (typeof DefaultWidgetLibrary === 'undefined') {
-        console.error('DefaultWidgetLibrary class not found');
-        return;
-    }
 
-    // Initialize managers
-    const updateManager = new UpdateManager('{{ $apiBaseUrl }}', '{{ csrf_token() }}');
-    const widgetFormManager = new WidgetFormManager(livePreview, updateManager);
-    // Initialize Device Preview
-    const devicePreview = new DevicePreview();
-    
-    console.log('✅ Live Designer initialized');
+    // Initialize the live preview system
+    const livePreview = new LivePreview({
+        pageId: {{ $page->id }},
+        apiUrl: '{{ $apiBaseUrl }}',
+        csrfToken: '{{ csrf_token() }}',
+        previewIframe: document.getElementById('preview-iframe')
+    });
 
-    // Initialize left sidebar component library managers (simplified - no loading)
-    const unifiedLoader = new UnifiedLoaderManager();
-    const templateManager = new TemplateManager(null, livePreview, unifiedLoader);
-    const widgetLibrary = new WidgetLibrary(livePreview, unifiedLoader);
-    const defaultWidgetLibrary = new DefaultWidgetLibrary(livePreview, unifiedLoader);
-    
-    // Initialize left sidebar components (server-rendered, just setup interactions)
-    await templateManager.init();
-    await defaultWidgetLibrary.init();
-    
-    console.log('✅ Live Designer components initialized (widget drill-down handled separately)');
-    
-    // Device preview is now fully handled by device-preview.js
-
-    // Global references for debugging
+    // Global reference for debugging
     window.livePreview = livePreview;
-    window.updateManager = updateManager;
-    window.widgetFormManager = widgetFormManager;
-    window.unifiedLoader = unifiedLoader;
-    window.templateManager = templateManager;
-    window.widgetLibrary = widgetLibrary;
-    window.defaultWidgetLibrary = defaultWidgetLibrary;
 
-
-    // Mobile sidebar toggle (right sidebar only)
-    const toggleRightSidebar = document.getElementById('toggle-right-sidebar');
-    const rightSidebar = document.getElementById('right-sidebar');
-    const mobileOverlay = document.getElementById('mobile-overlay');
-    
-    // Show toggle on mobile screens
-    if (window.innerWidth <= 991.98) {
-        if (toggleRightSidebar) toggleRightSidebar.style.display = 'block';
-    }
-
-    if (toggleRightSidebar && rightSidebar && mobileOverlay) {
-        toggleRightSidebar.addEventListener('click', function() {
-            rightSidebar.classList.toggle('show');
-            mobileOverlay.style.display = rightSidebar.classList.contains('show') ? 'block' : 'none';
-        });
-    }
-
-    if (mobileOverlay && rightSidebar) {
-        mobileOverlay.addEventListener('click', function() {
-            rightSidebar.classList.remove('show');
-            mobileOverlay.style.display = 'none';
-        });
-    }
-
-
-    // Action buttons
-    const previewPageBtn = document.getElementById('preview-page');
-    if (previewPageBtn) {
-        previewPageBtn.addEventListener('click', function() {
-            const previewUrl = '{{ route("admin.pages.show", $page) }}';
-            window.open(previewUrl, '_blank');
-        });
-    }
-
-    const savePageBtn = document.getElementById('save-page');
-    if (savePageBtn) {
-        savePageBtn.addEventListener('click', function() {
-            livePreview.showMessage('Changes are saved automatically!', 'success');
-        });
-    }
-
-    
-
-    console.log('✅ Live Designer initialized');
+    console.log('✅ Minimal Live Designer initialized');
 });
-
 </script>
 @endpush
