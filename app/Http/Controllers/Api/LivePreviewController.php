@@ -675,7 +675,7 @@ class LivePreviewController extends Controller
     <link href="' . asset('assets/admin/css/icons.min.css') . '" rel="stylesheet" type="text/css" />
     
     <!-- SortableJS Library for Drag and Drop -->
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+     <script src="' . asset('assets/admin/libs/sortablejs/Sortable.min.js') . '"></script>
     
     <!-- Selection Manager JS Modules (load in order) -->
     <script src="' . asset('assets/admin/js/live-designer/iframe-communicator.js') . '"></script>

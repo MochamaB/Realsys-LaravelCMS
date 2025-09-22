@@ -206,6 +206,9 @@ class SelectionManager {
             window.SortableManager.onComponentSelected(component);
         }
         
+        // Auto-enable sortable functionality for children
+        this.enableSortableForSelection(component);
+        
         // Add to selection history
         this.addToHistory(component);
         
@@ -517,8 +520,20 @@ class SelectionManager {
     }
     
     /**
+     * Auto-enable sortable functionality when component is selected
+     * @param {Object} component - Selected component
+     */
+    enableSortableForSelection(component) {
+        // Only enable sortable for components that have children to sort
+        if (component.type === 'page' || component.type === 'section') {
+            console.log(`🎯 AUTO-SORTABLE: Enabling sortable for ${component.type} children`);
+            this.enableSortableForComponent(component);
+        }
+    }
+    
+    /**
      * Enable sortable functionality for a component's children
-     * Called when drag button is clicked from toolbar
+     * Called when drag button is clicked from toolbar or automatically on selection
      * @param {Object} component - Selected component
      */
     enableSortableForComponent(component) {

@@ -293,6 +293,85 @@
    Sortable Drag and Drop Styling
    ============================================================================= */
 
+/* Drag Handles */
+.drag-handle {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 32px;
+    height: 32px;
+    background: rgba(0, 123, 255, 0.9);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 6px;
+    cursor: grab;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: all 0.2s ease;
+    z-index: 1001;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Show drag handles on parent hover */
+[data-section-id]:hover > .drag-handle,
+[data-page-section-widget-id]:hover > .drag-handle {
+    opacity: 0.8;
+}
+
+/* Show drag handles when element itself is hovered */
+.drag-handle:hover {
+    opacity: 1 !important;
+    background: rgba(0, 100, 200, 1);
+    border-color: rgba(255, 255, 255, 0.6);
+    transform: scale(1.05);
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+    transform: scale(0.95);
+}
+
+.drag-handle--section {
+    background: rgba(0, 123, 255, 0.9);
+}
+
+.drag-handle--widget {
+    background: rgba(255, 193, 7, 0.9);
+    color: #333;
+}
+
+.drag-handle i {
+    font-size: 14px;
+    color: white;
+}
+
+.drag-handle--widget i {
+    color: #333;
+}
+
+/* SortableJS Ghost and Chosen States */
+.sortable-ghost {
+    opacity: 0.5 !important;
+    background: rgba(0, 123, 255, 0.1) !important;
+    border: 2px dashed var(--selection-primary) !important;
+    transform: scale(0.98) !important;
+}
+
+.sortable-chosen {
+    transform: rotate(2deg) scale(1.02) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3) !important;
+    z-index: 9999 !important;
+    opacity: 0.9 !important;
+}
+
+.sortable-drag {
+    opacity: 0.8 !important;
+    transform: rotate(-1deg) scale(1.05) !important;
+    cursor: grabbing !important;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4) !important;
+}
+
 /* Sortable Mode Body Classes */
 .mode-sort {
     cursor: grab;

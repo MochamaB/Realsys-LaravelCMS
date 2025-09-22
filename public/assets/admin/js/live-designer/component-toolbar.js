@@ -26,15 +26,13 @@ class ComponentToolbar {
                 { id: 'edit', icon: 'bx bx-edit', label: 'Edit', variant: 'primary' },
                 { id: 'settings', icon: 'bx bx-cog', label: 'Settings', variant: 'secondary' },
                 { id: 'duplicate', icon: 'bx bx-copy', label: 'Duplicate', variant: 'secondary' },
-                { id: 'delete', icon: 'bx bx-trash', label: 'Delete', variant: 'danger' },
-                { id: 'drag', icon: 'bx bx-move', label: 'Move', variant: 'secondary' },
+                { id: 'delete', icon: 'bx bx-trash', label: 'Delete', variant: 'danger' }
             ],
             widget: [
                 { id: 'edit', icon: 'bx bx-edit', label: 'Edit', variant: 'primary' },
                 { id: 'settings', icon: 'bx bx-cog', label: 'Settings', variant: 'secondary' },
                 { id: 'duplicate', icon: 'bx bx-copy', label: 'Duplicate', variant: 'secondary' },
-                { id: 'delete', icon: 'bx bx-trash', label: 'Delete', variant: 'danger' },
-                { id: 'drag', icon: 'bx bx-move', label: 'Move', variant: 'secondary' },
+                { id: 'delete', icon: 'bx bx-trash', label: 'Delete', variant: 'danger' }
             ]
         };
         
@@ -143,7 +141,7 @@ class ComponentToolbar {
         button.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            this.handleAction(action.id, component);
+            this.executeAction(action.id, component);
         });
         
         return button;
@@ -245,9 +243,6 @@ class ComponentToolbar {
                 break;
             case 'seo':
                 this.handleSEOAction(component);
-                break;
-            case 'drag':
-                this.handleDragAction(component);
                 break;
             default:
                 console.warn(`⚠️ Unknown action: ${actionId}`);
@@ -357,75 +352,6 @@ class ComponentToolbar {
         }
     }
     
-    /**
-     * Handle drag action for component - enable sortable functionality
-     * @param {Object} component - Component object
-     */
-    handleDragAction(component) {
-        console.log(`🔄 Enabling sortable for ${component.type} ${component.id}`);
-        
-        // Enable sortable functionality through selection manager
-        if (this.selectionManager && this.selectionManager.enableSortableForComponent) {
-            const success = this.selectionManager.enableSortableForComponent(component);
-            
-            if (success) {
-                // Provide visual feedback that sortable is now active
-                this.showSortableActiveFeedback(component);
-                console.log(`✅ Sortable enabled for ${component.type}`);
-            } else {
-                console.error(`❌ Failed to enable sortable for ${component.type}`);
-                this.showSortableErrorFeedback(component);
-            }
-        } else {
-            console.error('❌ Selection manager not available or missing enableSortableForComponent method');
-        }
-    }
-    
-    /**
-     * Show visual feedback that sortable is active
-     * @param {Object} component - Component object
-     */
-    showSortableActiveFeedback(component) {
-        // Find the drag button and update its appearance
-        const dragButton = this.toolbar.querySelector('[data-action="drag"]');
-        if (dragButton) {
-            dragButton.classList.add('active');
-            dragButton.style.background = 'rgba(40, 167, 69, 0.9)'; // Success green
-            dragButton.title = `Sortable active for ${component.type}`;
-            
-            // Reset after a few seconds
-            setTimeout(() => {
-                dragButton.classList.remove('active');
-                dragButton.style.background = '';
-                dragButton.title = 'Move';
-            }, 3000);
-        }
-        
-        // Show temporary notification
-        this.showNotification(`Sortable enabled for ${component.type}. You can now drag to reorder items.`, 'success');
-    }
-    
-    /**
-     * Show visual feedback for sortable error
-     * @param {Object} component - Component object
-     */
-    showSortableErrorFeedback(component) {
-        // Find the drag button and update its appearance
-        const dragButton = this.toolbar.querySelector('[data-action="drag"]');
-        if (dragButton) {
-            dragButton.style.background = 'rgba(220, 53, 69, 0.9)'; // Error red
-            dragButton.title = `Cannot enable sortable for ${component.type}`;
-            
-            // Reset after a few seconds
-            setTimeout(() => {
-                dragButton.style.background = '';
-                dragButton.title = 'Move';
-            }, 3000);
-        }
-        
-        // Show temporary notification
-        this.showNotification(`Cannot enable sortable for ${component.type}`, 'error');
-    }
     
     /**
      * Show temporary notification

@@ -1,109 +1,54 @@
 /**
- * SortableManager - Simple sortable functionality for live designer
- * Receives component information and manages drag/drop operations
+ * SortableManager - Drag & drop functionality for live designer
+ * Manages SortableJS integration for sections and widgets
  */
 class SortableManager {
     constructor() {
-        this.isEnabled = false;
+        this.activeSortables = new Map();
+        this.isDragMode = false;
+        this.draggedElement = null;
         this.currentComponent = null;
         
-        console.log('📋 Simple SortableManager initialized');
+        console.log('📋 SortableManager initialized');
     }
     
     /**
-     * Receive component selection and log details
+     * Receive component selection - store for sortable operations
      * @param {Object} component - Selected component object
      */
     onComponentSelected(component) {
-        console.log('🔍 SORTABLE: Component selected:', component);
-        console.log('🔍 SORTABLE: Component type:', component.type);
-        console.log('🔍 SORTABLE: Component ID:', component.id);
-        console.log('🔍 SORTABLE: Component element:', component.element);
-        
-        // Check if we have access to the structured data from LivePreviewController
-        if (window.previewPageStructure) {
-            console.log('🔍 SORTABLE: Preview page structure available:', window.previewPageStructure);
-            this.logStructuredData(component);
-        } else {
-            console.log('🔍 SORTABLE: No preview page structure found');
-        }
-        
-        if (component.element) {
-            console.log('🔍 SORTABLE: Element tag:', component.element.tagName);
-            console.log('🔍 SORTABLE: Element classes:', component.element.className);
-            console.log('🔍 SORTABLE: Element parent:', component.element.parentElement);
-            
-            if (component.element.parentElement) {
-                console.log('🔍 SORTABLE: Parent tag:', component.element.parentElement.tagName);
-                console.log('🔍 SORTABLE: Parent classes:', component.element.parentElement.className);
-                console.log('🔍 SORTABLE: Parent children count:', component.element.parentElement.children.length);
-            }
-        }
-        
         this.currentComponent = component;
-    }
-    
-    /**
-     * Log structured data from LivePreviewController
-     * @param {Object} component - Selected component
-     */
-    logStructuredData(component) {
-        const structure = window.previewPageStructure;
-        
-        if (component.type === 'page') {
-            console.log('🔍 SORTABLE: Page data:', structure.page);
-            console.log('🔍 SORTABLE: Available sections:', structure.sections.length);
-            structure.sections.forEach((section, index) => {
-                console.log(`🔍 SORTABLE: Section ${index + 1}:`, section);
-            });
-        } else if (component.type === 'section') {
-            const sectionData = structure.sections.find(s => s.id == component.id);
-            if (sectionData) {
-                console.log('🔍 SORTABLE: Section data:', sectionData);
-                console.log('🔍 SORTABLE: Available widgets:', sectionData.widgets.length);
-                sectionData.widgets.forEach((widget, index) => {
-                    console.log(`🔍 SORTABLE: Widget ${index + 1}:`, widget);
-                });
-            } else {
-                console.log('🔍 SORTABLE: Section data not found for ID:', component.id);
-            }
-        } else if (component.type === 'widget') {
-            // Find widget in structure
-            let widgetData = null;
-            for (const section of structure.sections) {
-                widgetData = section.widgets.find(w => w.id == component.id);
-                if (widgetData) break;
-            }
-            
-            if (widgetData) {
-                console.log('🔍 SORTABLE: Widget data:', widgetData);
-            } else {
-                console.log('🔍 SORTABLE: Widget data not found for ID:', component.id);
-            }
-        }
+        console.log(`🎯 SORTABLE: Component selected for potential sorting: ${component.type} ${component.id}`);
     }
     
     /**
      * Enable sortable functionality for component
-     * Called when drag button is clicked
+     * Called automatically when component is selected
      * @param {Object} component - Component to enable sorting for
      */
     enableSortableForComponent(component) {
-        console.log('🔍 SORTABLE: Enabling sortable for component:', component);
+        console.log('🚀 SORTABLE: Auto-enabling sortable for component:', component.type, component.id);
+        
+        // Disable any existing sortables first
+        this.disableAllSortables();
         
         // Determine what should be sortable based on component type
         if (component.type === 'page') {
-            console.log('🔍 SORTABLE: Page selected - should make sections sortable');
-            this.makeSectionsSortable(component);
+            const success = this.makeSectionsSortable(component);
+            if (success) {
+                console.log('✨ SORTABLE: Page selected → sections are now draggable');
+            }
+            return success;
         } else if (component.type === 'section') {
-            console.log('🔍 SORTABLE: Section selected - should make widgets sortable');
-            this.makeWidgetsSortable(component);
+            const success = this.makeWidgetsSortable(component);
+            if (success) {
+                console.log('✨ SORTABLE: Section selected → widgets are now draggable');
+            }
+            return success;
         } else {
-            console.log('🔍 SORTABLE: Widget selected - no children to sort');
+            console.log('ℹ️ SORTABLE: Widget selected - no children to sort');
             return false;
         }
-        
-        return true;
     }
     
     /**
@@ -111,41 +56,35 @@ class SortableManager {
      * @param {Object} pageComponent - Page component
      */
     makeSectionsSortable(pageComponent) {
-        console.log('🔍 SORTABLE: Making sections sortable in page:', pageComponent.id);
+        console.log('📦 SORTABLE: Making sections sortable in page:', pageComponent.id);
         
-        // Get structured data for this page
-        const structure = window.previewPageStructure;
-        if (!structure) {
-            console.error('❌ SORTABLE: No page structure data available');
+        const container = pageComponent.element;
+        const sections = container.querySelectorAll('[data-section-id]');
+        
+        if (sections.length === 0) {
+            console.log('⚠️ SORTABLE: No sections found to sort');
             return false;
         }
         
-        console.log('🔍 SORTABLE: Page data from structure:', structure.page);
-        console.log('🔍 SORTABLE: Sections to make sortable:', structure.sections);
+        console.log(`📦 SORTABLE: Found ${sections.length} sections to make sortable`);
         
-        // Find the page container (should be the page element itself)
-        const container = pageComponent.element;
-        console.log('🔍 SORTABLE: Page container:', container);
+        // Add drag handles to sections
+        this.addDragHandles(sections, 'section');
         
-        // Find all sections within this page using structured data
-        const sections = container.querySelectorAll('[data-section-id]');
-        console.log('🔍 SORTABLE: Found DOM sections:', sections.length, sections);
-        
-        // Cross-reference DOM elements with structured data
-        structure.sections.forEach((sectionData, index) => {
-            const domElement = container.querySelector(`[data-section-id="${sectionData.id}"]`);
-            console.log(`🔍 SORTABLE: Section ${index + 1} (ID: ${sectionData.id}):`);
-            console.log(`  - Data:`, sectionData);
-            console.log(`  - DOM Element:`, domElement);
-            
-            if (domElement) {
-                console.log(`  - Element classes:`, domElement.className);
-                console.log(`  - Element position in DOM:`, Array.from(container.children).indexOf(domElement));
-            } else {
-                console.log(`  - ❌ DOM element not found for section ${sectionData.id}`);
-            }
+        // Create sortable instance
+        const sortable = Sortable.create(container, {
+            group: 'sections',
+            animation: 200,
+            handle: '.drag-handle',
+            ghostClass: 'sortable-ghost',
+            chosenClass: 'sortable-chosen',
+            dragClass: 'sortable-drag',
+            onStart: (evt) => this.onDragStart(evt, 'section'),
+            onEnd: (evt) => this.onDragEnd(evt, 'section', pageComponent.id)
         });
         
+        this.activeSortables.set('sections', sortable);
+        console.log('✅ SORTABLE: Sections are now sortable');
         return true;
     }
     
@@ -154,58 +93,191 @@ class SortableManager {
      * @param {Object} sectionComponent - Section component
      */
     makeWidgetsSortable(sectionComponent) {
-        console.log('🔍 SORTABLE: Making widgets sortable in section:', sectionComponent.id);
+        console.log('🧩 SORTABLE: Making widgets sortable in section:', sectionComponent.id);
         
-        // Get structured data for this section
-        const structure = window.previewPageStructure;
-        if (!structure) {
-            console.error('❌ SORTABLE: No page structure data available');
-            return false;
-        }
-        
-        const sectionData = structure.sections.find(s => s.id == sectionComponent.id);
-        if (!sectionData) {
-            console.error('❌ SORTABLE: Section data not found for ID:', sectionComponent.id);
-            return false;
-        }
-        
-        console.log('🔍 SORTABLE: Section data from structure:', sectionData);
-        console.log('🔍 SORTABLE: Widgets to make sortable:', sectionData.widgets);
-        
-        // Find the section container
         const container = sectionComponent.element;
-        console.log('🔍 SORTABLE: Section container:', container);
-        
-        // Find all widgets within this section using structured data
         const widgets = container.querySelectorAll('[data-page-section-widget-id]');
-        console.log('🔍 SORTABLE: Found DOM widgets:', widgets.length, widgets);
         
-        // Cross-reference DOM elements with structured data
-        sectionData.widgets.forEach((widgetData, index) => {
-            const domElement = container.querySelector(`[data-page-section-widget-id="${widgetData.id}"]`);
-            console.log(`🔍 SORTABLE: Widget ${index + 1} (ID: ${widgetData.id}):`);
-            console.log(`  - Data:`, widgetData);
-            console.log(`  - DOM Element:`, domElement);
+        if (widgets.length === 0) {
+            console.log('⚠️ SORTABLE: No widgets found to sort');
+            return false;
+        }
+        
+        console.log(`🧩 SORTABLE: Found ${widgets.length} widgets to make sortable`);
+        
+        // Add drag handles to widgets
+        this.addDragHandles(widgets, 'widget');
+        
+        // Create sortable instance
+        const sortable = Sortable.create(container, {
+            group: 'widgets',
+            animation: 200,
+            handle: '.drag-handle',
+            ghostClass: 'sortable-ghost',
+            chosenClass: 'sortable-chosen',
+            dragClass: 'sortable-drag',
+            onStart: (evt) => this.onDragStart(evt, 'widget'),
+            onEnd: (evt) => this.onDragEnd(evt, 'widget', sectionComponent.id)
+        });
+        
+        this.activeSortables.set(`widgets-${sectionComponent.id}`, sortable);
+        console.log('✅ SORTABLE: Widgets are now sortable');
+        return true;
+    }
+    
+    /**
+     * Add drag handles to elements
+     * @param {NodeList} elements - Elements to add handles to
+     * @param {string} type - Type of elements (section/widget)
+     */
+    addDragHandles(elements, type) {
+        elements.forEach(element => {
+            // Skip if already has handle
+            if (element.querySelector('.drag-handle')) return;
             
-            if (domElement) {
-                console.log(`  - Element classes:`, domElement.className);
-                console.log(`  - Element position in DOM:`, Array.from(container.children).indexOf(domElement));
-                console.log(`  - Data position:`, widgetData.position);
-            } else {
-                console.log(`  - ❌ DOM element not found for widget ${widgetData.id}`);
+            const handle = document.createElement('div');
+            handle.className = `drag-handle drag-handle--${type}`;
+            handle.innerHTML = '<i class="bx bx-move"></i>';
+            handle.title = `Drag to reorder ${type}`;
+            
+            // Position handle at top-right of element
+            handle.style.position = 'absolute';
+            handle.style.top = '5px';
+            handle.style.right = '5px';
+            handle.style.zIndex = '1000';
+            
+            // Make parent position relative if not already
+            if (getComputedStyle(element).position === 'static') {
+                element.style.position = 'relative';
+            }
+            
+            element.appendChild(handle);
+        });
+    }
+    
+    /**
+     * Remove drag handles from elements
+     * @param {NodeList} elements - Elements to remove handles from
+     */
+    removeDragHandles(elements) {
+        elements.forEach(element => {
+            const handle = element.querySelector('.drag-handle');
+            if (handle) {
+                handle.remove();
+            }
+        });
+    }
+    
+    /**
+     * Handle drag start event
+     * @param {Event} evt - SortableJS event
+     * @param {string} type - Type being dragged
+     */
+    onDragStart(evt, type) {
+        this.isDragMode = true;
+        this.draggedElement = evt.item;
+        
+        console.log(`🎯 SORTABLE: Started dragging ${type}:`, evt.item);
+        
+        // Hide component toolbar during drag
+        if (window.componentToolbar) {
+            window.componentToolbar.hide();
+        }
+        
+        // Send message to parent
+        if (window.iframeCommunicator) {
+            window.iframeCommunicator.sendMessage('drag:started', {
+                type: type,
+                elementId: this.getElementId(evt.item, type)
+            });
+        }
+    }
+    
+    /**
+     * Handle drag end event
+     * @param {Event} evt - SortableJS event
+     * @param {string} type - Type being dragged
+     * @param {string} parentId - Parent container ID
+     */
+    onDragEnd(evt, type, parentId) {
+        this.isDragMode = false;
+        
+        const elementId = this.getElementId(evt.item, type);
+        console.log(`✅ SORTABLE: Finished dragging ${type} ${elementId}:`, {
+            oldIndex: evt.oldIndex,
+            newIndex: evt.newIndex
+        });
+        
+        // Only process if position actually changed
+        if (evt.oldIndex !== evt.newIndex) {
+            // Send reorder message to parent
+            if (window.iframeCommunicator) {
+                window.iframeCommunicator.sendMessage('component:reordered', {
+                    componentType: type,
+                    componentId: elementId,
+                    parentId: parentId,
+                    oldPosition: evt.oldIndex,
+                    newPosition: evt.newIndex
+                });
+            }
+        }
+        
+        this.draggedElement = null;
+        
+        // Send drag ended message
+        if (window.iframeCommunicator) {
+            window.iframeCommunicator.sendMessage('drag:ended', {
+                type: type,
+                elementId: elementId
+            });
+        }
+    }
+    
+    /**
+     * Extract component ID from element
+     * @param {Element} element - DOM element
+     * @param {string} type - Component type
+     * @returns {string} Component ID
+     */
+    getElementId(element, type) {
+        if (type === 'section') {
+            return element.getAttribute('data-section-id');
+        } else if (type === 'widget') {
+            return element.getAttribute('data-page-section-widget-id');
+        }
+        return null;
+    }
+    
+    /**
+     * Disable all active sortables
+     */
+    disableAllSortables() {
+        console.log('🛑 SORTABLE: Disabling all sortables');
+        
+        this.activeSortables.forEach((sortable, key) => {
+            if (sortable) {
+                sortable.destroy();
+                console.log(`🛑 SORTABLE: Destroyed sortable: ${key}`);
             }
         });
         
-        return true;
+        this.activeSortables.clear();
+        
+        // Remove all drag handles
+        const allHandles = document.querySelectorAll('.drag-handle');
+        allHandles.forEach(handle => handle.remove());
+        
+        this.isDragMode = false;
+        this.draggedElement = null;
     }
     
     /**
      * Disable sortable functionality
      */
     disable() {
-        console.log('🔍 SORTABLE: Disabling sortable');
-        this.isEnabled = false;
+        this.disableAllSortables();
         this.currentComponent = null;
+        console.log('🛑 SORTABLE: Sortable functionality disabled');
     }
     
     /**
