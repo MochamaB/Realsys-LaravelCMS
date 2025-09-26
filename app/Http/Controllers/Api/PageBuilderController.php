@@ -142,24 +142,27 @@ class PageBuilderController extends Controller
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="' . csrf_token() . '">
     <title>Page Builder Preview - ' . e($page->title) . '</title>
-    
+
     <!-- Theme Assets -->
     ' . $this->getThemeAssetsHtml($page) . '
-    
+
     <!-- Page Builder Preview Assets -->
     ' . $previewAssets . '
-    
+
     <!-- Page Structure Data -->
     ' . $this->getPageStructureScript($page) . '
 </head>
 <body>
-    <!-- Page Container with Page Builder data attributes -->
-    <div data-pagebuilder-page="' . $page->id . '" 
-         data-page-title="' . e($page->title) . '" 
+    <!-- Page Container with Page Builder data attributes and GridStack -->
+    <div data-pagebuilder-page="' . $page->id . '"
+         data-page-title="' . e($page->title) . '"
          data-page-template="' . e($page->template->name ?? 'Unknown Template') . '"
          data-preview-type="page"
-         class="pagebuilder-preview-container">
+         class="pagebuilder-preview-container grid-stack"
+         id="pageGrid">
+        ' . $this->generatePageToolbar($page) . '
         ' . $pageContent . '
     </div>
 </body>
@@ -177,19 +180,42 @@ class PageBuilderController extends Controller
      */
     private function injectPageBuilderPreviewData(Page $page, string $html): string
     {
-        // Add Page Builder specific data attributes for component targeting
+        // Add Page Builder specific data attributes and always-visible toolbars
         $patterns = [
-            // Add preview attributes to existing section elements
+            // Wrap sections in grid-stack-item (preserve all existing attributes including GridStack data)
             '/<section([^>]*data-section-id="([^"]*)"[^>]*)>/i' => function($matches) {
-                return '<section' . $matches[1] . ' data-pagebuilder-section="' . $matches[2] . '" data-preview-type="section">';
+                $sectionAttributes = $matches[1];
+                $sectionId = $matches[2];
+
+                // Extract GridStack attributes from the section for the wrapper
+                $gsX = $this->extractAttribute($sectionAttributes, 'data-gs-x') ?? '0';
+                $gsY = $this->extractAttribute($sectionAttributes, 'data-gs-y') ?? '0';
+                $gsW = $this->extractAttribute($sectionAttributes, 'data-gs-w') ?? '12';
+                $gsH = $this->extractAttribute($sectionAttributes, 'data-gs-h') ?? '1';
+                $gsId = $this->extractAttribute($sectionAttributes, 'data-gs-id') ?? "section_{$sectionId}";
+
+                return '<div class="grid-stack-item"
+                             data-gs-x="' . $gsX . '"
+                             data-gs-y="' . $gsY . '"
+                             data-gs-w="' . $gsW . '"
+                             data-gs-h="' . $gsH . '"
+                             data-gs-id="' . $gsId . '">
+                    <div class="grid-stack-item-content">
+                        <section' . $sectionAttributes . ' data-pagebuilder-section="' . $sectionId . '" data-preview-type="section">' . $this->generateSectionToolbar($sectionId);
             },
-            
-            // Add preview attributes to existing widget elements  
+
+            // Close section grid-stack wrapper
+            '/<\/section>/i' => '</section>
+                    </div>
+                </div>',
+
+            // Add preview attributes and toolbar to existing widget elements
             '/<div([^>]*data-page-section-widget-id="([^"]*)"[^>]*)>/i' => function($matches) {
-                return '<div' . $matches[1] . ' data-pagebuilder-widget="' . $matches[2] . '" data-preview-type="widget" style="position: relative; cursor: pointer; outline: 1px dashed transparent;" onmouseover="this.style.outline=\'1px dashed #007bff\'" onmouseout="this.style.outline=\'1px dashed transparent\'">';
+                $widgetId = $matches[2];
+                return '<div' . $matches[1] . ' data-pagebuilder-widget="' . $widgetId . '" data-preview-type="widget" style="position: relative;">' . $this->generateWidgetToolbar($widgetId);
             }
         ];
-        
+
         foreach ($patterns as $pattern => $replacement) {
             if (is_callable($replacement)) {
                 $html = preg_replace_callback($pattern, $replacement, $html);
@@ -197,13 +223,137 @@ class PageBuilderController extends Controller
                 $html = preg_replace($pattern, $replacement, $html);
             }
         }
-        
+
         return $html;
     }
 
     /**
+     * Generate always-visible page toolbar HTML
+     *
+     * @param Page $page
+     * @return string
+     */
+    private function generatePageToolbar(Page $page): string
+{
+    return '
+    <div class="pagebuilder-toolbar pagebuilder-page-toolbar" data-component-type="page" data-page-id="' . $page->id . '">
+        <div class="toolbar-content">
+            <div class="toolbar-left">
+                <div class="component-info">
+                    <div class="component-icon">
+                        <i class="ri-file-text-line"></i>
+                    </div>
+                    <div class="component-details">
+                        <div class="component-name">Page • ' . e($page->title ?? 'Unknown Template') . '</div>
+                    </div>
+                </div>
+            </div>
+            <div class="toolbar-right">
+                <div class="toolbar-actions">
+                   
+                    <button class="toolbar-btn" data-action="add-section" data-page-id="' . $page->id . '" title="Add Section">
+                        <i class="ri-add-line"></i>
+                        <div class="btn-tooltip">Add Section</div>
+                    </button>
+                    
+                </div>
+            </div>
+        </div>
+    </div>';
+}
+
+    /**
+     * Generate always-visible section toolbar HTML
+     *
+     * @param string $sectionId
+     * @return string
+     */
+    private function generateSectionToolbar(string $sectionId): string
+    {
+        return '
+        <div class="pagebuilder-toolbar pagebuilder-section-toolbar" data-component-type="section" data-section-id="' . $sectionId . '">
+            <div class="toolbar-content">
+                <div class="toolbar-left">
+                    <div class="component-info">
+                        <div class="component-icon">
+                            <i class="ri-layout-grid-line"></i>
+                        </div>
+                        <div class="component-details">
+                            <div class="component-name">Section • ID: ' . $sectionId . '</div>
+                           
+                        </div>
+                    </div>
+                </div>
+                <div class="toolbar-right">
+                    <div class="toolbar-actions">
+                        <button class="toolbar-btn" data-action="add-widget" data-section-id="' . $sectionId . '" title="Add Widget">
+                            <i class="ri-add-line"></i>
+                            <div class="btn-tooltip">Add Widget</div>
+                        </button>
+                       
+                        <button class="toolbar-btn" data-action="duplicate-section" data-section-id="' . $sectionId . '" title="Duplicate Section">
+                            <i class="ri-file-copy-line"></i>
+                            <div class="btn-tooltip">Duplicate</div>
+                        </button>
+                         <button class="toolbar-btn" data-action="move-section" data-section-id="' . $sectionId . '" title="Move Section">
+                            <i class="ri-drag-move-2-line"></i>
+                            <div class="btn-tooltip">Move</div>
+                        </button>
+                        <button class="toolbar-btn toolbar-btn-danger" data-action="delete-section" data-section-id="' . $sectionId . '" title="Delete Section">
+                            <i class="ri-delete-bin-line"></i>
+                            <div class="btn-tooltip">Delete</div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>';
+    }
+
+    /**
+     * Generate always-visible widget toolbar HTML
+     *
+     * @param string $widgetId
+     * @return string
+     */
+    private function generateWidgetToolbar(string $widgetId): string
+{
+    return '
+    <div class="pagebuilder-toolbar pagebuilder-widget-toolbar" data-component-type="widget" data-widget-id="' . $widgetId . '">
+        <div class="toolbar-content">
+            <div class="toolbar-left">
+                <div class="component-info">
+                    <div class="component-icon">
+                        <i class="ri-puzzle-line"></i>
+                    </div>
+                    <div class="component-details">
+                        <div class="component-name">Widget • ID: ' . $widgetId . '</div>
+                    </div>
+                </div>
+            </div>
+            <div class="toolbar-right">
+                <div class="toolbar-actions">
+                    
+                    <button class="toolbar-btn" data-action="move-widget" data-widget-id="' . $widgetId . '" title="Move Widget">
+                        <i class="ri-drag-move-2-line"></i>
+                        <div class="btn-tooltip">Move</div>
+                    </button>
+                    <button class="toolbar-btn" data-action="duplicate-widget" data-widget-id="' . $widgetId . '" title="Duplicate Widget">
+                        <i class="ri-file-copy-line"></i>
+                        <div class="btn-tooltip">Duplicate</div>
+                    </button>
+                    <button class="toolbar-btn toolbar-btn-danger" data-action="delete-widget" data-widget-id="' . $widgetId . '" title="Delete Widget">
+                        <i class="ri-delete-bin-line"></i>
+                        <div class="btn-tooltip">Delete</div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>';
+}
+
+    /**
      * Get theme assets HTML for the page
-     * 
+     *
      * @param Page $page
      * @return string
      */
@@ -239,15 +389,48 @@ class PageBuilderController extends Controller
     private function getPageBuilderPreviewAssets(): string
     {
         return '
+    <!-- GridStack CSS & JS (Local Assets) -->
+    <link rel="stylesheet" href="' . asset('assets/admin/libs/gridstack/dist/gridstack.min.css') . '">
+    <script src="' . asset('assets/admin/libs/gridstack/dist/gridstack-all.js') . '"></script>
+
     <!-- Page Builder Preview Helper CSS -->
     <link rel="stylesheet" href="' . asset('assets/admin/css/page-builder/pagebuilder-preview-helper.css') . '">
     <link href="' . asset('assets/admin/css/icons.min.css') . '" rel="stylesheet" type="text/css" />
-    
-    <!-- Page Builder Preview Helper JS (separate from live-designer) -->
-    <script src="' . asset('assets/admin/js/page-builder/pagebuilder-preview-helper.js') . '"></script>
-    <script src="' . asset('assets/admin/js/page-builder/pagebuilder-page-preview.js') . '"></script>
-    <script src="' . asset('assets/admin/js/page-builder/pagebuilder-section-preview.js') . '"></script>
-    <script src="' . asset('assets/admin/js/page-builder/pagebuilder-widget-preview.js') . '"></script>
+
+    <!-- Page Builder Communication System -->
+    <script src="' . asset('assets/admin/js/page-builder/iframe-communicator.js') . '"></script>
+    <!-- Page Builder Toolbar Handler -->
+    <script src="' . asset('assets/admin/js/page-builder/toolbar-handler.js') . '"></script>
+    <!-- Page Builder GridStack JS -->
+    <script src="' . asset('assets/admin/js/page-builder/pagebuilder-gridstack.js') . '"></script>
+
+    <!-- Initialize Page Builder Iframe Systems -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            console.log("🎯 Initializing Page Builder iframe systems...");
+
+            // Initialize iframe communicator
+            if (window.PageBuilderIframeCommunicator) {
+                window.pageBuilderIframeCommunicator = new PageBuilderIframeCommunicator();
+                console.log("✅ Page Builder iframe communicator initialized");
+            }
+
+            // Initialize toolbar handler
+            if (window.PageBuilderToolbarHandler) {
+                window.pageBuilderToolbarHandler = new PageBuilderToolbarHandler();
+
+                // Connect toolbar handler to communicator
+                if (window.pageBuilderIframeCommunicator) {
+                    window.pageBuilderToolbarHandler.setCommunicator(window.pageBuilderIframeCommunicator);
+                    console.log("🔗 Toolbar handler connected to iframe communicator");
+                }
+
+                console.log("✅ Page Builder toolbar handler initialized");
+            }
+
+            console.log("✅ Page Builder iframe systems initialized");
+        });
+    </script>
 
     
     <!-- Page Builder Preview Styling -->
@@ -313,6 +496,23 @@ class PageBuilderController extends Controller
     // =====================================================================
     // LEGACY METHODS (DISABLED FOR NOW - PHASE 2+)
     // =====================================================================
+
+    /**
+     * Extract specific attribute value from attribute string
+     * Helper method for regex pattern matching
+     *
+     * @param string $attributeString
+     * @param string $attributeName
+     * @return string|null
+     */
+    private function extractAttribute(string $attributeString, string $attributeName): ?string
+    {
+        $pattern = '/' . preg_quote($attributeName, '/') . '="([^"]*?)"/i';
+        if (preg_match($pattern, $attributeString, $matches)) {
+            return $matches[1];
+        }
+        return null;
+    }
 
     /**
      * LEGACY - Will be re-enabled in Phase 2+

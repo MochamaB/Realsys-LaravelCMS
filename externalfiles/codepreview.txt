@@ -1,136 +1,528 @@
-GET http://realsyscms.local:8080/assets/admin/css/live-designer/sidebar-layout.css 500 (Internal Server Error)Understand this error
-live-designer:35  GET http://realsyscms.local:8080/assets/admin/css/live-designer/simple-live-designer.css net::ERR_ABORTED 500 (Internal Server Error)Understand this error
-live-designer:1385 Server theme widgets data: (8) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
-app.js:1042 Uncaught TypeError: Cannot read properties of null (reading 'addEventListener')
-    at app.js:1042:55
-    at app.js:1178:2
-(anonymous) @ app.js:1042
-(anonymous) @ app.js:1178Understand this error
-live-designer:2412  GET http://realsyscms.local:8080/assets/admin/js/live-designer/unified-loader-manager.js?v=1757259437 net::ERR_ABORTED 500 (Internal Server Error)Understand this error
-live-designer:2409  GET http://realsyscms.local:8080/assets/admin/js/live-designer/update-manager.js?v=1757259437 net::ERR_ABORTED 500 (Internal Server Error)Understand this error
-live-designer:2407  GET http://realsyscms.local:8080/assets/admin/js/live-designer/widget-form-manager.js?v=1757259437 net::ERR_ABORTED 500 (Internal Server Error)Understand this error
-live-designer:2415  GET http://realsyscms.local:8080/assets/admin/js/live-designer/widget-library.js?v=1757259437 net::ERR_ABORTED 500 (Internal Server Error)Understand this error
-live-designer:2416  GET http://realsyscms.local:8080/assets/admin/js/live-designer/default-widget-library.js?v=1757259437 net::ERR_ABORTED 500 (Internal Server Error)Understand this error
-live-designer:2413  GET http://realsyscms.local:8080/assets/admin/js/live-designer/template-manager.js?v=1757259437 net::ERR_ABORTED 500 (Internal Server Error)Understand this error
-widget-drill-down.js?v=1757259437:573 📦 Widget Drill-Down module loaded
-live-designer:2273 Uncaught TypeError: Cannot read properties of null (reading 'querySelector')
-    at HTMLDocument.<anonymous> (live-designer:2273:44)
-(anonymous) @ live-designer:2273Understand this error
-sidebar-manager.js?v=1757259437:19 🎛️ SidebarManager initializing...
-sidebar-manager.js?v=1757259437:59 ✅ Left sidebar toggle setup complete
-sidebar-manager.js?v=1757259437:94 ✅ Right sidebar toggle setup complete
-sidebar-manager.js?v=1757259437:27 ✅ SidebarManager initialized
-widget-drill-down.js?v=1757259437:14 🎯 Widget Drill-Down initialized
-widget-drill-down.js?v=1757259437:21 🔄 Setting up widget drill-down navigation...
-widget-drill-down.js?v=1757259437:103 ✅ Event delegation setup complete
-widget-drill-down.js?v=1757259437:29 ✅ Widget drill-down navigation ready
-parent-communicator.js?v=1757259437:26 🔗 Parent communicator initialized
-device-preview.js?v=1757259437:35 📱 Device Preview with Intelligent Scaling initialized
-device-preview.js?v=1757259437:85 📱 Device controls setup complete
-live-preview.js?v=1757259437:86 ❌ Failed to initialize Live Preview: TypeError: Failed to execute 'observe' on 'ResizeObserver': parameter 1 is not of type 'Element'.
-    at DevicePreview.setupResizeObserver (device-preview.js?v=1757259437:98:28)
-    at DevicePreview.init (device-preview.js?v=1757259437:53:14)
-    at LivePreview.setupDevicePreview (live-preview.js?v=1757259437:546:28)
-    at LivePreview.init (live-preview.js?v=1757259437:79:18)
-    at new LivePreview (live-preview.js?v=1757259437:54:14)
-    at HTMLDocument.<anonymous> (live-designer:2523:25)
-init @ live-preview.js?v=1757259437:86
-LivePreview @ live-preview.js?v=1757259437:54
-(anonymous) @ live-designer:2523Understand this error
-live-designer:2538 UpdateManager class not found
-(anonymous) @ live-designer:2538Understand this error
-preview-iframe:79 🏗️ Preview page structure loaded: {page: {…}, sections: Array(4)}
-index.ts-abec1db7.js:1 [Long Running Recorder] Content script initialised
-index.ts-abec1db7.js:3 [Long Running Recorder] Recorder disabled
-live-designer:2394 🔧 Layout initialization complete - Bootstrap modals now enabled
-BlockingPageContent.js:2  action SET_STORAGE_DATA @ 18:37:59.041
-BlockingPageContent.js:2  prev state {blocking: false}
-BlockingPageContent.js:2  action     {type: 'SET_STORAGE_DATA', urls: {…}, online: true, eula: true, welcome: true, …}
-BlockingPageContent.js:2  next state {blocking: false}
-NotificationContent.js:2  action SET_LOCALE @ 18:37:59.069
-NotificationContent.js:2  prev state {notification: false, locale: '', mode: '', os: '', browser: '', …}
-NotificationContent.js:2  action     {type: 'SET_LOCALE', locale: 'en'}
-NotificationContent.js:2  next state {notification: false, locale: 'en', mode: '', os: '', browser: '', …}
-NotificationContent.js:2  action SET_STORAGE_DATA @ 18:37:59.081
-NotificationContent.js:2  prev state {notification: false, locale: 'en', mode: '', os: '', browser: '', …}
-NotificationContent.js:2  action     {type: 'SET_STORAGE_DATA', urls: {…}, online: true, eula: true, welcome: true, …}
-NotificationContent.js:2  next state {notification: false, locale: 'en', mode: 'Promoter', os: 'win', browser: 'chrome', …}
-active-calendar.js:1 Uncaught TypeError: $(...).fullCalendar is not a function
-    at active-calendar.js:1:16
-(anonymous) @ active-calendar.js:1Understand this error
-main.js:7 Uncaught TypeError: $(...).meanmenu is not a function
-    at main.js:7:23
-    at main.js:338:3
-(anonymous) @ main.js:7
-(anonymous) @ main.js:338Understand this error
-selection-manager.js:30 🎯 Selection manager created
-iframe-communicator.js:79 📤 Sent message: iframe:ready {url: 'http://realsyscms.local:8080/admin/api/live-preview/pages/1/preview-iframe', timestamp: 1757259480107, userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb…KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36'}
-iframe-communicator.js:53 📡 Iframe communicator ready
-component-detector.js:43 🎯 Component detector initialized
-component-toolbar.js:43 🔧 Component toolbar initialized
-content-extractor.js:37 📤 Content extractor initialized
-selection-manager.js:73 ✅ Selection manager initialized successfully
-iframe-communicator.js:79 📤 Sent message: selection-system:ready {mode: 'select', stats: {…}}
-iframe-communicator.js:79 📤 Sent message: iframe:ready {url: 'http://realsyscms.local:8080/admin/api/live-preview/pages/1/preview-iframe', timestamp: 1757259480110, userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb…KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36'}
-iframe-communicator.js:53 📡 Iframe communicator ready
-selection-manager.js:30 🎯 Selection manager created
-preview-iframe:33 🎯 Selection Manager initialized
-parent-communicator.js?v=1757259437:67 🔗 Received from iframe: iframe:ready {url: 'http://realsyscms.local:8080/admin/api/live-preview/pages/1/preview-iframe', timestamp: 1757259480107, userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb…KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36'}
-parent-communicator.js?v=1757259437:130 🔗 Iframe communication established
-live-preview.js?v=1757259437:138 🔗 Iframe ready callback received: {url: 'http://realsyscms.local:8080/admin/api/live-preview/pages/1/preview-iframe', timestamp: 1757259480107, userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb…KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36'}
-live-preview.js?v=1757259437:151 Uncaught TypeError: this.devicePreview.getCurrentZoom is not a function
-    at LivePreview.syncInitialState (live-preview.js?v=1757259437:151:50)
-    at LivePreview.onIframeReady (live-preview.js?v=1757259437:141:14)
-    at ParentCommunicator.handleIframeReady (parent-communicator.js?v=1757259437:137:30)
-    at ParentCommunicator.handleMessage (parent-communicator.js?v=1757259437:83:22)
-    at parent-communicator.js?v=1757259437:58:18
-syncInitialState @ live-preview.js?v=1757259437:151
-onIframeReady @ live-preview.js?v=1757259437:141
-handleIframeReady @ parent-communicator.js?v=1757259437:137
-handleMessage @ parent-communicator.js?v=1757259437:83
-(anonymous) @ parent-communicator.js?v=1757259437:58
-postMessage
-sendMessage @ iframe-communicator.js:78
-notifyReady @ iframe-communicator.js:46
-IframeCommunicator @ iframe-communicator.js:19
-initialize @ selection-manager.js:44
-(anonymous) @ selection-manager.js:564Understand this error
-parent-communicator.js?v=1757259437:67 🔗 Received from iframe: selection-system:ready {mode: 'select', stats: {…}}
-parent-communicator.js?v=1757259437:146 🎯 Selection system ready in iframe: {mode: 'select', stats: {…}}
-parent-communicator.js?v=1757259437:341 Uncaught TypeError: this.livePreview.devicePreview.getZoomLevel is not a function
-    at ParentCommunicator.syncDeviceSettings (parent-communicator.js?v=1757259437:341:62)
-    at ParentCommunicator.handleSelectionSystemReady (parent-communicator.js?v=1757259437:152:14)
-    at ParentCommunicator.handleMessage (parent-communicator.js?v=1757259437:87:22)
-    at parent-communicator.js?v=1757259437:58:18
-syncDeviceSettings @ parent-communicator.js?v=1757259437:341
-handleSelectionSystemReady @ parent-communicator.js?v=1757259437:152
-handleMessage @ parent-communicator.js?v=1757259437:87
-(anonymous) @ parent-communicator.js?v=1757259437:58
-postMessage
-sendMessage @ iframe-communicator.js:78
-initialize @ selection-manager.js:76
-(anonymous) @ selection-manager.js:564Understand this error
-parent-communicator.js?v=1757259437:67 🔗 Received from iframe: iframe:ready {url: 'http://realsyscms.local:8080/admin/api/live-preview/pages/1/preview-iframe', timestamp: 1757259480110, userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb…KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36'}
-parent-communicator.js?v=1757259437:130 🔗 Iframe communication established
-live-preview.js?v=1757259437:138 🔗 Iframe ready callback received: {url: 'http://realsyscms.local:8080/admin/api/live-preview/pages/1/preview-iframe', timestamp: 1757259480110, userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb…KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36'}
-live-preview.js?v=1757259437:151 Uncaught TypeError: this.devicePreview.getCurrentZoom is not a function
-    at LivePreview.syncInitialState (live-preview.js?v=1757259437:151:50)
-    at LivePreview.onIframeReady (live-preview.js?v=1757259437:141:14)
-    at ParentCommunicator.handleIframeReady (parent-communicator.js?v=1757259437:137:30)
-    at ParentCommunicator.handleMessage (parent-communicator.js?v=1757259437:83:22)
-    at parent-communicator.js?v=1757259437:58:18
-syncInitialState @ live-preview.js?v=1757259437:151
-onIframeReady @ live-preview.js?v=1757259437:141
-handleIframeReady @ parent-communicator.js?v=1757259437:137
-handleMessage @ parent-communicator.js?v=1757259437:83
-(anonymous) @ parent-communicator.js?v=1757259437:58
-postMessage
-sendMessage @ iframe-communicator.js:78
-notifyReady @ iframe-communicator.js:46
-IframeCommunicator @ iframe-communicator.js:19
-(anonymous) @ preview-iframe:31Understand this error
-live-preview.js?v=1757259437:129 📝 Iframe loaded - selection manager will handle component detection
-parent-communicator.js?v=1757259437:38 🔗 Iframe loaded, waiting for selection system...
-index.ts-abec1db7.js:1 [Long Running Recorder] Content script initialised
-index.ts-abec1db7.js:3 [Long Running Recorder] Recorder disabled
-TISProUrlManualScannerLib.js:1 mouseenter href = http://realsyscms.local:8080/admin/pages
+<div data-pagebuilder-page="3" data-page-title="About Us" data-page-template="About us" data-preview-type="page" class="pagebuilder-preview-container grid-stack gs-12 grid-stack-animate" id="pageGrid" style="--gs-item-margin-top: 10px; --gs-item-margin-bottom: 10px; --gs-item-margin-right: 10px; --gs-item-margin-left: 10px; --gs-column-width: 8.333333333333334%; --gs-cell-height: 116.25px; height: 116.25px;" gs-current-row="1">
+        
+    <div class="pagebuilder-toolbar pagebuilder-page-toolbar" data-component-type="page" data-page-id="3">
+        <div class="toolbar-content">
+            <div class="toolbar-left">
+                <div class="component-info">
+                    <div class="component-icon">
+                        <i class="ri-file-text-line"></i>
+                    </div>
+                    <div class="component-details">
+                        <div class="component-name">Page • About us</div>
+                    </div>
+                </div>
+            </div>
+            <div class="toolbar-right">
+                <div class="toolbar-actions">
+                   
+                    <button class="toolbar-btn" data-action="add-section" data-page-id="3" title="Add Section">
+                        <i class="ri-add-line"></i>
+                        <div class="btn-tooltip">Add Section</div>
+                    </button>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+        
+
+    
+    
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <meta name="description" content="">
+        <meta name="author" content="REALSYSCMS">
+        <title>About Us</title>
+        
+          <!-- App favicon -->
+    <link rel="shortcut icon" href="http://realsyscms.local:8080/assets/admin/images/favicon.ico">
+        <!-- Theme CSS -->
+                    <link rel="stylesheet" href="http://realsyscms.local:8080/themes/miata/css/bootstrap.min.css">
+                    <link rel="stylesheet" href="http://realsyscms.local:8080/themes/miata/css/style.css">
+                    <link rel="stylesheet" href="http://realsyscms.local:8080/themes/miata/css/main.css">
+                    <link rel="stylesheet" href="http://realsyscms.local:8080/themes/miata/css/responsive.css">
+                    <link rel="stylesheet" href="http://realsyscms.local:8080/themes/miata/css/animate.css">
+                    <link rel="stylesheet" href="http://realsyscms.local:8080/themes/miata/css/chosen.min.css">
+                    <link rel="stylesheet" href="http://realsyscms.local:8080/themes/miata/css/font-awesome.min.css">
+                    <link rel="stylesheet" href="http://realsyscms.local:8080/themes/miata/css/fullcalendar.css">
+                    <link rel="stylesheet" href="http://realsyscms.local:8080/themes/miata/css/magnific-popup.css">
+                    <link rel="stylesheet" href="http://realsyscms.local:8080/themes/miata/css/meanmenu.min.css">
+                    <link rel="stylesheet" href="http://realsyscms.local:8080/themes/miata/css/normalize.css">
+                    <link rel="stylesheet" href="http://realsyscms.local:8080/themes/miata/css/owl.carousel.css">
+                    <link rel="stylesheet" href="http://realsyscms.local:8080/themes/miata/css/owl.theme.css">
+                    <link rel="stylesheet" href="http://realsyscms.local:8080/themes/miata/css/owl.transitions.css">
+                    <link rel="stylesheet" href="http://realsyscms.local:8080/themes/miata/css/style-customizer.css">
+                    <link rel="stylesheet" href="http://realsyscms.local:8080/themes/miata/css/venobox.css">
+                    <link rel="stylesheet" href="http://realsyscms.local:8080/themes/miata/lib/css/nivo-slider.css">
+                    <link rel="stylesheet" href="http://realsyscms.local:8080/themes/miata/lib/css/preview.css">
+                    <link rel="stylesheet" href="http://realsyscms.local:8080/themes/miata/css/mystyles.css">
+                
+        <!-- Widget CSS Assets -->
+                            
+        <!-- Custom CSS (Backward Compatibility) -->
+               
+
+    
+    
+    <div class="wrapper">
+       
+        <!-- Navigation/Header Section -->
+        <header class="header-area">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="logo floatleft">
+                    <a href="http://realsyscms.local:8080">
+                        <img src="http://realsyscms.local:8080/themes/miata/img/logo/logo.png" alt="REALSYSCMS" style="width: 250px; height: auto;" class="logo-img">
+                    </a>
+                </div>
+                <div class="header-search floatright">
+                    <div class="header-button floatright">
+                        <a href="http://realsyscms.local:8080/join/wizard" class="btn-primary">Join NPPK</a>
+                        <a href="#" class="btn-secondary">Donate Now</a>
+                    </div>
+                </div>
+                <div class="main-menu floatright">
+                    <nav>
+    <ul>
+                                                        <li>
+                        <a href="/">Home</a>
+                    </li>
+                                                                <li>
+                        <a href="/about-us">About Party</a>
+                    </li>
+                                                                <li>
+                        <a href="/about" target="_self" data-bs-toggle="dropdown" aria-expanded="false">
+                            Leadership
+                        </a>
+                                                    <ul class="submenu-mainmenu">
+                                                                    <li>
+                                        <a href="/about" target="_self">
+                                            Executive Members
+                                        </a>
+                                    </li>
+                                                                    <li>
+                                        <a href="/about" target="_self">
+                                            Secretariat
+                                        </a>
+                                    </li>
+                                                            </ul>
+                                            </li>
+                                                                <li>
+                        <a href="/news">News</a>
+                    </li>
+                                                                <li>
+                        <a href="/contact">Contact</a>
+                    </li>
+                                        </ul>
+</nav>                </div>
+                <button class="mobile-menu-toggle floatright">
+                    <div class="hamburger"></div>
+                    <div class="hamburger"></div>
+                    <div class="hamburger"></div>
+                </button>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Mobile Sidebar -->
+<div class="mobile-sidebar">
+    <button class="mobile-sidebar-close">×</button>
+    <div class="header-button">
+        <a href="http://realsyscms.local:8080/join/wizard" class="btn-primary">Join NPPK</a>
+        <a href="#" class="btn-secondary">Donate Now</a>
+    </div>
+    <div class="main-menu">
+        <nav>
+    <ul>
+                                                        <li>
+                        <a href="/">Home</a>
+                    </li>
+                                                                <li>
+                        <a href="/about-us">About Party</a>
+                    </li>
+                                                                <li>
+                        <a href="/about" target="_self" data-bs-toggle="dropdown" aria-expanded="false">
+                            Leadership
+                        </a>
+                                                    <ul class="submenu-mainmenu">
+                                                                    <li>
+                                        <a href="/about" target="_self">
+                                            Executive Members
+                                        </a>
+                                    </li>
+                                                                    <li>
+                                        <a href="/about" target="_self">
+                                            Secretariat
+                                        </a>
+                                    </li>
+                                                            </ul>
+                                            </li>
+                                                                <li>
+                        <a href="/news">News</a>
+                    </li>
+                                                                <li>
+                        <a href="/contact">Contact</a>
+                    </li>
+                                        </ul>
+</nav>    </div>
+</div>
+<div class="mobile-sidebar-overlay"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const menuToggle = document.querySelector('.mobile-menu-toggle');
+    const sidebar = document.querySelector('.mobile-sidebar');
+    const overlay = document.querySelector('.mobile-sidebar-overlay');
+    const closeButton = document.querySelector('.mobile-sidebar-close');
+
+    function closeMenu() {
+        menuToggle.classList.remove('active');
+        sidebar.classList.remove('active');
+        overlay.classList.remove('active');
+    }
+
+    menuToggle.addEventListener('click', function() {
+        this.classList.toggle('active');
+        sidebar.classList.toggle('active');
+        overlay.classList.toggle('active');
+    });
+
+    closeButton.addEventListener('click', closeMenu);
+    overlay.addEventListener('click', closeMenu);
+
+    // Set active menu item for both mobile and desktop menus
+    const currentPath = window.location.pathname;
+    const menuItems = document.querySelectorAll('.main-menu ul li a, .mobile-sidebar .main-menu ul li a');
+    
+    menuItems.forEach(item => {
+        if (item.getAttribute('href') === currentPath) {
+            item.parentElement.classList.add('active');
+            // If it's in a submenu, also highlight the parent
+            const parentSubmenu = item.closest('.submenu-mainmenu');
+            if (parentSubmenu) {
+                const parentItem = parentSubmenu.previousElementSibling;
+                if (parentItem) {
+                    parentItem.classList.add('active');
+                }
+            }
+        }
+    });
+});
+</script>        <!-- Main Content -->
+       
+            
+    
+                                    
+            <div class="grid-stack-item" data-gs-x="0" data-gs-y="0" data-gs-w="12" data-gs-h="3" data-gs-id="section_1756404708_68b09be4889a9_7">
+                    <div class="grid-stack-item-content">
+                        <section class="cms-section section-full-width container-fluid" id="section-20" style="background-color: #ffffff; padding: 40px 0 0 40px; margin: 0 0 0 0" data-section-id="20" data-section-type="full-width" data-gs-x="0" data-gs-y="0" data-gs-w="12" data-gs-h="3" data-gs-id="section_1756404708_68b09be4889a9_7" data-pagebuilder-section="20" data-preview-type="section">
+        <div class="pagebuilder-toolbar pagebuilder-section-toolbar" data-component-type="section" data-section-id="20">
+            <div class="toolbar-content">
+                <div class="toolbar-left">
+                    <div class="component-info">
+                        <div class="component-icon">
+                            <i class="ri-layout-grid-line"></i>
+                        </div>
+                        <div class="component-details">
+                            <div class="component-name">Section • ID: 20</div>
+                           
+                        </div>
+                    </div>
+                </div>
+                <div class="toolbar-right">
+                    <div class="toolbar-actions">
+                        <button class="toolbar-btn" data-action="add-widget" data-section-id="20" title="Add Widget">
+                            <i class="ri-add-line"></i>
+                            <div class="btn-tooltip">Add Widget</div>
+                        </button>
+                       
+                        <button class="toolbar-btn" data-action="duplicate-section" data-section-id="20" title="Duplicate Section">
+                            <i class="ri-file-copy-line"></i>
+                            <div class="btn-tooltip">Duplicate</div>
+                        </button>
+                         <button class="toolbar-btn" data-action="move-section" data-section-id="20" title="Move Section">
+                            <i class="ri-drag-move-2-line"></i>
+                            <div class="btn-tooltip">Move</div>
+                        </button>
+                        <button class="toolbar-btn toolbar-btn-danger" data-action="delete-section" data-section-id="20" title="Delete Section">
+                            <i class="ri-delete-bin-line"></i>
+                            <div class="btn-tooltip">Delete</div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+    
+    <div class="section-content">
+        <div class="row">
+            <div class="col-12">
+                
+                                    <div class="col-12" style="min-height: 80px; border: 1px dotted #ccc; padding: 10px;">
+                        <div class="no-widgets text-center">
+                            <em class="text-muted">No widgets assigned to this section</em>
+                        </div>
+                    </div>
+                            </div>
+        </div>
+    </div>
+    
+</section>
+                    </div>
+                </div>                                
+            <div class="grid-stack-item" data-gs-x="0" data-gs-y="4" data-gs-w="12" data-gs-h="4" data-gs-id="section_1756416516_68b0ca044eb01_8">
+                    <div class="grid-stack-item-content">
+                        <section class="cms-section section-full-width" id="section-21" style="background-color: #ffffff" data-section-id="21" data-section-type="full-width" data-gs-x="0" data-gs-y="4" data-gs-w="12" data-gs-h="4" data-gs-id="section_1756416516_68b0ca044eb01_8" data-pagebuilder-section="21" data-preview-type="section">
+        <div class="pagebuilder-toolbar pagebuilder-section-toolbar" data-component-type="section" data-section-id="21">
+            <div class="toolbar-content">
+                <div class="toolbar-left">
+                    <div class="component-info">
+                        <div class="component-icon">
+                            <i class="ri-layout-grid-line"></i>
+                        </div>
+                        <div class="component-details">
+                            <div class="component-name">Section • ID: 21</div>
+                           
+                        </div>
+                    </div>
+                </div>
+                <div class="toolbar-right">
+                    <div class="toolbar-actions">
+                        <button class="toolbar-btn" data-action="add-widget" data-section-id="21" title="Add Widget">
+                            <i class="ri-add-line"></i>
+                            <div class="btn-tooltip">Add Widget</div>
+                        </button>
+                       
+                        <button class="toolbar-btn" data-action="duplicate-section" data-section-id="21" title="Duplicate Section">
+                            <i class="ri-file-copy-line"></i>
+                            <div class="btn-tooltip">Duplicate</div>
+                        </button>
+                         <button class="toolbar-btn" data-action="move-section" data-section-id="21" title="Move Section">
+                            <i class="ri-drag-move-2-line"></i>
+                            <div class="btn-tooltip">Move</div>
+                        </button>
+                        <button class="toolbar-btn toolbar-btn-danger" data-action="delete-section" data-section-id="21" title="Delete Section">
+                            <i class="ri-delete-bin-line"></i>
+                            <div class="btn-tooltip">Delete</div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+    
+    <div class="section-content">
+        <div class="row">
+            <div class="col-12">
+                
+                                    <div class="col-12" style="min-height: 80px; border: 1px dotted #ccc; padding: 10px;">
+                        <div class="no-widgets text-center">
+                            <em class="text-muted">No widgets assigned to this section</em>
+                        </div>
+                    </div>
+                            </div>
+        </div>
+    </div>
+    
+</section>
+                    </div>
+                </div>            
+        
+
+        <!-- Footer Section -->
+        <footer id="footer" class="social-area">
+                <div class="container">
+                    <div class="footer-top">
+                        <div class="row">
+                            <div class="col-lg-6 col-md-6 col-sm-6 col-12">
+                                <div class="social-logo">
+                                    <a href="index.html">
+                                        <img src="" alt="">
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6 col-sm-6 col-12">
+                                <div class="social-icon floatright">
+                                    <ul>
+                                        <li><a class="facebook" href="#"><i class="fa fa-facebook"></i></a></li>
+                                        <li><a class="google" href="#"><i class="fa fa-google-plus"></i></a></li>
+                                        <li><a class="twitter" href="#"><i class="fa fa-twitter" aria-hidden="true"></i></a></li>
+                                        <li><a class="instagram" href="#"><i class="fa fa-instagram" aria-hidden="true"></i></a></li>
+                                        <li><a class="pinterest" href="#"><i class="fa fa-pinterest-p" aria-hidden="true"></i></a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer-middle ptb-80">
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-lg-3 col-md-6">
+                                <div class="middle-text">
+                                    <h3>About us</h3>
+                                    <div class="middle-mgn">
+                                        <p>Competently incentivize cross-unit value with end-to-end infrastructures. coordinate bricks-and-clicks architectures for highly efficient catalysts for change. </p>          <div class="footer-top-left">
+                                            <p><i class="fa fa-paper-plane"></i></p>
+                                            <a href="# ">+88 225 88 154 263</a>
+                                        </div>
+                                        <div class="footer-middle-right">
+                                            <p><i class="fa fa-phone"></i></p>
+                                            <a href="# ">msnmistiri@email.com </a>
+                                        </div>
+                                        <div class="footer-bottom-right">
+                                            <p><i class="fa fa-envelope" aria-hidden="true"></i></p>
+                                            <a href="# ">msnmistiri@email.com </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-md-6">
+                                <div class="middle-text res-11">
+                                    <h3>Recent Posts</h3>
+                                    <div class="middle-mgn">
+                                        <div class="img-text-both">
+                                            <div class="img-both">
+                                                <a href="#">
+                                                    <img alt="" src="">
+                                                </a>
+                                            </div>
+                                            <div class="text-both">
+                                                <p>Trump: Giuliani for 'radical Islam’</p>
+                                                <span class="published3">
+                                                    <i class="fa fa-calendar" aria-hidden="true"></i>
+                                                    14 May, 2016
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="img-text-both">
+                                            <div class="img-both">
+                                                <a href="#">
+                                                    <img alt="" src="">
+                                                </a>
+                                            </div>
+                                            <div class="text-both">
+                                                <p>Presidential Elections 2016</p>
+                                                <span class="published3">
+                                                    <i class="fa fa-calendar" aria-hidden="true"></i>
+                                                    14 May, 2016
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="img-text-both last-both">
+                                            <div class="img-both">
+                                                <a href="#">
+                                                    <img alt="" src="">
+                                                </a>
+                                            </div>
+                                            <div class="text-both">
+                                                <p>In Vegas, high finance, big stars</p>
+                                                <span class="published3">
+                                                    <i class="fa fa-calendar" aria-hidden="true"></i>
+                                                    14 May, 2016
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-md-6">
+                                <div class="middle-text res-1 mid-res">
+                                    <h3>Latest Twitter</h3>
+                                    <div class="middle-mgn">
+                                        <div class="twitter-one">
+                                            <a class="twitter" href="#"><i class="fa fa-twitter" aria-hidden="true"></i></a>
+                                            <p>from JoomlaMan, with One Page Parallax Option, perfect for creatives <a href="#">https://t.co/Uvr7JbtIqg </a></p>
+                                            <p class="cat1">2 day ago</p>
+                                        </div>
+                                        <div class="twitter-one">
+                                            <a class="twitter" href="#"><i class="fa fa-twitter" aria-hidden="true"></i></a>
+                                            <p>I added a video to a  @YouTube  playlist JM Ember - One Page Parallax <a href="#">https://t.co/Vp9R149Ppd</a></p>
+                                            <p class="cat1">2 month ago</p>
+                                        </div>
+                                        <div class="twitter-one">
+                                            <a class="twitter" href="#"><i class="fa fa-twitter" aria-hidden="true"></i></a>
+                                            <p>New One Page Parallax Joomla Template by Joomla - JM Ember <a href="#">https://t.co/Vp9R149Ppd</a></p>
+                                            <p class="cat1">2 years ago</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-md-6">
+                                <div class="middle-text res-1">
+                                    <h3>instagram</h3>
+                                    <div class="middle-mgn">
+                                        <div class="img-one"><a href="#"><img alt="" src=""></a></div>
+                                        <div class="img-one"><a href="#"><img alt="" src=""></a></div>
+                                        <div class="img-one mgn-none md-mrg"><a href="#"><img alt="" src=""></a></div>
+                                        <div class="img-one"><a href="#"><img alt="" src=""></a></div>
+                                        <div class="img-one"><a href="#"><img alt="" src=""></a></div>
+                                        <div class="img-one mgn-none"><a href="#"><img alt="" src=""></a></div>
+                                        <div class="img-one"><a href="#"><img alt="" src=""></a></div>
+                                        <div class="img-one"><a href="#"><img alt="" src=""></a></div>
+                                        <div class="img-one mgn-none res-nn"><a href="#"><img alt="" src=""></a></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <div class="container">
+                        <div class="footer-bottom-all">
+                            <div class="row">
+                                <div class="col-lg-6 col-12 col-md-9">
+                                    <div class="footer-menu">
+                            
+                                    <nav>
+    <ul>
+                                                        <li>
+                        <a href="/privacy">Privacy Policy</a>
+                    </li>
+                                                                <li>
+                        <a href="/terms">Terms of Service</a>
+                    </li>
+                                                                <li>
+                        <a href="/contact">Contact</a>
+                    </li>
+                                                                <li>
+                        <a href="/login">Members Area</a>
+                    </li>
+                                                                <li>
+                        <a href="admin/login">&amp;</a>
+                    </li>
+                                        </ul>
+</nav>                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-12 col-md-3">
+                                    <div class="copyright-text floatright">
+                                        <p>© 2025 <a href="https://realsys.co.ke/">Realsys.</a></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+     
+    </div>
+       <!-- Theme JavaScript -->
+                   <script src="http://realsyscms.local:8080/themes/miata/js/jquery-1.12.4.min.js"></script>
+                    <script src="http://realsyscms.local:8080/themes/miata/js/active-calendar.js"></script>
+                    <script src="http://realsyscms.local:8080/themes/miata/js/ajax-mail.js"></script>
+                    <script src="http://realsyscms.local:8080/themes/miata/js/bootstrap.min.js"></script>
+                    <script src="http://realsyscms.local:8080/themes/miata/js/main.js"></script>
+                    <script src="http://realsyscms.local:8080/themes/miata/js/modernizr-3.11.7.min.js"></script>
+                    <script src="http://realsyscms.local:8080/themes/miata/js/plugins.js"></script>
+                    <script src="http://realsyscms.local:8080/themes/miata/js/wow.min.js"></script>
+                    <script src="http://realsyscms.local:8080/themes/miata/lib/js/jquery.nivo.slider.js"></script>
+                
+        <!-- Widget JavaScript Assets -->
+                            
+        <!-- Custom JavaScript (Backward Compatibility) -->
+            
+
+
+    </div>

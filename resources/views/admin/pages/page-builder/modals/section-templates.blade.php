@@ -2,8 +2,8 @@
 <div class="modal fade" id="sectionTemplatesModal" tabindex="-1" aria-labelledby="sectionTemplatesModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title" id="sectionTemplatesModalLabel">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title text-white pb-2" id="sectionTemplatesModalLabel">
                     <i class="ri-layout-grid-line me-2"></i>Choose Section Template
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>

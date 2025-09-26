@@ -24,9 +24,9 @@ class ComponentToolbar {
             ],
             section: [
                 { id: 'edit', icon: 'bx bx-edit', label: 'Edit', variant: 'primary' },
-                { id: 'settings', icon: 'bx bx-cog', label: 'Settings', variant: 'secondary' },
-                { id: 'duplicate', icon: 'bx bx-copy', label: 'Duplicate', variant: 'secondary' },
-                { id: 'delete', icon: 'bx bx-trash', label: 'Delete', variant: 'danger' }
+                { id: 'duplicate', icon: 'bx bx-copy', label: 'Duplicate', variant: 'primary' },
+                { id: 'move', icon: 'bx bx-move', label: 'Move', variant: 'primary' },
+                { id: 'delete', icon: 'bx bx-trash', label: 'Delete', variant: 'primary' }
             ],
             widget: [
                 { id: 'edit', icon: 'bx bx-edit', label: 'Edit', variant: 'primary' },
@@ -241,6 +241,9 @@ class ComponentToolbar {
             case 'delete':
                 this.handleDeleteAction(component);
                 break;
+            case 'move':
+                this.handleMoveAction(component);
+                break;
             case 'seo':
                 this.handleSEOAction(component);
                 break;
@@ -336,6 +339,21 @@ class ComponentToolbar {
         }
     }
     
+    /**
+     * Handle move action for component - enables sortable mode
+     * @param {Object} component - Component object
+     */
+    handleMoveAction(component) {
+        console.log(`🔄 Enabling sortable mode for ${component.type} ${component.id}`);
+        
+        // Enable sortable functionality through selection manager
+        if (this.selectionManager && this.selectionManager.enableSortableForComponent) {
+            this.selectionManager.enableSortableForComponent(component);
+        } else {
+            console.error('❌ Selection manager not available for sortable activation');
+        }
+    }
+
     /**
      * Handle SEO action for component
      * @param {Object} component - Component object

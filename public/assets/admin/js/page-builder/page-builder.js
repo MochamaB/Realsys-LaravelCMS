@@ -144,6 +144,8 @@ class PageBuilderMain {
                 messageEl.textContent = message;
             }
             this.loader.style.display = 'flex';
+        } else {
+            console.warn('⚠️ Loader element not found - cannot show loader message:', message);
         }
     }
 
@@ -196,47 +198,26 @@ document.addEventListener('DOMContentLoaded', function() {
     const messageRouter = new PageBuilderMessageRouter();
     window.pageBuilderMessageRouter = messageRouter;
 
-    // Initialize and register action handlers
-    if (window.PageBuilderSectionActions && window.PageBuilderPageActions) {
-        const sectionActions = new PageBuilderSectionActions();
-        const pageActions = new PageBuilderPageActions();
+    // Initialize parent communicator first
+    if (window.PageBuilderParentCommunicator) {
+        window.pageBuilderParentCommunicator = new PageBuilderParentCommunicator();
 
-        // Register section action handlers
-        messageRouter.registerHandler('add-section-requested', (data, event) => {
-            sectionActions.handleAddSection(data, event);
-        });
-        messageRouter.registerHandler('section-edit-requested', (data, event) => {
-            sectionActions.handleSectionEdit(data, event);
-        });
-        messageRouter.registerHandler('section-delete-requested', (data, event) => {
-            sectionActions.handleSectionDelete(data, event);
-        });
-        messageRouter.registerHandler('section-move-requested', (data, event) => {
-            sectionActions.handleSectionMove(data, event);
-        });
-        messageRouter.registerHandler('section-selected', (data, event) => {
-            sectionActions.handleSectionSelected(data, event);
-        });
+        const iframe = document.getElementById('pageBuilderPreviewIframe');
+        if (iframe) {
+            window.pageBuilderParentCommunicator.setIframe(iframe);
+            console.log('🔗 Parent communicator connected to iframe');
+        }
 
-        // Register page action handlers
-        messageRouter.registerHandler('page-edit-requested', (data, event) => {
-            pageActions.handlePageEdit(data, event);
-        });
-        messageRouter.registerHandler('page-selected', (data, event) => {
-            pageActions.handlePageSelected(data, event);
-        });
-        messageRouter.registerHandler('page-deselected', (data, event) => {
-            pageActions.handlePageDeselected(data, event);
-        });
-
-        // Store action handlers globally for access
-        window.pageBuilderSectionActions = sectionActions;
-        window.pageBuilderPageActions = pageActions;
-
-        console.log('✅ Page Builder action handlers registered');
+        console.log('✅ Page Builder parent communicator initialized');
     } else {
-        console.warn('⚠️ Action handler classes not found - handlers not registered');
+        console.warn('⚠️ PageBuilderParentCommunicator class not found');
     }
+
+    // Register toolbar action handler for iframe:ready message
+    messageRouter.registerHandler('iframe:ready', (data) => {
+        console.log('✅ Iframe is ready:', data);
+        // Iframe is now ready to receive messages
+    });
     
     // Initialize main iframe functionality
     if (window.PageBuilderMain) {
@@ -251,7 +232,7 @@ document.addEventListener('DOMContentLoaded', function() {
         devicePreview.init();
         window.pageBuilderDevicePreview = devicePreview;
     }
-    
+
     console.log('✅ Page Builder systems initialized');
 });
 

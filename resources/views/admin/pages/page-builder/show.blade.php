@@ -51,21 +51,24 @@
 <!-- Include Section Templates Modal -->
 @include('admin.pages.page-builder.modals.section-templates')
 
+<!-- Include Add Widget Modal -->
+@include('admin.pages.page-builder.modals.addwidget')
+
 
 @endsection
 
 @push('scripts')
-<!-- Page Builder Action Handlers -->
-<script src="{{ asset('assets/admin/js/page-builder/actions/pagebuilder-section-actions.js') }}?v={{ time() }}"></script>
-<script src="{{ asset('assets/admin/js/page-builder/actions/pagebuilder-page-actions.js') }}?v={{ time() }}"></script>
+<!-- Page Builder Communication System -->
+<script src="{{ asset('assets/admin/js/page-builder/parent-communicator.js') }}?v={{ time() }}"></script>
 <!-- Page Builder Main Script -->
 <script src="{{ asset('assets/admin/js/page-builder/page-builder.js') }}?v={{ time() }}"></script>
 <!-- Page Builder Device Preview -->
 <script src="{{ asset('assets/admin/js/page-builder/device-preview.js') }}?v={{ time() }}"></script>
 <!-- Page Builder Widget Drill-Down -->
 <script src="{{ asset('assets/admin/js/page-builder/widget-drill-down.js') }}?v={{ time() }}"></script>
-<!-- Page Builder Section Drag Handler -->
-<script src="{{ asset('assets/admin/js/page-builder/drag-handler.js') }}?v={{ time() }}"></script>
+<!-- Page Builder Add Widget Wizard -->
+<script src="{{ asset('assets/admin/js/page-builder/addwidget-wizard.js') }}?v={{ time() }}"></script>
+
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

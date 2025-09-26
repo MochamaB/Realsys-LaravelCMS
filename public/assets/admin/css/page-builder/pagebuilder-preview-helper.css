@@ -1,252 +1,380 @@
 /**
- * PAGE BUILDER PREVIEW HELPER CSS
- * ===============================
- * 
- * Styles for Page Builder preview functionality including page selection,
- * hover states, toolbar buttons, and visual indicators
+ * MODERN PAGE BUILDER TOOLBARS - SLEEK DESIGN MATCHING REFERENCE IMAGE
+ * ===================================================================
  */
 
 /* ==============================================
-   PREVIEW MODE SETUP
+   TOOLBAR BASE STYLES
    ============================================== */
 
-/* Preview mode indicator */
-[data-preview-mode="pagebuilder"] {
-    position: relative;
-}
-
-/* ==============================================
-   PAGE-LEVEL PREVIEW STYLES
-   ============================================== */
-
-/* Page-level highlighting */
-[data-pagebuilder-page].preview-highlighted {
-    outline: 3px solid #17a2b8 !important;
-    outline-offset: 4px;
-    position: relative;
-    margin: 30px 0px !important;
-}
-
-/* Page toolbar buttons */
-.page-toolbar-buttons {
+   .pagebuilder-toolbar {
     position: absolute;
-    top: -60px;
     left: 0;
     right: 0;
+    border-radius: 0px;
+    /* give the outer bar some padding so inner pills don't touch edges */
+    padding: 0px;
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    z-index: 1000;
-    background: rgba(255, 255, 255, 0.98);
-    padding: 8px 12px;
-    border-radius: 6px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    border: 1px solid rgba(0, 123, 255, 0.2);
-    /* Ensure toolbar buttons maintain size regardless of parent scaling */
-    transform-origin: top left;
-    font-size: 13px; /* Fixed font size */
-    min-height: 48px;
-}
+    z-index: 1001;
+    font-size: 13px;
+    min-height: 50px;
 
-/* Page info section (left side of toolbar) */
-.page-toolbar-info {
-    flex: 1;
-    min-width: 0; /* Allow text truncation */
-}
-
-.page-toolbar-info .fw-bold {
-    font-size: 14px;
-    color: #2c3e50 !important;
-    max-width: 200px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.page-toolbar-info .small {
-    font-size: 12px;
-    max-width: 150px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-/* Action buttons section (right side of toolbar) */
-.page-toolbar-actions {
-    flex-shrink: 0; /* Don't shrink buttons */
-}
-
-.page-toolbar-btn {
-    padding: 4px 8px;
-    font-size: 12px;
+    /* remove parent border so child pills define their own visuals */
     border: none;
-    border-radius: 3px;
-    cursor: pointer;
+    transition: all 0.2s ease;
+
+    /* allow child rounded backgrounds to show */
+    overflow: visible;
+}
+
+.toolbar-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 100%;
+}
+
+.toolbar-left {
+    display: inline-flex;      /* shrink-to-fit */
+    align-items: center;
+    flex: 0 0 auto;            /* do not grow */
+    min-width: 0;
+    gap: 8px;
+}
+
+.toolbar-right {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    gap: 8px;
+}
+
+/* Component Info Structure */
+.component-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.component-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 0px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(5px);
+    flex-shrink: 0;
+}
+
+.component-icon i {
+    font-size: 12px;
+    color: white;
+}
+
+.component-details {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.component-name {
+    font-weight: 600;
+    color: white;
+    font-size: 15px;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 180px;
+}
+
+.component-type {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.75);
+    font-weight: 400;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 180px;
+}
+
+/* Toolbar Actions */
+.toolbar-actions {
     display: flex;
     align-items: center;
     gap: 4px;
-    transition: all 0.2s ease;
-    font-weight: 500;
 }
 
-.page-toolbar-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.page-toolbar-btn i {
-    font-size: 14px;
-}
-
-/* Button variants */
-.page-toolbar-btn.btn-info {
-    background: #17a2b8;
-    color: white;
-}
-
-.page-toolbar-btn.btn-info:hover {
-    background: #138496;
-}
-
-.page-toolbar-btn.btn-success {
-    background: #28a745;
-    color: white;
-}
-
-.page-toolbar-btn.btn-success:hover {
-    background: #218838;
-}
-
-.page-toolbar-btn.btn-secondary {
-    background: #6c757d;
-    color: white;
-}
-
-.page-toolbar-btn.btn-secondary:hover {
-    background: #5a6268;
-}
-
-/* ==============================================
-   SECTION PREVIEW STYLES
-   ============================================== */
-
-/* Section highlighting for sortable mode */
-[data-preview-type="section"] {
-    transition: all 0.2s ease;
-}
-
-[data-preview-section] {
-    transition: all 0.2s ease;
-}
-
-[data-preview-section]:hover {
-    outline: 1px solid #28a745;
-    outline-offset: 2px;
-    background-color: rgba(0, 123, 255, 0.03);
-}
-
-[data-preview-section].preview-highlighted {
-    outline: 2px solid #28a745 !important;
-    outline-offset: 3px;
-    background-color: rgba(0, 123, 255, 0.05);
-}
-
-/* ==============================================
-   WIDGET PREVIEW STYLES
-   ============================================== */
-
-/* Widget preview highlighting */
-[data-preview-widget] {
-    transition: all 0.2s ease;
-    border-radius: 2px;
-    position: relative;
-}
-
-[data-preview-widget]:hover {
-    box-shadow: 0 0 0 2px #0d6efd, 0 0 0 4px rgba(13, 110, 253, 0.2);
-}
-
-[data-preview-widget].preview-highlighted {
-    box-shadow: 0 0 0 3px #0d6efd, 0 0 0 6px rgba(13, 110, 253, 0.3) !important;
-}
-
-/* Widget selection indicator */
-[data-preview-widget].preview-highlighted::after {
-    content: '✏️ Selected';
-    position: absolute;
-    top: -25px;
-    left: 0;
-    background: #0d6efd;
-    color: white;
-    padding: 2px 8px;
-    border-radius: 3px;
-    font-size: 11px;
-    font-weight: 500;
-    z-index: 1000;
-    pointer-events: none;
-}
-
-/* ==============================================
-   INTERACTIVE STATES
-   ============================================== */
-
-/* Make preview elements cursor pointers */
-[data-pagebuilder-page],
-[data-preview-section],
-[data-preview-widget] {
+.toolbar-btn {
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 0px;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    position: relative;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+    color: white;
 }
 
-/* Focus styles for accessibility */
-[data-pagebuilder-page]:focus,
-[data-preview-section]:focus,
-[data-preview-widget]:focus {
-    outline: 2px solid #007bff;
+.toolbar-btn i {
+    font-size: 20px;
+    color: white;
+    transition: color 0.2s ease;
+}
+
+/* Tooltip Styles */
+.btn-tooltip {
+    position: absolute;
+    bottom: -32px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 4px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 500;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.2s ease;
+    z-index: 1002;
+    backdrop-filter: blur(10px);
+}
+
+.btn-tooltip::before {
+    content: '';
+    position: absolute;
+    top: -3px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 3px solid transparent;
+    border-right: 3px solid transparent;
+    border-bottom: 3px solid rgba(0, 0, 0, 0.8);
+}
+
+.toolbar-btn:hover .btn-tooltip {
+    opacity: 1;
+    bottom: -36px;
+}
+
+.toolbar-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+}
+
+.toolbar-btn:active {
+    transform: translateY(0);
+    background: rgba(255, 255, 255, 0.25);
+}
+
+/* Danger button styling */
+.toolbar-btn-danger:hover {
+    background: rgba(239, 68, 68, 0.2);
+}
+
+.toolbar-btn-danger:hover i {
+    color: #fecaca;
+}
+
+/* ==============================================
+   PAGE TOOLBAR SPECIFIC STYLES (Blue Theme)
+   ============================================== */
+
+   .pagebuilder-page-toolbar {
+    top: -50px;
+    background: transparent;
+    border-left: none;
+}
+
+/* blue pill for left & right inside page-toolbar */
+.pagebuilder-page-toolbar .toolbar-left,
+.pagebuilder-page-toolbar .toolbar-right {
+    background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 0px;
+    align-items: center;
+    display: inline-flex;
+}
+
+.pagebuilder-page-toolbar .component-icon {
+    background: rgba(147, 197, 253, 0.2);
+}
+
+.pagebuilder-page-toolbar .component-icon i {
+    color: #dbeafe;
+}
+
+/* ==============================================
+   SECTION TOOLBAR SPECIFIC STYLES (Green Theme)
+   ============================================== */
+
+   .pagebuilder-section-toolbar {
+    top: -50px;
+    background: transparent;
+    border-left: none;
+}
+
+/* green pill for section toolbar childs */
+.pagebuilder-section-toolbar .toolbar-left,
+.pagebuilder-section-toolbar .toolbar-right {
+    background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 0px;
+    align-items: center;
+    display: inline-flex;
+}
+
+.pagebuilder-section-toolbar .component-icon {
+    background: rgba(110, 231, 183, 0.2);
+}
+
+.pagebuilder-section-toolbar .component-icon i {
+    color: #d1fae5;
+}
+
+/* ==============================================
+   WIDGET TOOLBAR SPECIFIC STYLES (Yellow/Orange Theme)
+   ============================================== */
+
+   .pagebuilder-widget-toolbar {
+    top: -50px;
+    background: transparent;
+    border-left: none;
+}
+
+/* orange pill for widget toolbar childs */
+.pagebuilder-widget-toolbar .toolbar-left,
+.pagebuilder-widget-toolbar .toolbar-right {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 0px;
+    align-items: center;
+    display: inline-flex;
+}
+
+.pagebuilder-widget-toolbar .component-icon {
+    background: rgba(251, 191, 36, 0.2);
+}
+
+.pagebuilder-widget-toolbar .component-icon i {
+    color: #fef3c7;
+}
+
+/* ==============================================
+   COMPONENT POSITIONING AND SPACING
+   ============================================== */
+
+[data-pagebuilder-page] {
+    margin-top: 55px;
+    padding-top: 8px;
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+[data-pagebuilder-section] {
+    margin-top: 55px;
+    padding-top: 8px;
+    outline: 2px solid #10b981;
+    outline-offset: 2px;
+}
+
+[data-pagebuilder-widget] {
+    margin-top: 55px;
+    padding-top: 8px;
+    outline: 2px solid #f59e0b;
     outline-offset: 2px;
 }
 
 /* ==============================================
-   SELECTION HIERARCHY STYLES
+   HOVER STATES AND INTERACTIONS
    ============================================== */
 
-/* When page is selected, dim other elements slightly */
-[data-preview-mode="pagebuilder"][data-page-selected="true"] [data-preview-section],
-[data-preview-mode="pagebuilder"][data-page-selected="true"] [data-preview-widget] {
-    opacity: 0.9;
+.pagebuilder-toolbar:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), 0 2px 6px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
 }
 
-/* When section is selected, highlight it and dim others */
-[data-preview-mode="pagebuilder"][data-section-selected="true"] [data-preview-section]:not(.preview-highlighted) {
-    opacity: 0.7;
+/* Enhanced hover states for each toolbar type */
+.pagebuilder-page-toolbar:hover {
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3), 0 2px 6px rgba(59, 130, 246, 0.2);
 }
 
-/* When widget is selected, highlight it and dim others */
-[data-preview-mode="pagebuilder"][data-widget-selected="true"] [data-preview-widget]:not(.preview-highlighted) {
-    opacity: 0.7;
+.pagebuilder-section-toolbar:hover {
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3), 0 2px 6px rgba(16, 185, 129, 0.2);
+}
+
+.pagebuilder-widget-toolbar:hover {
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3), 0 2px 6px rgba(245, 158, 11, 0.2);
 }
 
 /* ==============================================
    RESPONSIVE ADJUSTMENTS
    ============================================== */
 
-/* Mobile adjustments */
 @media (max-width: 768px) {
-    /* Larger touch targets */
-    [data-pagebuilder-page],
-    [data-preview-section],
-    [data-preview-widget] {
-        min-height: 24px;
+    .pagebuilder-toolbar {
+        min-height: 36px;
     }
     
-    /* Adjust toolbar button sizes */
-    .page-toolbar-btn {
-        padding: 6px 10px;
-        font-size: 13px;
+    .toolbar-content {
+        padding: 0 8px;
     }
     
-    /* Reduce outline thickness on mobile */
-    [data-pagebuilder-page].preview-highlighted {
-        outline-width: 2px;
+    .component-name {
+        font-size: 11px;
+        max-width: 100px;
+    }
+    
+    .component-type {
+        font-size: 9px;
+        max-width: 100px;
+    }
+    
+    .toolbar-btn {
+        width: 24px;
+        height: 24px;
+    }
+    
+    .toolbar-btn i {
+        font-size: 11px;
+    }
+    
+    .component-icon {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .component-icon i {
+        font-size: 11px;
+    }
+    
+    .toolbar-actions {
+        gap: 2px;
+    }
+}
+
+@media (max-width: 480px) {
+    .component-details {
+        display: none;
+    }
+    
+    .toolbar-content {
+        gap: 8px;
     }
 }
 
@@ -254,45 +382,88 @@
    ACCESSIBILITY IMPROVEMENTS
    ============================================== */
 
+.toolbar-btn:focus {
+    outline: 2px solid rgba(255, 255, 255, 0.6);
+    outline-offset: 1px;
+}
+
 /* High contrast mode support */
 @media (prefers-contrast: high) {
-    [data-pagebuilder-page].preview-highlighted {
-        outline: 4px solid #000 !important;
+    .pagebuilder-toolbar {
+        border: 2px solid white;
+        background: #000 !important;
     }
     
-    [data-preview-section].preview-highlighted {
-        outline: 3px solid #000 !important;
+    .toolbar-btn {
+        border: 1px solid white;
+        background: #333;
     }
     
-    [data-preview-widget]:hover {
-        border: 2px solid #000;
-    }
-    
-    [data-preview-widget].preview-highlighted {
-        border: 3px solid #000 !important;
-        box-shadow: none !important;
-    }
-    
-    .page-toolbar-btn {
-        border: 2px solid #000;
+    .component-name,
+    .component-type,
+    .toolbar-btn i {
+        color: white !important;
     }
 }
 
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
-    [data-pagebuilder-page],
-    [data-preview-section],
-    [data-preview-widget] {
+    .pagebuilder-toolbar,
+    .toolbar-btn,
+    .btn-tooltip {
         transition: none;
     }
     
-    .page-toolbar-btn {
-        transition: none;
-    }
-    
-    .page-toolbar-btn:hover {
+    .toolbar-btn:hover,
+    .pagebuilder-toolbar:hover {
         transform: none;
     }
+}
+
+/* ==============================================
+   GRIDSTACK INTEGRATION UPDATES
+   ============================================== */
+
+/* Page GridStack container styling */
+.pagebuilder-preview-container.grid-stack {
+    background: #f8f9fa;
+    padding: 20px;
+    min-height: 100vh;
+}
+
+/* Grid stack item styling */
+.grid-stack-item {
+    border-radius: 0px;
+    transition: all 0.2s ease;
+}
+
+.grid-stack-item-content {
+    background: white;
+    border-radius: 6px;
+    overflow: visible;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e5e7eb;
+}
+
+ 
+/* Dragging state styles */
+.grid-stack-dragging {
+    opacity: 0.9;
+    transform: rotate(1deg);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+}
+
+/* GridStack placeholder styling */
+.grid-stack-placeholder {
+    background: rgba(59, 130, 246, 0.08) !important;
+    border: 2px dashed #3b82f6 !important;
+    border-radius: 6px !important;
+}
+
+/* Remove default GridStack resize handles */
+.grid-stack-item > .ui-resizable-handle {
+    display: none !important;
 }
 
 /* ==============================================
@@ -301,14 +472,15 @@
 
 /* Hide preview helpers during printing */
 @media print {
-    .page-toolbar-buttons,
-    [data-preview-widget]::after {
+    .pagebuilder-page-toolbar,
+    .pagebuilder-section-toolbar,
+    .pagebuilder-widget-toolbar {
         display: none !important;
     }
-    
-    [data-pagebuilder-page].preview-highlighted,
-    [data-preview-section].preview-highlighted,
-    [data-preview-widget].preview-highlighted {
+
+    [data-pagebuilder-page],
+    [data-pagebuilder-section],
+    [data-pagebuilder-widget] {
         outline: none !important;
         box-shadow: none !important;
     }
@@ -325,3 +497,32 @@
     outline: 2px solid #dc3545 !important;
     background-color: rgba(220, 53, 69, 0.1);
 }
+
+/* Active/selected state for components */
+.pagebuilder-component-selected [data-pagebuilder-page],
+.pagebuilder-component-selected [data-pagebuilder-section],
+.pagebuilder-component-selected [data-pagebuilder-widget] {
+    outline-width: 3px;
+    outline-offset: 3px;
+}
+
+.pagebuilder-component-selected .pagebuilder-toolbar {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25), 0 3px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Animation for toolbar appearance */
+@keyframes toolbarSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.pagebuilder-toolbar {
+    animation: toolbarSlideIn 0.3s ease-out;
+}
+

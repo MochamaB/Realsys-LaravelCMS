@@ -533,11 +533,11 @@ class SelectionManager {
     
     /**
      * Enable sortable functionality for a component's children
-     * Called when drag button is clicked from toolbar or automatically on selection
+     * Called when move button is clicked from toolbar
      * @param {Object} component - Selected component
      */
     enableSortableForComponent(component) {
-        console.log(`🔍 SELECTION: Delegating sortable enable to SortableManager for ${component.type} ${component.id}`);
+        console.log(`🔍 MANUAL-SORTABLE: Enabling sortable for ${component.type} ${component.id}`);
         
         // Delegate to the sortable manager
         if (window.SortableManager && window.SortableManager.enableSortableForComponent) {

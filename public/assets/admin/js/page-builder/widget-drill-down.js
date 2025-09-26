@@ -36,20 +36,25 @@ class PageBuilderWidgetDrillDown {
      */
     setupEventDelegation() {
         document.addEventListener('click', (e) => {
-            // Drill-down button clicks
+            // Safety check: ensure e.target is a valid DOM element with closest method
+            if (!e.target || typeof e.target.closest !== 'function') {
+                return;
+            }
+
+            // Drill-down button clicks (sidebar only)
             const drillDownBtn = e.target.closest('.drill-down-btn') || e.target.closest('.expand-content-types-btn');
             if (drillDownBtn) {
                 console.log('🎯 Page Builder drill-down button clicked!', drillDownBtn);
                 e.preventDefault();
                 e.stopPropagation();
-                
+
                 const widgetId = drillDownBtn.getAttribute('data-drill-widget-id');
                 console.log('📦 Widget ID:', widgetId);
-                
+
                 if (widgetId) {
                     // Show loading view immediately
                     this.showLoadingView('content-types', 'Loading content types...');
-                    
+
                     this.showContentTypes(widgetId);
                 } else {
                     console.error('❌ No widget ID found on drill-down button');
@@ -64,7 +69,7 @@ class PageBuilderWidgetDrillDown {
                 this.navigateBack();
                 return;
             }
-            
+
             // Content type card clicks
             const contentTypeCard = e.target.closest('.content-type-card');
             if (contentTypeCard) {

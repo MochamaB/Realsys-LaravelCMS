@@ -18,16 +18,16 @@ class SortableManager {
      */
     onComponentSelected(component) {
         this.currentComponent = component;
-        console.log(`🎯 SORTABLE: Component selected for potential sorting: ${component.type} ${component.id}`);
+        console.log(`🎯 SORTABLE: Component selected (no auto-sortable): ${component.type} ${component.id}`);
     }
     
     /**
      * Enable sortable functionality for component
-     * Called automatically when component is selected
+     * Called manually when move button is clicked
      * @param {Object} component - Component to enable sorting for
      */
     enableSortableForComponent(component) {
-        console.log('🚀 SORTABLE: Auto-enabling sortable for component:', component.type, component.id);
+        console.log('🚀 SORTABLE: Manual-enabling sortable for component:', component.type, component.id);
         
         // Disable any existing sortables first
         this.disableAllSortables();
@@ -36,13 +36,13 @@ class SortableManager {
         if (component.type === 'page') {
             const success = this.makeSectionsSortable(component);
             if (success) {
-                console.log('✨ SORTABLE: Page selected → sections are now draggable');
+                console.log('✨ SORTABLE: Move button clicked → sections are now draggable');
             }
             return success;
         } else if (component.type === 'section') {
             const success = this.makeWidgetsSortable(component);
             if (success) {
-                console.log('✨ SORTABLE: Section selected → widgets are now draggable');
+                console.log('✨ SORTABLE: Move button clicked → widgets are now draggable');
             }
             return success;
         } else {
@@ -126,33 +126,15 @@ class SortableManager {
     }
     
     /**
-     * Add drag handles to elements
+     * Add drag handles to elements - REMOVED DYNAMIC CREATION
+     * Now uses predefined sortable structure with CSS classes
      * @param {NodeList} elements - Elements to add handles to
      * @param {string} type - Type of elements (section/widget)
      */
     addDragHandles(elements, type) {
-        elements.forEach(element => {
-            // Skip if already has handle
-            if (element.querySelector('.drag-handle')) return;
-            
-            const handle = document.createElement('div');
-            handle.className = `drag-handle drag-handle--${type}`;
-            handle.innerHTML = '<i class="bx bx-move"></i>';
-            handle.title = `Drag to reorder ${type}`;
-            
-            // Position handle at top-right of element
-            handle.style.position = 'absolute';
-            handle.style.top = '5px';
-            handle.style.right = '5px';
-            handle.style.zIndex = '1000';
-            
-            // Make parent position relative if not already
-            if (getComputedStyle(element).position === 'static') {
-                element.style.position = 'relative';
-            }
-            
-            element.appendChild(handle);
-        });
+        // No longer dynamically creating drag handles
+        // Sortable structure should be predefined in iframe with CSS classes
+        console.log(`📦 SORTABLE: Using predefined sortable structure for ${elements.length} ${type}s`);
     }
     
     /**

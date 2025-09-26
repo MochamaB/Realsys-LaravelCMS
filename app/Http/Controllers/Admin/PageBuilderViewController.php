@@ -11,21 +11,25 @@ class PageBuilderViewController extends Controller
 {
     /**
      * Show GridStack page builder interface
-     * 
+     *
      * This controller handles view rendering and data loading for the Page Builder.
      */
     public function show(Page $page)
     {
-        // Load data for left sidebar
+        // Load data for left sidebar (regular data for drill-down functionality)
         $sectionTemplates = $this->loadAvailableSectionTemplates();
         $themeWidgets = $this->loadThemeWidgets();
         $defaultWidgets = $this->loadDefaultWidgets();
-        
+
+        // Load additional data for wizard modal (includes nested content types and items)
+        $themeWidgetsWithData = $this->loadThemeWidgetsForWizard();
+
         return view('admin.pages.page-builder.show', [
             'page' => $page,
             'sectionTemplates' => $sectionTemplates,
             'themeWidgets' => $themeWidgets,
             'defaultWidgets' => $defaultWidgets,
+            'themeWidgetsWithData' => $themeWidgetsWithData,
             'apiBaseUrl' => '/admin/api/page-builder'
         ]);
     }
@@ -132,6 +136,61 @@ class PageBuilderViewController extends Controller
                         'items_count' => $ct->contentItems()->count()
                     ];
                 })
+            ];
+        })->toArray();
+    }
+
+    /**
+     * Load theme widgets with all content types and items data for wizard
+     */
+    public function loadThemeWidgetsForWizard()
+    {
+        // Get active theme
+        $activeTheme = \App\Models\Theme::where('is_active', true)->first();
+
+        if (!$activeTheme) {
+            return [];
+        }
+
+        // Get widgets with content types and items
+        $widgets = \App\Models\Widget::where('theme_id', $activeTheme->id)
+            ->with(['contentTypes.contentItems', 'fieldDefinitions'])
+            ->orderBy('name')
+            ->get(['id', 'name', 'description', 'icon', 'theme_id', 'slug', 'view_path']);
+
+        return $widgets->map(function($widget) use ($activeTheme) {
+            $contentTypes = $widget->contentTypes->map(function($contentType) {
+                return [
+                    'id' => $contentType->id,
+                    'name' => $contentType->name,
+                    'slug' => $contentType->slug,
+                    'description' => $contentType->description,
+                    'icon' => $contentType->icon ?? 'ri-folder-line',
+                    'items_count' => $contentType->contentItems->count(),
+                    'is_active' => $contentType->is_active,
+                    'items' => $contentType->contentItems->map(function($item) {
+                        return [
+                            'id' => $item->id,
+                            'title' => $item->title,
+                            'excerpt' => $item->excerpt,
+                            'status' => $item->status,
+                            'created_at' => $item->created_at,
+                            'updated_at' => $item->updated_at
+                        ];
+                    })->toArray()
+                ];
+            })->toArray();
+
+            return [
+                'id' => $widget->id,
+                'name' => $widget->name,
+                'description' => $widget->description,
+                'icon' => $widget->icon ?? 'ri-puzzle-line',
+                'preview_image' => $this->getWidgetPreviewImage($widget, $activeTheme),
+                'slug' => $widget->slug,
+                'has_content_types' => $widget->contentTypes->count() > 0,
+                'content_types_count' => $widget->contentTypes->count(),
+                'content_types' => $contentTypes
             ];
         })->toArray();
     }
